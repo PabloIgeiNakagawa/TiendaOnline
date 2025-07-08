@@ -1,0 +1,29 @@
+﻿@{
+    var mensajeExito = TempData["MensajeExito"];
+    var mensajeError = TempData["MensajeError"];
+}
+
+@if (mensajeExito != null)
+{
+    <div class="row my-2">
+        <div class="col-12">
+            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                @mensajeExito
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+        </div>
+    </div>
+}
+else if (mensajeError != null)
+{
+    <div class="row my-2">
+        <div class="col-12">
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                <i class="bi bi-x-circle-fill me-2"></i>
+                @mensajeError
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+        </div>
+    </div>
+}

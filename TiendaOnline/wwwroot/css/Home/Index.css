@@ -1,0 +1,432 @@
+﻿/* Hero Section */
+.seccion-hero {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+    .seccion-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 50%;
+        height: 100%;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23e2e8f0" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        opacity: 0.5;
+    }
+
+.min-vh-75 {
+    min-height: 75vh;
+}
+
+.insignia-hero {
+    display: inline-block;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.titulo-hero {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+}
+
+.gradiente-texto {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.descripcion-hero {
+    font-size: 1.25rem;
+    color: #64748b;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.acciones-hero {
+    margin-bottom: 3rem;
+}
+
+.estadisticas-hero {
+    display: flex;
+    gap: 2rem;
+}
+
+.elemento-estadistica {
+    text-align: center;
+}
+
+.numero-estadistica {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.etiqueta-estadistica {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Hero Image */
+.imagen-hero {
+    position: relative;
+    height: 500px;
+}
+
+.imagen-principal-hero {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+.tarjeta-flotante {
+    position: absolute;
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: float 3s ease-in-out infinite;
+    z-index: 2;
+}
+
+.tarjeta-1 {
+    top: 10%;
+    right: 10%;
+    animation-delay: 0s;
+}
+
+.tarjeta-2 {
+    bottom: 30%;
+    left: 5%;
+    animation-delay: 1s;
+}
+
+.tarjeta-3 {
+    top: 60%;
+    right: 5%;
+    animation-delay: 2s;
+}
+
+.imagen-componente {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.contenido-tarjeta h6 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.precio {
+    font-size: 0.75rem;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Section Headers */
+.encabezado-seccion {
+    margin-bottom: 3rem;
+}
+
+.titulo-seccion {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.subtitulo-seccion {
+    font-size: 1.125rem;
+    color: #64748b;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Category Cards */
+.tarjeta-categoria {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+    height: 100%;
+}
+
+    .tarjeta-categoria:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+.icono-categoria {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.tarjeta-categoria h5 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #1e293b;
+}
+
+.tarjeta-categoria p {
+    color: #64748b;
+    margin-bottom: 1rem;
+}
+
+.conteo-categoria {
+    display: block;
+    font-size: 0.875rem;
+    color: #2563eb;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.enlace-categoria {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+    .enlace-categoria:hover {
+        color: #1d4ed8;
+    }
+
+/* Product Cards */
+.tarjeta-producto {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+    position: relative;
+}
+
+    .tarjeta-producto:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+.insignia-producto {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: #10b981;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 2;
+}
+
+    .insignia-producto.rebaja {
+        background: #ef4444;
+    }
+
+    .insignia-producto.nuevo {
+        background: #8b5cf6;
+    }
+
+.imagen-producto {
+    position: relative;
+    padding: 2rem;
+    text-align: center;
+    background: #f8fafc;
+}
+
+.acciones-producto {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.tarjeta-producto:hover .acciones-producto {
+    opacity: 1;
+}
+
+.info-producto {
+    padding: 1.5rem;
+}
+
+.titulo-producto {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #1e293b;
+}
+
+.calificacion-producto {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+    .calificacion-producto i {
+        color: #f59e0b;
+    }
+
+    .calificacion-producto span {
+        color: #64748b;
+        margin-left: 0.5rem;
+    }
+
+.precio-producto {
+    margin-bottom: 1rem;
+}
+
+.precio-actual {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2563eb;
+}
+
+.precio-original {
+    font-size: 1rem;
+    color: #94a3b8;
+    text-decoration: line-through;
+    margin-left: 0.5rem;
+}
+
+.agregar-carrito {
+    transition: all 0.3s ease;
+}
+
+    .agregar-carrito:hover {
+        transform: translateY(-2px);
+    }
+
+/* Brands Section */
+.grilla-marcas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 2rem;
+    align-items: center;
+}
+
+.elemento-marca {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 12px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+    .elemento-marca:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+.logo-marca {
+    max-width: 100%;
+    height: auto;
+    transition: filter 0.3s ease;
+}
+
+/* Feature Cards */
+.tarjeta-caracteristica {
+    padding: 2rem 1rem;
+}
+
+.icono-caracteristica {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.tarjeta-caracteristica h5 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #1e293b;
+}
+
+.tarjeta-caracteristica p {
+    color: #64748b;
+    margin: 0;
+}
+
+/* Newsletter Section */
+.formulario-newsletter .input-group {
+    max-width: 400px;
+    margin-left: auto;
+}
+
+.formulario-newsletter .form-control {
+    border: none;
+    padding: 0.75rem 1rem;
+}
+
+.formulario-newsletter .btn {
+    color: #2563eb;
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .titulo-hero {
+        font-size: 2.5rem;
+    }
+
+    .estadisticas-hero {
+        justify-content: center;
+    }
+
+    .tarjeta-flotante {
+        display: none;
+    }
+
+    .titulo-seccion {
+        font-size: 2rem;
+    }
+}

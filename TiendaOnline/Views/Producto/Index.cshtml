@@ -1,0 +1,242 @@
+﻿@using TiendaOnline.Models
+@model IEnumerable<TiendaOnline.Models.Producto>
+@{
+    ViewData["Title"] = "Productos";
+    var categorias = ViewBag.Categorias as List<Categoria>;
+    string busqueda = ViewBag.Busqueda;
+}
+
+<link rel="stylesheet" href="~/css/Producto/Index.css" asp-append-version="true" />
+
+<div class="container-fluid py-4">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-box-seam-fill me-2 text-primary"></i>
+                        Catálogo de Productos
+                    </h2>
+                    <p class="text-muted mb-0">Descubre nuestra amplia gama de componentes de PC</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-funnel me-1"></i>Ordenar
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" data-orden="nombre">Nombre A-Z</a></li>
+                            <li><a class="dropdown-item" data-orden="precio-asc">Precio: Menor a Mayor</a></li>
+                            <li><a class="dropdown-item" data-orden="precio-desc">Precio: Mayor a Menor</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar de Filtros -->
+        <div class="col-lg-3 col-md-4">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-funnel me-2 text-primary"></i>Filtros
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Búsqueda -->
+                    <div class="filtro-seccion">
+                        <div class="filtro-header">
+                            <i class="bi bi-search me-2"></i>Buscar
+                        </div>
+                        <div class="filtro-contenido">
+                            <input type="text" id="busquedaProducto" class="form-control" placeholder="Buscar productos..." value="@busqueda">
+                        </div>
+                    </div>
+
+                    <!-- Categorías -->
+                    <div class="filtro-seccion">
+                        <div class="filtro-header">
+                            <i class="bi bi-tags me-2"></i>Categorías
+                        </div>
+                        <div class="filtro-contenido">
+                            <div class="categoria-item active" data-categoria="">
+                                <span class="categoria-nombre">Todas las categorías</span>
+                                <span class="categoria-count">@Model.Count()</span>
+                            </div>
+                            @foreach (var categoria in categorias)
+                            {
+                                <div class="categoria-item" data-categoria="@categoria.CategoriaId">
+                                    <span class="categoria-nombre">@categoria.Nombre</span>
+                                    <span class="categoria-count">@Model.Count(p => p.CategoriaId == categoria.CategoriaId)</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Rango de Precios -->
+                    <div class="filtro-seccion">
+                        <div class="filtro-header">
+                            <i class="bi bi-currency-dollar me-2"></i>Rango de Precio
+                        </div>
+                        <div class="filtro-contenido">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" id="precioMin" class="form-control form-control-sm" placeholder="Mín">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" id="precioMax" class="form-control form-control-sm" placeholder="Máx">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary btn-sm w-100 mt-2" id="aplicarFiltroPrecios">
+                                Aplicar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Limpiar Filtros -->
+                    <div class="p-3 border-top">
+                        <button class="btn btn-outline-secondary w-100" id="limpiarFiltros">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Limpiar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos -->
+        <div class="col-lg-9 col-md-8">
+            <!-- Barra de Resultados -->
+            <div class="resultados-barra mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="resultados-texto">
+                        Mostrando <span id="productosVisibles">@Model.Count()</span> de <span id="totalProductos">@Model.Count()</span> productos
+                    </span>
+                    <div class="vista-controles">
+                        <button class="btn btn-sm btn-outline-secondary active" data-vista="grid">
+                            <i class="bi bi-grid-3x3-gap"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" data-vista="list">
+                            <i class="bi bi-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid de Productos -->
+            <div id="productosContainer" class="productos-grid">
+                @foreach (var producto in Model)
+                {
+                    <div class="producto-card"
+                         data-categoria="@producto.CategoriaId"
+                         data-precio="@producto.Precio"
+                         data-nombre="@producto.Nombre.ToLower()"
+                         data-stock="@(producto.Stock > 0 ? "true" : "false")">
+                        <div class="card h-100 shadow-sm border-0">
+                            <!-- Imagen del Producto -->
+                            <div class="producto-imagen">
+                                @if (producto.Stock <= 0)
+                                {
+                                    <div class="badge-agotado">Agotado</div>
+                                }
+                                else if (producto.Stock <= 5)
+                                {
+                                    <div class="badge-stock-bajo">Últimas unidades</div>
+                                }
+                                <img src="@(producto.Imagen != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(producto.Imagen)}" : "/img/placeholder.svg?height=250&width=250")"
+                                     class="card-img-top"
+                                     alt="@producto.Nombre"
+                                     loading="lazy" />
+                            </div>
+
+                            <!-- Información del Producto -->
+                            <div class="card-body d-flex flex-column">
+                                <div class="producto-categoria">
+                                    @{
+                                        var categoria = categorias?.FirstOrDefault(c => c.CategoriaId == producto.CategoriaId);
+                                    }
+                                    @if (categoria != null)
+                                    {
+                                        <span class="badge bg-light text-dark">@categoria.Nombre</span>
+                                    }
+                                </div>
+
+                                <h6 class="producto-titulo">@producto.Nombre</h6>
+
+                                <p class="producto-descripcion">@producto.Descripcion</p>
+
+                                <!-- Stock -->
+                                <div class="producto-stock mb-2">
+                                    @if (producto.Stock > 0)
+                                    {
+                                        <small class="text-success">
+                                            <i class="bi bi-check-circle me-1"></i>
+                                            @producto.Stock unidades disponibles
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-danger">
+                                            <i class="bi bi-x-circle me-1"></i>
+                                            Sin stock
+                                        </small>
+                                    }
+                                </div>
+
+                                <!-- Precio -->
+                                <div class="producto-precio mt-auto">
+                                    <span class="precio-actual">$@producto.Precio.ToString("N0")</span>
+                                </div>
+
+                                <!-- Botones de Acción -->
+                                <div class="producto-acciones mt-3">
+                                    @if (producto.Stock > 0)
+                                    {
+                                        <form asp-controller="Carrito" asp-action="Agregar" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@producto.ProductoId" />
+                                            <button type="submit" class="btn btn-primary flex-fill me-2 agregar-carrito">
+                                                <i class="bi bi-bag-plus me-1"></i>Agregar
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-outline-secondary flex-fill me-2" disabled>
+                                            <i class="bi bi-x-circle me-1"></i>Agotado
+                                        </button>
+                                    }
+                                    <a class="btn btn-outline-primary" asp-controller="Producto" asp-action="Detalles" asp-route-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Ver detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Mensaje cuando no hay productos -->
+            <div id="noProductos" class="text-center py-5" style="display: none;">
+                <div class="mb-3">
+                    <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="text-muted">No se encontraron productos</h5>
+                <p class="text-muted">Intenta ajustar los filtros o buscar con otros términos</p>
+                <button class="btn btn-primary" id="limpiarBusqueda">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar Filtros
+                </button>
+            </div>
+
+            <!-- Paginación -->
+            <nav aria-label="Paginación de productos" class="mt-4">
+                <ul class="pagination justify-content-center" id="paginacion">
+                    <!-- La paginación será generada por JavaScript -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+<script src="~/js/Producto/Index.js" asp-append-version="true"></script>

@@ -1,0 +1,300 @@
+﻿@model TiendaOnline.Models.Usuario
+@{
+    ViewData["Title"] = "Perfil de Usuario";
+    var esPropioPerfil = User.Claims.FirstOrDefault(c => c.Type == "UsuarioId")?.Value == Model.UsuarioId.ToString();
+    var esAdmin = User.IsInRole("Administrador");
+}
+
+<link rel="stylesheet" href="~/css/Usuario/PerfilUsuario.css" asp-append-version="true" />
+
+<div class="container-fluid py-4">
+    <!-- Migas de Pan -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-controller="Usuario" asp-action="Index" class="text-decoration-none">
+                    <i class="bi bi-people me-1"></i>Usuarios
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                @if (esPropioPerfil)
+                {
+                    <text>Mi Perfil</text>
+                }
+                else
+                {
+                    <text>Perfil de Usuario</text>
+                }
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Encabezado del Perfil -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="tarjeta-encabezado-perfil">
+                <div class="contenido-encabezado">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-perfil">
+                                @Model.Nombre.Substring(0, 1).ToUpper()@Model.Apellido.Substring(0, 1).ToUpper()
+                            </div>
+                            <div class="info-basica ms-4">
+                                <h1 class="nombre-usuario">@Model.Nombre @Model.Apellido</h1>
+                                <div class="metadatos-usuario">
+                                    <span class="fecha-registro">
+                                        <i class="bi bi-calendar-plus me-1"></i>
+                                        Miembro desde @Model.FechaCreacion.ToString("MMMM yyyy")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="acciones-perfil">
+                            @if (esPropioPerfil || esAdmin)
+                            {
+                                <a asp-controller="Usuario" asp-action="EditarUsuario" asp-route-id="@Model.UsuarioId"
+                                   class="btn btn-primary">
+                                    <i class="bi bi-pencil me-2"></i>Editar Perfil
+                                </a>
+                            }
+                            @if (esAdmin && !esPropioPerfil)
+                            {
+                                @if (Model.Activo)
+                                {
+                                    <button class="btn btn-outline-danger ms-2"
+                                            onclick="confirmarAccion('@Model.UsuarioId', 'baja', '@Model.Nombre @Model.Apellido')">
+                                        <i class="bi bi-person-dash me-2"></i>Dar de Baja
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-success ms-2"
+                                            onclick="confirmarAccion('@Model.UsuarioId', 'alta', '@Model.Nombre @Model.Apellido')">
+                                        <i class="bi bi-person-plus me-2"></i>Dar de Alta
+                                    </button>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="row g-4">
+        <!-- Información Personal -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-person-circle me-2 text-primary"></i>
+                        Información Personal
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="campo-info">
+                                <label class="etiqueta-campo">
+                                    <i class="bi bi-person me-2"></i>Nombre Completo
+                                </label>
+                                <div class="valor-campo">@Model.Nombre @Model.Apellido</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="campo-info">
+                                <label class="etiqueta-campo">
+                                    <i class="bi bi-envelope me-2"></i>Correo Electrónico
+                                </label>
+                                <div class="valor-campo">@Model.Email</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="campo-info">
+                                <label class="etiqueta-campo">
+                                    <i class="bi bi-calendar me-2"></i>Fecha de Nacimiento
+                                </label>
+                                <div class="valor-campo">
+                                    @Model.FechaNacimiento.ToString("dd 'de' MMMM 'de' yyyy")
+                                    <small class="text-muted ms-2">
+                                        (@((DateTime.Now.Year - Model.FechaNacimiento.Year)) años)
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="campo-info">
+                                <label class="etiqueta-campo">
+                                    <i class="bi bi-telephone me-2"></i>Teléfono
+                                </label>
+                                <div class="valor-campo">
+                                    @if (!string.IsNullOrEmpty(Model.Telefono))
+                                    {
+                                        <span>@Model.Telefono</span>
+                                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarAlPortapapeles('@Model.Telefono')">
+                                            <i class="bi bi-copy"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No especificado</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="campo-info">
+                                <label class="etiqueta-campo">
+                                    <i class="bi bi-geo-alt me-2"></i>Dirección
+                                </label>
+                                <div class="valor-campo">
+                                    @if (!string.IsNullOrEmpty(Model.Direccion))
+                                    {
+                                        <span>@Model.Direccion</span>
+                                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarAlPortapapeles('@Model.Direccion')">
+                                            <i class="bi bi-copy"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No especificada</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información Administrativa (Solo para Admins) -->
+            @if (esAdmin)
+            {
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-shield-check me-2 text-warning"></i>
+                            Información Administrativa
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="campo-info">
+                                    <label class="etiqueta-campo">
+                                        <i class="bi bi-key me-2"></i>ID de Usuario
+                                    </label>
+                                    <div class="valor-campo">
+                                        <code class="codigo-id">#@Model.UsuarioId</code>
+                                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarAlPortapapeles('@Model.UsuarioId')">
+                                            <i class="bi bi-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="campo-info">
+                                    <label class="etiqueta-campo">
+                                        <i class="bi bi-calendar-plus me-2"></i>Fecha de Registro
+                                    </label>
+                                    <div class="valor-campo">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            </div>
+                            @if (Model.UltimaFechaAlta != null)
+                            {
+                                <div class="col-md-6">
+                                    <div class="campo-info">
+                                        <label class="etiqueta-campo">
+                                            <i class="bi bi-arrow-up-circle me-2"></i>Última Fecha de Alta
+                                        </label>
+                                        <div class="valor-campo">@Model.UltimaFechaAlta?.ToString("dd/MM/yyyy HH:mm")</div>
+                                    </div>
+                                </div>
+                            }
+                            @if (Model.UltimaFechaBaja != null)
+                            {
+                                <div class="col-md-6">
+                                    <div class="campo-info">
+                                        <label class="etiqueta-campo">
+                                            <i class="bi bi-arrow-down-circle me-2"></i>Última Fecha de Baja
+                                        </label>
+                                        <div class="valor-campo">@Model.UltimaFechaBaja?.ToString("dd/MM/yyyy HH:mm")</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Panel Lateral -->
+        <div class="col-lg-4">
+            <!-- Estadísticas del Usuario -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-graph-up me-2 text-success"></i>
+                        Estadísticas
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="estadistica-item">
+                        <div class="icono-estadistica pedidos">
+                            <i class="bi bi-bag-check"></i>
+                        </div>
+                        <div class="contenido-estadistica">
+                            <h6>Pedidos Realizados</h6>
+                            <span class="numero-estadistica">24</span>
+                        </div>
+                    </div>
+                    <div class="estadistica-item">
+                        <div class="icono-estadistica compras">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                        <div class="contenido-estadistica">
+                            <h6>Total Gastado</h6>
+                            <span class="numero-estadistica">$2.450.000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-labelledby="etiquetaModalConfirmacion" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="etiquetaModalConfirmacion">Confirmar Acción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="text-center py-3">
+                    <div class="mb-3">
+                        <i id="iconoConfirmacion" class="display-4"></i>
+                    </div>
+                    <p id="mensajeConfirmacion" class="mb-0 fs-6"></p>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="botonConfirmar" class="btn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Formularios Ocultos -->
+<div style="display: none;">
+    <form id="formularioBaja@(Model.UsuarioId)" asp-controller="Usuario" asp-action="DarBajaUsuario" asp-route-id="@Model.UsuarioId" method="post">
+        @Html.AntiForgeryToken()
+    </form>
+    <form id="formularioAlta@(Model.UsuarioId)" asp-controller="Usuario" asp-action="DarAltaUsuario" asp-route-id="@Model.UsuarioId" method="post">
+        @Html.AntiForgeryToken()
+    </form>
+</div>
+
+<script src="~/js/Usuario/PerfilUsuario.js" asp-append-version="true"></script>

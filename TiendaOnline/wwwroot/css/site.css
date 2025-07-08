@@ -1,0 +1,47 @@
+/* Reset de márgenes y padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .navbar-nav {
+        margin: 1rem 0;
+    }
+
+    .barra-busqueda {
+        display: block !important;
+        width: 100%;
+        margin: 1rem 0;
+    }
+
+    .d-flex.align-items-center.gap-3 {
+        margin-top: 1rem;
+        justify-content: flex-start;
+    }
+
+    .dropdown-toggle {
+        width: 100%;
+        justify-content: space-between;
+    }
+    /* Corregir posicionamiento del dropdown en móviles */
+    .dropdown-menu {
+        position: absolute !important;
+        left: 0 !important;
+        right: 0 !important;
+        transform: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .dropdown {
+        position: relative;
+        width: 100%;
+    }
+}

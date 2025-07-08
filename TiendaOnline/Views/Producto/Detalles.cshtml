@@ -1,0 +1,282 @@
+﻿@model TiendaOnline.Models.Producto
+@{
+    ViewData["Title"] ="Detalle - " + Model.Nombre;
+}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="my-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            @Html.ActionLink("Inicio", "Index", "Home", null, new { @class = "text-decoration-none" })
+        </li>
+        <li class="breadcrumb-item">
+            @Html.ActionLink("Productos", "Index", "Productos", null, new { @class = "text-decoration-none" })
+        </li>
+        @if (Model.Categoria != null)
+        {
+            <li class="breadcrumb-item">
+                @Html.ActionLink(Model.Categoria.Nombre, "Index", "Productos",
+                         new { categoria = Model.CategoriaId }, new { @class = "text-decoration-none" })
+            </li>
+        }
+        <li class="breadcrumb-item active" aria-current="page">@Model.Nombre</li>
+    </ol>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Imagen del Producto -->
+        <div class="col-lg-6 col-md-6 mb-4">
+            <div class="producto-imagen-detalle">
+                @if (Model.Stock <= 0)
+                {
+                    <div class="badge-agotado-detalle">
+                        <i class="bi bi-x-circle"></i> Agotado
+                    </div>
+                }
+                else if (Model.Stock <= 5)
+                {
+                    <div class="badge-stock-bajo-detalle">
+                        <i class="bi bi-exclamation-triangle"></i> Últimas unidades
+                    </div>
+                }
+
+                <img src="@(Model.Imagen != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(Model.Imagen)}" : Url.Content("~/img/placeholder.svg?height=500&width=500"))"
+                     class="img-fluid producto-imagen-principal"
+                     alt="@Model.Nombre"
+                     id="imagenPrincipal" />
+
+                <!-- Botón para ampliar imagen -->
+                <button class="btn btn-light btn-zoom" onclick="ampliarImagen()" title="Ampliar imagen">
+                    <i class="bi bi-zoom-in"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Información del Producto -->
+        <div class="col-lg-6 col-md-6">
+            <div class="producto-info-detalle">
+                <!-- Categoría -->
+                @if (Model.Categoria != null)
+                {
+                    <div class="producto-categoria-detalle mb-3">
+                        <span class="badge bg-primary">
+                            <i class="bi bi-tag"></i> @Model.Categoria.Nombre
+                        </span>
+                    </div>
+                }
+
+                <!-- Título -->
+                <h1 class="producto-titulo-detalle mb-3">@Model.Nombre</h1>
+
+                <!-- Descripción -->
+                <div class="producto-descripcion-detalle mb-4">
+                    <p class="lead">@Model.Descripcion</p>
+                </div>
+
+                <!-- Precio -->
+                <div class="producto-precio-detalle mb-4">
+                    <div class="precio-container">
+                        <span class="precio-principal">@Model.Precio.ToString("C", new System.Globalization.CultureInfo("es-CO"))</span>
+                        <small class="precio-moneda text-muted">ARS</small>
+                    </div>
+                </div>
+
+                <!-- Stock -->
+                <div class="producto-stock-detalle mb-4">
+                    <div class="stock-info">
+                        @if (Model.Stock > 0)
+                        {
+                            <div class="stock-disponible">
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                                <span class="stock-texto">
+                                    <strong>@Model.Stock</strong> unidades disponibles
+                                </span>
+                                @if (Model.Stock <= 5)
+                                {
+                                    <span class="badge bg-warning text-dark ms-2">¡Pocas unidades!</span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="stock-agotado">
+                                <i class="bi bi-x-circle-fill text-danger"></i>
+                                <span class="stock-texto text-danger">
+                                    <strong>Sin stock disponible</strong>
+                                </span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Formulario para agregar al carrito -->
+                @if (Model.Stock > 0)
+                {
+                    @using (Html.BeginForm("Agregar", "Carrito", FormMethod.Post, new { @class = "producto-acciones-detalle" }))
+                    {
+                        @Html.Hidden("id", Model.ProductoId)
+
+                        <div class="row g-3">
+                            <!-- Selector de cantidad -->
+                            <div class="col-md-4">
+                                <label for="Cantidad" class="form-label">Cantidad:</label>
+                                <div class="input-group">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="cambiarCantidad(-1)">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    @Html.TextBox("Cantidad", 1, new
+                                        {
+                                            @class = "form-control text-center",
+                                            @type = "number",
+                                            @min = "1",
+                                            @max = Model.Stock,
+                                            @id = "cantidad"
+                                        })
+                                    <button class="btn btn-outline-secondary" type="button" onclick="cambiarCantidad(1)">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="col-md-8">
+                                <div class="mt-4 d-grid gap-2 d-md-flex">
+                                    <button type="submit" class="btn btn-primary btn-lg flex-fill agregar-carrito-detalle">
+                                        <i class="bi bi-cart-plus me-2"></i>Agregar al Carrito
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="producto-acciones-detalle">
+                        <div class="d-grid">
+                            <button class="btn btn-outline-secondary btn-lg" disabled>
+                                <i class="bi bi-x-circle me-2"></i>Producto Agotado
+                            </button>
+                        </div>
+                    </div>
+                }
+
+                <!-- Información adicional -->
+                <div class="producto-info-adicional mt-5">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <i class="bi bi-truck text-primary"></i>
+                                <div>
+                                    <strong>Envío gratis</strong>
+                                    <small class="d-block text-muted">En compras superiores a $50.000</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <i class="bi bi-arrow-clockwise text-primary"></i>
+                                <div>
+                                    <strong>Devoluciones</strong>
+                                    <small class="d-block text-muted">30 días para cambios</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de navegación -->
+                <div class="mt-4">
+                    @Html.ActionLink("← Volver a productos", "Index", "Producto", null, new { @class = "btn btn-outline-secondary" })
+                    @Html.ActionLink("Editar producto", "Edit", "Productos", new { id = Model.ProductoId }, new { @class = "btn btn-outline-primary ms-2" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ampliar imagen -->
+<div class="modal fade" id="imagenModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Model.Nombre</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="@(Model.Imagen != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(Model.Imagen)}" : Url.Content("~/img/placeholder.svg?height=500&width=500"))"
+                     class="img-fluid" alt="@Model.Nombre" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/detalle-producto.js"></script>
+
+    <script>
+        // Función específica para cambiar cantidad
+        function cambiarCantidad(cambio) {
+            const cantidadInput = document.getElementById('cantidad');
+            const cantidadActual = parseInt(cantidadInput.value);
+            const max = parseInt(cantidadInput.max);
+            const min = parseInt(cantidadInput.min);
+
+            const nuevaCantidad = cantidadActual + cambio;
+
+            if (nuevaCantidad >= min && nuevaCantidad <= max) {
+                cantidadInput.value = nuevaCantidad;
+            }
+        }
+
+        // Función para ampliar imagen
+        function ampliarImagen() {
+            const modal = new bootstrap.Modal(document.getElementById('imagenModal'));
+            modal.show();
+        }
+
+        // Validación del formulario
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const cantidad = document.getElementById('cantidad').value;
+                    if (!cantidad || cantidad < 1) {
+                        e.preventDefault();
+                        alert('Por favor, selecciona una cantidad válida.');
+                        return false;
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+@if (TempData["Mensaje"] != null)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toast = document.createElement('div');
+            toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed';
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 1055;';
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi bi-check-circle me-2"></i>
+        @TempData["Mensaje"]
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+
+            document.body.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+
+            toast.addEventListener('hidden.bs.toast', () => {
+                toast.remove();
+            });
+        });
+    </script>
+}

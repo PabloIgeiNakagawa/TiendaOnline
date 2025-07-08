@@ -1,0 +1,582 @@
+﻿@model IEnumerable<TiendaOnline.Models.Pedido>
+@{
+    ViewData["Title"] = "Mis Pedidos";
+}
+
+<div class="container-fluid py-4">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 fw-bold text-dark">
+                        <i class="bi bi-bag-check-fill me-2 text-primary"></i>
+                        Mis Pedidos
+                    </h2>
+                    <p class="text-muted mb-0">Historial completo de tus compras y pedidos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="filtroEstado" class="form-label fw-semibold">
+                                <i class="bi bi-funnel me-1"></i>Estado del Pedido
+                            </label>
+                            <select id="filtroEstado" class="form-select">
+                                <option value="">Todos los estados</option>
+                                @foreach (var estado in Enum.GetValues<TiendaOnline.Models.EstadoPedido>())
+                                {
+                                    <option value="@((int)estado)">@estado.ToString()</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroFechaDesde" class="form-label fw-semibold">
+                                <i class="bi bi-calendar me-1"></i>Desde
+                            </label>
+                            <input type="date" id="filtroFechaDesde" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroFechaHasta" class="form-label fw-semibold">
+                                <i class="bi bi-calendar me-1"></i>Hasta
+                            </label>
+                            <input type="date" id="filtroFechaHasta" class="form-control">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="button" id="limpiarFiltros" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card total">
+                <div class="stat-icon">
+                    <i class="bi bi-bag-check"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">@Model.Count()</h3>
+                    <p class="stat-label">Total Pedidos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card pending">
+                <div class="stat-icon">
+                    <i class="bi bi-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">@Model.Count(p => p.Estado == TiendaOnline.Models.EstadoPedido.Pendiente)</h3>
+                    <p class="stat-label">Pendientes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card delivered">
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">@Model.Count(p => p.Estado == TiendaOnline.Models.EstadoPedido.Entregado)</h3>
+                    <p class="stat-label">Entregados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card cancelled">
+                <div class="stat-icon">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">@Model.Count(p => p.Estado == TiendaOnline.Models.EstadoPedido.Cancelado)</h3>
+                    <p class="stat-label">Cancelados</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Pedidos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="pedidos-container" id="pedidosContainer">
+                @if (Model.Any())
+                {
+                    @foreach (var pedido in Model.OrderByDescending(p => p.FechaPedido))
+                    {
+                        <div class="pedido-card"
+                             data-estado="@((int)pedido.Estado)"
+                             data-fecha="@pedido.FechaPedido.ToString("yyyy-MM-dd")">
+                            <div class="card shadow-sm border-0 mb-4">
+                                <!-- Header del Pedido -->
+                                <div class="card-header bg-white border-bottom">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-3">
+                                            <div class="pedido-info">
+                                                <h6 class="pedido-numero mb-1">Pedido #@pedido.PedidoId</h6>
+                                                <small class="text-muted">@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            @{
+                                                string claseEstado = pedido.Estado switch
+                                                {
+                                                    TiendaOnline.Models.EstadoPedido.Pendiente => "bg-warning",
+                                                    TiendaOnline.Models.EstadoPedido.Enviado => "bg-primary",
+                                                    TiendaOnline.Models.EstadoPedido.Entregado => "bg-success",
+                                                    TiendaOnline.Models.EstadoPedido.Cancelado => "bg-danger",
+                                                    _ => "bg-secondary"
+                                                };
+                                            }
+                                            <span class="badge @claseEstado px-3 py-2 rounded-pill">
+                                                @pedido.Estado.ToString()
+                                            </span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="pedido-fechas">
+                                                @if (pedido.FechaEnvio.HasValue)
+                                                {
+                                                    <small class="text-muted d-block">
+                                                        <i class="bi bi-truck me-1"></i>Enviado: @pedido.FechaEnvio.Value.ToString("dd/MM/yyyy")
+                                                    </small>
+                                                }
+                                                @if (pedido.FechaEntrega.HasValue)
+                                                {
+                                                    <small class="text-success d-block">
+                                                        <i class="bi bi-check-circle me-1"></i>Entregado: @pedido.FechaEntrega.Value.ToString("dd/MM/yyyy")
+                                                    </small>
+                                                }
+                                                @if (pedido.FechaCancelado.HasValue)
+                                                {
+                                                    <small class="text-danger d-block">
+                                                        <i class="bi bi-x-circle me-1"></i>Cancelado: @pedido.FechaCancelado.Value.ToString("dd/MM/yyyy")
+                                                    </small>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <div class="pedido-acciones">
+                                                <a asp-controller="Pedido" asp-action="Detalles" asp-route-id="@pedido.PedidoId"
+                                                   class="btn btn-primary me-2"
+                                                   data-bs-toggle="tooltip"
+                                                   title="Ver detalles completos">
+                                                    <i class="bi bi-eye me-1"></i>Ver Detalles
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contenido del Pedido -->
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="pedido-timeline">
+                                                <h6 class="mb-3">
+                                                    <i class="bi bi-clock-history me-2"></i>Estado del Pedido
+                                                </h6>
+                                                <div class="timeline">
+                                                    <div class="timeline-item @(pedido.Estado >= TiendaOnline.Models.EstadoPedido.Pendiente ? "completed" : "")">
+                                                        <div class="timeline-marker">
+                                                            <i class="bi bi-cart-check"></i>
+                                                        </div>
+                                                        <div class="timeline-content">
+                                                            <h6>Pedido Realizado</h6>
+                                                            <small class="text-muted">@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="timeline-item @(pedido.Estado >= TiendaOnline.Models.EstadoPedido.Enviado ? "completed" : "")">
+                                                        <div class="timeline-marker">
+                                                            <i class="bi bi-truck"></i>
+                                                        </div>
+                                                        <div class="timeline-content">
+                                                            <h6>Enviado</h6>
+                                                            @if (pedido.FechaEnvio.HasValue)
+                                                            {
+                                                                <small class="text-muted">@pedido.FechaEnvio.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                                                            }
+                                                            else
+                                                            {
+                                                                <small class="text-muted">Pendiente de envío</small>
+                                                            }
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="timeline-item @(pedido.Estado == TiendaOnline.Models.EstadoPedido.Entregado ? "completed" : "") @(pedido.Estado == TiendaOnline.Models.EstadoPedido.Cancelado ? "cancelled" : "")">
+                                                        <div class="timeline-marker">
+                                                            @if (pedido.Estado == TiendaOnline.Models.EstadoPedido.Cancelado)
+                                                            {
+                                                                <i class="bi bi-x-circle"></i>
+                                                            }
+                                                            else
+                                                            {
+                                                                <i class="bi bi-check-circle"></i>
+                                                            }
+                                                        </div>
+                                                        <div class="timeline-content">
+                                                            @if (pedido.Estado == TiendaOnline.Models.EstadoPedido.Cancelado)
+                                                            {
+                                                                <h6>Cancelado</h6>
+                                                                @if (pedido.FechaCancelado.HasValue)
+                                                                {
+                                                                    <small class="text-muted">@pedido.FechaCancelado.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                <h6>Entregado</h6>
+                                                                @if (pedido.FechaEntrega.HasValue)
+                                                                {
+                                                                    <small class="text-muted">@pedido.FechaEntrega.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <small class="text-muted">Pendiente de entrega</small>
+                                                                }
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="bi bi-bag-x text-muted" style="font-size: 4rem;"></i>
+                        </div>
+                        <h5 class="text-muted">No tienes pedidos aún</h5>
+                        <p class="text-muted">¡Explora nuestro catálogo y realiza tu primera compra!</p>
+                        <a asp-controller="Producto" asp-action="Index" class="btn btn-primary">
+                            <i class="bi bi-shop me-2"></i>Ver Productos
+                        </a>
+                    </div>
+                }
+            </div>
+
+            <!-- Mensaje cuando no hay resultados filtrados -->
+            <div id="noResultados" class="text-center py-5" style="display: none;">
+                <div class="mb-3">
+                    <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="text-muted">No se encontraron pedidos</h5>
+                <p class="text-muted">Intenta ajustar los filtros de búsqueda</p>
+                <button class="btn btn-primary" id="limpiarBusqueda">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estadísticas */
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        height: 100%;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .stat-card.total .stat-icon {
+        background: #2563eb;
+    }
+
+    .stat-card.pending .stat-icon {
+        background: #f59e0b;
+    }
+
+    .stat-card.delivered .stat-icon {
+        background: #10b981;
+    }
+
+    .stat-card.cancelled .stat-icon {
+        background: #ef4444;
+    }
+
+    .stat-number {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        color: #64748b;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    /* Pedidos */
+    .pedidos-container {
+        min-height: 400px;
+    }
+
+    .pedido-card {
+        transition: all 0.3s ease;
+    }
+
+    .pedido-numero {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .pedido-acciones .btn {
+        border-radius: 6px;
+    }
+
+    /* Timeline */
+    .timeline {
+        position: relative;
+        padding-left: 3rem; /* Cambiado de 1.5rem a 3rem */
+    }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 1rem; /* Cambiado de 0.5rem a 1rem */
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+    .timeline-marker {
+        position: absolute;
+        left: 0rem; /* Cambiado de -0.5rem a 0rem */
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 0.875rem;
+        z-index: 1;
+    }
+
+    .timeline-item.completed .timeline-marker {
+        background: #10b981;
+        color: white;
+    }
+
+    .timeline-item.cancelled .timeline-marker {
+        background: #ef4444;
+        color: white;
+    }
+
+    .timeline-content h6 {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .timeline-content small {
+        font-size: 0.75rem;
+    }
+
+    /* Cards */
+    .card {
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+        }
+
+    /* Badges */
+    .badge {
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    /* Form controls */
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .pedido-acciones
+
+    {
+        margin-top: 1rem;
+    }
+
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .stat-icon {
+        margin-bottom: 0.5rem;
+    }
+
+    .timeline {
+        padding-left: 2.5rem; 
+    }
+
+    .timeline-marker {
+        left: 0.25rem; 
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 0.75rem;
+    }
+
+    .timeline::before {
+        left: 1rem; 
+    }
+
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar tooltips
+        var listaTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltips = listaTooltips.map(function (elementoTooltip) {
+            return new bootstrap.Tooltip(elementoTooltip);
+        });
+
+        // Variables para filtros
+        const filtroEstado = document.getElementById('filtroEstado');
+        const filtroFechaDesde = document.getElementById('filtroFechaDesde');
+        const filtroFechaHasta = document.getElementById('filtroFechaHasta');
+        const limpiarFiltros = document.getElementById('limpiarFiltros');
+        const pedidos = document.querySelectorAll('.pedido-card');
+        const pedidosContainer = document.getElementById('pedidosContainer');
+        const noResultados = document.getElementById('noResultados');
+
+        // Función para filtrar pedidos
+        function filtrarPedidos() {
+            const valorEstado = filtroEstado.value;
+            const fechaDesde = filtroFechaDesde.value ? new Date(filtroFechaDesde.value) : null;
+            const fechaHasta = filtroFechaHasta.value ? new Date(filtroFechaHasta.value) : null;
+            let contadorVisible = 0;
+
+            pedidos.forEach(pedido => {
+                const estado = pedido.dataset.estado;
+                const fecha = new Date(pedido.dataset.fecha);
+
+                const coincideEstado = !valorEstado || estado === valorEstado;
+                const coincideFechaDesde = !fechaDesde || fecha >= fechaDesde;
+                const coincideFechaHasta = !fechaHasta || fecha <= fechaHasta;
+
+                if (coincideEstado && coincideFechaDesde && coincideFechaHasta) {
+                    pedido.style.display = '';
+                    contadorVisible++;
+                } else {
+                    pedido.style.display = 'none';
+                }
+            });
+
+            if (contadorVisible === 0 && pedidos.length > 0) {
+                noResultados.style.display = 'block';
+            } else {
+                noResultados.style.display = 'none';
+            }
+        }
+
+        // Event listeners para filtros
+        filtroEstado.addEventListener('change', filtrarPedidos);
+        filtroFechaDesde.addEventListener('change', filtrarPedidos);
+        filtroFechaHasta.addEventListener('change', filtrarPedidos);
+
+        limpiarFiltros.addEventListener('click', function() {
+            filtroEstado.value = '';
+            filtroFechaDesde.value = '';
+            filtroFechaHasta.value = '';
+            filtrarPedidos();
+        });
+
+        // Limpiar búsqueda desde el mensaje de no resultados
+        const limpiarBusqueda = document.getElementById('limpiarBusqueda');
+        if (limpiarBusqueda) {
+            limpiarBusqueda.addEventListener('click', function() {
+                filtroEstado.value = '';
+                filtroFechaDesde.value = '';
+                filtroFechaHasta.value = '';
+                filtrarPedidos();
+            });
+        }
+    });
+
+    // Funciones para acciones de pedidos
+    function repetirPedido(pedidoId) {
+        // Aquí harías la lógica para repetir el pedido
+        mostrarToast('Productos agregados al carrito', 'success');
+    }
+
+    // Función para mostrar toast
+    function mostrarToast(mensaje, tipo) {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${tipo} border-0 position-fixed top-0 end-0 m-3`;
+        toast.style.zIndex = '9999';
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-check-circle me-2"></i>${mensaje}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+
+        toast.addEventListener('hidden.bs.toast', () => {
+            document.body.removeChild(toast);
+        });
+    }
+</script>
