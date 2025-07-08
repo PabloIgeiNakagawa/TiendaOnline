@@ -179,3 +179,4 @@ C:\Users\Pablo\source\repos\TiendaOnline\TiendaOnline\bin\Debug\net8.0\System.We
 C:\Users\Pablo\source\repos\TiendaOnline\TiendaOnline\bin\Debug\net8.0\System.Web.WebPages.dll
 C:\Users\Pablo\source\repos\TiendaOnline\TiendaOnline\bin\Debug\net8.0\Microsoft.Web.Infrastructure.dll
 C:\Users\Pablo\source\repos\TiendaOnline\TiendaOnline\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+C:\Users\Pablo\source\repos\TiendaOnline\TiendaOnline\obj\Debug\net8.0\TiendaOnline.sourcelink.json

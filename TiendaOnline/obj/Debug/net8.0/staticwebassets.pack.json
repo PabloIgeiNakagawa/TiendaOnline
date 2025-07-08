@@ -73,6 +73,22 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
+      "Id": "C:\\Users\\Pablo\\source\\repos\\TiendaOnline\\TiendaOnline\\wwwroot\\img\\home\\pc.webp",
+      "PackagePath": "staticwebassets\\img\\home\\pc.webp"
+    },
+    {
+      "Id": "C:\\Users\\Pablo\\source\\repos\\TiendaOnline\\TiendaOnline\\wwwroot\\img\\home\\ram.webp",
+      "PackagePath": "staticwebassets\\img\\home\\ram.webp"
+    },
+    {
+      "Id": "C:\\Users\\Pablo\\source\\repos\\TiendaOnline\\TiendaOnline\\wwwroot\\img\\home\\rtx-4090.webp",
+      "PackagePath": "staticwebassets\\img\\home\\rtx-4090.webp"
+    },
+    {
+      "Id": "C:\\Users\\Pablo\\source\\repos\\TiendaOnline\\TiendaOnline\\wwwroot\\img\\home\\ryzen9.webp",
+      "PackagePath": "staticwebassets\\img\\home\\ryzen9.webp"
+    },
+    {
       "Id": "C:\\Users\\Pablo\\source\\repos\\TiendaOnline\\TiendaOnline\\wwwroot\\img\\logos\\AMD.svg",
       "PackagePath": "staticwebassets\\img\\logos\\AMD.svg"
     },

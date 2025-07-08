@@ -15,6 +15,10 @@ wwwroot\css\Usuario\Login.css
 wwwroot\css\Usuario\PerfilUsuario.css
 wwwroot\css\Usuario\Register.css
 wwwroot\favicon.ico
+wwwroot\img\home\pc.webp
+wwwroot\img\home\ram.webp
+wwwroot\img\home\rtx-4090.webp
+wwwroot\img\home\ryzen9.webp
 wwwroot\img\logos\AMD.svg
 wwwroot\img\logos\ASUS.svg
 wwwroot\img\logos\Corsair.svg

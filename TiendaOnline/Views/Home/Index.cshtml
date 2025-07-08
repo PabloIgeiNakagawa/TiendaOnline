@@ -5,71 +5,75 @@
 
 <link rel="stylesheet" href="~/css/Home/Index.css" asp-append-version="true" />
 
+
 <!-- Sección Hero -->
-<section class="seccion-hero">
+<section class="seccion-hero min-vh-75 d-flex align-items-center">
     <div class="container">
-        <div class="row align-items-center min-vh-75">
+        <div class="row align-items-center">
             <div class="col-lg-6">
-                <div class="contenido-hero">
-                    <span class="insignia-hero">🔥 Nueva Generación</span>
-                    <h1 class="titulo-hero">
-                        Construye tu
-                        <span class="gradiente-texto">PC Gaming</span>
-                        de ensueño
-                    </h1>
-                    <p class="descripcion-hero">
-                        Descubre los componentes más avanzados para gaming, workstation y uso profesional.
-                        Calidad garantizada y los mejores precios del mercado.
-                    </p>
-                    <div class="acciones-hero">
-                        <a href="#" class="btn btn-primary btn-lg me-3">
-                            <i class="bi bi-lightning-fill me-2"></i>Ver Ofertas
-                        </a>
-                        <a href="#" class="btn btn-outline-primary btn-lg">
-                            <i class="bi bi-play-circle me-2"></i>Arma tu PC
-                        </a>
+                <div class="insignia-hero">
+                    ✨ Nuevo stock disponible
+                </div>
+                <h1 class="titulo-hero">
+                    Construye tu
+                    <span class="gradiente-texto">PC Gaming</span>
+                    ideal
+                </h1>
+                <p class="descripcion-hero">
+                    Encuentra los mejores componentes para PC gaming, workstation y oficina.
+                    Procesadores, tarjetas gráficas, memorias RAM y más con garantía oficial
+                    y envío gratis.
+                </p>
+                <div class="acciones-hero">
+                    <a asp-controller="Producto" asp-action="Index" class="btn btn-primary btn-lg me-3">
+                        <i class="bi bi-cart"></i> Ver Productos
+                    </a>
+                </div>
+                <div class="estadisticas-hero">
+                    <div class="elemento-estadistica">
+                        <span class="numero-estadistica">500+</span>
+                        <span class="etiqueta-estadistica">Productos</span>
                     </div>
-                    <div class="estadisticas-hero">
-                        <div class="elemento-estadistica">
-                            <span class="numero-estadistica">10K+</span>
-                            <span class="etiqueta-estadistica">Productos</span>
-                        </div>
-                        <div class="elemento-estadistica">
-                            <span class="numero-estadistica">50K+</span>
-                            <span class="etiqueta-estadistica">Clientes</span>
-                        </div>
-                        <div class="elemento-estadistica">
-                            <span class="numero-estadistica">24/7</span>
-                            <span class="etiqueta-estadistica">Soporte</span>
-                        </div>
+                    <div class="elemento-estadistica">
+                        <span class="numero-estadistica">50+</span>
+                        <span class="etiqueta-estadistica">Marcas</span>
+                    </div>
+                    <div class="elemento-estadistica">
+                        <span class="numero-estadistica">10K+</span>
+                        <span class="etiqueta-estadistica">Clientes</span>
                     </div>
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="imagen-hero">
+                    <!-- Imagen principal -->
+                    <div class="imagen-principal-hero">
+                        <img src="~/img/home/pc.webp" alt="PC Gaming" class="img-fluid" style="max-width: 400px; height: auto;">
+                    </div>
+
+                    <!-- Tarjetas flotantes -->
                     <div class="tarjeta-flotante tarjeta-1">
-                        <img src="/placeholder.svg?height=80&width=80" alt="RTX 4090" class="imagen-componente">
+                        <img src="~/img/home/rtx-4090.webp" alt="GPU" class="imagen-componente">
                         <div class="contenido-tarjeta">
                             <h6>RTX 4090</h6>
-                            <span class="precio">$1.899.999</span>
+                            <span class="precio">$1,299.99</span>
                         </div>
                     </div>
+
                     <div class="tarjeta-flotante tarjeta-2">
-                        <img src="/placeholder.svg?height=80&width=80" alt="AMD Ryzen 9" class="imagen-componente">
+                        <img src="~/img/home/ryzen9.webp" alt="CPU" class="imagen-componente">
                         <div class="contenido-tarjeta">
-                            <h6>Ryzen 9 7950X</h6>
-                            <span class="precio">$899.999</span>
+                            <h6>AMD Ryzen 9</h6>
+                            <span class="precio">$549.99</span>
                         </div>
                     </div>
+
                     <div class="tarjeta-flotante tarjeta-3">
-                        <img src="/placeholder.svg?height=80&width=80" alt="DDR5 RAM" class="imagen-componente">
+                        <img src="~/img/home/ram.webp" alt="RAM" class="imagen-componente">
                         <div class="contenido-tarjeta">
-                            <h6>DDR5 32GB</h6>
-                            <span class="precio">$299.999</span>
+                            <h6>32GB DDR5</h6>
+                            <span class="precio">$299.99</span>
                         </div>
-                    </div>
-                    <div class="imagen-principal-hero">
-                        <img src="/placeholder.svg?height=400&width=500" alt="Gaming PC" class="img-fluid">
                     </div>
                 </div>
             </div>
@@ -93,7 +97,6 @@
                     <h5>Procesadores</h5>
                     <p>Intel & AMD últimas generaciones</p>
                     <span class="conteo-categoria">250+ productos</span>
-                    <a href="#" class="enlace-categoria">Ver todos</a>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
@@ -104,7 +107,6 @@
                     <h5>Tarjetas Gráficas</h5>
                     <p>NVIDIA RTX & AMD Radeon</p>
                     <span class="conteo-categoria">180+ productos</span>
-                    <a href="#" class="enlace-categoria">Ver todos</a>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
@@ -115,7 +117,6 @@
                     <h5>Memoria RAM</h5>
                     <p>DDR4 & DDR5 alta velocidad</p>
                     <span class="conteo-categoria">120+ productos</span>
-                    <a href="#" class="enlace-categoria">Ver todos</a>
                 </div>
             </div>
             <div class="col-lg-3 col-md-6">
@@ -126,7 +127,6 @@
                     <h5>Almacenamiento</h5>
                     <p>SSD NVMe & SATA de alta velocidad</p>
                     <span class="conteo-categoria">200+ productos</span>
-                    <a href="#" class="enlace-categoria">Ver todos</a>
                 </div>
             </div>
         </div>
