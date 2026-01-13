@@ -43,9 +43,9 @@
                     <div class="carrito-item fade-in">
                         <div class="carrito-item-content">
                             <div class="carrito-item-image">
-                                @if (item.Imagen != null)
+                                @if (item.ImagenUrl != null)
                                 {
-                                    <img src="data:image/jpeg;base64,@Convert.ToBase64String(item.Imagen)" alt="@item.Nombre" />
+                                    <img src=@item.ImagenUrl alt="@item.Nombre" />
                                 }
                                 else
                                 {

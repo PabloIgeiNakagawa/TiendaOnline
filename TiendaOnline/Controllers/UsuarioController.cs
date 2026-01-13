@@ -38,6 +38,7 @@ namespace TiendaOnline.Controllers
             try
             {
                 await _usuarioService.CrearUsuarioAsync(usuario);
+                TempData["MensajeExito"] = "El usuario se creó correctamente.";
                 return RedirectToAction("Usuarios","Admin");
             }
             catch (EmailDuplicadoException ex)

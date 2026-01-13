@@ -1,30 +1,30 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using TiendaOnline.IServices;
 using TiendaOnline.Models;
-using TiendaOnline.Services;
 
 public class ProductoController : Controller
 {
     private readonly IProductoService _productoService;
     private readonly ICategoriaService _categoriaService;
+    private readonly IImagenService _imagenService;
 
-    public ProductoController(IProductoService productoService, ICategoriaService categoriaService)
+    public ProductoController(IProductoService productoService, ICategoriaService categoriaService, IImagenService imagenService)
     {
         _productoService = productoService;
         _categoriaService = categoriaService;
+        _imagenService = imagenService;
     }
 
-    public async Task<IActionResult> Index(string? busqueda)
+    public async Task<IActionResult> Index(string busqueda)
     {
+        var categoriasRaiz = await _categoriaService.ObtenerCategoriasRaizAsync();
         var productos = await _productoService.ObtenerProductosAsync();
-        var categorias = await _categoriaService.ObtenerCategoriasAsync();
 
-        ViewBag.Categorias = categorias;
-        ViewBag.Busqueda = busqueda;
+        ViewBag.CategoriasRaiz = categoriasRaiz;
+        ViewBag.Busqueda = busqueda; 
+
         return View(productos);
     }
 
@@ -39,7 +39,14 @@ public class ProductoController : Controller
     [Authorize(Roles = "Administrador")]
     public async Task<IActionResult> AgregarProducto()
     {
-        ViewBag.Categorias = await _categoriaService.ObtenerCategoriasAsync();
+        var categoriasHoja = await _categoriaService.ObtenerCategoriasHojaAsync();
+
+        var listaFormateada = categoriasHoja.Select(c => new {
+            Id = c.CategoriaId,
+            NombreRuta = ObtenerRutaCompleta(c)
+        });
+
+        ViewBag.Categorias = new SelectList(listaFormateada, "Id", "NombreRuta");
         return View(new Producto());
     }
 
@@ -51,21 +58,30 @@ public class ProductoController : Controller
         if (ImagenArchivo == null || ImagenArchivo.Length == 0)
         {
             ModelState.AddModelError("ImagenArchivo", "La imagen es obligatoria.");
-            return View(producto);
+        }
+
+        if (!await _categoriaService.EsCategoriaHojaAsync(producto.CategoriaId))
+        {
+            ModelState.AddModelError("CategoriaId", "Debe seleccionar una subcategoría final.");
         }
 
         if (!ModelState.IsValid)
         {
-            ViewBag.Categorias = await _categoriaService.ObtenerCategoriasAsync();
+            var categoriasHoja = await _categoriaService.ObtenerCategoriasHojaAsync();
+            var listaParaSelect = categoriasHoja.Select(c => new {
+                IdValue = c.CategoriaId,
+                TextValue = ObtenerRutaCompleta(c)
+            }).ToList();
+
+            ViewBag.Categorias = new SelectList(listaParaSelect, "IdValue", "TextValue");
             return View(producto);
         }
-        using var ms = new MemoryStream();
-        await ImagenArchivo.CopyToAsync(ms);
-        producto.Imagen = ms.ToArray();
+
+        string urlImagen = await _imagenService.SubirImagenAsync(ImagenArchivo);
+        producto.ImagenUrl = urlImagen;
 
         await _productoService.AgregarProductoAsync(producto);
-
-        return RedirectToAction("Detalles", "Producto", new { id = producto.ProductoId });
+        return RedirectToAction("Detalles", new { id = producto.ProductoId });
     }
 
     [HttpPost]
@@ -105,6 +121,12 @@ public class ProductoController : Controller
         await _productoService.EditarProductoAsync(id, productoEditado, ImagenArchivo);
         TempData["MensajeExito"] = "El producto se actualizó correctamente.";
         return RedirectToAction("Detalles", "Producto", new { id });
+    }
+
+    private string ObtenerRutaCompleta(Categoria cat)
+    {
+        if (cat.CategoriaPadre == null) return cat.Nombre;
+        return $"{ObtenerRutaCompleta(cat.CategoriaPadre)} > {cat.Nombre}";
     }
 }
 

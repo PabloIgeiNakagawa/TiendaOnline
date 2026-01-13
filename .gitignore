@@ -1,0 +1,12 @@
+# Secretos y Configuración
+appsettings.Development.json
+appsettings.Production.json
+
+# Carpetas de compilación de .NET
+bin/
+obj/
+
+# Archivos de Visual Studio
+.vs/
+.idea/
+*.user

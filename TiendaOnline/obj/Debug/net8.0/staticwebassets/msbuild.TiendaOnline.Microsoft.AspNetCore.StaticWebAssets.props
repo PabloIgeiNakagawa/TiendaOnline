@@ -1,22 +1,22 @@
 ﻿<Project>
   <ItemGroup>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\Admin\Auditorias.css'))">
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\Admin\Index.css'))">
       <SourceType>Package</SourceType>
       <SourceId>TiendaOnline</SourceId>
       <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
       <BasePath>_content/TiendaOnline</BasePath>
-      <RelativePath>css/Admin/Auditorias.css</RelativePath>
+      <RelativePath>css/Admin/Index.css</RelativePath>
       <AssetKind>All</AssetKind>
       <AssetMode>All</AssetMode>
       <AssetRole>Primary</AssetRole>
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>b2px0ayb6r</Fingerprint>
-      <Integrity>3brekMXeoXX4w/trQfgWfWvcExwN/OeWqafQ4OIDD6M=</Integrity>
+      <Fingerprint>44ty3dnbcp</Fingerprint>
+      <Integrity>HNHYthWFo4+0Nokx4ufMwkhBlo3ATO1Ziy7fYGNdjOk=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\Admin\Auditorias.css'))</OriginalItemSpec>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\Admin\Index.css'))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\Admin\Pedidos.css'))">
       <SourceType>Package</SourceType>
@@ -660,8 +660,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>se0b0mhcpq</Fingerprint>
-      <Integrity>1P49M6dl7c05PvCTY+oPbdyDil2aLHEREYrhN6IWocg=</Integrity>
+      <Fingerprint>z77qlhuon5</Fingerprint>
+      <Integrity>8V95z4IGFq3JdhpoYH3V+jJ0WCNdIG2FPT8uICPan+w=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\Producto\Index.js'))</OriginalItemSpec>

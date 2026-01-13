@@ -42,7 +42,7 @@ namespace TiendaOnline.Controllers
                     Nombre = producto.Nombre,
                     Precio = producto.Precio,
                     Cantidad = 1,
-                    Imagen = producto.Imagen
+                    ImagenUrl = producto.ImagenUrl
                 });
             }
             HttpContext.Session.SetObject(CarritoKey, carrito);

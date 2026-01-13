@@ -58,6 +58,10 @@
         background: linear-gradient(135deg, #f59e0b, #d97706);
     }
 
+    .link-icon.categories {
+        background: linear-gradient(135deg, #ec4899, #be185d);
+    }
+
     .link-icon.users {
         background: linear-gradient(135deg, #7c3aed, #6d28d9);
     }

@@ -67,7 +67,7 @@
                     <!-- Categoría -->
                     <div class="form-floating">
                         <select asp-for="CategoriaId"
-                                asp-items="@(new SelectList(ViewBag.Categorias, "CategoriaId", "Nombre"))"
+                                asp-items="ViewBag.Categorias"
                                 class="form-select"
                                 id="categoria"
                                 required>
@@ -120,11 +120,11 @@
                                placeholder="0.00"
                                required />
                         <label for="precio">
-                            <i class="bi bi-currency-dollar me-1"></i>Precio (COP)
+                            <i class="bi bi-currency-dollar me-1"></i>Precio (ARS)
                         </label>
                         <span asp-validation-for="Precio" class="invalid-feedback"></span>
                         <div class="form-text">
-                            Precio en pesos colombianos
+                            Precio en pesos argentinos
                         </div>
                     </div>
 

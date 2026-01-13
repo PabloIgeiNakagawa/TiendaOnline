@@ -41,7 +41,7 @@
                     </div>
                 }
 
-                <img src="@(Model.Imagen != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(Model.Imagen)}" : Url.Content("~/img/placeholder.svg?height=500&width=500"))"
+                <img src="@(Model.ImagenUrl != null ? Model.ImagenUrl : Url.Content("~/img/placeholder.svg?height=500&width=500"))"
                      class="img-fluid producto-imagen-principal"
                      alt="@Model.Nombre"
                      id="imagenPrincipal" />
@@ -204,7 +204,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center">
-                <img src="@(Model.Imagen != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(Model.Imagen)}" : Url.Content("~/img/placeholder.svg?height=500&width=500"))"
+                <img src="@(Model.ImagenUrl != null ? Model.ImagenUrl : Url.Content("~/img/placeholder.svg?height=500&width=500"))"
                      class="img-fluid" alt="@Model.Nombre" />
             </div>
         </div>

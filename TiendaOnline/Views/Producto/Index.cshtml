@@ -26,9 +26,9 @@
                             <i class="bi bi-funnel me-1"></i>Ordenar
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" data-orden="nombre">Nombre A-Z</a></li>
-                            <li><a class="dropdown-item" data-orden="precio-asc">Precio: Menor a Mayor</a></li>
-                            <li><a class="dropdown-item" data-orden="precio-desc">Precio: Mayor a Menor</a></li>
+                            <li><button class="dropdown-item" data-orden="nombre">Nombre A-Z</button></li>
+                            <li><button class="dropdown-item" data-orden="precio-asc">Precio: Menor a Mayor</button></li>
+                            <li><button class="dropdown-item" data-orden="precio-desc">Precio: Mayor a Menor</button></li>
                         </ul>
                     </div>
                 </div>
@@ -62,17 +62,46 @@
                             <i class="bi bi-tags me-2"></i>Categorías
                         </div>
                         <div class="filtro-contenido">
-                            <div class="categoria-item active" data-categoria="">
+                            <div class="categoria-item active" data-categoria="" id="item-todas">
                                 <span class="categoria-nombre">Todas las categorías</span>
                                 <span class="categoria-count">@Model.Count()</span>
                             </div>
-                            @foreach (var categoria in categorias)
-                            {
-                                <div class="categoria-item" data-categoria="@categoria.CategoriaId">
-                                    <span class="categoria-nombre">@categoria.Nombre</span>
-                                    <span class="categoria-count">@Model.Count(p => p.CategoriaId == categoria.CategoriaId)</span>
-                                </div>
-                            }
+
+                            <div class="accordion accordion-flush" id="accCategorias">
+                                @foreach (var cat in (List<Categoria>)ViewBag.CategoriasRaiz)
+                                {
+                                    var tieneHijos = cat.Subcategorias != null && cat.Subcategorias.Any();
+                                    var collapseId = "collapse" + cat.CategoriaId;
+
+                                    <div class="accordion-item border-0">
+                                        <div class="categoria-item d-flex align-items-center" data-categoria="@cat.CategoriaId">
+                                            @if (tieneHijos)
+                                            {
+                                                <i class="bi bi-chevron-right me-2 small toggle-icon"
+                                                   data-bs-toggle="collapse"
+                                                   data-bs-target="#@collapseId"
+                                                   style="cursor: pointer;"></i>
+                                            }
+                                            <span class="categoria-nombre flex-grow-1">@cat.Nombre</span>
+                                        </div>
+
+                                        @if (tieneHijos)
+                                        {
+                                            <div id="@collapseId" class="collapse" data-bs-parent="#accCategorias">
+                                                <div class="ms-3 ps-2 border-start">
+                                                    @foreach (var sub in cat.Subcategorias)
+                                                    {
+                                                        <div class="categoria-item" data-categoria="@sub.CategoriaId">
+                                                            <span class="categoria-nombre small">@sub.Nombre</span>
+                                                            <span class="categoria-count">@sub.Productos.Count</span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
                         </div>
                     </div>
 
@@ -108,6 +137,12 @@
 
         <!-- Productos -->
         <div class="col-lg-9 col-md-8">
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb bg-white p-2 shadow-sm rounded" id="tiendaBreadcrumb">
+                    <li class="breadcrumb-item"><a href="#" class="text-decoration-none" onclick="resetearFiltroCategoria()">Tienda</a></li>
+                    <li class="breadcrumb-item active" id="breadcrumbActual">Todos los productos</li>
+                </ol>
+            </nav>
             <!-- Barra de Resultados -->
             <div class="resultados-barra mb-4">
                 <div class="d-flex justify-content-between align-items-center">
@@ -131,6 +166,7 @@
                 {
                     <div class="producto-card"
                          data-categoria="@producto.CategoriaId"
+                         data-categoria-padre="@producto.Categoria?.CategoriaPadreId"
                          data-precio="@producto.Precio"
                          data-nombre="@producto.Nombre.ToLower()"
                          data-stock="@(producto.Stock > 0 ? "true" : "false")">
@@ -145,7 +181,7 @@
                                 {
                                     <div class="badge-stock-bajo">Últimas unidades</div>
                                 }
-                                <img src="@(producto.Imagen != null ? $"data:image/jpeg;base64,{Convert.ToBase64String(producto.Imagen)}" : "/img/placeholder.svg?height=250&width=250")"
+                                <img src="@(producto.ImagenUrl != null ? producto.ImagenUrl : "/img/placeholder.svg?height=250&width=250")"
                                      class="card-img-top"
                                      alt="@producto.Nombre"
                                      loading="lazy" />
@@ -154,12 +190,9 @@
                             <!-- Información del Producto -->
                             <div class="card-body d-flex flex-column">
                                 <div class="producto-categoria">
-                                    @{
-                                        var categoria = categorias?.FirstOrDefault(c => c.CategoriaId == producto.CategoriaId);
-                                    }
-                                    @if (categoria != null)
+                                    @if (producto.Categoria != null)
                                     {
-                                        <span class="badge bg-light text-dark">@categoria.Nombre</span>
+                                        <span class="badge bg-light text-dark">@producto.Categoria.Nombre</span>
                                     }
                                 </div>
 

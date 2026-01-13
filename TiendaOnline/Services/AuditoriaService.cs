@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System.Security.Claims;
 using TiendaOnline.Data;
 using TiendaOnline.Exceptions;
@@ -23,20 +24,30 @@ namespace TiendaOnline.Services
                 .Include(a => a.Usuario)
                 .ToListAsync();
         }
-        public async Task RegistrarAuditoriaAsync(Auditoria auditoria)
+        public async Task RegistrarAccionAsync(string accion, object? datosAnteriores, object? datosNuevos)
         {
+            var auditoria = new Auditoria
+            {
+                UsuarioId = ObtenerUsuarioId(),
+                Accion = accion,
+                DatosAnteriores = JsonConvert.SerializeObject(datosAnteriores ?? new { }),
+                DatosNuevos = JsonConvert.SerializeObject(datosNuevos ?? new { }),
+                Fecha = DateTime.Now
+            };
             _context.Auditorias.Add(auditoria);
             await _context.SaveChangesAsync();
         }
 
-        public int ObtenerUsuarioId()
+        private int ObtenerUsuarioId()
         {
-            var usuarioIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("UsuarioId")?.Value;
-            if (usuarioIdClaim != null && int.TryParse(usuarioIdClaim, out int usuarioId))
+            var claim = _httpContextAccessor.HttpContext?.User.FindFirst("UsuarioId")?.Value;
+
+            if (string.IsNullOrEmpty(claim) || !int.TryParse(claim, out int id))
             {
-                return usuarioId; // Retorna el UsuarioId como entero
+                throw new UnauthorizedAccessException("No se pudo identificar al usuario activo.");
             }
-            return -1;
+
+            return id;
         }
 
     }

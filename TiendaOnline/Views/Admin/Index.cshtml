@@ -1,7 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Panel de Administración";
 }
-<link rel="stylesheet" href="~/css/Admin/Auditorias.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/Admin/Index.css" asp-append-version="true" />
 
 <div class="container-fluid py-4">
     <!-- Encabezado del Panel -->
@@ -25,6 +25,19 @@
                         </div>
                         <div class="link-content">
                             <h5 class="link-title">Productos</h5>
+                            <p class="link-description">Gestionar catálogo de productos</p>
+                        </div>
+                        <div class="link-arrow">
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </a>
+
+                    <a asp-controller="Admin" asp-action="Categorias" class="admin-link">
+                        <div class="link-icon categories">
+                            <i class="bi bi-tags-fill"></i>
+                        </div>
+                        <div class="link-content">
+                            <h5 class="link-title">Categorías</h5>
                             <p class="link-description">Gestionar catálogo de productos</p>
                         </div>
                         <div class="link-arrow">

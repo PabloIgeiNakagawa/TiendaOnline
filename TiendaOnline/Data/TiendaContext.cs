@@ -21,6 +21,13 @@ namespace TiendaOnline.Data
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
+            // Configuración para evitar ciclos de cascada en Categorías
+            modelBuilder.Entity<Categoria>()
+                .HasOne(c => c.CategoriaPadre)
+                .WithMany(c => c.Subcategorias)
+                .HasForeignKey(c => c.CategoriaPadreId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             base.OnModelCreating(modelBuilder);
         }
     }

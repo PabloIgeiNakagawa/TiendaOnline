@@ -1,4 +1,4 @@
-using MercadoPago.Config;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Data;
 using TiendaOnline.IServices;
@@ -49,16 +49,11 @@ builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IPedidoService, PedidoService>();
 builder.Services.AddScoped<IReportesService, ReportesService>();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
-
-// Configuración de MercadoPago
-//builder.Services.Configure<MercadoPagoSettings>(builder.Configuration.GetSection("MercadoPago"));
+builder.Services.AddScoped<IImagenService, CloudinaryService>();
+builder.Services.AddScoped<PasswordHasher<Usuario>>();
 
 
 var app = builder.Build();
-
-// Configuración de MercadoPago
-//var mercadoPagoSettings = app.Services.GetRequiredService<IConfiguration>().GetSection("MercadoPago").Get<MercadoPagoSettings>();
-//MercadoPagoConfig.AccessToken = mercadoPagoSettings.AccessToken;
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -80,6 +75,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}"
+);
 
 app.Run();

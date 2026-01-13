@@ -32,6 +32,10 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cQXVkaXRvcmlhcy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Pablo/source/repos/TiendaOnline/TiendaOnline/Views/Admin/Categorias.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cQ2F0ZWdvcmlhcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Pablo/source/repos/TiendaOnline/TiendaOnline/Views/Admin/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
@@ -50,6 +54,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/Pablo/source/repos/TiendaOnline/TiendaOnline/Views/Admin/Usuarios.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cVXN1YXJpb3MuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Pablo/source/repos/TiendaOnline/TiendaOnline/Views/Categoria/AgregarCategoria.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2F0ZWdvcmlhXEFncmVnYXJDYXRlZ29yaWEuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Pablo/source/repos/TiendaOnline/TiendaOnline/Views/Home/Index.cshtml]

@@ -52,13 +52,21 @@ public class AdminController : Controller
         return View(productos);
     }
 
+    // Categorias
+    [HttpGet]
+    [Authorize(Roles = "Administrador")]
+    public async Task<IActionResult> Categorias()
+    {
+        var categorias = await _categoriaService.ObtenerCategoriasAsync();
+        return View(categorias);
+    }
+
     // Pedidos
     [HttpGet]
     [Authorize(Roles = "Administrador, Repartidor")]
     public async Task<IActionResult> Pedidos()
     {
         var pedidos = await _pedidoService.ObtenerPedidosConDetallesAsync();
-
         return View(pedidos);
     }
 

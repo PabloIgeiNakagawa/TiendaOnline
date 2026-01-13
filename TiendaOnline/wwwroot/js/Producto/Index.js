@@ -23,15 +23,22 @@
         let visibles = 0;
 
         productos.forEach(producto => {
-            const categoria = producto.dataset.categoria;
+            const categoriaId = producto.dataset.categoria;
+            const categoriaPadreId = producto.dataset.categoriaPadre;
             const precio = parseFloat(producto.dataset.precio);
             const nombre = producto.dataset.nombre;
 
             let mostrar = true;
 
             // Filtro por categoría
-            if (filtros.categoria && categoria !== filtros.categoria) {
-                mostrar = false;
+            if (filtros.categoria) {
+                // Se muestra si coincide con la categoría propia O con la del padre
+                const coincidePropia = categoriaId === filtros.categoria;
+                const coincidePadre = categoriaPadreId === filtros.categoria;
+
+                if (!coincidePropia && !coincidePadre) {
+                    mostrar = false;
+                }
             }
 
             // Filtro por búsqueda
@@ -167,4 +174,22 @@
         filtros.busqueda = busquedaInput.value.trim();
         filtrarProductos();
     }
+
+    // NUEVO: Animación de flechas para subcategorías
+    document.querySelectorAll('.collapse').forEach(el => {
+        el.addEventListener('show.bs.collapse', () => {
+            const icon = document.querySelector(`[data-bs-target="#${el.id}"]`);
+            if (icon) icon.style.transform = 'rotate(90deg)';
+        });
+        el.addEventListener('hide.bs.collapse', () => {
+            const icon = document.querySelector(`[data-bs-target="#${el.id}"]`);
+            if (icon) icon.style.transform = 'rotate(0deg)';
+        });
+    });
+
+    // NUEVO: Función para resetear desde el breadcrumb
+    window.resetearFiltroCategoria = function () {
+        const itemTodas = document.querySelector('.categoria-item[data-categoria=""]');
+        if (itemTodas) itemTodas.click();
+    };
 });

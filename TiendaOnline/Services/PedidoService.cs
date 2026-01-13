@@ -11,13 +11,11 @@ namespace TiendaOnline.Services
     {
         private readonly TiendaContext _context;
         private readonly IAuditoriaService _auditoriaService;
-        private readonly int usuarioActivoId;
 
         public PedidoService(TiendaContext context, IAuditoriaService auditoriaService)
         {
             _context = context;
             _auditoriaService = auditoriaService;
-            usuarioActivoId = _auditoriaService.ObtenerUsuarioId();
         }
 
         public async Task<Pedido?> ObtenerPedidoAsync(int id)
@@ -57,7 +55,7 @@ namespace TiendaOnline.Services
         {
             var pedido = new Pedido
             {
-                UsuarioId = usuarioActivoId,
+                UsuarioId = usuarioId, // Usamos el parámetro que recibe la función
                 FechaPedido = DateTime.Now,
                 Estado = EstadoPedido.Pendiente,
                 DetallesPedido = carrito.Select(item => new DetallePedido
@@ -69,75 +67,61 @@ namespace TiendaOnline.Services
             };
 
             _context.Pedidos.Add(pedido);
-            int cambios = await _context.SaveChangesAsync();
-            if (cambios > 0)
+
+            if (await _context.SaveChangesAsync() > 0)
             {
-                var auditoria = new Auditoria
+                await _auditoriaService.RegistrarAccionAsync("Crear Pedido", null, new
                 {
-                    UsuarioId = usuarioActivoId,
-                    Accion = "Crear Pedido",
-                    DatosAnteriores = "{}",
-                    DatosNuevos = JsonConvert.SerializeObject(pedido),
-                    Fecha = DateTime.Now
-                };
-                await _auditoriaService.RegistrarAuditoriaAsync(auditoria);
+                    pedido.PedidoId,
+                    pedido.UsuarioId,
+                    TotalItems = pedido.DetallesPedido.Count
+                });
+
                 return pedido.PedidoId;
             }
-            else
-            {
-                throw new Exception("No se pudo crear el pedido.");
 
-            }
+            throw new Exception("No se pudo crear el pedido.");
         }
 
         public async Task PedidoEnviadoAsync(int pedidoId)
         {
             var pedido = await _context.Pedidos.FindAsync(pedidoId);
-            if (pedido == null)
-                throw new Exception("Pedido no encontrado.");
+            if (pedido == null) throw new Exception("Pedido no encontrado.");
 
-            EstadoPedido estadoAnterior = pedido.Estado;
+            var estadoAnterior = new { pedido.Estado, pedido.FechaEnvio };
 
             pedido.Estado = EstadoPedido.Enviado;
             pedido.FechaEnvio = DateTime.Now;
-            int cambios = await _context.SaveChangesAsync();
-            if(cambios > 0)
+
+            if (await _context.SaveChangesAsync() > 0)
             {
-                var auditoria = new Auditoria
+                await _auditoriaService.RegistrarAccionAsync("Enviar Pedido", estadoAnterior, new
                 {
-                    UsuarioId = usuarioActivoId,
-                    Accion = "Enviar Pedido",
-                    DatosAnteriores = JsonConvert.SerializeObject(new { Estado = estadoAnterior, FechaEntrega = (DateTime?)null }),
-                    DatosNuevos = JsonConvert.SerializeObject(new { Estado = pedido.Estado, FechaEntrega = pedido.FechaEntrega }),
-                    Fecha = DateTime.Now
-                };
-                await _auditoriaService.RegistrarAuditoriaAsync(auditoria);
+                    pedido.PedidoId,
+                    pedido.Estado,
+                    pedido.FechaEnvio
+                });
             }
         }
 
         public async Task PedidoEntregadoAsync(int pedidoId)
         {
             var pedido = await _context.Pedidos.FindAsync(pedidoId);
-            if (pedido == null)
-                throw new Exception("Pedido no encontrado.");
+            if (pedido == null) throw new Exception("Pedido no encontrado.");
 
-            EstadoPedido estadoAnterior = pedido.Estado;
+            var estadoAnterior = new { pedido.Estado, pedido.FechaEntrega };
 
             pedido.Estado = EstadoPedido.Entregado;
             pedido.FechaEntrega = DateTime.Now;
-            int cambios = await _context.SaveChangesAsync();
 
-            if (cambios > 0)
+            if (await _context.SaveChangesAsync() > 0)
             {
-                var auditoria = new Auditoria
+                await _auditoriaService.RegistrarAccionAsync("Entregar Pedido", estadoAnterior, new
                 {
-                    UsuarioId = usuarioActivoId,
-                    Accion = "Entregar Pedido",
-                    DatosAnteriores = JsonConvert.SerializeObject(new { Estado = estadoAnterior, FechaEntrega = (DateTime?)null }),
-                    DatosNuevos = JsonConvert.SerializeObject(new { Estado = pedido.Estado, FechaEntrega = pedido.FechaEntrega }),
-                    Fecha = DateTime.Now
-                };
-                await _auditoriaService.RegistrarAuditoriaAsync(auditoria);
+                    pedido.PedidoId,
+                    pedido.Estado,
+                    pedido.FechaEntrega
+                });
             }
             else
             {
@@ -148,26 +132,21 @@ namespace TiendaOnline.Services
         public async Task PedidoCanceladoAsync(int pedidoId)
         {
             var pedido = await _context.Pedidos.FindAsync(pedidoId);
-            if (pedido == null)
-                throw new Exception("Pedido no encontrado.");
+            if (pedido == null) throw new Exception("Pedido no encontrado.");
 
-            EstadoPedido estadoAnterior = pedido.Estado;
+            var estadoAnterior = new { pedido.Estado, pedido.FechaCancelado };
 
             pedido.Estado = EstadoPedido.Cancelado;
             pedido.FechaCancelado = DateTime.Now;
 
-            int cambios = await _context.SaveChangesAsync();
-            if (cambios > 0)
+            if (await _context.SaveChangesAsync() > 0)
             {
-                var auditoria = new Auditoria
+                await _auditoriaService.RegistrarAccionAsync("Cancelar Pedido", estadoAnterior, new
                 {
-                    UsuarioId = usuarioActivoId,
-                    Accion = "Cancelar Pedido",
-                    DatosAnteriores = JsonConvert.SerializeObject(new { Estado = estadoAnterior, FechaCancelado = (DateTime?)null }),
-                    DatosNuevos = JsonConvert.SerializeObject(new { Estado = pedido.Estado, FechaCancelado = pedido.FechaCancelado }),
-                    Fecha = DateTime.Now
-                };
-                await _auditoriaService.RegistrarAuditoriaAsync(auditoria);
+                    pedido.PedidoId,
+                    pedido.Estado,
+                    pedido.FechaCancelado
+                });
             }
             else
             {

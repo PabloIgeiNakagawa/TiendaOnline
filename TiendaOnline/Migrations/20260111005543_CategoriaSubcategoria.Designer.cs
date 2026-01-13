@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TiendaOnline.Data;
 
@@ -11,9 +12,11 @@ using TiendaOnline.Data;
 namespace TiendaOnline.Migrations
 {
     [DbContext(typeof(TiendaContext))]
-    partial class TiendaContextModelSnapshot : ModelSnapshot
+    [Migration("20260111005543_CategoriaSubcategoria")]
+    partial class CategoriaSubcategoria
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -163,8 +166,8 @@ namespace TiendaOnline.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<string>("ImagenUrl")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<byte[]>("Imagen")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<string>("Nombre")
                         .IsRequired()

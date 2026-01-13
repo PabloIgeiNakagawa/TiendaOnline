@@ -18,13 +18,13 @@
                     </h2>
                     <p class="text-muted mb-0">Administra los productos del sistema</p>
                 </div>
-                <a asp-controller="Producto" asp-action="AgregarProducto" class="btn btn-primary btn-lg shadow-sm">
-                    <i class="bi bi-plus-circle me-2"></i>
-                    Nuevo Producto
-                </a>
+                    <a asp-controller="Producto" asp-action="AgregarProducto" class="btn btn-primary btn-lg shadow-sm">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Nuevo Producto
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
 
     <!-- Filtros y Búsqueda -->
     <div class="row mb-4">
@@ -165,9 +165,9 @@
                                         <td class="py-3">
                                             <div class="d-flex align-items-center">
                                                 <div class="producto-imagen-mini me-3">
-                                                    @if (producto.Imagen != null)
+                                                    @if (producto.ImagenUrl != null)
                                                     {
-                                                        <img src="data:image/jpeg;base64,@Convert.ToBase64String(producto.Imagen)"
+                                                        <img src=@producto.ImagenUrl
                                                              alt="@producto.Nombre" class="img-thumbnail @(producto.Activo ? "" : "opacity-50")" style="width: 50px; height: 50px; object-fit: cover;" />
                                                     }
                                                     else
