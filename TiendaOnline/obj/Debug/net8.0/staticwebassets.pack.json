@@ -129,10 +129,6 @@
       "PackagePath": "staticwebassets\\js\\Admin\\Usuarios.js"
     },
     {
-      "Id": "C:\\Users\\Pablo\\source\\repos\\TiendaOnline\\TiendaOnline\\wwwroot\\js\\Home\\Index.js",
-      "PackagePath": "staticwebassets\\js\\Home\\Index.js"
-    },
-    {
       "Id": "C:\\Users\\Pablo\\source\\repos\\TiendaOnline\\TiendaOnline\\wwwroot\\js\\Pedido\\Carrito.js",
       "PackagePath": "staticwebassets\\js\\Pedido\\Carrito.js"
     },

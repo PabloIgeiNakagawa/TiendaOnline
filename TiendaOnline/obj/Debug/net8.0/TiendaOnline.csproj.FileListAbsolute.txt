@@ -179,3 +179,5 @@ C:\Users\Pablo\source\repos\TiendaOnline\TiendaOnline\bin\Debug\net8.0\Microsoft
 C:\Users\Pablo\source\repos\TiendaOnline\TiendaOnline\obj\Debug\net8.0\TiendaOnline.sourcelink.json
 C:\Users\Pablo\source\repos\TiendaOnline\TiendaOnline\bin\Debug\net8.0\appsettings.Production.json
 C:\Users\Pablo\source\repos\TiendaOnline\TiendaOnline\bin\Debug\net8.0\CloudinaryDotNet.dll
+C:\Users\Pablo\source\repos\TiendaOnline\TiendaOnline\bin\Debug\net8.0\appsettings.Development.json
+C:\Users\Pablo\source\repos\TiendaOnline\TiendaOnline\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

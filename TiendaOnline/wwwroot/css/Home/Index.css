@@ -190,7 +190,7 @@
 .icono-categoria {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    background: #0d6efd;
     border-radius: 20px;
     display: flex;
     align-items: center;
@@ -375,7 +375,7 @@
 .icono-caracteristica {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    background: #0d6efd;
     border-radius: 20px;
     display: flex;
     align-items: center;
