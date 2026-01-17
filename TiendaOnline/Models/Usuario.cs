@@ -22,7 +22,7 @@ namespace TiendaOnline.Models
         [MinLength(3, ErrorMessage = "El nombre debe poseer más de 3 caracteres.")]
         [MaxLength(50, ErrorMessage = "El nombre debe poseer menos de 50 caracteres.")]
         [Display(Name = "Nombre")]
-        public required string Nombre { get; set; }
+        public string Nombre { get; set; }
 
         [Required]
         public Rol Rol { get; set; }
@@ -30,13 +30,13 @@ namespace TiendaOnline.Models
         [Required(ErrorMessage = "El apellido es obligatorio.")]
         [MinLength(3, ErrorMessage = "El apellido debe poseer más de 3 caracteres.")]
         [MaxLength(50, ErrorMessage = "El apellido no puede tener más de 50 caracteres")]
-        public required string Apellido { get; set; }
+        public string Apellido { get; set; }
 
         [Required(ErrorMessage = "La fecha de nacimiento es obligatoria.")]
         [Display(Name = "Fecha de Nacimiento")]
         [DataType(DataType.Date)]
         [Column(TypeName = "date")]
-        public required DateTime FechaNacimiento {  get; set; }
+        public DateTime FechaNacimiento {  get; set; }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (FechaNacimiento > DateTime.Today.AddYears(-18))
@@ -52,23 +52,23 @@ namespace TiendaOnline.Models
         [Phone]
         [MaxLength(25)]
         [Display(Name = "Teléfono")]
-        public required string Telefono { get; set; }
+        public string Telefono { get; set; }
 
         [Required(ErrorMessage = "El email es obligatorio.")]
         [EmailAddress(ErrorMessage = "Email inválido.")]
         [MaxLength(50)]
-        public required string Email { get; set; }
+        public string Email { get; set; }
 
         [Required(ErrorMessage = "La contraseña es obligatoria.")]
         [Display(Name ="Contraseña")]
         [MaxLength(100, ErrorMessage = "La contraseña no puede tener más de 50 caracteres")]
-        public required string Contrasena { get; set; }
+        public string Contrasena { get; set; }
 
         [NotMapped]
         [Required(ErrorMessage = "Se necesita confirmar la contraseña.")]
         [Display(Name = "Confirmar contraseña")]
         [Compare("Contrasena", ErrorMessage = "Las contraseñas no coinciden.")]
-        public required string ConfirmarContrasena { get; set; }
+        public string ConfirmarContrasena { get; set; }
 
         [MaxLength(100)]
         public string? Direccion { get; set; }
