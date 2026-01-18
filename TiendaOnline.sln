@@ -5,6 +5,8 @@ VisualStudioVersion = 17.12.35728.132
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiendaOnline", "TiendaOnline\TiendaOnline.csproj", "{82F8BD6F-87B7-4E7E-9094-D9088110DDEF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TiendaOnline.Tests", "TiendaOnline.Tests\TiendaOnline.Tests.csproj", "{037655E0-BB04-4B25-8799-7FCAC16C1F3C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{82F8BD6F-87B7-4E7E-9094-D9088110DDEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82F8BD6F-87B7-4E7E-9094-D9088110DDEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82F8BD6F-87B7-4E7E-9094-D9088110DDEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{037655E0-BB04-4B25-8799-7FCAC16C1F3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{037655E0-BB04-4B25-8799-7FCAC16C1F3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{037655E0-BB04-4B25-8799-7FCAC16C1F3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{037655E0-BB04-4B25-8799-7FCAC16C1F3C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

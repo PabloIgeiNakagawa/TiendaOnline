@@ -38,11 +38,12 @@ namespace TiendaOnline.Services
 
         public async Task CrearUsuarioAsync(Usuario usuario)
         {
+            usuario.Email = usuario.Email.Trim().ToLower();
+
             if (await _context.Usuarios.AnyAsync(u => u.Email == usuario.Email))
                 throw new EmailDuplicadoException(usuario.Email);
 
             usuario.Contrasena = _passwordHasher.HashPassword(usuario, usuario.Contrasena);
-            usuario.Email = usuario.Email.Trim().ToLower();
 
             _context.Usuarios.Add(usuario);
             if (await _context.SaveChangesAsync() > 0)
