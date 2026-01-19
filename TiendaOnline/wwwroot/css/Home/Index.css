@@ -173,12 +173,10 @@
 
 /* Category Cards */
 .tarjeta-categoria {
-    background: white;
     border-radius: 16px;
     padding: 2rem;
     text-align: center;
     transition: all 0.3s ease;
-    border: 1px solid #e2e8f0;
     height: 100%;
 }
 

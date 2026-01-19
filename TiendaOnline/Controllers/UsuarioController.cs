@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Security.Claims;
+using TiendaOnline.DTOS;
 using TiendaOnline.Exceptions;
 using TiendaOnline.Models;
 using TiendaOnline.Services;

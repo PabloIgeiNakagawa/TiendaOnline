@@ -16,6 +16,12 @@ namespace TiendaOnline.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Definimos clave primaria compuesta para la tabla intermedia ProductoDescuento.
+            // Esto garantiza la unicidad de la relación many-to-many entre Producto y Descuento
+            // y evita duplicados en la base de datos.
+            modelBuilder.Entity<ProductoDescuento>()
+                .HasKey(pd => new { pd.ProductoId, pd.DescuentoId });
+
             // Índice único para el Email en la entidad Usuario
             modelBuilder.Entity<Usuario>()
                 .HasIndex(u => u.Email)

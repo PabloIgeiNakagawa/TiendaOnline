@@ -20,14 +20,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="h-100 d-flex flex-column">
-    <header class="border-bottom sticky-top bg-white shadow-sm">
-        <div class="bg-light text-dark py-1 border-bottom d-none d-md-block text-center" style="font-size: 0.8rem; font-weight: 500;">
+<body class="bg-body-tertiary h-100 d-flex flex-column">
+    <header class="">
+        <div class="py-1 d-none d-md-block text-center" style="font-size: 0.8rem; font-weight: 500;">
             <i class="bi bi-cpu me-2 text-primary"></i>
             ¡Nuevos procesadores serie 9000 disponibles! Envíos a todo el país.
         </div>
 
-        <nav class="navbar navbar-expand-lg navbar-light py-3">
+        <nav class="navbar navbar-expand-lg py-3">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
                     <div class="brand-icon-wrapper me-2">
@@ -53,7 +53,7 @@
 
                     <div class="me-lg-3 my-2 my-lg-0">
                         <form class="d-flex position-relative" method="get" asp-controller="Producto" asp-action="Index">
-                            <input class="form-control bg-light border-0 rounded-pill ps-4"
+                            <input class="form-control border-0 rounded-pill ps-4"
                                    style="font-size: 0.9rem; width: 240px;"
                                    type="search" name="busqueda" placeholder="Buscar hardware..." aria-label="Buscar">
                             <button class="btn text-primary position-absolute end-0 me-1" type="submit">
@@ -63,13 +63,13 @@
                     </div>
 
                     <div class="me-lg-3 d-grid d-lg-block my-2 my-lg-0">
-                        <a class="btn btn-white border-0 position-relative hover-lift text-dark d-flex align-items-center justify-content-center" asp-controller="Carrito" asp-action="Index">
+                        <a class="btn btn-white border-0 position-relative d-flex align-items-center justify-content-center" asp-controller="Carrito" asp-action="Index">
                             <i class="bi bi-cart3 fs-5"></i>
                             <span class="d-lg-none ms-2">Carrito</span>
                         </a>
                     </div>
 
-                    <div class="dropdown d-grid d-lg-block">
+                    <div class="dropdown d-grid d-lg-block me-lg-3">
                         <button class="btn btn-primary rounded-pill px-4 d-flex align-items-center justify-content-center gap-2 shadow-sm" type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-person-circle fs-5"></i>
                             <span class="fw-medium small">
@@ -142,7 +142,12 @@
                             }
                         </ul>
                     </div>
-
+                    <div class="me-lg-3 d-grid d-lg-block my-2 my-lg-0">
+                        <button class="btn btn-link nav-link py-2 px-0 px-lg-2" id="bd-theme" type="button" onclick="toggleTheme()" title="Cambiar tema">
+                            <i id="theme-icon" class="bi bi-sun"></i>
+                            <span id="modo-actual" class="d-lg-none ms-2">Claro</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </nav>

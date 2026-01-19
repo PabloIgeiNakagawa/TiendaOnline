@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace TiendaOnline.Models
 {
@@ -8,32 +7,28 @@ namespace TiendaOnline.Models
         [Key]
         public int ProductoId { get; set; }
 
-        [Required]
-        public bool Activo { get; set; } = true;
-
-        [Required]
-        [MaxLength(50)]
+        [Required, MaxLength(100)]
         public string Nombre { get; set; }
 
-        [Required]
-        [MaxLength(150)]
-        public string Descripcion { get; set; }
+        public string? Descripcion { get; set; }
 
         [Required]
-        [Precision(18, 2)]
-        [Range(0, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0.")]
         public decimal Precio { get; set; }
 
         [Required]
-        [Range(0, int.MaxValue, ErrorMessage = "El stock debe ser mayor a 0.")]
-        public int Stock { get; set; }
-
-        public string? ImagenUrl { get; set; }
+        public bool Activo { get; set; }
 
         [Required]
-        public int CategoriaId { get; set; }
-        public Categoria? Categoria { get; set; }
+        public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
 
-        public ICollection<DetallePedido> DetallesPedido { get; set; } = new List<DetallePedido>();
+        // Categoría
+        [Required]
+        public int CategoriaId { get; set; }
+        public Categoria Categoria { get; set; }
+
+        // Navegación
+        public ICollection<ProductoImagen> Imagenes { get; set; } = new List<ProductoImagen>();
+        public ICollection<ProductoDescuento> ProductoDescuentos { get; set; } = new List<ProductoDescuento>();
+        public Stock Stock { get; set; }
     }
 }

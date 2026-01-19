@@ -2,36 +2,26 @@
 
 namespace TiendaOnline.Models
 {
-    public enum EstadoPedido
-    {
-        Pendiente = 0,
-        Enviado = 1,
-        Entregado = 2,
-        Cancelado = 3
-    }
-
     public class Pedido
     {
         [Key]
         public int PedidoId { get; set; }
 
         [Required]
-        public DateTime FechaPedido { get; set; } = DateTime.Now;
-
-        public DateTime? FechaEnvio { get; set; }
-
-        public DateTime? FechaEntrega { get; set; }
-
-        public DateTime? FechaCancelado { get; set; }
-
-        [Required]
-        public EstadoPedido Estado { get; set; } = EstadoPedido.Pendiente;
-
-        [Required]
         public int UsuarioId { get; set; }
-
         public Usuario Usuario { get; set; }
 
-        public ICollection<DetallePedido> DetallesPedido { get; set; }
+        [Required]
+        public int EstadoPedidoId { get; set; }
+        public EstadoPedido EstadoPedido { get; set; }
+
+        [Required]
+        public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+
+        [Required]
+        public decimal Total { get; set; }
+
+        public ICollection<PedidoDetalle> Detalles { get; set; } = new List<PedidoDetalle>();
+        public ICollection<Pago> Pagos { get; set; } = new List<Pago>();
     }
 }
