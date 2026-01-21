@@ -26,6 +26,7 @@ namespace TiendaOnline.Services
             var uploadParams = new ImageUploadParams()
             {
                 File = new FileDescription(archivo.FileName, stream),
+                Folder = "TechStore",
                 // Esto optimiza la imagen al subirla para no gastar créditos de más
                 Transformation = new Transformation()
                     .Width(800).Height(800).Crop("limit")
@@ -33,6 +34,11 @@ namespace TiendaOnline.Services
             };
 
             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+            if (uploadResult.Error != null)
+            {
+                throw new Exception(uploadResult.Error.Message);
+            }
 
             return uploadResult.SecureUrl.ToString();
         }
