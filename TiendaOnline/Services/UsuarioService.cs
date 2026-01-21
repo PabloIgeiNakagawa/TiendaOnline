@@ -46,14 +46,7 @@ namespace TiendaOnline.Services
             usuario.Contrasena = _passwordHasher.HashPassword(usuario, usuario.Contrasena);
 
             _context.Usuarios.Add(usuario);
-            if (await _context.SaveChangesAsync() > 0)
-            {
-                await _auditoriaService.RegistrarAccionAsync("Crear Usuario", null, new { usuario.UsuarioId, usuario.Email, usuario.Nombre });
-            }
-            else
-            {
-                throw new Exception("No se pudo crear el usuario.");
-            }
+            await _context.SaveChangesAsync();
         }
 
         public async Task DarBajaUsuarioAsync(int usuarioId)
@@ -72,15 +65,7 @@ namespace TiendaOnline.Services
             usuario.Activo = false;
             usuario.UltimaFechaBaja = DateTime.Now;
 
-            if (await _context.SaveChangesAsync() > 0)
-            {
-                await _auditoriaService.RegistrarAccionAsync("Dar baja usuario", estadoAnterior, new
-                {
-                    usuario.UsuarioId,
-                    usuario.Activo,
-                    usuario.UltimaFechaBaja
-                });
-            }
+            await _context.SaveChangesAsync();
         }
 
         public async Task DarAltaUsuarioAsync(int usuarioId)
@@ -99,15 +84,7 @@ namespace TiendaOnline.Services
             usuario.Activo = true;
             usuario.UltimaFechaAlta = DateTime.Now;
 
-            if (await _context.SaveChangesAsync() > 0)
-            {
-                await _auditoriaService.RegistrarAccionAsync("Dar alta usuario", estadoAnterior, new
-                {
-                    usuario.UsuarioId,
-                    usuario.Activo,
-                    usuario.UltimaFechaAlta
-                });
-            }
+            await _context.SaveChangesAsync();
         }
 
         public async Task EditarUsuarioAsync(int usuarioId, Usuario usuarioEditado)
@@ -129,16 +106,7 @@ namespace TiendaOnline.Services
             usuario.Telefono = usuarioEditado.Telefono;
             usuario.Direccion = usuarioEditado.Direccion;
 
-            if (await _context.SaveChangesAsync() > 0)
-            {
-                await _auditoriaService.RegistrarAccionAsync("Editar usuario", datosAnteriores, new
-                {
-                    usuario.Nombre,
-                    usuario.Apellido,
-                    usuario.Telefono,
-                    usuario.Direccion
-                });
-            }
+            await _context.SaveChangesAsync();
         }
     }
 }

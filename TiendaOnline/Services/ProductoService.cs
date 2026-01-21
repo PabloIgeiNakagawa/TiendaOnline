@@ -37,16 +37,7 @@ public class ProductoService : IProductoService
     public async Task AgregarProductoAsync(Producto producto)
     {
         _context.Productos.Add(producto);
-        int cambios = await _context.SaveChangesAsync();
-
-        if (cambios > 0)
-        {
-            await _auditoriaService.RegistrarAccionAsync("Agregar Producto", null, producto);
-        }
-        else
-        {
-            throw new Exception("No se pudo agregar el producto.");
-        }
+        await _context.SaveChangesAsync();
     }
 
     public async Task DarBajaProductoAsync(int productoId)
@@ -58,18 +49,7 @@ public class ProductoService : IProductoService
 
         producto.Activo = false;
 
-        if (await _context.SaveChangesAsync() > 0)
-        {
-            await _auditoriaService.RegistrarAccionAsync("Dar de baja producto", estadoAnterior, new
-            {
-                producto.ProductoId,
-                producto.Activo
-            });
-        }
-        else
-        {
-            throw new Exception("No se pudo dar de baja el producto.");
-        }
+        await _context.SaveChangesAsync();
     }
 
     public async Task DarAltaProductoAsync(int productoId)
@@ -81,18 +61,7 @@ public class ProductoService : IProductoService
 
         producto.Activo = true;
 
-        if (await _context.SaveChangesAsync() > 0)
-        {
-            await _auditoriaService.RegistrarAccionAsync("Dar de alta producto", estadoAnterior, new
-            {
-                producto.ProductoId,
-                producto.Activo
-            });
-        }
-        else
-        {
-            throw new Exception("No se pudo dar de alta el producto.");
-        }
+        await _context.SaveChangesAsync();
     }
 
     public async Task EditarProductoAsync(int productoId, Producto productoEditado, IFormFile ImagenArchivo)
@@ -128,17 +97,6 @@ public class ProductoService : IProductoService
         producto.Stock = productoEditado.Stock;
         producto.CategoriaId = productoEditado.CategoriaId;
 
-        if (await _context.SaveChangesAsync() > 0)
-        {
-            await _auditoriaService.RegistrarAccionAsync("Editar Producto", datosAnteriores, new
-            {
-                producto.Nombre,
-                producto.Descripcion,
-                producto.Precio,
-                producto.Stock,
-                producto.CategoriaId,
-                producto.ImagenUrl
-            });
-        }
+        await _context.SaveChangesAsync();
     }
 }

@@ -68,19 +68,9 @@ namespace TiendaOnline.Services
 
             _context.Pedidos.Add(pedido);
 
-            if (await _context.SaveChangesAsync() > 0)
-            {
-                await _auditoriaService.RegistrarAccionAsync("Crear Pedido", null, new
-                {
-                    pedido.PedidoId,
-                    pedido.UsuarioId,
-                    TotalItems = pedido.DetallesPedido.Count
-                });
+            await _context.SaveChangesAsync();
 
-                return pedido.PedidoId;
-            }
-
-            throw new Exception("No se pudo crear el pedido.");
+            return pedido.PedidoId;
         }
 
         public async Task PedidoEnviadoAsync(int pedidoId)
@@ -93,15 +83,7 @@ namespace TiendaOnline.Services
             pedido.Estado = EstadoPedido.Enviado;
             pedido.FechaEnvio = DateTime.Now;
 
-            if (await _context.SaveChangesAsync() > 0)
-            {
-                await _auditoriaService.RegistrarAccionAsync("Enviar Pedido", estadoAnterior, new
-                {
-                    pedido.PedidoId,
-                    pedido.Estado,
-                    pedido.FechaEnvio
-                });
-            }
+            await _context.SaveChangesAsync();
         }
 
         public async Task PedidoEntregadoAsync(int pedidoId)
@@ -114,19 +96,7 @@ namespace TiendaOnline.Services
             pedido.Estado = EstadoPedido.Entregado;
             pedido.FechaEntrega = DateTime.Now;
 
-            if (await _context.SaveChangesAsync() > 0)
-            {
-                await _auditoriaService.RegistrarAccionAsync("Entregar Pedido", estadoAnterior, new
-                {
-                    pedido.PedidoId,
-                    pedido.Estado,
-                    pedido.FechaEntrega
-                });
-            }
-            else
-            {
-                throw new Exception("No se pudo entregar el pedido.");
-            }
+            await _context.SaveChangesAsync();
         }
 
         public async Task PedidoCanceladoAsync(int pedidoId)
@@ -139,19 +109,7 @@ namespace TiendaOnline.Services
             pedido.Estado = EstadoPedido.Cancelado;
             pedido.FechaCancelado = DateTime.Now;
 
-            if (await _context.SaveChangesAsync() > 0)
-            {
-                await _auditoriaService.RegistrarAccionAsync("Cancelar Pedido", estadoAnterior, new
-                {
-                    pedido.PedidoId,
-                    pedido.Estado,
-                    pedido.FechaCancelado
-                });
-            }
-            else
-            {
-                throw new Exception("No se pudo cancelar el pedido.");
-            }
+            await _context.SaveChangesAsync();
         }
     }
 }
