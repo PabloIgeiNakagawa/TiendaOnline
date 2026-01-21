@@ -21,8 +21,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="h-100 d-flex flex-column">
-    <header class="border-bottom sticky-top bg-white shadow-sm">
-        <div class="bg-light text-dark py-1 border-bottom d-none d-md-block text-center" style="font-size: 0.8rem; font-weight: 500;">
+    <header class="border-bottom sticky-top">
+        <div class="py-1 border-bottom d-none d-md-block text-center" style="font-size: 0.8rem; font-weight: 500;">
             <i class="bi bi-cpu me-2 text-primary"></i>
             ¡Nuevos procesadores serie 9000 disponibles! Envíos a todo el país.
         </div>
@@ -33,7 +33,7 @@
                     <div class="brand-icon-wrapper me-2">
                         <i class="bi bi-cpu-fill"></i>
                     </div>
-                    <span class="fw-bold fs-3 text-dark">TECH<span class="text-primary">STORE</span></span>
+                    <span class="fw-bold fs-3">TECH<span class="text-primary">STORE</span></span>
                 </a>
 
                 <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navegacionPrincipal">
@@ -53,7 +53,7 @@
 
                     <div class="me-lg-3 my-2 my-lg-0">
                         <form class="d-flex position-relative" method="get" asp-controller="Producto" asp-action="Index">
-                            <input class="form-control bg-light border-0 rounded-pill ps-4"
+                            <input class="form-control bg-body-secondary border-0 rounded-pill ps-4"
                                    style="font-size: 0.9rem; width: 240px;"
                                    type="search" name="busqueda" placeholder="Buscar hardware..." aria-label="Buscar">
                             <button class="btn text-primary position-absolute end-0 me-1" type="submit">
@@ -63,13 +63,13 @@
                     </div>
 
                     <div class="me-lg-3 d-grid d-lg-block my-2 my-lg-0">
-                        <a class="btn btn-white border-0 position-relative hover-lift text-dark d-flex align-items-center justify-content-center" asp-controller="Carrito" asp-action="Index">
+                        <a class="btn btn-white border-0 position-relative hover-lift d-flex align-items-center justify-content-center" asp-controller="Carrito" asp-action="Index">
                             <i class="bi bi-cart3 fs-5"></i>
                             <span class="d-lg-none ms-2">Carrito</span>
                         </a>
                     </div>
 
-                    <div class="dropdown d-grid d-lg-block">
+                    <div class="dropdown me-lg-3 d-grid d-lg-block my-2 my-lg-0">
                         <button class="btn btn-primary rounded-pill px-4 d-flex align-items-center justify-content-center gap-2 shadow-sm" type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-person-circle fs-5"></i>
                             <span class="fw-medium small">
@@ -84,7 +84,7 @@
                             </span>
                         </button>
 
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <ul class="dropdown-menu dropdown-menu-end bg-body-tertiary shadow border-0 mt-2">
                             @if (User.Identity.IsAuthenticated)
                             {
                                 <li>
@@ -141,8 +141,15 @@
                                 </li>
                             }
                         </ul>
-                    </div>
 
+                        
+                    </div>
+                    <div class="me-lg-3 d-grid d-lg-block my-2 my-lg-0">
+                        <button class="btn btn-link nav-link py-2 px-0 px-lg-2" id="bd-theme" type="button" onclick="toggleTheme()" title="Cambiar tema">
+                            <i id="theme-icon" class="bi bi-sun-fill fs-2"></i>
+                            <span id="modo-actual" class="d-lg-none ms-2">Claro</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -164,7 +171,7 @@
                             <i class="bi bi-cpu-fill fs-6"></i>
                         </div>                        
                         <div>
-                            <h5 class="mb-0 fw-bold text-dark">TECH<span class="text-primary">STORE</span></h5>
+                            <h5 class="mb-0 fw-bold">TECH<span class="text-primary">STORE</span></h5>
                             <small class="text-secondary">Expertos en PC Components</small>
                         </div>
                     </div>

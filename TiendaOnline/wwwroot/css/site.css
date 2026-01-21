@@ -7,12 +7,6 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: #ffffff;
-}
-
-/* 2. ESTILOS GLOBALES DEL HEADER (Fuera de media queries) */
-.navbar {
-    background-color: #ffffff !important;
 }
 
 .brand-icon-wrapper {
@@ -28,7 +22,6 @@ body {
 }
 
 .nav-link {
-    color: #444 !important;
     transition: all 0.2s;
 }
 

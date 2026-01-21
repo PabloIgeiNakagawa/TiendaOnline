@@ -1,155 +1,75 @@
-﻿/* Hero Section */
-.seccion-hero {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    position: relative;
-    overflow: hidden;
+﻿:root {
+    --transition-speed: 0.5s;
 }
 
-    .seccion-hero::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 50%;
-        height: 100%;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23e2e8f0" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-        opacity: 0.5;
-    }
+.seccion-hero {
+    overflow: hidden;
+    background: radial-gradient(circle at top right, rgba(var(--bs-primary-rgb), 0.05), transparent);
+}
 
 .min-vh-75 {
     min-height: 75vh;
 }
 
-.insignia-hero {
-    display: inline-block;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 25px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-}
-
-.titulo-hero {
-    font-size: 3.5rem;
-    font-weight: 800;
-    line-height: 1.1;
-    margin-bottom: 1.5rem;
-}
-
-.gradiente-texto {
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
+/* Gradiente de texto */
+.text-gradient {
+    background: linear-gradient(90deg, #0d6efd, #6610f2);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
 }
 
-.descripcion-hero {
-    font-size: 1.25rem;
-    color: #64748b;
-    margin-bottom: 2rem;
-    line-height: 1.6;
-}
-
-.acciones-hero {
-    margin-bottom: 3rem;
-}
-
-.estadisticas-hero {
-    display: flex;
-    gap: 2rem;
-}
-
-.elemento-estadistica {
-    text-align: center;
-}
-
-.numero-estadistica {
-    display: block;
-    font-size: 2rem;
-    font-weight: 700;
-    color: #1e293b;
-}
-
-.etiqueta-estadistica {
-    font-size: 0.875rem;
-    color: #64748b;
-    font-weight: 500;
-}
-
-/* Hero Image */
-.imagen-hero {
-    position: relative;
-    height: 500px;
-}
-
-.imagen-principal-hero {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1;
-}
-
-.tarjeta-flotante {
-    position: absolute;
-    background: white;
-    border-radius: 12px;
-    padding: 1rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    animation: float 3s ease-in-out infinite;
-    z-index: 2;
-}
-
-.tarjeta-1 {
-    top: 10%;
-    right: 10%;
-    animation-delay: 0s;
-}
-
-.tarjeta-2 {
-    bottom: 30%;
-    left: 5%;
-    animation-delay: 1s;
-}
-
-.tarjeta-3 {
-    top: 60%;
-    right: 5%;
-    animation-delay: 2s;
-}
-
-.imagen-componente {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 8px;
-}
-
-.contenido-tarjeta h6 {
-    margin: 0;
-    font-size: 0.875rem;
-    font-weight: 600;
-}
-
-.precio {
-    font-size: 0.75rem;
-    color: #2563eb;
-    font-weight: 600;
+/* Animación de la imagen principal */
+.main-hero-img {
+    filter: drop-shadow(0 20px 50px rgba(0,0,0,0.1));
+    animation: float 6s ease-in-out infinite;
 }
 
 @keyframes float {
     0%, 100% {
-        transform: translateY(0px);
+        transform: translateY(0);
     }
 
     50% {
-        transform: translateY(-10px);
+        transform: translateY(-20px);
     }
+}
+
+/* Tarjetas flotantes con efecto cristal (Glassmorphism) */
+.floating-card {
+    position: absolute;
+    background: rgba(var(--bs-body-bg-rgb), 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(var(--bs-border-color-rgb), 0.2);
+    border-radius: 15px;
+    width: fit-content;
+    z-index: 10;
+    transition: transform 0.3s ease;
+}
+
+    .floating-card:hover {
+        transform: scale(1.05) translateY(-5px);
+    }
+
+.card-1 {
+    top: 10%;
+    right: 5%;
+    animation: float 5s ease-in-out infinite;
+}
+
+.card-2 {
+    bottom: 20%;
+    left: -5%;
+    animation: float 7s ease-in-out infinite;
+}
+
+/* Ajuste para modo oscuro nativo de BS 5.3 */
+[data-bs-theme="dark"] .floating-card {
+    background: rgba(33, 37, 41, 0.8);
+}
+
+/* Controles de carrusel suaves */
+.carousel-control-prev-icon, .carousel-control-next-icon {
+    filter: invert(1) grayscale(100); /* Ajustar según color de fondo */
 }
 
 /* Section Headers */
@@ -160,7 +80,6 @@
 .titulo-seccion {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #1e293b;
     margin-bottom: 1rem;
 }
 
@@ -173,12 +92,10 @@
 
 /* Category Cards */
 .tarjeta-categoria {
-    background: white;
     border-radius: 16px;
     padding: 2rem;
     text-align: center;
     transition: all 0.3s ease;
-    border: 1px solid #e2e8f0;
     height: 100%;
 }
 
@@ -197,13 +114,11 @@
     justify-content: center;
     margin: 0 auto 1.5rem;
     font-size: 2rem;
-    color: white;
 }
 
 .tarjeta-categoria h5 {
     font-weight: 600;
     margin-bottom: 0.5rem;
-    color: #1e293b;
 }
 
 .tarjeta-categoria p {
@@ -382,13 +297,12 @@
     justify-content: center;
     margin: 0 auto 1.5rem;
     font-size: 2rem;
-    color: white;
 }
 
 .tarjeta-caracteristica h5 {
     font-weight: 600;
     margin-bottom: 1rem;
-    color: #1e293b;
+
 }
 
 .tarjeta-caracteristica p {
