@@ -2,7 +2,6 @@
 .icono-registro {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #2563eb, #7c3aed);
     border-radius: 20px;
     display: flex;
     align-items: center;
@@ -10,7 +9,6 @@
     margin: 0 auto;
     color: white;
     font-size: 2rem;
-    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
 }
 
 /* Card principal */
@@ -30,7 +28,6 @@
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 2px solid #e2e8f0;
     padding-bottom: 0.5rem;
 }
 
@@ -38,7 +35,6 @@
 .form-floating > .form-control,
 .form-floating > .form-select {
     border-radius: 12px;
-    border: 2px solid #e9ecef;
     transition: all 0.3s ease;
     font-size: 1rem;
     padding: 1rem 0.75rem;
@@ -184,7 +180,7 @@
 }
 
 /* Responsive */
-@@media (max-width: 768px) {
+@media (max-width: 768px) {
     .card-body {
         padding: 2rem !important;
     }

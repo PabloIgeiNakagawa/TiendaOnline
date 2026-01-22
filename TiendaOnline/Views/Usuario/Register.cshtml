@@ -13,10 +13,10 @@
         <div class="col-lg-8 col-xl-6">
             <!-- Encabezado -->
             <div class="text-center mb-5">
-                <div class="icono-registro mb-3">
+                <div class="icono-registro bg-primary mb-3">
                     <i class="bi bi-person-plus-fill"></i>
                 </div>
-                <h2 class="fw-bold text-dark mb-2">@tituloFormulario</h2>
+                <h2 class="fw-bold mb-2">@tituloFormulario</h2>
                 <p class="text-muted">
                     @if (esAdmin)
                     {
@@ -37,13 +37,13 @@
 
                         <!-- Información Personal -->
                         <div class="seccion-formulario mb-4">
-                            <h6 class="titulo-seccion mb-3">
+                            <h6 class="titulo-seccion border-bottom  mb-3">
                                 <i class="bi bi-person-circle me-2"></i>Información Personal
                             </h6>
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input asp-for="Nombre" class="form-control" id="campoNombre" placeholder="Nombre" required />
+                                        <input asp-for="Nombre" class="form-control border-1" id="campoNombre" placeholder="Nombre" required />
                                         <label for="campoNombre">
                                             <i class="bi bi-person me-1"></i>Nombre
                                         </label>
@@ -186,7 +186,7 @@
                         {
                             <div class="seccion-formulario mb-4">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="aceptarTerminos" required>
+                                    <input class="" type="checkbox" id="aceptarTerminos" required>
                                     <label class="form-check-label" for="aceptarTerminos">
                                         Acepto los <a href="#" class="text-primary">términos y condiciones</a> y la
                                         <a href="#" class="text-primary">política de privacidad</a>
@@ -196,26 +196,24 @@
                         }
 
                         <!-- Botones -->
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg px-4" id="botonEnviar">
-                                    <i class="bi bi-check-circle me-2"></i>
-                                    <span class="texto-boton">@(esAdmin ? "Crear Usuario" : "Crear Cuenta")</span>
-                                    <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-lg px-4" onclick="limpiarFormulario()">
-                                    <i class="bi bi-arrow-clockwise me-2"></i>Limpiar
-                                </button>
-                            </div>
+                        <div class="d-lg-flex justify-content-between gap-2 align-items-center pt-3 border-top">
+                            <button type="submit" class="btn btn-primary p-3 my-2 my-lg-0" id="botonEnviar">
+                                <i class="bi bi-check-circle me-2"></i>
+                                <span class="texto-boton">@(esAdmin ? "Crear Usuario" : "Crear Cuenta")</span>
+                                <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+                            </button>
+                            <a class="btn btn-outline-secondary p-3 my-2 my-lg-0 d-block" onclick="limpiarFormulario()">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Limpiar
+                            </a>
                             @if (esAdmin)
                             {
-                                <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-outline-danger">
+                                <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-outline-danger p-3 d-block my-2 my-lg-0">
                                     <i class="bi bi-x-circle me-1"></i>Cancelar
                                 </a>
                             }
                             else
                             {
-                                <a asp-controller="Usuario" asp-action="Login" class="btn btn-outline-secondary">
+                                <a asp-controller="Usuario" asp-action="Login" class="btn btn-outline-info p-3 d-block" my-2 my-lg-0>
                                     <i class="bi bi-box-arrow-in-right me-1"></i>¿Ya tienes cuenta?
                                 </a>
                             }
