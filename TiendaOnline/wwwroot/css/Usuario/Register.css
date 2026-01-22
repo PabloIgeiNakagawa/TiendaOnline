@@ -1,37 +1,12 @@
-﻿/* Icono de registro */
-.icono-registro {
-    width: 80px;
-    height: 80px;
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    color: white;
-    font-size: 2rem;
+﻿/* Form floating */
+.form-floating .is-invalid {
+    border-color: #dc3545;
 }
 
-/* Card principal */
-.card {
-    border-radius: 20px;
-    overflow: hidden;
+.form-floating .is-valid {
+    border-color: #198754;
 }
 
-/* Secciones del formulario */
-.seccion-formulario {
-    position: relative;
-}
-
-.titulo-seccion {
-    color: #64748b;
-    font-weight: 600;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding-bottom: 0.5rem;
-}
-
-/* Form floating */
 .form-floating > .form-control,
 .form-floating > .form-select {
     border-radius: 12px;
@@ -80,56 +55,8 @@
     padding: 1rem 0.75rem;
 }
 
-/* Indicador de fuerza de contraseña */
-.indicador-fuerza {
-    margin-top: 0.5rem;
-}
-
-.barra-fuerza {
-    height: 4px;
-    background-color: #e9ecef;
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.relleno-fuerza {
-    height: 100%;
-    width: 0%;
-    transition: all 0.3s ease;
-    border-radius: 2px;
-}
-
-    .relleno-fuerza.debil {
-        background-color: #dc3545;
-        width: 25%;
-    }
-
-    .relleno-fuerza.regular {
-        background-color: #fd7e14;
-        width: 50%;
-    }
-
-    .relleno-fuerza.buena {
-        background-color: #ffc107;
-        width: 75%;
-    }
-
-    .relleno-fuerza.fuerte {
-        background-color: #198754;
-        width: 100%;
-    }
-
-.texto-fuerza {
-    color: #6c757d;
-    font-size: 0.75rem;
-    margin-top: 0.25rem;
-    display: block;
-}
-
 /* Botones */
 .btn {
-    border-radius: 12px;
-    font-weight: 500;
     transition: all 0.3s ease;
 }
 
@@ -137,11 +64,6 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-
-.btn-primary {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    border: none;
-}
 
     .btn-primary:hover {
         background: linear-gradient(135deg, #1d4ed8, #1e40af);
@@ -158,21 +80,6 @@
     box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
 }
 
-/* Validación */
-.text-danger {
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-    display: block;
-}
-
-.form-floating .is-invalid {
-    border-color: #dc3545;
-}
-
-.form-floating .is-valid {
-    border-color: #198754;
-}
-
 /* Estados de carga */
 .cargando {
     pointer-events: none;
@@ -181,16 +88,6 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-    .card-body {
-        padding: 2rem !important;
-    }
-
-    .icono-registro {
-        width: 60px;
-        height: 60px;
-        font-size: 1.5rem;
-    }
-
     .d-flex.justify-content-between {
         flex-direction: column;
         gap: 1rem;
