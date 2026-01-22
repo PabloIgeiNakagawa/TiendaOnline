@@ -8,20 +8,30 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:title" content="TechStore PC - Tu tienda de componentes">
+    <meta property="og:description" content="Encuentra el mejor hardware para tu setup.">
+    <meta property="og:image" content="~/img/logo-social.png">
+    <meta property="og:type" content="website">
     <title>@ViewData["Title"] - TechStore PC</title>
+
     <meta name="description" content="Tu tienda de confianza para componentes de PC">
     <link rel="icon" type="image/x-icon" href="~/favicon.ico">
-    <!-- Hojas de Estilo -->
-    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/TiendaOnline.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+    <!-- Modo oscuro y claro -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
 </head>
 <body class="h-100 d-flex flex-column">
-    <header class="border-bottom sticky-top">
+    <header class="sticky-top">
         <div class="py-1 border-bottom d-none d-md-block text-center" style="font-size: 0.8rem; font-weight: 500;">
             <i class="bi bi-cpu me-2 text-primary"></i>
             ¡Nuevos procesadores serie 9000 disponibles! Envíos a todo el país.
@@ -146,7 +156,7 @@
                     </div>
                     <div class="me-lg-3 d-grid d-lg-block my-2 my-lg-0">
                         <button class="btn btn-link nav-link py-2 px-0 px-lg-2" id="bd-theme" type="button" onclick="toggleTheme()" title="Cambiar tema">
-                            <i id="theme-icon" class="bi bi-sun-fill fs-2"></i>
+                            <i id="theme-icon" class="bi bi-sun-fill fs-3"></i>
                             <span id="modo-actual" class="d-lg-none ms-2">Claro</span>
                         </button>
                     </div>
@@ -236,9 +246,8 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

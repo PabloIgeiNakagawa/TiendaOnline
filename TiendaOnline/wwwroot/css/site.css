@@ -5,6 +5,10 @@
     box-sizing: border-box;
 }
 
+header {
+    background-color: var(--bs-body-bg);
+}
+
 body {
     font-family: 'Inter', sans-serif;
 }
@@ -47,7 +51,7 @@ body {
 }
 
 /* 3. RESPONSIVE (Solo para ajustes de pantalla) */
-@media (max-width: 991px) { /* Cambiado a 991px para cubrir tablets */
+@media (max-width: 991px) {
     .navbar-collapse {
         padding: 1rem 0;
     }

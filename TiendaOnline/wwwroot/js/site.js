@@ -10,10 +10,10 @@ const applyTheme = (theme) => {
     const texto = document.getElementById('modo-actual');
 
     if (theme === 'dark') {
-        if (icon) icon.className = 'bi bi-moon-fill fs-4';
+        if (icon) icon.className = 'bi bi-moon-fill fs-3';
         if (texto) texto.innerText = 'Oscuro';
     } else {
-        if (icon) icon.className = 'bi bi-sun-fill fs-4';
+        if (icon) icon.className = 'bi bi-sun-fill fs-3';
         if (texto) texto.innerText = 'Claro';
     }
 };
