@@ -1,18 +1,3 @@
-/* 1. RESET Y GENERALES */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-header {
-    background-color: var(--bs-body-bg);
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-}
-
 .brand-icon-wrapper {
     background: linear-gradient(135deg, #0d6efd 0%, #004fb2 100%);
     color: white;
@@ -38,15 +23,7 @@ body {
     color: #0d6efd !important;
 }
 
-.dropdown-menu {
-    border-radius: 12px;
-    padding: 0.5rem;
-    min-width: 180px;
-    font-size: 0.9rem;
-}
-
 .dropdown-item {
-    border-radius: 6px;
     transition: all 0.2s;
 }
 
