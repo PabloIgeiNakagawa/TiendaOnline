@@ -164,13 +164,17 @@
             <div id="productosContainer" class="productos-grid">
                 @foreach (var producto in Model)
                 {
-                    <a class="text-decoration-none" asp-controller="Producto" asp-action="Detalles" asp-route-id="@producto.ProductoId" title="Ver detalles">
-                        <div class="producto-card"
-                             data-categoria="@producto.CategoriaId"
-                             data-categoria-padre="@producto.Categoria?.CategoriaPadreId"
-                             data-precio="@producto.Precio"
-                             data-nombre="@producto.Nombre.ToLower()"
-                             data-stock="@(producto.Stock > 0 ? "true" : "false")">
+                    <a asp-controller="Producto" 
+                        asp-action="Detalles" 
+                        asp-route-id="@producto.ProductoId"
+                        class="text-decoration-none producto-link"
+                        data-categoria="@producto.CategoriaId"
+                        data-categoria-padre="@producto.Categoria?.CategoriaPadreId"
+                        data-precio="@producto.Precio"
+                        data-nombre="@producto.Nombre.ToLower()"
+                        data-stock="@(producto.Stock > 0 ? "true" : "false")"
+                        title="Ver detalles">
+                        <div class="producto-card">
                             <div class="card h-100 shadow-sm border-0">
                                 <!-- Imagen del Producto -->
                                 <div class="position-relative overflow-hidden bg-body-tertiary producto-imagen">

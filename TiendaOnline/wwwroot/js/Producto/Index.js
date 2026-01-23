@@ -19,7 +19,7 @@
 
     // Filtrado de productos
     function filtrarProductos() {
-        const productos = document.querySelectorAll('.producto-card');
+        const productos = document.querySelectorAll('.producto-link');
         let visibles = 0;
 
         productos.forEach(producto => {
@@ -30,41 +30,33 @@
 
             let mostrar = true;
 
-            // Filtro por categoría
             if (filtros.categoria) {
-                // Se muestra si coincide con la categoría propia O con la del padre
                 const coincidePropia = categoriaId === filtros.categoria;
                 const coincidePadre = categoriaPadreId === filtros.categoria;
-
-                if (!coincidePropia && !coincidePadre) {
-                    mostrar = false;
-                }
+                if (!coincidePropia && !coincidePadre) mostrar = false;
             }
 
-            // Filtro por búsqueda
             if (filtros.busqueda && !nombre.includes(filtros.busqueda.toLowerCase())) {
                 mostrar = false;
             }
 
-            // Filtro por precio
-            if (filtros.precioMin && precio < filtros.precioMin) {
-                mostrar = false;
-            }
-            if (filtros.precioMax && precio > filtros.precioMax) {
-                mostrar = false;
-            }
+            if (filtros.precioMin && precio < filtros.precioMin) mostrar = false;
+            if (filtros.precioMax && precio > filtros.precioMax) mostrar = false;
 
             producto.style.display = mostrar ? 'block' : 'none';
+
             if (mostrar) visibles++;
         });
 
+        // Actualizar UI
         productosVisibles.textContent = visibles;
-
         if (visibles === 0) {
             productosContainer.style.display = 'none';
             noProductos.style.display = 'block';
         } else {
-            productosContainer.style.display = 'grid';
+            // Restaurar el tipo de display según la vista activa
+            const esGrid = document.querySelector('[data-vista="grid"]').classList.contains('active');
+            productosContainer.style.display = esGrid ? 'grid' : 'flex';
             noProductos.style.display = 'none';
         }
     }
