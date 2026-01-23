@@ -1,34 +1,38 @@
-﻿// Al cargar la página, aplicar el tema guardado o el del sistema
-const getStoredTheme = () => localStorage.getItem('theme');
-const setStoredTheme = theme => localStorage.setItem('theme', theme);
-
-// Función para aplicar el tema y cambiar el icono/texto
+﻿const getStoredTheme = () => localStorage.getItem('theme');
 const applyTheme = (theme) => {
     document.documentElement.setAttribute('data-bs-theme', theme);
-
-    const icon = document.getElementById('theme-icon');
-    const texto = document.getElementById('modo-actual');
-
-    if (theme === 'dark') {
-        if (icon) icon.className = 'bi bi-moon-fill fs-3';
-        if (texto) texto.innerText = 'Oscuro';
-    } else {
-        if (icon) icon.className = 'bi bi-sun-fill fs-3';
-        if (texto) texto.innerText = 'Claro';
-    }
 };
 
-// Inicialización
 const savedTheme = getStoredTheme();
 if (savedTheme) {
     applyTheme(savedTheme);
 }
 
-// Función para el botón
+document.addEventListener('DOMContentLoaded', () => {
+    const theme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+    updateThemeUI(theme);
+});
+
+function updateThemeUI(theme) {
+    const icon = document.getElementById('theme-icon');
+    const texto = document.getElementById('modo-actual');
+
+    if (!icon) return;
+
+    if (theme === 'dark') {
+        icon.className = 'bi bi-moon fs-3';
+        if (texto) texto.innerText = 'Oscuro';
+    } else {
+        icon.className = 'bi bi-sun fs-3';
+        if (texto) texto.innerText = 'Claro';
+    }
+}
+
 function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-bs-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
+    localStorage.setItem('theme', newTheme);
     applyTheme(newTheme);
-    setStoredTheme(newTheme);
+    updateThemeUI(newTheme);
 }
