@@ -175,7 +175,7 @@
         filtrarProductos();
     }
 
-    // NUEVO: Animación de flechas para subcategorías
+    // Animación de flechas para subcategorías
     document.querySelectorAll('.collapse').forEach(el => {
         el.addEventListener('show.bs.collapse', () => {
             const icon = document.querySelector(`[data-bs-target="#${el.id}"]`);
@@ -187,7 +187,7 @@
         });
     });
 
-    // NUEVO: Función para resetear desde el breadcrumb
+    // Función para resetear desde el breadcrumb
     window.resetearFiltroCategoria = function () {
         const itemTodas = document.querySelector('.categoria-item[data-categoria=""]');
         if (itemTodas) itemTodas.click();
