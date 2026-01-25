@@ -28,7 +28,8 @@ namespace TiendaOnline.Models
         [Range(0, int.MaxValue, ErrorMessage = "El stock debe ser mayor a 0.")]
         public int Stock { get; set; }
 
-        public string? ImagenUrl { get; set; }
+        [Required]
+        public string ImagenUrl { get; set; }
 
         [Required]
         public int CategoriaId { get; set; }
