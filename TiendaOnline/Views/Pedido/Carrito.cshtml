@@ -3,19 +3,30 @@
 @{
     ViewData["Title"] = "Carrito de Compras";
     bool usuarioEstaAutenticado = User.Identity.IsAuthenticated;
+    decimal total = Model.Sum(i => i.Precio * i.Cantidad);
+}
+@section Styles{
+    <style>
+        .carrito-item {
+            transition: all 0.3s ease;
+        }
+
+            .carrito-item:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            }
+    </style>
 }
 
-<link rel="stylesheet" href="~/css/Pedido/Carrito.css" asp-append-version="true" />
-
-<div class="container carrito-container">
+<div class="container py-4">
     <!-- Encabezado del carrito -->
-    <div class="carrito-header">
-        <h1 class="carrito-title">
-            <i class="bi bi-cart3"></i>
+    <div class="mb-4 border-bottom pb-3">
+        <h1 class="fs-3 fw-bold d-flex align-items-center gap-2">
+            <i class="bi bi-cart3 text-primary"></i>
             @ViewData["Title"]
             @if (Model != null && Model.Any())
             {
-                <span class="carrito-count">@Model.Count</span>
+                <span class="bg-primary text-white small fw-semibold rounded-pill px-3 py-1 ms-2">@Model.Count</span>
             }
         </h1>
     </div>
@@ -23,13 +34,14 @@
     @if (Model == null || !Model.Any())
     {
         <!-- Carrito vacío -->
-        <div class="carrito-empty fade-in">
-            <i class="bi bi-cart-x"></i>
-            <h3>Tu carrito está vacío</h3>
-            <p>Parece que aún no has agregado productos a tu carrito de compras.</p>
-            <a href="@Url.Action("Index", "Producto")" class="btn-shop">
-                <i class="bi bi-bag-plus text-white"></i>
-                Ir a comprar
+        <div class="rounded-3 shadow-sm p-5 text-center my-4">
+            <i class="bi bi-cart-x fs-1 mb-4 opacity-50"></i>
+            <h3 class="h4 fw-semibold mb-3">Tu carrito está vacío</h3>
+            <p class="text-secondary mb-5">¡Parece que aún no has agregado productos a tu carrito de compras!</p>
+            <a asp-controller="Producto" asp-action="Index"
+               class="btn btn-primary fw-medium px-4 py-2 rounded-3 shadow-sm d-inline-flex align-items-center border-0">
+                <i class="bi bi-cart-plus-fill fs-5 me-2"></i>
+                <span>Comenzar compra</span>
             </a>
         </div>
     }
@@ -40,52 +52,73 @@
             <div class="col-lg-8">
                 @foreach (var item in Model)
                 {
-                    <div class="carrito-item fade-in">
-                        <div class="carrito-item-content">
-                            <div class="carrito-item-image">
+                    <div class="carrito-item card border shadow-sm mb-4 rounded-3 overflow-hidden">
+                        <div class="d-flex flex-column flex-md-row p-3 p-md-4">
+
+                            <div class="d-flex align-items-center justify-content-center bg-light mb-3 mb-md-0 me-md-4 flex-shrink-0 rounded-2 overflow-hidden mx-auto mx-md-0"
+                                 style="width: 140px; height: 140px;">
                                 @if (item.ImagenUrl != null)
                                 {
-                                    <img src=@item.ImagenUrl alt="@item.Nombre" />
+                                    <a asp-controller="Producto" asp-action="Detalles" asp-route-id="@item.ProductoId">
+                                        <img src="@item.ImagenUrl" alt="@item.Nombre" class="w-100 h-100 object-fit-cover" />
+                                    </a>
                                 }
                                 else
                                 {
                                     <i class="bi bi-box text-muted" style="font-size: 2rem;"></i>
                                 }
                             </div>
-                            <div class="carrito-item-details">
-                                <h3 class="carrito-item-title">@item.Nombre</h3>
-                                <div class="carrito-item-price">@item.Precio.ToString("C0")</div>
-                                <div class="carrito-item-subtotal">
-                                    Subtotal: <strong>@((item.Precio * item.Cantidad).ToString("C0"))</strong>
+
+                            <div class="flex-grow-1 d-flex flex-column">
+                                <div class="text-center text-md-start">
+                                    <a asp-controller="Producto" asp-action="Detalles" asp-route-id="@item.ProductoId" class="h5 fw-semibold mb-1 text-decoration-none">@item.Nombre</a>
+                                    <div class="fs-5 fw-bold mb-2">@item.Precio.ToString("C0")</div>
+                                    <div class="small text-muted mb-3">
+                                        Subtotal: <strong>@((item.Precio * item.Cantidad).ToString("C0"))</strong>
+                                    </div>
                                 </div>
 
-                                <div class="carrito-item-actions">
+                                <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start mt-auto gap-3">
+
                                     <form asp-controller="Carrito" asp-action="ActualizarCantidad" method="post" class="d-flex align-items-center">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="productoId" value="@item.ProductoId" />
 
-                                        <div class="quantity-control">
-                                            <button type="button" class="quantity-btn" onclick="decrementQuantity('@item.ProductoId')">
+                                        <div class="d-flex align-items-center border border-2 rounded-2 overflow-hidden" style="width: fit-content;">
+                                            <button type="button"
+                                                    class="btn text-secondary d-flex align-items-center justify-content-center p-0 border-0"
+                                                    style="width: 32px; height: 32px;"
+                                                    onclick="disminuirCantidad('@item.ProductoId')">
                                                 <i class="bi bi-dash"></i>
                                             </button>
-                                            <input id="cantidad-@item.ProductoId" type="number" name="cantidad" value="@item.Cantidad" min="1" class="quantity-input" />
-                                            <button type="button" class="quantity-btn" onclick="incrementQuantity('@item.ProductoId')">
+                                            <input id="cantidad-@item.ProductoId"
+                                                   type="number" name="cantidad"
+                                                   value="@item.Cantidad" min="1"
+                                                   class="form-control border-0 text-center fw-semibold p-1 shadow-none"
+                                                   style="width: 50px;" />
+                                            <button type="button"
+                                                    class="btn text-secondary d-flex align-items-center justify-content-center p-0 border-0"
+                                                    style="width: 32px; height: 32px;"
+                                                    onclick="aumentarCantidad('@item.ProductoId')">
                                                 <i class="bi bi-plus"></i>
                                             </button>
                                         </div>
 
-                                        <button type="submit" class="update-btn">
-                                            <i class="bi bi-arrow-repeat me-1"></i>
-                                            Actualizar
+                                        <button type="submit" class="btn btn-primary rounded-2 fw-semibold ms-2">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                            <span class="d-none d-sm-inline"> Actualizar</span>
                                         </button>
                                     </form>
 
-                                    <form asp-controller="Carrito" asp-action="EliminarItem" method="post">
+                                    <form asp-controller="Carrito" asp-action="EliminarItem" method="post"
+                                          class="position-absolute top-0 end-0 p-3" style="z-index: 10;">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.ProductoId" />
-                                        <button type="submit" class="remove-btn" onclick="return confirm('¿Estás seguro de eliminar este producto del carrito?')">
-                                            <i class="bi bi-trash"></i>
-                                            Eliminar
+                                        <button type="submit"
+                                                class="btn btn-link text-danger p-0 border-0 shadow-none"
+                                                onclick="return confirm('¿Eliminar producto?')"
+                                                title="Eliminar">
+                                            <i class="bi bi-trash3-fill fs-5"></i>
                                         </button>
                                     </form>
                                 </div>
@@ -96,7 +129,7 @@
 
                 <!-- Botón continuar comprando -->
                 <div class="text-center mb-4">
-                    <a asp-controller="Producto" asp-action="Index" class="btn-continue">
+                    <a asp-controller="Producto" asp-action="Index" class="btn btn-outline-info fw-semibold rounded-2 d-inline-flex align-items-center gap-2 mt-3">
                         <i class="bi bi-arrow-left"></i>
                         Continuar comprando
                     </a>
@@ -105,7 +138,10 @@
                 <div class="text-center mb-4">
                     <form asp-controller="Carrito" asp-action="Vaciar" method="post">
                         @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-danger">Vaciar carrito</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-cart-x-fill"></i>
+                            Vaciar carrito
+                        </button>
                     </form>
 
                 </div>
@@ -113,24 +149,30 @@
 
             <!-- Resumen del carrito -->
             <div class="col-lg-4">
-                <div class="carrito-summary">
-                    <h3 class="summary-title">Resumen del pedido</h3>
+                <div class="bg-body-tertiary rounded-3 shadow-sm p-4 sticky-top border">
+                    <h3 class="h5 fw-semibold mb-4 pb-3 border-bottom">Resumen del pedido</h3>
 
-                    <div class="summary-item">
-                        <span>Productos (@Model.Count)</span>
-                        <span>@Model.Sum(i => i.Precio * i.Cantidad).ToString("C0")</span>
-                    </div>
+                    @foreach (var item in Model)
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="pe-2">
+                                <p class="mb-0 fw-semibold small text-truncate" style="max-width: 180px;">
+                                    @item.Nombre
+                                </p>
+                                <small class="text-muted">Cantidad: @item.Cantidad</small>
+                            </div>
+                            <span class="fw-medium small">
+                                @((item.Precio * item.Cantidad).ToString("C0"))
+                            </span>
+                        </div>
+                    }
 
-                    <div class="summary-item">
+                    <div class="d-flex justify-content-between mb-2">
                         <span>Envío</span>
                         <span>Gratis</span>
                     </div>
 
-                    @{
-                        decimal total = Model.Sum(i => i.Precio * i.Cantidad);
-                    }
-
-                    <div class="summary-total">
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top fw-bold fs-5">
                         <span>Total</span>
                         <span>@total.ToString("C0")</span>
                     </div>
@@ -145,19 +187,19 @@
                                 <input type="hidden" name="[@i].Precio" value="@Model[i].Precio" />
                             }
 
-                            <button type="submit" class="btn-checkout">
+                            <button type="submit" class="btn btn-success fw-bold w-100 mt-4 d-flex align-items-center justify-content-center gap-2 rounded-2">
                                 <i class="bi bi-credit-card"></i> Finalizar compra
                             </button>
                         </form>
                     }
                     else
                     {
-                        <a class="btn btn-checkout disabled" href="#" tabindex="-1" aria-disabled="true">
+                        <a class="btn btn-success fw-bold w-100 mt-4 d-flex align-items-center justify-content-center gap-2 rounded-2 disabled" href="#" tabindex="-1" aria-disabled="true">
                             <i class="bi bi-credit-card"></i>
                             Finalizar compra
                         </a>
                         <div class="mt-2">
-                            <a asp-controller="Usuario" asp-action="Register" class="text-decoration-underline">
+                            <a asp-controller="Usuario" asp-action="Register" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">
                                 Para finalizar la compra debes tener una cuenta
                             </a>
                         </div>
@@ -168,4 +210,21 @@
     }
 </div>
 
-<script src="~/js/Pedido/Carrito.js" asp-append-version="true"></script>
+@section Scripts {
+    <script>
+        // Funciones para aumentar y disminuir cantidad
+        function aumentarCantidad(productoId) {
+            const input = document.getElementById('cantidad-' + productoId);
+            let valorActual = parseInt(input.value) || 1; // Si no es número, asume 1
+            input.value = valorActual + 1;
+        }
+
+        function disminuirCantidad(productoId) {
+            const input = document.getElementById('cantidad-' + productoId);
+            let valorActual = parseInt(input.value) || 1;
+            if (valorActual > 1) {
+                input.value = valorActual - 1;
+            }
+        }
+    </script>
+}
