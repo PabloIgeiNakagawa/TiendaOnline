@@ -41,6 +41,58 @@
         </div>
     </div>
 
+    <!-- Estadísticas Rápidas -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start-0 border-bottom-0 border-end-0 border-primary border-4 p-3 d-flex flex-row align-items-center rounded-4 shadow-sm gap-3">
+                <div class="d-flex align-items-center justify-content-center text-white flex-shrink-0 bg-primary rounded-3 ms-2"
+                     style="width: 35px; height: 35px; font-size: 1rem;">
+                    <i class="bi bi-bag-check"></i>
+                </div>
+                <div>
+                    <h3 class="fs-5 fw-bold mb-1">@Model.Count()</h3>
+                    <p class="text-secondary small mb-0">Total Pedidos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start-0 border-bottom-0 border-end-0 border-warning border-4 p-3 d-flex flex-row align-items-center rounded-4 shadow-sm gap-3">
+                <div class="d-flex align-items-center justify-content-center text-white flex-shrink-0 bg-warning rounded-3 ms-2"
+                     style="width: 35px; height: 35px; font-size: 1rem;">
+                    <i class="bi bi-clock"></i>
+                </div>
+                <div>
+                    <h3 class="fs-5 fw-bold mb-1">@Model.Count(p => p.Estado == TiendaOnline.Models.EstadoPedido.Pendiente)</h3>
+                    <p class="text-secondary small mb-0">Pendientes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start-0 border-bottom-0 border-end-0 border-success border-4 p-3 d-flex flex-row align-items-center rounded-4 shadow-sm gap-3">
+                <div class="d-flex align-items-center justify-content-center text-white flex-shrink-0 bg-success rounded-3 ms-2"
+                     style="width: 35px; height: 35px; font-size: 1rem;">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div>
+                    <h3 class="fs-5 fw-bold mb-1">@Model.Count(p => p.Estado == TiendaOnline.Models.EstadoPedido.Entregado)</h3>
+                    <p class="text-secondary small mb-0">Entregados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100 border-start-0 border-bottom-0 border-end-0 border-danger border-4 p-3 d-flex flex-row align-items-center rounded-4 shadow-sm gap-3">
+                <div class="d-flex align-items-center justify-content-center text-white flex-shrink-0 bg-danger rounded-3 ms-2"
+                     style="width: 35px; height: 35px; font-size: 1rem;">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="fs-5 fw-bold mb-1">@Model.Count(p => p.Estado == TiendaOnline.Models.EstadoPedido.Cancelado)</h3>
+                    <p class="text-secondary small mb-0">Cancelados</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Filtros -->
     <div class="row mb-4">
         <div class="col-12">
@@ -77,58 +129,6 @@
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Estadísticas Rápidas -->
-    <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card h-100 border p-4 d-flex flex-row align-items-center rounded-3 shadow-sm gap-3 total">
-                <div class="d-flex align-items-center justify-content-center text-white flex-shrink-0 bg-primary rounded-3"
-                     style="width: 50px; height: 50px; font-size: 1.25rem;">
-                    <i class="bi bi-bag-check"></i>
-                </div>
-                <div class="stat-content">
-                    <h3 class="fs-2 fw-bold mb-1">@Model.Count()</h3>
-                    <p class="text-secondary small mb-0">Total Pedidos</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card h-100 border p-4 d-flex flex-row align-items-center rounded-3 shadow-sm gap-3 pending">
-                <div class="d-flex align-items-center justify-content-center text-white flex-shrink-0 bg-warning rounded-3"
-                     style="width: 50px; height: 50px; font-size: 1.25rem;">
-                    <i class="bi bi-clock"></i>
-                </div>
-                <div class="stat-content">
-                    <h3 class="fs-2 fw-bold mb-1">@Model.Count(p => p.Estado == TiendaOnline.Models.EstadoPedido.Pendiente)</h3>
-                    <p class="text-secondary small mb-0">Pendientes</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card h-100 border p-4 d-flex flex-row align-items-center rounded-3 shadow-sm gap-3 delivered">
-                <div class="d-flex align-items-center justify-content-center text-white flex-shrink-0 bg-success rounded-3"
-                     style="width: 50px; height: 50px; font-size: 1.25rem;">
-                    <i class="bi bi-check-circle"></i>
-                </div>
-                <div class="stat-content">
-                    <h3 class="fs-2 fw-bold mb-1">@Model.Count(p => p.Estado == TiendaOnline.Models.EstadoPedido.Entregado)</h3>
-                    <p class="text-secondary small mb-0">Entregados</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card h-100 border p-4 d-flex flex-row align-items-center rounded-3 shadow-sm gap-3">
-                <div class="d-flex align-items-center justify-content-center text-white flex-shrink-0 bg-danger rounded-3"
-                     style="width: 50px; height: 50px; font-size: 1.25rem;">
-                    <i class="bi bi-x-circle"></i>
-                </div>
-                <div class="stat-content">
-                    <h3 class="fs-2 fw-bold mb-1">@Model.Count(p => p.Estado == TiendaOnline.Models.EstadoPedido.Cancelado)</h3>
-                    <p class="text-secondary small mb-0">Cancelados</p>
                 </div>
             </div>
         </div>
