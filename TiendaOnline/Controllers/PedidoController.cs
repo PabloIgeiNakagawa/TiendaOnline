@@ -1,29 +1,24 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
 using System.Security.Claims;
 using TiendaOnline.IServices;
 using TiendaOnline.Models;
-using TiendaOnline.Services;
 
 namespace TiendaOnline.Controllers
 {
     public class PedidoController : Controller
     {
         private readonly IPedidoService _pedidoService;
-        private readonly IUsuarioService _usuarioService;
 
-        public PedidoController(IPedidoService pedidoService, IUsuarioService usuarioService)
+        public PedidoController(IPedidoService pedidoService)
         {
             _pedidoService = pedidoService;
-            _usuarioService = usuarioService;
         }
 
         public async Task<IActionResult> MisPedidos()
         {
-            var claim = User.FindFirst("UsuarioId");
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (claim == null)
             {
                 return Unauthorized();
@@ -69,26 +64,41 @@ namespace TiendaOnline.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Administrador, Repartidor")]
-        public async Task<IActionResult> CambiarEstadoAsync(int pedidoId, EstadoPedido nuevoEstado)
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> Enviar(int pedidoId)
         {
-            switch (nuevoEstado)
+            if (pedidoId <= 0)
             {
-                case EstadoPedido.Enviado:
-                    await _pedidoService.PedidoEnviadoAsync(pedidoId);
-                    break;
-                case EstadoPedido.Entregado:
-                    await _pedidoService.PedidoEntregadoAsync(pedidoId);
-                    break;
-                case EstadoPedido.Cancelado:
-                    await _pedidoService.PedidoCanceladoAsync(pedidoId);
-                    break;
-                default:
-                    TempData["MensajeError"] = "Estado de pedido no válido.";
-                    return RedirectToAction("Detalles", new { id = pedidoId });
+                return NotFound();
             }
+            await _pedidoService.PedidoEnviadoAsync(pedidoId);
+            TempData["MensajeExito"] = "Estado del pedido actualizado a Enviado";
+            return RedirectToAction("Detalles", new { id = pedidoId });
+        }
 
-            TempData["MensajeExito"] = $"Estado del pedido actualizado a {nuevoEstado}";
+        [HttpPost]
+        [Authorize(Roles = "Administrador, Repartidor")]
+        public async Task<IActionResult> Entregar(int pedidoId)
+        {
+            if (pedidoId <= 0)
+            {
+                return NotFound();
+            }
+            await _pedidoService.PedidoEntregadoAsync(pedidoId);
+            TempData["MensajeExito"] = "Estado del pedido actualizado a Entregado";
+            return RedirectToAction("Detalles", new { id = pedidoId });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> Cancelar(int pedidoId)
+        {
+            if (pedidoId <= 0)
+            {
+                return NotFound();
+            }
+            await _pedidoService.PedidoCanceladoAsync(pedidoId);
+            TempData["MensajeExito"] = "Estado del pedido actualizado a Cancelado";
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
     }

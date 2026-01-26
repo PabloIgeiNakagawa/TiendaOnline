@@ -3,70 +3,64 @@
     var listaTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltips = listaTooltips.map((elementoTooltip) => new bootstrap.Tooltip(elementoTooltip))
 })
-
-// Cambiar estado del pedido (Solo Admin)
-function cambiarEstado(pedidoId, nuevoEstado, nombreEstado) {
-    const modal = new bootstrap.Modal(document.getElementById("modalCambioEstado"))
-    const mensajeCambioEstado = document.getElementById("mensajeCambioEstado")
-    const botonConfirmarEstado = document.getElementById("botonConfirmarEstado")
-    const iconoEstado = document.getElementById("iconoEstado")
-
-    // Configurar modal según el estado
-    const configuraciones = {
-        1: {
-            // Enviado
-            mensaje: `¿Confirmas que el pedido #${pedidoId.toString().padStart(6, "0")} ha sido enviado?`,
-            icono: "bi bi-truck text-info display-4",
-            boton: "btn btn-info",
-            texto: "Marcar como Enviado",
-        },
-        2: {
-            // Entregado
-            mensaje: `¿Confirmas que el pedido #${pedidoId.toString().padStart(6, "0")} ha sido entregado?`,
-            icono: "bi bi-check-circle text-success display-4",
-            boton: "btn btn-success",
-            texto: "Marcar como Entregado",
-        },
-        3: {
-            // Cancelado
-            mensaje: `¿Estás seguro de cancelar el pedido #${pedidoId.toString().padStart(6, "0")}?`,
-            icono: "bi bi-x-circle text-danger display-4",
-            boton: "btn btn-danger",
-            texto: "Cancelar Pedido",
-        },
-    }
-
-    const config = configuraciones[nuevoEstado]
-    mensajeCambioEstado.textContent = config.mensaje
-    iconoEstado.className = config.icono
-    botonConfirmarEstado.className = config.boton
-    botonConfirmarEstado.textContent = config.texto
-
-    botonConfirmarEstado.onclick = () => {
+function enviarPedido(pedidoId) {
+    const modal = new bootstrap.Modal(document.getElementById("modalCambioEstado"));
+    const mensajeCambioEstado = document.getElementById("mensajeCambioEstado");
+    const botonDerecho = document.getElementById("botonDerecho");
+    const iconoEstado = document.getElementById("iconoEstado");
+    mensajeCambioEstado.textContent = `¿Confirmas que el pedido #${pedidoId.toString().padStart(6, "0")} ha sido enviado?`;
+    iconoEstado.className = "bi bi-truck text-info display-4";
+    botonDerecho.className = "btn btn-info";
+    botonDerecho.textContent = "Marcar como Enviado";
+    botonDerecho.onclick = () => {
         // Mostrar loading
-        botonConfirmarEstado.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Procesando...'
-        botonConfirmarEstado.disabled = true
+        botonDerecho.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Procesando...'
+        botonDerecho.disabled = true
 
-        // Establecer el nuevo estado y enviar formulario
-        document.getElementById(`nuevoEstado${pedidoId}`).value = nuevoEstado
-        document.getElementById(`formularioCambioEstado${pedidoId}`).submit()
+        // Enviar formulario
+        document.getElementById(`enviarPedido${pedidoId}`).submit()
     }
 
     modal.show()
 }
 
-// Cancelar pedido (Solo Usuario)
-function cancelarPedidoUsuario(pedidoId) {
-    const modal = new bootstrap.Modal(document.getElementById("modalCancelarPedido"))
-    const botonCancelarPedido = document.getElementById("botonCancelarPedido")
-
-    botonCancelarPedido.onclick = () => {
+function entregarPedido(pedidoId) {
+    const modal = new bootstrap.Modal(document.getElementById("modalCambioEstado"));
+    const mensajeCambioEstado = document.getElementById("mensajeCambioEstado");
+    const botonDerecho = document.getElementById("botonDerecho");
+    const iconoEstado = document.getElementById("iconoEstado");
+    mensajeCambioEstado.textContent = `¿Confirmas que el pedido #${pedidoId.toString().padStart(6, "0")} ha sido entregado?`;
+    iconoEstado.className = "bi bi-check-circle text-success display-4";
+    botonDerecho.className = "btn btn-success";
+    botonDerecho.textContent = "Marcar como Entregado";
+    botonDerecho.onclick = () => {
         // Mostrar loading
-        botonCancelarPedido.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Cancelando...'
-        botonCancelarPedido.disabled = true
+        botonDerecho.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Procesando...'
+        botonDerecho.disabled = true
 
         // Enviar formulario
-        document.getElementById(`formularioCancelarPedido${pedidoId}`).submit()
+        document.getElementById(`entregarPedido${pedidoId}`).submit()
+    }
+
+    modal.show()
+}
+
+function cancelarPedido(pedidoId) {
+    const modal = new bootstrap.Modal(document.getElementById("modalCambioEstado"));
+    const mensajeCambioEstado = document.getElementById("mensajeCambioEstado");
+    const botonDerecho = document.getElementById("botonDerecho");
+    const iconoEstado = document.getElementById("iconoEstado");
+    mensajeCambioEstado.textContent = `¿Estás seguro de cancelar el pedido #${pedidoId.toString().padStart(6, "0")}?`;
+    iconoEstado.className = "bi bi-x-circle text-danger display-4";
+    botonDerecho.className = "btn btn-danger";
+    botonDerecho.textContent = "Cancelar Pedido";
+    botonDerecho.onclick = () => {
+        // Mostrar loading
+        botonDerecho.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Procesando...'
+        botonDerecho.disabled = true
+
+        // Enviar formulario
+        document.getElementById(`cancelarPedido${pedidoId}`).submit()
     }
 
     modal.show()
