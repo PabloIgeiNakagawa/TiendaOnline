@@ -1,7 +1,11 @@
 ﻿@using System.Security.Claims
+@using TiendaOnline.Helpers
 @{
     var idUsuario = User.Claims.FirstOrDefault(c => c.Type == "UsuarioId")?.Value;
     bool usuarioEstaAutenticado = User.Identity.IsAuthenticated;
+    var carritoLayout = Context.Session.GetObject<List<ItemCarrito>>("Carrito") ?? new List<ItemCarrito>();
+
+    var conteoProductos = carritoLayout.Sum(i => i.Cantidad);
 }
 <!DOCTYPE html>
 <html lang="es" class="h-100">
@@ -31,7 +35,7 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 </head>
 <body class="h-100 d-flex flex-column">
-    <header class="sticky-top shadow">
+    <header class="sticky-top shadow-sm bg-body">
         <div class="py-1 border-bottom d-none d-md-block text-center" style="font-size: 0.8rem; font-weight: 500;">
             <i class="bi bi-cpu me-2 text-primary"></i>
             ¡Nuevos procesadores serie 9000 disponibles! Envíos a todo el país.
@@ -71,8 +75,24 @@
 
                     <div class="me-lg-3 d-grid d-lg-block my-2 my-lg-0">
                         <a class="btn btn-white border-0 position-relative hover-lift d-flex align-items-center justify-content-center" asp-controller="Carrito" asp-action="Index">
-                            <i class="bi bi-cart3 fs-5"></i>
+                            <div class="position-relative">
+                                <i class="bi bi-cart3 fs-5"></i>
+                                @if (conteoProductos > 0)
+                                {
+                                    <span class="d-none d-lg-block position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                                        @conteoProductos
+                                    </span>
+                                }
+                            </div>
+
                             <span class="d-lg-none ms-2">Carrito</span>
+
+                            @if (conteoProductos > 0)
+                            {
+                                <span class="d-lg-none badge rounded-pill bg-danger ms-2">
+                                    @conteoProductos
+                                </span>
+                            }
                         </a>
                     </div>
 
@@ -98,7 +118,7 @@
                             </span>
                         </button>
 
-                        <ul class="dropdown-menu dropdown-menu-end bg-body-secondary rounded-3 shadow border-0 mt-2" style="min-width: 180px; font-size: 0.9rem;">
+                        <ul class="dropdown-menu dropdown-menu-end rounded-3 shadow border-0 mt-2" style="min-width: 180px; font-size: 0.9rem;">
                             @if (User.Identity.IsAuthenticated)
                             {
                                 <li>
@@ -174,60 +194,60 @@
         <div class="container">
             <div class="row gy-4">
                 <div class="col-lg-4 col-md-6">
-                    <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3">
                         <div class="brand-icon-wrapper me-2" style="width: 32px; height: 32px;">
                             <i class="bi bi-cpu-fill fs-6"></i>
                         </div>                        
                         <div>
                             <h5 class="mb-0 fw-bold">TECH<span class="text-primary">STORE</span></h5>
-                            <small class="text-secondary">Expertos en PC Components</small>
+                            <small class="text-secondary">Expertos en componentes de PC</small>
                         </div>
                     </div>
-                    <p class="text-secondary small mb-4">
+                    <p class="text-secondary small mb-4 text-center text-md-start">
                         Tu tienda de confianza para armar la PC de tus sueños. Componentes de alto rendimiento y asesoramiento especializado.
                     </p>
-                    <div class="d-flex gap-3">
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle shadow-sm"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle shadow-sm"><i class="bi bi-instagram"></i></a>
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle shadow-sm"><i class="bi bi-twitter-x"></i></a>
+                    <div class="d-flex gap-3 justify-content-center justify-content-md-start">
+                        <a href="#" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-twitter-x"></i></a>
                     </div>
                 </div>
 
                 <div class="col-lg-2 col-md-6">
-                    <h6 class="text-uppercase fw-bold mb-3">Navegación</h6>
+                    <h6 class="text-uppercase fw-bold mb-3 text-center text-md-start">Navegación</h6>
                     <ul class="list-unstyled small">
-                        <li class="mb-2"><a href="/" class="text-secondary text-decoration-none">Inicio</a></li>
-                        <li class="mb-2"><a href="/Producto" class="text-secondary text-decoration-none">Productos</a></li>
-                        <li class="mb-2"><a href="#" class="text-secondary text-decoration-none">Promociones</a></li>
-                        <li class="mb-2"><a href="#" class="text-secondary text-decoration-none">Contacto</a></li>
-                        <li class="mb-2"><a href="/Home/Privacy" class="text-secondary text-decoration-none">Privacidad</a></li>
+                        <li class="mb-2 text-center text-md-start"><a href="/" class="text-secondary text-decoration-none">Inicio</a></li>
+                        <li class="mb-2 text-center text-md-start"><a href="/Producto" class="text-secondary text-decoration-none">Productos</a></li>
+                        <li class="mb-2 text-center text-md-start"><a href="#" class="text-secondary text-decoration-none">Promociones</a></li>
+                        <li class="mb-2 text-center text-md-start"><a href="#" class="text-secondary text-decoration-none">Contacto</a></li>
+                        <li class="mb-2 text-center text-md-start"><a href="/Home/Privacy" class="text-secondary text-decoration-none">Privacidad</a></li>
                     </ul>
                 </div>
 
                 <div class="col-lg-3 col-md-6">
-                    <h6 class="text-uppercase fw-bold mb-3">Aceptamos</h6>
-                    <div class="d-flex flex-wrap gap-2 fs-3 text-secondary">
+                    <h6 class="text-uppercase fw-bold mb-3 text-center text-md-start">Aceptamos</h6>
+                    <div class="d-flex flex-wrap gap-2 fs-3 text-secondary justify-content-center justify-content-md-start">
                         <i class="bi bi-credit-card"></i>
                         <i class="bi bi-paypal"></i>
                         <i class="bi bi-bank"></i>
                     </div>
-                    <p class="small text-secondary mt-3">
+                    <p class="small text-secondary mt-3 text-center text-md-start">
                         <i class="bi bi-truck me-2"></i>Envíos a todo el país.
                     </p>
                 </div>
 
                 <div class="col-lg-3 col-md-4">
-                    <h6 class="text-dark fw-bold mb-3 small text-uppercase" style="letter-spacing: 1px;">Soporte</h6>
+                    <h6 class="text-dark fw-bold mb-3 small text-uppercase text-center text-md-start" style="letter-spacing: 1px;">Soporte</h6>
                     <ul class="list-unstyled footer-contact">
-                        <li class="d-flex align-items-center mb-3">
+                        <li class="d-flex align-items-center mb-3 justify-content-center justify-content-md-start">
                             <div class="contact-icon me-2"><i class="bi bi-envelope text-info "></i></div>
                             <span class="small">soporte@techstore.com</span>
                         </li>
-                        <li class="d-flex align-items-center mb-3">
+                        <li class="d-flex align-items-center mb-3 justify-content-center justify-content-md-start">
                             <div class="contact-icon me-2"><i class="bi bi-whatsapp text-success"></i></div>
                             <span class="small">+54 11 1234-5678</span>
                         </li>
-                        <li class="d-flex align-items-center">
+                        <li class="d-flex align-items-center justify-content-center justify-content-md-start">
                             <div class="contact-icon me-2"><i class="bi bi-geo-alt"></i></div>
                             <span class="small">Buenos Aires, Argentina</span>
                         </li>
