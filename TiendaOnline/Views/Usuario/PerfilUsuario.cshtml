@@ -2,14 +2,11 @@
 @{
     ViewData["Title"] = "Perfil de Usuario";
     var esPropioPerfil = User.Claims.FirstOrDefault(c => c.Type == "UsuarioId")?.Value == Model.UsuarioId.ToString();
-    var esAdmin = User.IsInRole("Administrador");
 }
-
-<link rel="stylesheet" href="~/css/Usuario/PerfilUsuario.css" asp-append-version="true" />
 
 <div class="container-fluid py-4">
     <!-- Migas de Pan -->
-    <nav aria-label="breadcrumb" class="mb-4">
+    <nav aria-label="breadcrumb" class="mb-4" style="--bs-breadcrumb-divider: '›'; --bs-breadcrumb-divider-color: #6c757d;">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
                 <a asp-controller="Usuario" asp-action="Index" class="text-decoration-none">
@@ -28,264 +25,232 @@
             </li>
         </ol>
     </nav>
-
-    <!-- Encabezado del Perfil -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="tarjeta-encabezado-perfil">
-                <div class="contenido-encabezado">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-perfil">
-                                @Model.Nombre.Substring(0, 1).ToUpper()@Model.Apellido.Substring(0, 1).ToUpper()
-                            </div>
-                            <div class="info-basica ms-4">
-                                <h1 class="nombre-usuario">@Model.Nombre @Model.Apellido</h1>
-                                <div class="metadatos-usuario">
-                                    <span class="fecha-registro">
-                                        <i class="bi bi-calendar-plus me-1"></i>
-                                        Miembro desde @Model.FechaCreacion.ToString("MMMM yyyy")
-                                    </span>
-                                </div>
+    <!-- Contenido Principal -->
+    <div class="row g-4">
+        <!-- Encabezado del Perfil -->
+        <div class="rounded-4 shadow-sm border-0">
+            <div class="p-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="info-basica ms-md-4">
+                            <h1 class="fs-2 fw-bold mb-2">@Model.Nombre @Model.Apellido</h1>
+                            <div class="d-flex align-items-center gap-3 text-secondary">
+                                <span class="small">
+                                    <i class="bi bi-calendar-plus me-1"></i>
+                                    Miembro desde @Model.FechaCreacion.ToString("MMMM yyyy")
+                                </span>
                             </div>
                         </div>
-                        <div class="acciones-perfil">
-                            @if (esPropioPerfil || esAdmin)
+                    </div>
+                    <div class="acciones-perfil">
+                        @if (esPropioPerfil || User.IsInRole("Administrador"))
+                        {
+                            <a asp-controller="Usuario" asp-action="EditarUsuario" asp-route-id="@Model.UsuarioId"
+                               class="btn btn-primary">
+                                <i class="bi bi-pencil me-2"></i>Editar Perfil
+                            </a>
+                        }
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            @if (Model.Activo)
                             {
-                                <a asp-controller="Usuario" asp-action="EditarUsuario" asp-route-id="@Model.UsuarioId"
-                                   class="btn btn-primary">
-                                    <i class="bi bi-pencil me-2"></i>Editar Perfil
-                                </a>
+                                <button class="btn btn-outline-danger ms-0 ms-md-2 mt-3 mt-md-0"
+                                        onclick="darBajaUsuario('@Model.UsuarioId', '@Model.Nombre @Model.Apellido')">
+                                    <i class="bi bi-person-dash me-2"></i>Dar de Baja
+                                </button>
                             }
-                            @if (esAdmin && !esPropioPerfil)
+                            else
                             {
-                                @if (Model.Activo)
+                                <button class="btn btn-outline-success ms-2"
+                                        onclick="darAltaUsuario('@Model.UsuarioId', '@Model.Nombre @Model.Apellido')">
+                                    <i class="bi bi-person-plus me-2"></i>Dar de Alta
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Información personal -->
+        <div class="card p-0 rounded-4 shadow-sm border-0">
+            <div class="card-header bg-body-tertiary border-bottom border-light-subtle rounded-top-4 px-4 py-3">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-person-circle me-2 text-primary"></i>
+                    Información Personal
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary mb-2">
+                                <i class="bi bi-person me-2"></i>Nombre Completo
+                            </label>
+                            <div class="d-flex align-items-center fw-medium">@Model.Nombre @Model.Apellido</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary mb-2">
+                                <i class="bi bi-envelope me-2"></i>Correo Electrónico
+                            </label>
+                            <div class="d-flex align-items-center fw-medium">@Model.Email</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary mb-2">
+                                <i class="bi bi-calendar me-2"></i>Fecha de Nacimiento
+                            </label>
+                            <div class="d-flex align-items-center fw-medium">
+                                @Model.FechaNacimiento.ToString("dd 'de' MMMM 'de' yyyy")
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary mb-2">
+                                <i class="bi bi-telephone me-2"></i>Teléfono
+                            </label>
+                            <div class="d-flex align-items-center fw-medium">
+                                @if (!string.IsNullOrEmpty(Model.Telefono))
                                 {
-                                    <button class="btn btn-outline-danger ms-2"
-                                            onclick="confirmarAccion('@Model.UsuarioId', 'baja', '@Model.Nombre @Model.Apellido')">
-                                        <i class="bi bi-person-dash me-2"></i>Dar de Baja
+                                    <span>@Model.Telefono</span>
+                                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarAlPortapapeles('@Model.Telefono')">
+                                        <i class="bi bi-copy"></i>
                                     </button>
                                 }
                                 else
                                 {
-                                    <button class="btn btn-outline-success ms-2"
-                                            onclick="confirmarAccion('@Model.UsuarioId', 'alta', '@Model.Nombre @Model.Apellido')">
-                                        <i class="bi bi-person-plus me-2"></i>Dar de Alta
+                                    <span class="text-muted">No especificado</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary mb-2">
+                                <i class="bi bi-geo-alt me-2"></i>Dirección
+                            </label>
+                            <div class="d-flex align-items-center fw-medium">
+                                @if (!string.IsNullOrEmpty(Model.Direccion))
+                                {
+                                    <span>@Model.Direccion</span>
+                                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarAlPortapapeles('@Model.Direccion')">
+                                        <i class="bi bi-copy"></i>
                                     </button>
                                 }
-                            }
+                                else
+                                {
+                                    <span class="text-muted">No especificada</span>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Contenido Principal -->
-    <div class="row g-4">
-        <!-- Información Personal -->
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white border-bottom">
+        <!-- Información Administrativa (Solo para Admins) -->
+        @if (User.IsInRole("Administrador"))
+        {
+            <div class="card p-0 rounded-4 shadow-sm border-0">
+                <div class="card-header bg-body-tertiary border-bottom border-light-subtle rounded-top-4 px-4 py-3">
                     <h5 class="mb-0 fw-semibold">
-                        <i class="bi bi-person-circle me-2 text-primary"></i>
-                        Información Personal
+                        <i class="bi bi-shield-check me-2 text-warning"></i>
+                        Información Administrativa
                     </h5>
                 </div>
                 <div class="card-body p-4">
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <div class="campo-info">
-                                <label class="etiqueta-campo">
-                                    <i class="bi bi-person me-2"></i>Nombre Completo
+                            <div class="mb-4">
+                                <label class="form-label small fw-semibold text-secondary mb-2">
+                                    <i class="bi bi-key me-2"></i>ID de Usuario
                                 </label>
-                                <div class="valor-campo">@Model.Nombre @Model.Apellido</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="campo-info">
-                                <label class="etiqueta-campo">
-                                    <i class="bi bi-envelope me-2"></i>Correo Electrónico
-                                </label>
-                                <div class="valor-campo">@Model.Email</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="campo-info">
-                                <label class="etiqueta-campo">
-                                    <i class="bi bi-calendar me-2"></i>Fecha de Nacimiento
-                                </label>
-                                <div class="valor-campo">
-                                    @Model.FechaNacimiento.ToString("dd 'de' MMMM 'de' yyyy")
-                                    <small class="text-muted ms-2">
-                                        (@((DateTime.Now.Year - Model.FechaNacimiento.Year)) años)
-                                    </small>
+                                <div class="d-flex align-items-center fw-medium">
+                                    <code class="bg-body-secondary text-secondary px-2 py-1 rounded-2">#@Model.UsuarioId</code>
+                                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarAlPortapapeles('@Model.UsuarioId')">
+                                        <i class="bi bi-copy"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="campo-info">
-                                <label class="etiqueta-campo">
-                                    <i class="bi bi-telephone me-2"></i>Teléfono
+                            <div class="mb-4">
+                                <label class="form-label small fw-semibold text-secondary mb-2">
+                                    <i class="bi bi-calendar-plus me-2"></i>Fecha de Registro
                                 </label>
-                                <div class="valor-campo">
-                                    @if (!string.IsNullOrEmpty(Model.Telefono))
-                                    {
-                                        <span>@Model.Telefono</span>
-                                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarAlPortapapeles('@Model.Telefono')">
-                                            <i class="bi bi-copy"></i>
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">No especificado</span>
-                                    }
-                                </div>
+                                <div class="d-flex align-items-center fw-medium">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</div>
                             </div>
                         </div>
-                        <div class="col-12">
-                            <div class="campo-info">
-                                <label class="etiqueta-campo">
-                                    <i class="bi bi-geo-alt me-2"></i>Dirección
-                                </label>
-                                <div class="valor-campo">
-                                    @if (!string.IsNullOrEmpty(Model.Direccion))
-                                    {
-                                        <span>@Model.Direccion</span>
-                                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarAlPortapapeles('@Model.Direccion')">
-                                            <i class="bi bi-copy"></i>
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">No especificada</span>
-                                    }
+                        @if (Model.UltimaFechaAlta != null)
+                        {
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label class="form-label small fw-semibold text-secondary mb-2">
+                                        <i class="bi bi-arrow-up-circle me-2"></i>Última Fecha de Alta
+                                    </label>
+                                    <div class="d-flex align-items-center fw-medium">@Model.UltimaFechaAlta?.ToString("dd/MM/yyyy HH:mm")</div>
                                 </div>
                             </div>
-                        </div>
+                        }
+                        @if (Model.UltimaFechaBaja != null)
+                        {
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label class="form-label small fw-semibold text-secondary mb-2">
+                                        <i class="bi bi-arrow-down-circle me-2"></i>Última Fecha de Baja
+                                    </label>
+                                    <div class="d-flex align-items-center fw-medium">@Model.UltimaFechaBaja?.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
+        }
 
-            <!-- Información Administrativa (Solo para Admins) -->
-            @if (esAdmin)
-            {
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white border-bottom">
-                        <h5 class="mb-0 fw-semibold">
-                            <i class="bi bi-shield-check me-2 text-warning"></i>
-                            Información Administrativa
-                        </h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="campo-info">
-                                    <label class="etiqueta-campo">
-                                        <i class="bi bi-key me-2"></i>ID de Usuario
-                                    </label>
-                                    <div class="valor-campo">
-                                        <code class="codigo-id">#@Model.UsuarioId</code>
-                                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarAlPortapapeles('@Model.UsuarioId')">
-                                            <i class="bi bi-copy"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="campo-info">
-                                    <label class="etiqueta-campo">
-                                        <i class="bi bi-calendar-plus me-2"></i>Fecha de Registro
-                                    </label>
-                                    <div class="valor-campo">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</div>
-                                </div>
-                            </div>
-                            @if (Model.UltimaFechaAlta != null)
-                            {
-                                <div class="col-md-6">
-                                    <div class="campo-info">
-                                        <label class="etiqueta-campo">
-                                            <i class="bi bi-arrow-up-circle me-2"></i>Última Fecha de Alta
-                                        </label>
-                                        <div class="valor-campo">@Model.UltimaFechaAlta?.ToString("dd/MM/yyyy HH:mm")</div>
-                                    </div>
-                                </div>
-                            }
-                            @if (Model.UltimaFechaBaja != null)
-                            {
-                                <div class="col-md-6">
-                                    <div class="campo-info">
-                                        <label class="etiqueta-campo">
-                                            <i class="bi bi-arrow-down-circle me-2"></i>Última Fecha de Baja
-                                        </label>
-                                        <div class="valor-campo">@Model.UltimaFechaBaja?.ToString("dd/MM/yyyy HH:mm")</div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-
-        <!-- Panel Lateral -->
-        <div class="col-lg-4">
+        @if (User.IsInRole("Administrador"))
+        {
             <!-- Estadísticas del Usuario -->
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white border-bottom">
+            <div class="card p-0 rounded-4 shadow-sm border-0">
+                <div class="card-header bg-body-tertiary border-bottom border-light-subtle rounded-top-4 px-4 py-3">
                     <h5 class="mb-0 fw-semibold">
                         <i class="bi bi-graph-up me-2 text-success"></i>
                         Estadísticas
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <div class="estadistica-item">
-                        <div class="icono-estadistica pedidos">
+                    <div class="d-flex align-items-center gap-3 py-3 border-bottom-0">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 bg-primary text-white fs-5"
+                             style="width: 50px; height: 50px;">
                             <i class="bi bi-bag-check"></i>
                         </div>
-                        <div class="contenido-estadistica">
-                            <h6>Pedidos Realizados</h6>
-                            <span class="numero-estadistica">24</span>
+                        <div>
+                            <h6 class="m-0 mb-1 small text-secondary fw-medium">Pedidos Realizados</h6>
+                            <span class="fs-4 fw-bold">24</span>
                         </div>
                     </div>
-                    <div class="estadistica-item">
-                        <div class="icono-estadistica compras">
+                    <div class="d-flex align-items-center gap-3 py-3 border-bottom-0">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 bg-success text-white fs-5"
+                             style="width: 50px; height: 50px;">
                             <i class="bi bi-currency-dollar"></i>
                         </div>
-                        <div class="contenido-estadistica">
-                            <h6>Total Gastado</h6>
-                            <span class="numero-estadistica">$2.450.000</span>
+                        <div class="border-bottom-0">
+                            <h6 class="m-0 mb-1 small text-secondary fw-medium">Total Gastado</h6>
+                            <span class="fs-4 fw-bold">$2.450.000</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        }
     </div>
 </div>
 
+
 <!-- Modal de Confirmación -->
-<div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-labelledby="etiquetaModalConfirmacion" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="etiquetaModalConfirmacion">Confirmar Acción</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body pt-0">
-                <div class="text-center py-3">
-                    <div class="mb-3">
-                        <i id="iconoConfirmacion" class="display-4"></i>
-                    </div>
-                    <p id="mensajeConfirmacion" class="mb-0 fs-6"></p>
-                </div>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" id="botonConfirmar" class="btn">Confirmar</button>
-            </div>
-        </div>
-    </div>
-</div>
+<partial name="_ModalCambiarEstado" />
 
 <!-- Formularios Ocultos -->
 <div style="display: none;">
@@ -297,4 +262,88 @@
     </form>
 </div>
 
-<script src="~/js/Usuario/PerfilUsuario.js" asp-append-version="true"></script>
+@section Scripts {
+    <script>
+            document.addEventListener('DOMContentLoaded', function () {
+            // Inicializar tooltips
+            var listaTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltips = listaTooltips.map(function (elementoTooltip) {
+                return new bootstrap.Tooltip(elementoTooltip);
+            });
+        });
+
+        function darBajaUsuario(idUsuario, nombreUsuario) {
+            const modal = new bootstrap.Modal(document.getElementById('modalCambioEstado'));
+            const titulo = document.getElementById('modalTitulo');
+            const iconoEstado = document.getElementById('iconoEstado');
+            const mensajeCambioEstado = document.getElementById('mensajeCambioEstado');
+            const botonDerecho = document.getElementById('botonDerecho');
+
+            titulo.textContent = 'Dar de baja usuario';
+            iconoEstado.className = 'bi bi-exclamation-triangle text-warning display-4';
+            mensajeCambioEstado.textContent = `¿Estás seguro de que quieres dar de baja a ${nombreUsuario}?`;
+            botonDerecho.className = 'btn btn-danger';
+            botonDerecho.textContent = 'Dar de Baja';
+            botonDerecho.onclick = () => {
+                document.getElementById(`formularioBaja${idUsuario}`).submit();
+            };
+
+            modal.show();
+        }
+
+        function darAltaUsuario(idUsuario, nombreUsuario) {
+            const modal = new bootstrap.Modal(document.getElementById('modalCambioEstado'));
+            const titulo = document.getElementById('modalTitulo');
+            const iconoEstado = document.getElementById('iconoEstado');
+            const mensajeCambioEstado = document.getElementById('mensajeCambioEstado');
+            const botonDerecho = document.getElementById('botonDerecho');
+
+            titulo.textContent = 'Dar de alta usuario';
+            iconoEstado.className = 'bi bi-check-circle text-success display-4';
+            mensajeCambioEstado.textContent = `¿Estás seguro de que quieres dar de alta a ${nombreUsuario}?`;
+            botonDerecho.className = 'btn btn-success';
+            botonDerecho.textContent = 'Dar de Alta';
+            botonDerecho.onclick = () => {
+                document.getElementById(`formularioAlta${idUsuario}`).submit();
+            };
+
+            modal.show();
+        }
+
+        // Copiar al portapapeles
+        function copiarAlPortapapeles(texto) {
+            navigator.clipboard.writeText(texto).then(function () {
+                // Mostrar notificación de éxito
+                const toast = document.createElement('div');
+                toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3';
+                toast.style.zIndex = '9999';
+                toast.innerHTML = `
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="bi bi-check-circle me-2"></i>Copiado al portapapeles
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                        </div>
+                    `;
+                document.body.appendChild(toast);
+
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
+
+                toast.addEventListener('hidden.bs.toast', () => {
+                    document.body.removeChild(toast);
+                });
+            }).catch(function () {
+                // Fallback para navegadores que no soportan clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = texto;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                alert('Texto copiado al portapapeles');
+            });
+        }
+    </script>
+}
