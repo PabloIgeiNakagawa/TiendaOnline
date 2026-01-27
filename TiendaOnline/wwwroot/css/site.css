@@ -1,3 +1,13 @@
+.breadcrumb {
+    --bs-breadcrumb-divider: '\203a'; /* Seria este signo ">" */
+    --bs-breadcrumb-divider-color: #6c757d;
+}
+
+/* Para aplicar el font-weight bold al separador */
+.breadcrumb-item::before {
+    font-weight: 700;
+}
+
 .brand-icon-wrapper {
     background: linear-gradient(135deg, #0d6efd 0%, #004fb2 100%);
     color: white;
