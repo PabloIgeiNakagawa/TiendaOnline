@@ -2,18 +2,15 @@
 @{
     ViewData["Title"] = "Nueva Categoría";
 }
-
-@* Reutilizamos el CSS de registro para mantener la coherencia visual *@
-<link rel="stylesheet" href="~/css/Usuario/Register.css" asp-append-version="true" />
-
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-8 col-xl-6">
             <div class="text-center mb-5">
-                <div class="icono-registro mb-3" style="background-color: var(--bs-primary); color: white; width: 80px; height: 80px; line-height: 80px; border-radius: 50%; display: inline-block; font-size: 2rem;">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle shadow-sm fs-2 mb-3"
+                     style="width: 80px; height: 80px;">
                     <i class="bi bi-tag-fill"></i>
                 </div>
-                <h2 class="fw-bold text-dark mb-2">Crear Nueva Categoría</h2>
+                <h2 class="fw-bold mb-2">Crear Nueva Categoría</h2>
                 <p class="text-muted">Defina el nombre y la posición jerárquica en el catálogo</p>
             </div>
 
@@ -61,14 +58,14 @@
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <div class="d-flex justify-content-end align-items-center pt-3 border-top">
                             <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg px-4">
-                                    <i class="bi bi-save me-2"></i>Guardar Categoría
-                                </button>
                                 <a asp-controller="Admin" asp-action="Categorias" class="btn btn-outline-secondary btn-lg px-4">
                                     <i class="bi bi-arrow-left me-2"></i>Volver
                                 </a>
+                                <button type="submit" class="btn btn-primary btn-lg px-4">
+                                    <i class="bi bi-save me-2"></i>Guardar Categoría
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -77,9 +74,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
