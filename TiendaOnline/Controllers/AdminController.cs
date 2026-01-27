@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
-using TiendaOnline.IServices;
-using TiendaOnline.Models;
-using TiendaOnline.Services;
+using TiendaOnline.Services.IServices;
 
 public class AdminController : Controller
 {

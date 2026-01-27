@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Data;
-using TiendaOnline.IServices;
-using TiendaOnline.Models;
-using TiendaOnline.Services;
+using TiendaOnline.Domain.Entities; 
+using TiendaOnline.Domain.Interfaces;
+using TiendaOnline.Services.IServices;
+using TiendaOnline.Services.Services;
+using TiendaOnline.Infrastructure.ExternalServices; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,12 +17,15 @@ builder.Services.AddHttpContextAccessor();
 
 // Base de datos
 builder.Services.AddDbContext<TiendaContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        b => b.MigrationsAssembly("TiendaOnline.Data")
+    ));
 
 // Sesion
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // El carrito se borra tras 30 min de inactividad
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
@@ -31,27 +36,31 @@ builder.Services.AddAuthentication("CookieAuth")
     {
         config.LoginPath = "/Usuario/Login";
         config.LogoutPath = "/Usuario/Logout";
-
-        // Configuraciones de seguridad para la cookie
-        config.Cookie.HttpOnly = true; // Evita acceso desde JavaScript (más seguro)
+        config.Cookie.HttpOnly = true;
         #if DEBUG
             config.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         #else
             config.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         #endif
-        config.Cookie.SameSite = SameSiteMode.Strict; // Previene CSRF
+            config.Cookie.SameSite = SameSiteMode.Strict;
     });
 
-// Services
+// Registro de Servicios (Inyección de Dependencias)
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IProductoService, ProductoService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IPedidoService, PedidoService>();
 builder.Services.AddScoped<IReportesService, ReportesService>();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
-builder.Services.AddScoped<IImagenService, CloudinaryService>();
-builder.Services.AddScoped<PasswordHasher<Usuario>>();
 
+// Servicio para manejar la sesión del usuario
+builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+
+// El servicio de Cloudinary (Interfaz en Domain, Implementación en Infrastructure)
+builder.Services.AddScoped<IImagenService, CloudinaryService>();
+
+// PasswordHasher (Usando la entidad del Domain)
+builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 
 var app = builder.Build();
 
@@ -59,23 +68,18 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseSession(); // Para el carrito
-
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}"
-);
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

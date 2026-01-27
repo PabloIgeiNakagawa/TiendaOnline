@@ -7,14 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CloudinaryDotNet" Version="1.27.9" />
     <PackageReference Include="Microsoft.AspNet.Mvc" Version="5.3.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.5">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.5" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TiendaOnline.Data\TiendaOnline.Data.csproj" />
+    <ProjectReference Include="..\TiendaOnline.Domain\TiendaOnline.Domain.csproj" />
+    <ProjectReference Include="..\TiendaOnline.Infrastructure\TiendaOnline.Infrastructure.csproj" />
+    <ProjectReference Include="..\TiendaOnline.Services\TiendaOnline.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>

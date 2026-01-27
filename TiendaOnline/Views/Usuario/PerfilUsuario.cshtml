@@ -1,4 +1,4 @@
-﻿@model TiendaOnline.Models.Usuario
+﻿@model TiendaOnline.Domain.Entities.Usuario
 @{
     ViewData["Title"] = "Perfil de Usuario";
     var esPropioPerfil = User.Claims.FirstOrDefault(c => c.Type == "UsuarioId")?.Value == Model.UsuarioId.ToString();

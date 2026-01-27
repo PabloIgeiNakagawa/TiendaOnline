@@ -1,4 +1,4 @@
-﻿@model TiendaOnline.Models.Pedido
+﻿@model TiendaOnline.Domain.Entities.Pedido
 @{
     ViewData["Title"] = $"Pedido #{Model.PedidoId.ToString("D6")}";
     var total = Model.DetallesPedido?.Sum(d => d.Cantidad * d.PrecioUnitario) ?? 0;

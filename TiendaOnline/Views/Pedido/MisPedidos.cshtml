@@ -1,4 +1,4 @@
-﻿@model IEnumerable<TiendaOnline.Models.Pedido>
+﻿@model IEnumerable<TiendaOnline.Domain.Entities.Pedido>
 @{
     ViewData["Title"] = "Mis Pedidos";
 }
@@ -62,7 +62,7 @@
                     <i class="bi bi-clock"></i>
                 </div>
                 <div>
-                    <h3 class="fs-5 fw-bold mb-1">@Model.Count(p => p.Estado == TiendaOnline.Models.EstadoPedido.Pendiente)</h3>
+                    <h3 class="fs-5 fw-bold mb-1">@Model.Count(p => p.Estado == EstadoPedido.Pendiente)</h3>
                     <p class="text-secondary small mb-0">Pendientes</p>
                 </div>
             </div>
@@ -74,7 +74,7 @@
                     <i class="bi bi-check-circle"></i>
                 </div>
                 <div>
-                    <h3 class="fs-5 fw-bold mb-1">@Model.Count(p => p.Estado == TiendaOnline.Models.EstadoPedido.Entregado)</h3>
+                    <h3 class="fs-5 fw-bold mb-1">@Model.Count(p => p.Estado == EstadoPedido.Entregado)</h3>
                     <p class="text-secondary small mb-0">Entregados</p>
                 </div>
             </div>
@@ -86,7 +86,7 @@
                     <i class="bi bi-x-circle"></i>
                 </div>
                 <div class="stat-content">
-                    <h3 class="fs-5 fw-bold mb-1">@Model.Count(p => p.Estado == TiendaOnline.Models.EstadoPedido.Cancelado)</h3>
+                    <h3 class="fs-5 fw-bold mb-1">@Model.Count(p => p.Estado == EstadoPedido.Cancelado)</h3>
                     <p class="text-secondary small mb-0">Cancelados</p>
                 </div>
             </div>
@@ -105,7 +105,7 @@
                             </label>
                             <select id="filtroEstado" class="form-select">
                                 <option value="">Todos los estados</option>
-                                @foreach (var estado in Enum.GetValues<TiendaOnline.Models.EstadoPedido>())
+                                @foreach (var estado in Enum.GetValues<EstadoPedido>())
                                 {
                                     <option value="@((int)estado)">@estado.ToString()</option>
                                 }
@@ -159,10 +159,10 @@
                                             @{
                                                 string claseEstado = pedido.Estado switch
                                                 {
-                                                    TiendaOnline.Models.EstadoPedido.Pendiente => "bg-warning",
-                                                    TiendaOnline.Models.EstadoPedido.Enviado => "bg-primary",
-                                                    TiendaOnline.Models.EstadoPedido.Entregado => "bg-success",
-                                                    TiendaOnline.Models.EstadoPedido.Cancelado => "bg-danger",
+                                                    EstadoPedido.Pendiente => "bg-warning",
+                                                    EstadoPedido.Enviado => "bg-primary",
+                                                    EstadoPedido.Entregado => "bg-success",
+                                                    EstadoPedido.Cancelado => "bg-danger",
                                                     _ => "bg-secondary"
                                                 };
                                             }
@@ -225,7 +225,7 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="@(pedido.Estado >= TiendaOnline.Models.EstadoPedido.Enviado ? "bg-success text-white" : "")">
+                                                    <div class="@(pedido.Estado >= EstadoPedido.Enviado ? "bg-success text-white" : "")">
                                                         <div class="timeline-marker">
                                                             <i class="bi bi-truck"></i>
                                                         </div>
@@ -242,9 +242,9 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="@(pedido.Estado == TiendaOnline.Models.EstadoPedido.Entregado ? "bg-success text-white" : "") @(pedido.Estado == TiendaOnline.Models.EstadoPedido.Cancelado ? "bg-danger text-white" : "")">
+                                                    <div class="@(pedido.Estado == EstadoPedido.Entregado ? "bg-success text-white" : "") @(pedido.Estado == EstadoPedido.Cancelado ? "bg-danger text-white" : "")">
                                                         <div class="timeline-marker">
-                                                            @if (pedido.Estado == TiendaOnline.Models.EstadoPedido.Cancelado)
+                                                            @if (pedido.Estado == EstadoPedido.Cancelado)
                                                             {
                                                                 <i class="bi bi-x-circle"></i>
                                                             }
@@ -254,7 +254,7 @@
                                                             }
                                                         </div>
                                                         <div>
-                                                            @if (pedido.Estado == TiendaOnline.Models.EstadoPedido.Cancelado)
+                                                            @if (pedido.Estado == EstadoPedido.Cancelado)
                                                             {
                                                                 <h6 class="m-0 small fw-semibold">Cancelado</h6>
                                                                 @if (pedido.FechaCancelado.HasValue)

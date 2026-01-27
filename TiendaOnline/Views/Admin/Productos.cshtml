@@ -1,7 +1,7 @@
-﻿@model IEnumerable<TiendaOnline.Models.Producto>
+﻿@model IEnumerable<TiendaOnline.Domain.Entities.Producto>
 @{
     ViewData["Title"] = "Gestión de Productos";
-    var categorias = ViewBag.Categorias as List<TiendaOnline.Models.Categoria>;
+    var categorias = ViewBag.Categorias as List<Categoria>;
 }
 
 <link rel="stylesheet" href="~/css/Admin/Productos.css" asp-append-version="true" />

@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using TiendaOnline.Models;
+using TiendaOnline.Domain.Entities;
 
 namespace TiendaOnline.Controllers
 {

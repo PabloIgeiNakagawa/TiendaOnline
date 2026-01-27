@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using TiendaOnline.Models;
-using TiendaOnline.IServices;
+using TiendaOnline.Domain.Entities;
+using TiendaOnline.Services.IServices;
 
 public class CategoriaController : Controller
 {

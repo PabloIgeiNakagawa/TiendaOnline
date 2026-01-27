@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using TiendaOnline.Helpers;
-using TiendaOnline.IServices;
-using TiendaOnline.Models;
+using TiendaOnline.Services.IServices;
+using TiendaOnline.Domain.DTOs;
 
 namespace TiendaOnline.Controllers
 {

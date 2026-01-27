@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using TiendaOnline.IServices;
-using TiendaOnline.Models;
+using TiendaOnline.Domain.Entities;
+using TiendaOnline.Domain.Interfaces;
+using TiendaOnline.Services.IServices;
 using TiendaOnline.ViewModels.Producto;
 
 public class ProductoController : Controller
@@ -75,7 +76,16 @@ public class ProductoController : Controller
         }
 
         // 2. Mapear del ViewModel a la Entidad real
-        string urlImagen = await _imagenService.SubirImagenAsync(model.ImagenArchivo);
+        Stream? stream = null;
+        string? nombre = null;
+
+        if (model.ImagenArchivo != null)
+        {
+            stream = model.ImagenArchivo.OpenReadStream();
+            nombre = model.ImagenArchivo.FileName;
+        }
+
+        string urlImagen = await _imagenService.SubirImagenAsync(stream, nombre);
 
         var nuevoProducto = new Producto
         {
@@ -124,11 +134,21 @@ public class ProductoController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Administrador")]
-    public async Task<IActionResult> EditarProducto(int id, Producto productoEditado, IFormFile ImagenArchivo)
+    public async Task<IActionResult> Editar(int id, Producto producto, IFormFile? ImagenArchivo)
     {
-        await _productoService.EditarProductoAsync(id, productoEditado, ImagenArchivo);
-        TempData["MensajeExito"] = "El producto se actualizó correctamente.";
-        return RedirectToAction("Detalles", "Producto", new { id });
+        Stream? stream = null;
+        string? nombre = null;
+
+        if (ImagenArchivo != null)
+        {
+            stream = ImagenArchivo.OpenReadStream();
+            nombre = ImagenArchivo.FileName;
+        }
+
+        // Llamamos al servicio con los datos "limpios"
+        await _productoService.EditarProductoAsync(id, producto, stream, nombre);
+
+        return RedirectToAction("Index");
     }
 
     private string ObtenerRutaCompleta(Categoria cat)

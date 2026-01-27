@@ -1,4 +1,4 @@
-﻿@model IEnumerable<TiendaOnline.Models.Usuario>
+﻿@model IEnumerable<TiendaOnline.Domain.Entities.Usuario>
 @{
     ViewData["Title"] = "Gestión de Usuarios";
 }
@@ -43,7 +43,7 @@
                             </label>
                             <select id="filtroRol" class="form-select">
                                 <option value="">Todos los roles</option>
-                                @foreach (var rol in Html.GetEnumSelectList<TiendaOnline.Models.Rol>())
+                                @foreach (var rol in Html.GetEnumSelectList<Rol>())
                                 {
                                     <option value="@rol.Text">@rol.Text</option>
                                 }

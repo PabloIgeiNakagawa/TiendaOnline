@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using TiendaOnline.IServices;
-using TiendaOnline.Models;
+using TiendaOnline.Domain.DTOs;
+using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Controllers
 {

@@ -2,11 +2,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using System.Security.Claims;
-using TiendaOnline.Exceptions;
-using TiendaOnline.Models;
-using TiendaOnline.Services;
+using TiendaOnline.Domain.Exceptions;
+using TiendaOnline.Domain.Entities;
+using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Controllers
 {
