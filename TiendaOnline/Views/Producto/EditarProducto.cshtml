@@ -3,30 +3,28 @@
     ViewData["Title"] = $"Editar - {Model.Nombre}";
 }
 
-<link rel="stylesheet" href="~/css/Producto/EditarProducto.css" asp-append-version="true" />
-
 <div class="container py-4">
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a href="@Url.Action("Index", "Home")" class="text-decoration-none">
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
                     <i class="bi bi-house-door"></i> Inicio
                 </a>
             </li>
             <li class="breadcrumb-item">
-                <a href="@Url.Action("Index", "Producto")" class="text-decoration-none">Productos</a>
+                <a asp-controller="Admin" asp-action="Productos"  class="text-decoration-none">Productos</a>
             </li>
             <li class="breadcrumb-item">
-                <a href="@Url.Action("Detalles", "Producto", new { id = Model.ProductoId })" class="text-decoration-none">@Model.Nombre</a>
+                <a asp-controller="Producto" asp-action="Detalles" asp-route-id="@Model.ProductoId" class="text-decoration-none">@Model.Nombre</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">Editar</li>
         </ol>
     </nav>
 
-    <div class="form-container">
+    <div class="mx-auto rounded-3 shadow overflow-hidden" style="max-width: 800px;">
         <!-- Header -->
-        <div class="form-header">
+        <div class="bg-success text-white py-4 px-3 text-center">
             <h2 class="mb-2">
                 <i class="bi bi-pencil-square me-2"></i>
                 Editar Producto
@@ -35,7 +33,7 @@
         </div>
 
         <!-- Formulario -->
-        <div class="form-body">
+        <div class="p-4">
             <form asp-action="EditarProducto" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <input asp-for="ProductoId" type="hidden" />
@@ -129,28 +127,16 @@
                             <i class="bi bi-image-fill me-1"></i>Imagen Actual
                         </label>
                         <div>
-                            @if (Model.ImagenUrl != null)
-                            {
-                                <div class="image-container">
-                                    <img src=@Model.ImagenUrl
-                                         class="current-image"
-                                         alt="@Model.Nombre" />
-                                    <div class="image-badge">
-                                        <i class="bi bi-check"></i>
-                                    </div>
-                                </div>
-                                <div class="form-text text-success">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    Imagen cargada correctamente
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="text-center p-4 border rounded bg-light">
-                                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
-                                    <p class="text-muted mb-0">Sin imagen</p>
-                                </div>
-                            }
+                            <div class="position-relative d-inline-block">
+                                <img src=@Model.ImagenUrl
+                                     class="img-fluid my-3 rounded-3 shadow-sm border border-2 border-light-subtle d-block object-fit-cover"
+                                     style="max-width: 200px; max-height: 200px;"
+                                     alt="@Model.Nombre" />
+                            </div>
+                            <div class="form-text text-success">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Imagen cargada correctamente
+                            </div>
                         </div>
                     </div>
 
@@ -162,9 +148,12 @@
                         <input type="file" name="ImagenArchivo" id="ImagenArchivo" class="form-control" accept="image/*" />
                         <div class="form-text">Formatos permitidos: JPG, PNG, JPEG</div>
 
-                        <img id="imagePreview" class="image-preview" alt="Nueva imagen" />
+                        <img id="imagePreview"
+                             class="d-none img-fluid my-3 rounded-3 shadow-sm border border-2 border-success"
+                             style="max-width: 200px; max-height: 200px; object-fit: cover;"
+                             alt="Nueva imagen" />
 
-                        <div class="change-image-info">
+                        <div class="alert alert-info rounded-2 p-2 mt-2 small">
                             <i class="bi bi-lightbulb me-1"></i>
                             <strong>Nota:</strong> Si no selecciona una nueva imagen, se mantendrá la imagen actual.
                         </div>
@@ -176,18 +165,17 @@
                     <div class="col-12">
                         <div class="d-flex flex-column flex-md-row gap-3 justify-content-md-end">
 
-                            <a href="@Url.Action("Index", "Producto")"
+                            <a asp-controller="Admin" asp-action="Productos"
                                class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center">
                                 <i class="bi bi-arrow-left me-2"></i>Cancelar
                             </a>
 
-                            <a href="@Url.Action("Detalles", "Producto", new { id = Model.ProductoId })"
+                            <a asp-controller="Producto" asp-action="Detalles" asp-route-id="@Model.ProductoId"
                                class="btn btn-outline-info d-inline-flex align-items-center justify-content-center">
                                 <i class="bi bi-eye me-2"></i>Ver Detalle
                             </a>
 
-                            <button type="submit"
-                                    class="btn btn-submit d-inline-flex align-items-center justify-content-center">
+                            <button type="submit" class="btn btn-success d-inline-flex align-items-center justify-content-center">
                                 <i class="bi bi-check-circle me-2"></i>Guardar Cambios
                             </button>
 
@@ -198,9 +186,29 @@
         </div>
     </div>
 </div>
-<script src="~/js/Producto/EditarProducto.js" asp-append-version="true"></script>
+
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <script>
+        // Solo vista previa de nueva imagen
+        document.addEventListener('DOMContentLoaded', function () {
+            const imagenInput = document.getElementById('ImagenArchivo');
+            const imagePreview = document.getElementById('imagePreview');
+
+            if (imagenInput && imagePreview) {
+                imagenInput.addEventListener('change', function () {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            imagePreview.src = e.target.result;
+                            imagePreview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        imagePreview.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
 }
