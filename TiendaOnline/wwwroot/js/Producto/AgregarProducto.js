@@ -163,8 +163,10 @@
         const reader = new FileReader();
         reader.onload = function (e) {
             imagePreview.src = e.target.result;
+            imagePreview.classList.remove('d-none');
             imagePreview.style.display = 'block';
             uploadPlaceholder.style.display = 'none';
+            fileInfo.classList.remove('d-none');
             fileInfo.style.display = 'block';
             fileName.textContent = file.name;
             uploadContainer.classList.add('has-image');

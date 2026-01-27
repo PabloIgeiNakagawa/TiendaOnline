@@ -1,29 +1,58 @@
-﻿@model TiendaOnline.Models.Producto
+﻿@model TiendaOnline.ViewModels.Producto.AgregarProductoViewModel
 @{
     ViewData["Title"] = "Agregar Producto";
 }
+@section Styles{
+    <style>
+        .image-upload-container {
+            position: relative;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
 
-<link rel="stylesheet" href="~/css/Producto/AgregarProducto.css" asp-append-version="true" />
+            .image-upload-container:hover {
+                border-color: #0d6efd;
+            }
+
+            .image-upload-container.dragover {
+                border-color: #198754;
+                background: #d1e7dd;
+            }
+
+        .loading-spinner {
+            display: none;
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 1rem;
+        }
+    </style>
+}
 
 <div class="container-fluid py-4">
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a href="@Url.Action("Index", "Home")" class="text-decoration-none">
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
                     <i class="bi bi-house-door"></i> Inicio
                 </a>
             </li>
             <li class="breadcrumb-item">
-                <a href="@Url.Action("Index", "Producto")" class="text-decoration-none">Productos</a>
+                <a asp-controller="Admin" asp-action="Productos" class="text-decoration-none">Productos</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">Agregar Producto</li>
         </ol>
     </nav>
 
-    <div class="form-container">
+    <div class="mx-auto rounded-3 shadow overflow-hidden" style="max-width: 800px;">
         <!-- Header -->
-        <div class="form-header">
+        <div class="bg-primary py-5 px-4 text-center text-white">
             <h2 class="mb-2">
                 <i class="bi bi-plus-circle me-2"></i>
                 Agregar Nuevo Producto
@@ -32,7 +61,7 @@
         </div>
 
         <!-- Formulario -->
-        <div class="form-body">
+        <div class="p-4">
             <form asp-action="AgregarProducto" method="post" enctype="multipart/form-data" id="formProducto" novalidate>
                 @Html.AntiForgeryToken()
 
@@ -45,56 +74,54 @@
                         </h5>
                     </div>
                 </div>
-
-                <div class="form-group-row">
-                    <!-- Nombre -->
-                    <div class="form-floating">
-                        <input asp-for="Nombre"
-                               class="form-control"
-                               id="nombre"
-                               placeholder="Nombre del producto"
-                               maxlength="50"
-                               required />
-                        <label for="nombre">
-                            <i class="bi bi-box me-1"></i>Nombre del Producto
-                        </label>
-                        <span asp-validation-for="Nombre" class="invalid-feedback"></span>
-                        <div class="form-text">
-                            <span id="nombreContador">0</span>/50 caracteres
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <!-- Nombre -->
+                        <div class="form-floating mb-4">
+                            <input asp-for="Nombre"
+                                   class="form-control"
+                                   id="nombre"
+                                   placeholder="Nombre del producto"
+                                   maxlength="50"
+                                   required />
+                            <label for="nombre">
+                                <i class="bi bi-box me-1"></i>Nombre del Producto
+                            </label>
+                            <span asp-validation-for="Nombre" class="invalid-feedback"></span>
+                            <div class="form-text">
+                                <span id="nombreContador">0</span>/50 caracteres
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Categoría -->
-                    <div class="form-floating">
-                        <select asp-for="CategoriaId"
-                                asp-items="ViewBag.Categorias"
-                                class="form-select"
-                                id="categoria"
-                                required>
-                            <option value="">Seleccione una categoría</option>
-                        </select>
-                        <label for="categoria">
-                            <i class="bi bi-tag me-1"></i>Categoría
-                        </label>
-                        <span asp-validation-for="CategoriaId" class="invalid-feedback"></span>
+                    <div class="col-12 col-md-6">
+                        <!-- Categoria -->
+                        <div class="form-floating mb-4">
+                            <select asp-for="CategoriaId"
+                                    asp-items="ViewBag.Categorias"
+                                    class="form-select"
+                                    id="categoria"
+                                    required>
+                                <option value="">Seleccione una categoría</option>
+                            </select>
+                            <label for="categoria">
+                                <i class="bi bi-tag me-1"></i>Categoría
+                            </label>
+                            <span asp-validation-for="CategoriaId" class="invalid-feedback"></span>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Descripción -->
-                <div class="form-floating mb-4">
-                    <textarea asp-for="Descripcion"
-                              class="form-control"
-                              id="descripcion"
-                              placeholder="Descripción del producto"
-                              style="height: 120px"
-                              maxlength="150"
-                              required></textarea>
-                    <label for="descripcion">
-                        <i class="bi bi-card-text me-1"></i>Descripción
-                    </label>
-                    <span asp-validation-for="Descripcion" class="invalid-feedback"></span>
-                    <div class="form-text">
-                        <span id="descripcionContador">0</span>/150 caracteres
+                    <div class="col-12">
+                        <!-- Descripción -->
+                        <div class="form-floating mb-4">
+                            <textarea asp-for="Descripcion"
+                                      class="form-control"
+                                      id="descripcion"
+                                      placeholder="Descripción"
+                                      style="height: 100px"></textarea>
+                            <label for="descripcion">Descripción</label>
+                            <span asp-validation-for="Descripcion" class="text-danger"></span>
+                        </div>
                     </div>
                 </div>
 
@@ -108,41 +135,43 @@
                     </div>
                 </div>
 
-                <div class="form-group-row">
-                    <!-- Precio -->
-                    <div class="form-floating">
-                        <input asp-for="Precio"
-                               type="number"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               id="precio"
-                               placeholder="0.00"
-                               required />
-                        <label for="precio">
-                            <i class="bi bi-currency-dollar me-1"></i>Precio (ARS)
-                        </label>
-                        <span asp-validation-for="Precio" class="invalid-feedback"></span>
-                        <div class="form-text">
-                            Precio en pesos argentinos
+                <div class="row col-md-12 g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="form-floating mb-4">
+                            <input asp-for="Precio"
+                                   type="number"
+                                   step="0.01"
+                                   min="0"
+                                   class="form-control"
+                                   id="precio"
+                                   placeholder="0.00"
+                                   required />
+                            <label for="precio">
+                                <i class="bi bi-currency-dollar me-1"></i>Precio (ARS)
+                            </label>
+                            <span asp-validation-for="Precio" class="invalid-feedback"></span>
+                            <div class="form-text">
+                                Precio en pesos argentinos
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Stock -->
-                    <div class="form-floating">
-                        <input asp-for="Stock"
-                               type="number"
-                               min="0"
-                               class="form-control"
-                               id="stock"
-                               placeholder="0"
-                               required />
-                        <label for="stock">
-                            <i class="bi bi-boxes me-1"></i>Stock Inicial
-                        </label>
-                        <span asp-validation-for="Stock" class="invalid-feedback"></span>
-                        <div class="form-text">
-                            Cantidad disponible en inventario
+                    <div class="col-12 col-md-6">
+                        <div class="form-floating mb-4">
+                            <input asp-for="Stock"
+                                   type="number"
+                                   min="0"
+                                   class="form-control"
+                                   id="stock"
+                                   placeholder="0"
+                                   required />
+                            <label for="stock">
+                                <i class="bi bi-boxes me-1"></i>Stock Inicial
+                            </label>
+                            <span asp-validation-for="Stock" class="invalid-feedback"></span>
+                            <div class="form-text">
+                                Cantidad disponible en inventario
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -158,7 +187,7 @@
                 </div>
 
                 <div class="image-upload-container" onclick="document.getElementById('imagenArchivo').click()">
-                    <input type="file"
+                    <input type="file" asp-for="ImagenArchivo"
                            name="ImagenArchivo"
                            id="imagenArchivo"
                            class="d-none"
@@ -166,15 +195,18 @@
                            required />
 
                     <div id="uploadPlaceholder">
-                        <i class="bi bi-cloud-upload upload-icon"></i>
+                        <i class="bi bi-cloud-upload fs-1 text-secondary mb-3"></i>
                         <h6>Haga clic para seleccionar una imagen</h6>
                         <p class="text-muted mb-0">o arrastre y suelte aquí</p>
                         <small class="text-muted">PNG, JPG, JPEG hasta 5MB</small>
                     </div>
 
-                    <img id="imagePreview" class="image-preview" alt="Vista previa" />
+                    <img id="imagePreview"
+                         class="d-none mx-auto my-3 rounded-3 shadow-sm img-thumbnail object-fit-cover"
+                         style="max-width: 200px; max-height: 200px;"
+                         alt="Vista previa" />
 
-                    <div id="fileInfo" class="file-info">
+                    <div id="fileInfo" class="d-none mt-3 p-3 bg-primary-subtle border-start border-4 border-primary rounded-2 shadow-sm">
                         <i class="bi bi-file-image me-2"></i>
                         <span id="fileName"></span>
                         <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeImage(event)">
@@ -193,10 +225,10 @@
                 <div class="row mt-5">
                     <div class="col-12">
                         <div class="d-flex gap-3 justify-content-end">
-                            <a href="@Url.Action("Index", "Producto")" class="btn btn-outline-secondary">
+                            <a asp-controller="Admin" asp-action="Productos" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left me-2"></i>Cancelar
                             </a>
-                            <button type="submit" class="btn btn-submit" id="btnSubmit">
+                            <button type="submit" class="btn btn-primary" id="btnSubmit">
                                 <span class="btn-text">
                                     <i class="bi bi-plus-circle me-2"></i>Agregar Producto
                                 </span>
@@ -211,5 +243,6 @@
         </div>
     </div>
 </div>
-
-<script src="~/js/Producto/AgregarProducto.js" asp-append-version="true"></script>
+@section Scripts{
+    <script src="~/js/Producto/AgregarProducto.js" asp-append-version="true"></script>
+}

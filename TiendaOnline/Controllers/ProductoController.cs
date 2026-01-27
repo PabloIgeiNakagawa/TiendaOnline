@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TiendaOnline.IServices;
 using TiendaOnline.Models;
+using TiendaOnline.ViewModels.Producto;
 
 public class ProductoController : Controller
 {
@@ -47,41 +48,48 @@ public class ProductoController : Controller
         });
 
         ViewBag.Categorias = new SelectList(listaFormateada, "Id", "NombreRuta");
-        return View(new Producto());
+        return View(new AgregarProductoViewModel());
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Administrador")]
-    public async Task<IActionResult> AgregarProducto(Producto producto, IFormFile ImagenArchivo)
+    public async Task<IActionResult> AgregarProducto(AgregarProductoViewModel model)
     {
-        if (ImagenArchivo == null || ImagenArchivo.Length == 0)
-        {
-            ModelState.AddModelError("ImagenArchivo", "La imagen es obligatoria.");
-        }
-
-        if (!await _categoriaService.EsCategoriaHojaAsync(producto.CategoriaId))
+        // 1. Validar regla de negocio (que tenga padre)
+        if (!await _categoriaService.EsCategoriaHojaAsync(model.CategoriaId))
         {
             ModelState.AddModelError("CategoriaId", "Debe seleccionar una subcategoría final.");
         }
 
         if (!ModelState.IsValid)
         {
+            // Recargar el ViewBag como ya lo hacías
             var categoriasHoja = await _categoriaService.ObtenerCategoriasHojaAsync();
-            var listaParaSelect = categoriasHoja.Select(c => new {
+            ViewBag.Categorias = new SelectList(categoriasHoja.Select(c => new {
                 IdValue = c.CategoriaId,
                 TextValue = ObtenerRutaCompleta(c)
-            }).ToList();
+            }), "IdValue", "TextValue");
 
-            ViewBag.Categorias = new SelectList(listaParaSelect, "IdValue", "TextValue");
-            return View(producto);
+            return View(model);
         }
 
-        string urlImagen = await _imagenService.SubirImagenAsync(ImagenArchivo);
-        producto.ImagenUrl = urlImagen;
+        // 2. Mapear del ViewModel a la Entidad real
+        string urlImagen = await _imagenService.SubirImagenAsync(model.ImagenArchivo);
 
-        await _productoService.AgregarProductoAsync(producto);
-        return RedirectToAction("Detalles", new { id = producto.ProductoId });
+        var nuevoProducto = new Producto
+        {
+            Nombre = model.Nombre,
+            Descripcion = model.Descripcion,
+            Precio = model.Precio,
+            Stock = model.Stock,
+            CategoriaId = model.CategoriaId,
+            ImagenUrl = urlImagen,
+            Activo = true
+        };
+
+        await _productoService.AgregarProductoAsync(nuevoProducto);
+        return RedirectToAction("Detalles", new { id = nuevoProducto.ProductoId });
     }
 
     [HttpPost]
