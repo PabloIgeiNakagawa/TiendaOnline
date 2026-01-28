@@ -4,7 +4,7 @@
     ViewData["Title"] = "Registrarse";
 }
 @section Styles {
-    <link rel="stylesheet" href="~/css/Usuario/Register.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/Admin/Usuario/CrearUsuario.css" asp-append-version="true" />
 }
 
 <div class="container py-5">
@@ -15,14 +15,14 @@
                 <div class="d-flex align-items-center justify-content-center mx-auto mb-3 text-white fs-2 rounded-4 bg-primary " style="width: 80px; height: 80px;">
                     <i class="bi bi-person-plus-fill"></i>
                 </div>
-                <h2 class="fw-bold mb-2">Crear cuenta</h2>
-                <p class="text-muted">Complete sus datos para crear su cuenta en TechStore</p>
+                <h2 class="fw-bold mb-2">Crear Usuario</h2>
+                <p class="text-muted">Complete la información para crear un nuevo usuario en el sistema</p>
             </div>
 
             <!-- Formulario -->
             <div class="shadow border-0 rounded-4 overflow-hidden">
                 <div class="p-5">
-                    <form asp-area="" asp-controller="Usuario" asp-action="Register" method="post" id="formularioRegistro" novalidate>
+                    <form asp-area="Admin" asp-controller="Usuario" asp-action="CrearUsuario" method="post" id="formularioRegistro" novalidate>
                         @Html.AntiForgeryToken()
 
                         <!-- Información Personal -->
@@ -126,16 +126,34 @@
                             </div>
                         </div>
 
-                        <input type="hidden" asp-for="Rol" value="@((int)Rol.Usuario)" required />
-
-                        <!-- Términos y Condiciones -->
                         <div class="seccion-formulario mb-4">
-                            <div class="form-check">
-                                <input class="" type="checkbox" id="aceptarTerminos" required>
-                                <label class="form-check-label" for="aceptarTerminos">
-                                    Acepto los <a href="#" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">términos y condiciones</a> y la
-                                    <a href="#" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">política de privacidad</a>
-                                </label>
+                            <h6 class="border-bottom mb-3 text-secondary fw-semibold small text-uppercase pb-2" style="letter-spacing: 0.5px;">
+                                <i class="bi bi-shield-check me-2"></i>Configuración de Acceso
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select asp-for="Rol" class="form-select" id="campoRol" asp-items="Html.GetEnumSelectList<Rol>()" required>
+                                            <option value="" disabled selected>Seleccione un rol</option>
+                                        </select>
+                                        <label for="campoRol">
+                                            <i class="bi bi-shield me-1"></i>Rol del Usuario
+                                        </label>
+                                        <span asp-validation-for="Rol" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="alert alert-info border-0 h-100 d-flex align-items-center">
+                                        <div>
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            <strong>Roles:</strong><br>
+                                            <small>
+                                                • <strong>Usuario:</strong> Acceso básico<br>
+                                                • <strong>Administrador:</strong> Acceso completo
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -143,14 +161,14 @@
                         <div class="d-lg-flex justify-content-between gap-2 align-items-center pt-3 border-top">
                             <button type="submit" class="btn btn-primary fw-medium rounded-3 p-3 my-2 my-lg-0" id="botonEnviar">
                                 <i class="bi bi-check-circle me-2"></i>
-                                <span class="texto-boton">Crear Cuenta</span>
+                                <span class="texto-boton">Crear Usuario</span>
                                 <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
                             </button>
                             <a class="btn btn-outline-secondary fw-medium rounded-3 p-3 my-2 my-lg-0 d-block" onclick="limpiarFormulario()">
                                 <i class="bi bi-arrow-clockwise me-2"></i>Limpiar
                             </a>
-                            <a asp-controller="Usuario" asp-action="Login" class="btn btn-outline-info fw-medium rounded-3 p-3 d-block" my-2 my-lg-0>
-                                <i class="bi bi-box-arrow-in-right me-1"></i>¿Ya tienes cuenta?
+                            <a asp-area="Admin" asp-controller="Usuario" asp-action="Index" class="btn btn-outline-danger fw-medium rounded-3 p-3 d-block my-2 my-lg-0">
+                                <i class="bi bi-x-circle me-1"></i>Cancelar
                             </a>
                         </div>
                     </form>
@@ -217,3 +235,4 @@
         });
     </script>
 }
+
