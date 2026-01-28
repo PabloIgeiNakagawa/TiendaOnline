@@ -200,4 +200,8 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ViewModels\Producto\" />
+  </ItemGroup>
+
 </Project>

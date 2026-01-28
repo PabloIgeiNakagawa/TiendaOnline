@@ -1,0 +1,221 @@
+﻿<!DOCTYPE html>
+<html lang="es" class="h-100">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin TechStore PC</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --tech-primary: #0d6efd;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f6;
+        }
+
+        /* Sidebar mejorada con tu estilo */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            background-color: #1e293b; /* Un gris azulado más moderno */
+            transition: all 0.3s;
+        }
+
+            .sidebar .nav-link {
+                color: #94a3b8;
+                padding: 0.8rem 1.5rem;
+                font-weight: 500;
+                border-radius: 0.5rem;
+                margin: 0.2rem 1rem;
+            }
+
+                .sidebar .nav-link:hover {
+                    background-color: #334155;
+                    color: #f8fafc;
+                }
+
+                .sidebar .nav-link.active {
+                    background-color: var(--tech-primary);
+                    color: white;
+                }
+
+        /* Contenedor Principal */
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        /* Tus estilos de "Admin Cards" para la vista principal */
+        .admin-link {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            text-decoration: none;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+            .admin-link:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                border-color: var(--tech-primary);
+                color: var(--tech-primary);
+            }
+
+        .link-icon {
+            width: 54px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            margin-right: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        /* Colores dinámicos */
+        .products {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .categories {
+            background: #fff7ed;
+            color: #f97316;
+        }
+
+        .users {
+            background: #f0fdf4;
+            color: #22c55e;
+        }
+
+        .orders {
+            background: #faf5ff;
+            color: #a855f7;
+        }
+
+        .reports {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+
+        .audit {
+            background: #f8fafc;
+            color: #64748b;
+        }
+
+        .link-content h5 {
+            margin-bottom: 0.25rem;
+            font-weight: 700;
+        }
+
+        .link-content p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        @@media (max-width: 768px) {
+            .sidebar {
+                margin-left: calc(-1 * var(--sidebar-width));
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+            }
+
+            .sidebar.show {
+                margin-left: 0;
+            }
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+    <aside class="sidebar d-flex flex-column">
+        <div class="p-4 mb-2">
+            <h5 class="text-white fw-bold mb-0">
+                <i class="bi bi-cpu me-2"></i>TechStore <span class="text-primary">Admin</span>
+            </h5>
+        </div>
+
+        <nav class="nav flex-column flex-grow-1">
+            <a class="nav-link"
+               asp-area="Admin" asp-controller="Reportes" asp-action="Index">
+                <i class="bi bi-grid-1x2 me-2"></i> Dashboard
+            </a>
+            <a class="nav-link" asp-area="Admin" asp-controller="Producto" asp-action="Index">
+                <i class="bi bi-box-seam me-2"></i> Productos
+            </a>
+            <a class="nav-link" asp-area="Admin" asp-controller="Categoria" asp-action="Index">
+                <i class="bi bi-tags me-2"></i> Categorías
+            </a>
+            <a class="nav-link" asp-area="Admin" asp-controller="Usuario" asp-action="Index">
+                <i class="bi bi-people me-2"></i> Usuarios
+            </a>
+            <a class="nav-link" asp-area="Admin" asp-controller="Pedido" asp-action="Index">
+                <i class="bi bi-cart-check me-2"></i> Pedidos
+            </a>
+            <button class="btn btn-link nav-link py-2 px-0 px-lg-2" id="bd-theme" type="button" onclick="toggleTheme()" title="Cambiar tema">
+                <i id="theme-icon" class="bi bi-sun fs-3"></i>
+                <span id="modo-actual" class="d-lg-none ms-2">Claro</span>
+            </button>
+        </nav>
+
+        <div class="p-3 border-top border-secondary mt-auto">
+            <a class="nav-link text-danger" asp-area="" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-box-arrow-left me-2"></i> Salir al Sitio
+            </a>
+        </div>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="navbar navbar-expand bg-white border-bottom sticky-top p-3 shadow-sm">
+            <div class="container-fluid">
+                <button class="btn btn-light d-md-none me-2" type="button" data-bs-toggle="collapse" data-bs-target=".sidebar">
+                    <i class="bi bi-list"></i>
+                </button>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item text-muted">Admin</li>
+                        <li class="breadcrumb-item active fw-semibold text-dark">@ViewData["Title"]</li>
+                    </ol>
+                </nav>
+                <div class="ms-auto d-flex align-items-center">
+                    <span class="me-3 d-none d-sm-inline text-muted">Hola, Administrador</span>
+                    <i class="bi bi-person-circle fs-4 text-primary"></i>
+                </div>
+            </div>
+        </header>
+
+        <main class="container-fluid p-4">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

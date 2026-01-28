@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TiendaOnline.ViewModels.Producto
+namespace TiendaOnline.Areas.Admin.ViewModels.Producto
 {
     public class AgregarProductoViewModel
     {

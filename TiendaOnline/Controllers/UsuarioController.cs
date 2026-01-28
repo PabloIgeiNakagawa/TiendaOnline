@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -112,26 +111,6 @@ namespace TiendaOnline.Controllers
         {
             var usuario = await _usuarioService.ObtenerUsuarioAsync(id);
             return View(usuario);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> DarAltaUsuario(int id)
-        {
-            await _usuarioService.DarAltaUsuarioAsync(id);
-            TempData["MensajeExito"] = "El usuario se dió de alta correctamente.";
-            return RedirectToAction("Usuarios", "Admin");
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> DarBajaUsuario(int id)
-        {
-            await _usuarioService.DarBajaUsuarioAsync(id);
-            TempData["MensajeExito"] = "El usuario se dió de baja correctamente.";
-            return RedirectToAction("Usuarios", "Admin");
         }
 
         [HttpGet]

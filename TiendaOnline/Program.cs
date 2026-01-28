@@ -78,6 +78,12 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// 1. Ruta para Áreas (Primero)
+app.MapControllerRoute(
+    name: "MyAreas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
+// 2. Ruta por defecto (Segundo)
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
