@@ -201,7 +201,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ViewModels\Producto\" />
+    <Folder Include="ViewModels\" />
   </ItemGroup>
 
 </Project>
