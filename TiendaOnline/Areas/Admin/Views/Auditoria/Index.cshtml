@@ -9,18 +9,18 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h2 class="mb-1 fw-bold text-dark">
+                    <h2 class="mb-1 fw-bold">
                         <i class="bi bi-shield-check me-2 text-primary"></i>
                         Auditoría del Sistema
                     </h2>
                     <p class="text-muted mb-0">Registro completo de todas las acciones realizadas en el sistema</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary" onclick="exportarAuditoria()">
+                    <button class="btn btn-outline-primary rounded-2" onclick="exportarAuditoriaCSV()">
                         <i class="bi bi-download me-1"></i>Exportar
                     </button>
                     <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <button class="btn btn-outline-secondary rounded-2 dropdown-toggle" type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-funnel me-1"></i>Filtrar por Período
                         </button>
                         <ul class="dropdown-menu">
@@ -35,10 +35,74 @@
         </div>
     </div>
 
+    <!-- Estadísticas Rápidas -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card rounded-3 bg-primary text-white border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Total de Registros</h6>
+                            <h3 class="mb-0" id="totalRegistros">@Model.Count()</h3>
+                        </div>
+                        <div class="ms-3">
+                            <i class="bi bi-file-text" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card rounded-3 bg-success text-white border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Registros Hoy</h6>
+                            <h3 class="mb-0" id="registrosHoy">@Model.Count(a => a.Fecha.Date == DateTime.Today)</h3>
+                        </div>
+                        <div class="ms-3">
+                            <i class="bi bi-calendar-day" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card rounded-3 bg-info text-white border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Usuarios Activos</h6>
+                            <h3 class="mb-0" id="usuariosActivos">@Model.Select(a => a.UsuarioId).Distinct().Count()</h3>
+                        </div>
+                        <div class="ms-3">
+                            <i class="bi bi-people" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card rounded-3 bg-warning text-white border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Acciones Únicas</h6>
+                            <h3 class="mb-0" id="accionesUnicas">@Model.Select(a => a.Accion).Distinct().Count()</h3>
+                        </div>
+                        <div class="ms-3">
+                            <i class="bi bi-lightning" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Filtros -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow-sm border-0">
+            <div class="card rounded-3 shadow-sm border-0">
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-3">
@@ -81,10 +145,7 @@
                     <div class="row mt-3">
                         <div class="col-12">
                             <div class="d-flex gap-2">
-                                <button class="btn btn-primary" id="aplicarFiltros">
-                                    <i class="bi bi-search me-1"></i>Aplicar Filtros
-                                </button>
-                                <button class="btn btn-outline-secondary" id="limpiarFiltros">
+                                <button class="btn btn-outline-secondary rounded-2" id="limpiarFiltros">
                                     <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
                                 </button>
                             </div>
@@ -95,90 +156,21 @@
         </div>
     </div>
 
-    <!-- Estadísticas Rápidas -->
-    <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-primary text-white border-0">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="card-title mb-1">Total de Registros</h6>
-                            <h3 class="mb-0" id="totalRegistros">@Model.Count()</h3>
-                        </div>
-                        <div class="ms-3">
-                            <i class="bi bi-file-text" style="font-size: 2rem; opacity: 0.7;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-success text-white border-0">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="card-title mb-1">Registros Hoy</h6>
-                            <h3 class="mb-0" id="registrosHoy">@Model.Count(a => a.Fecha.Date == DateTime.Today)</h3>
-                        </div>
-                        <div class="ms-3">
-                            <i class="bi bi-calendar-day" style="font-size: 2rem; opacity: 0.7;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-info text-white border-0">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="card-title mb-1">Usuarios Activos</h6>
-                            <h3 class="mb-0" id="usuariosActivos">@Model.Select(a => a.UsuarioId).Distinct().Count()</h3>
-                        </div>
-                        <div class="ms-3">
-                            <i class="bi bi-people" style="font-size: 2rem; opacity: 0.7;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card bg-warning text-white border-0">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="card-title mb-1">Acciones Únicas</h6>
-                            <h3 class="mb-0" id="accionesUnicas">@Model.Select(a => a.Accion).Distinct().Count()</h3>
-                        </div>
-                        <div class="ms-3">
-                            <i class="bi bi-lightning" style="font-size: 2rem; opacity: 0.7;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Tabla de Auditoría -->
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white border-bottom">
+            <div class="card rounded-3 shadow-sm border-0">
+                <div class="card-header border-bottom">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 fw-semibold">
                             <span id="registrosVisibles">@Model.Count()</span> registros de auditoría
                         </h5>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline-secondary" onclick="actualizarTabla()">
-                                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0" id="tablaAuditoria">
-                            <thead class="table-light">
+                            <thead  >
                                 <tr>
                                     <th class="border-0 py-3">
                                         <div class="d-flex align-items-center">
@@ -223,14 +215,9 @@
                                             </div>
                                         </td>
                                         <td class="py-3">
-                                            <div class="d-flex align-items-center">
-                                                <div class="circulo-avatar me-3">
-                                                    @auditoria.Usuario.Nombre.Substring(0, 1).ToUpper()@auditoria.Usuario.Apellido.Substring(0, 1).ToUpper()
-                                                </div>
-                                                <div>
-                                                    <div class="fw-semibold">@auditoria.Usuario.Nombre @auditoria.Usuario.Apellido</div>
-                                                    <small class="text-muted">@auditoria.Usuario.Email</small>
-                                                </div>
+                                            <div>
+                                                <div class="fw-semibold">@auditoria.Usuario.Nombre @auditoria.Usuario.Apellido</div>
+                                                <small class="text-muted">@auditoria.Usuario.Email</small>
                                             </div>
                                         </td>
                                         <td class="py-3">
@@ -244,12 +231,12 @@
                                                     _ => "bg-secondary"
                                                 };
                                             }
-                                            <span class="badge @claseAccion px-3 py-2 rounded-pill">
+                                            <span class="badge @claseAccion px-3 py-2 rounded-pill small fw-medium">
                                                 @auditoria.Accion
                                             </span>
                                         </td>
                                         <td class="py-3">
-                                            <button class="btn btn-sm btn-outline-primary"
+                                            <button class="btn btn-sm btn-outline-primary rounded-2"
                                                     onclick="verCambios(@auditoria.AuditoriaId, '@Html.Raw(Html.Encode(auditoria.DatosAnteriores))', '@Html.Raw(Html.Encode(auditoria.DatosNuevos))')"
                                                     data-bs-toggle="tooltip"
                                                     title="Ver detalles de los cambios">
@@ -258,17 +245,11 @@
                                         </td>
                                         <td class="py-3 text-center">
                                             <div class="d-flex justify-content-center gap-1">
-                                                <button class="btn btn-sm btn-outline-info"
+                                                <button class="btn btn-sm btn-outline-info rounded-2"
                                                         onclick="verDetalles(@auditoria.AuditoriaId)"
                                                         data-bs-toggle="tooltip"
                                                         title="Ver detalles completos">
                                                     <i class="bi bi-info-circle"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-secondary"
-                                                        onclick="copiarRegistro(@auditoria.AuditoriaId)"
-                                                        data-bs-toggle="tooltip"
-                                                        title="Copiar información">
-                                                    <i class="bi bi-copy"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -281,20 +262,9 @@
             </div>
         </div>
     </div>
-
-    <!-- Paginación -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <nav aria-label="Paginación de auditoría">
-                <ul class="pagination justify-content-center" id="paginacion">
-                    <!-- La paginación será generada por JavaScript -->
-                </ul>
-            </nav>
-        </div>
-    </div>
 </div>
 
-<!-- Modal de Cambios -->
+<!-- Modal de detalle de los cambios -->
 <div class="modal fade" id="modalCambios" tabindex="-1" aria-labelledby="etiquetaModalCambios" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -310,322 +280,26 @@
                         <h6 class="text-muted mb-3">
                             <i class="bi bi-arrow-left-circle me-2"></i>Datos Anteriores
                         </h6>
-                        <div class="bg-light p-3 rounded">
-                            <pre id="datosAnteriores" class="mb-0"></pre>
+                        <div class="bg-body-secondary p-3 rounded">
+                            <pre id="datosAnteriores" class="text-wrap text-break small lh-sm mb-0"></pre>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <h6 class="text-muted mb-3">
                             <i class="bi bi-arrow-right-circle me-2"></i>Datos Nuevos
                         </h6>
-                        <div class="bg-light p-3 rounded">
-                            <pre id="datosNuevos" class="mb-0"></pre>
+                        <div class="bg-body-secondary p-3 rounded">
+                            <pre id="datosNuevos" class="text-wrap text-break small lh-sm mb-0"></pre>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" onclick="exportarCambios()">
-                    <i class="bi bi-download me-1"></i>Exportar
-                </button>
+                <button type="button" class="btn btn-secondary rounded-2" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
-</div>
-
-<!-- Modal de Detalles -->
-<div class="modal fade" id="modalDetalles" tabindex="-1" aria-labelledby="etiquetaModalDetalles" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="etiquetaModalDetalles">
-                    <i class="bi bi-info-circle me-2"></i>Detalles del Registro de Auditoría
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body" id="contenidoDetalles">
-                <!-- El contenido será cargado dinámicamente -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .circulo-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-        font-size: 14px;
-    }
-
-    .table-hover tbody tr:hover {
-        background-color: #f8f9fa;
-        transform: translateY(-1px);
-        transition: all 0.2s ease;
-    }
-
-    .card {
-        border-radius: 12px;
-    }
-
-    .btn {
-        border-radius: 8px;
-    }
-
-    .badge {
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-
-    .form-control, .form-select {
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
-    }
-
-        .form-control:focus, .form-select:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-        }
-
-    pre {
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        font-size: 0.875rem;
-        line-height: 1.4;
-    }
-
-    .bg-light {
-        background-color: #f8f9fa !important;
-    }
-
-    @@media (max-width: 768px) {
-        .d-flex.justify-content-between {
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .circulo-avatar {
-            width: 35px;
-            height: 35px;
-            font-size: 12px;
-        }
-
-        .table-responsive {
-            font-size: 0.875rem;
-        }
-    }
-</style>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Inicializar tooltips
-        var listaTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        var tooltips = listaTooltips.map(function (elementoTooltip) {
-            return new bootstrap.Tooltip(elementoTooltip);
-        });
-
-        // Variables para filtros
-        const filtroUsuario = document.getElementById('filtroUsuario');
-        const filtroAccion = document.getElementById('filtroAccion');
-        const filtroFechaDesde = document.getElementById('filtroFechaDesde');
-        const filtroFechaHasta = document.getElementById('filtroFechaHasta');
-        const aplicarFiltros = document.getElementById('aplicarFiltros');
-        const limpiarFiltros = document.getElementById('limpiarFiltros');
-        const filas = document.querySelectorAll('.fila-auditoria');
-        const registrosVisibles = document.getElementById('registrosVisibles');
-
-        // Función para filtrar registros
-        function filtrarRegistros() {
-            const valorUsuario = filtroUsuario.value;
-            const valorAccion = filtroAccion.value;
-            const fechaDesde = filtroFechaDesde.value ? new Date(filtroFechaDesde.value) : null;
-            const fechaHasta = filtroFechaHasta.value ? new Date(filtroFechaHasta.value) : null;
-            let contadorVisible = 0;
-
-            filas.forEach(fila => {
-                const usuario = fila.dataset.usuario;
-                const accion = fila.dataset.accion;
-                const fecha = new Date(fila.dataset.fecha);
-
-                const coincideUsuario = !valorUsuario || usuario === valorUsuario;
-                const coincideAccion = !valorAccion || accion === valorAccion;
-                const coincideFechaDesde = !fechaDesde || fecha >= fechaDesde;
-                const coincideFechaHasta = !fechaHasta || fecha <= fechaHasta;
-
-                if (coincideUsuario && coincideAccion && coincideFechaDesde && coincideFechaHasta) {
-                    fila.style.display = '';
-                    contadorVisible++;
-                } else {
-                    fila.style.display = 'none';
-                }
-            });
-
-            registrosVisibles.textContent = contadorVisible;
-        }
-
-        // Event listeners para filtros
-        aplicarFiltros.addEventListener('click', filtrarRegistros);
-
-        limpiarFiltros.addEventListener('click', function() {
-            filtroUsuario.value = '';
-            filtroAccion.value = '';
-            filtroFechaDesde.value = '';
-            filtroFechaHasta.value = '';
-            filtrarRegistros();
-        });
-
-        // Filtros por período
-        document.querySelectorAll('[data-periodo]').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-                const periodo = this.dataset.periodo;
-                const hoy = new Date();
-
-                switch(periodo) {
-                    case 'hoy':
-                        filtroFechaDesde.value = hoy.toISOString().split('T')[0];
-                        filtroFechaHasta.value = hoy.toISOString().split('T')[0];
-                        break;
-                    case 'semana':
-                        const semanaAtras = new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
-                        filtroFechaDesde.value = semanaAtras.toISOString().split('T')[0];
-                        filtroFechaHasta.value = hoy.toISOString().split('T')[0];
-                        break;
-                    case 'mes':
-                        const mesAtras = new Date(hoy.getTime() - 30 * 24 * 60 * 60 * 1000);
-                        filtroFechaDesde.value = mesAtras.toISOString().split('T')[0];
-                        filtroFechaHasta.value = hoy.toISOString().split('T')[0];
-                        break;
-                    case 'todos':
-                        filtroFechaDesde.value = '';
-                        filtroFechaHasta.value = '';
-                        break;
-                }
-                filtrarRegistros();
-            });
-        });
-    });
-
-    // Función para ver cambios
-    function verCambios(auditoriaId, datosAnteriores, datosNuevos) {
-        document.getElementById('datosAnteriores').textContent = datosAnteriores || 'Sin datos anteriores';
-        document.getElementById('datosNuevos').textContent = datosNuevos || 'Sin datos nuevos';
-
-        const modal = new bootstrap.Modal(document.getElementById('modalCambios'));
-        modal.show();
-    }
-
-    // Función para ver detalles
-    function verDetalles(auditoriaId) {
-        // Aquí puedes hacer una llamada AJAX para obtener más detalles
-        const contenido = `
-            <div class="row">
-                <div class="col-md-6">
-                    <h6>ID de Auditoría</h6>
-                    <p>${auditoriaId}</p>
-                </div>
-                <div class="col-md-6">
-                    <h6>Estado</h6>
-                    <p><span class="badge bg-success">Completado</span></p>
-                </div>
-            </div>
-            <hr>
-            <h6>Información Adicional</h6>
-            <p>Registro de auditoría generado automáticamente por el sistema.</p>
-        `;
-
-        document.getElementById('contenidoDetalles').innerHTML = contenido;
-
-        const modal = new bootstrap.Modal(document.getElementById('modalDetalles'));
-        modal.show();
-    }
-
-    // Función para copiar registro
-    function copiarRegistro(auditoriaId) {
-        const texto = `Registro de Auditoría ID: ${auditoriaId}`;
-        navigator.clipboard.writeText(texto).then(function() {
-            mostrarToast('Información copiada al portapapeles', 'success');
-        });
-    }
-
-    // Función para exportar auditoría
-    function exportarAuditoria() {
-        const filas = document.querySelectorAll('.fila-auditoria:not([style*="display: none"])');
-        let csv = [];
-
-        // Encabezados
-        const encabezados = ['Fecha', 'Usuario', 'Acción', 'Datos Anteriores', 'Datos Nuevos'];
-        csv.push(encabezados.join(','));
-
-        // Datos (esto sería mejor hacerlo desde el servidor)
-        csv.push('Datos de ejemplo...');
-
-        // Descargar
-        const contenidoCSV = csv.join('\n');
-        const blob = new Blob([contenidoCSV], { type: 'text/csv;charset=utf-8;' });
-        const enlace = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        enlace.setAttribute('href', url);
-        enlace.setAttribute('download', `auditoria_${new Date().toISOString().split('T')[0]}.csv`);
-        enlace.style.visibility = 'hidden';
-        document.body.appendChild(enlace);
-        enlace.click();
-        document.body.removeChild(enlace);
-    }
-
-    // Función para exportar cambios del modal
-    function exportarCambios() {
-        const datosAnteriores = document.getElementById('datosAnteriores').textContent;
-        const datosNuevos = document.getElementById('datosNuevos').textContent;
-
-        const contenido = `Datos Anteriores:\n${datosAnteriores}\n\nDatos Nuevos:\n${datosNuevos}`;
-        const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8;' });
-        const enlace = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        enlace.setAttribute('href', url);
-        enlace.setAttribute('download', `cambios_auditoria_${Date.now()}.txt`);
-        enlace.style.visibility = 'hidden';
-        document.body.appendChild(enlace);
-        enlace.click();
-        document.body.removeChild(enlace);
-    }
-
-    // Función para actualizar tabla
-    function actualizarTabla() {
-        // Aquí harías una llamada AJAX para recargar los datos
-        mostrarToast('Tabla actualizada', 'info');
-    }
-
-    // Función para mostrar toast
-    function mostrarToast(mensaje, tipo) {
-        const toast = document.createElement('div');
-        toast.className = `toast align-items-center text-white bg-${tipo} border-0 position-fixed top-0 end-0 m-3`;
-        toast.style.zIndex = '9999';
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="bi bi-check-circle me-2"></i>${mensaje}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        `;
-        document.body.appendChild(toast);
-
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
-
-        toast.addEventListener('hidden.bs.toast', () => {
-            document.body.removeChild(toast);
-        });
-    }
-</script>
+</div> 
+@section Scripts{
+    <script src="~/js/Admin/Auditoria/Index.js"></script>
+}
