@@ -4,7 +4,58 @@
     var esAdmin = User.IsInRole("Administrador");
 }
 
-<link rel="stylesheet" href="~/css/Admin/Pedidos.css" asp-append-version="true" />
+@section Styles{
+    <style>
+        .ordenable {
+            transition: background-color 0.2s ease;
+            user-select: none;
+            cursor: pointer;
+        }
+
+            .ordenable:hover {
+                background-color: #e9ecef;
+            }
+
+        .icono-orden {
+            transition: transform 0.2s ease;
+            font-size: 0.8rem;
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @@keyframes spin{
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        #mensajeSinResultados {
+            animation: fadeInUp 0.3s ease-out;
+        }
+    </style>
+}
 
 <div class="container-fluid py-4">
     <!-- Sección de Encabezado -->
@@ -12,7 +63,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h2 class="mb-1 fw-bold text-dark">
+                    <h2 class="mb-1 fw-bold">
                         <i class="bi bi-receipt me-2 text-primary"></i>
                         Gestión de Pedidos
                     </h2>
@@ -33,10 +84,11 @@
     <!-- Estadísticas Rápidas -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card stats-card stats-pendiente">
+            <div class="card bg-body-tertiary border-5 border-top-0 border-bottom-0 border-end-0 border-warning rounded-3 overflow-hidden position-relative">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="stats-icon">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 me-3 bg-warning bg-opacity-10 text-warning"
+                             style="width: 50px; height: 50px; font-size: 1.5rem;">
                             <i class="bi bi-clock"></i>
                         </div>
                         <div>
@@ -48,10 +100,11 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card stats-card stats-enviado">
+            <div class="card bg-body-tertiary border-5 border-top-0 border-bottom-0 border-end-0 border-info rounded-3 overflow-hidden position-relative">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="stats-icon">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 me-3 bg-info bg-opacity-10 text-info"
+                             style="width: 50px; height: 50px; font-size: 1.5rem;">
                             <i class="bi bi-truck"></i>
                         </div>
                         <div>
@@ -63,10 +116,11 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card stats-card stats-entregado">
+            <div class="card bg-body-tertiary border-5 border-top-0 border-bottom-0 border-end-0 border-success rounded-3 overflow-hidden position-relative">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="stats-icon">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 me-3 bg-success bg-opacity-10 text-success"
+                             style="width: 50px; height: 50px; font-size: 1.5rem;">
                             <i class="bi bi-check-circle"></i>
                         </div>
                         <div>
@@ -78,10 +132,11 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card stats-card stats-cancelado">
+            <div class="card bg-body-tertiary border-5 border-top-0 border-bottom-0 border-end-0 border-danger rounded-3 overflow-hidden position-relative">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="stats-icon">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 me-3 bg-danger bg-opacity-10 text-danger"
+                             style="width: 50px; height: 50px; font-size: 1.5rem;">
                             <i class="bi bi-x-circle"></i>
                         </div>
                         <div>
@@ -146,9 +201,6 @@
                             <button type="button" id="limpiarFiltros" class="btn btn-outline-secondary flex-fill">
                                 <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
                             </button>
-                            <button type="button" id="filtrosAvanzados" class="btn btn-outline-info">
-                                <i class="bi bi-sliders"></i>
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -160,7 +212,7 @@
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-white border-bottom">
+                <div class="card-header border-bottom">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 fw-semibold">
                             <span id="totalPedidos">@Model.Count()</span> pedidos encontrados
@@ -175,7 +227,7 @@
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0" id="tablaPedidos">
-                            <thead class="table-light">
+                            <thead class="border-bottom">
                                 <tr>
                                     <th class="ordenable border-0 py-3" data-columna="0">
                                         <div class="d-flex align-items-center cursor-pointer">
@@ -236,20 +288,21 @@
                                         data-total="@total">
                                         <td class="py-3">
                                             <div class="d-flex align-items-center">
-                                                <div class="pedido-id-badge me-3">
+                                                <div class="fw-semibold px-3 py-2 text-uppercase"
+                                                     style="font-size: 0.9rem; letter-spacing: 0.5px;">
                                                     #@pedido.PedidoId.ToString("D6")
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="py-3">
                                             <div class="cliente-info">
-                                                <div class="fw-semibold text-dark">@(pedido.Usuario == null ? "Cliente no disponible" : pedido.Usuario.Nombre + " " + pedido.Usuario.Apellido)</div>
+                                                <div class="fw-semibold mb-1">@(pedido.Usuario == null ? "Cliente no disponible" : pedido.Usuario.Nombre + " " + pedido.Usuario.Apellido)</div>
                                                 <small class="text-muted">@(pedido.Usuario?.Email ?? "")</small>
                                             </div>
                                         </td>
                                         <td class="py-3">
-                                            <div class="fecha-info">
-                                                <div class="fw-semibold">@pedido.FechaPedido.ToString("dd/MM/yyyy")</div>
+                                            <div>
+                                                <div class="fw-semibold mb-1">@pedido.FechaPedido.ToString("dd/MM/yyyy")</div>
                                                 <small class="text-muted">@pedido.FechaPedido.ToString("HH:mm")</small>
                                             </div>
                                         </td>
@@ -267,28 +320,32 @@
                                             }
                                         </td>
                                         <td class="py-3">
-                                            <div class="total-pedido">@total.ToString("C0")</div>
+                                            <div class="fw-bold text-success">@total.ToString("C0")</div>
                                         </td>
                                         <td class="py-3">
                                             @switch (pedido.Estado)
                                             {
                                                 case EstadoPedido.Pendiente:
-                                                    <span class="badge estado-pendiente">
+                                                    <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"
+                                                          style="font-size: 0.8rem; letter-spacing: 0.5px;">
                                                         <i class="bi bi-clock me-1"></i>Pendiente
                                                     </span>
                                                     break;
                                                 case EstadoPedido.Enviado:
-                                                    <span class="badge estado-enviado">
+                                                    <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-info bg-opacity-10 text-info border border-info border-opacity-25"
+                                                          style="font-size: 0.8rem; letter-spacing: 0.5px;">
                                                         <i class="bi bi-truck me-1"></i>Enviado
                                                     </span>
                                                     break;
                                                 case EstadoPedido.Entregado:
-                                                    <span class="badge estado-entregado">
+                                                    <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-success bg-opacity-10 text-success border border-success border-opacity-25"
+                                                          style="font-size: 0.8rem; letter-spacing: 0.5px;">
                                                         <i class="bi bi-check-circle me-1"></i>Entregado
                                                     </span>
                                                     break;
                                                 case EstadoPedido.Cancelado:
-                                                    <span class="badge estado-cancelado">
+                                                    <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25"
+                                                          style="font-size: 0.8rem; letter-spacing: 0.5px;">
                                                         <i class="bi bi-x-circle me-1"></i>Cancelado
                                                     </span>
                                                     break;
@@ -296,27 +353,27 @@
                                         </td>
                                         <td class="py-3">
                                             <div class="d-flex justify-content-center gap-1">
-                                                <a href="@Url.Action("Detalles", "Pedido", new { id = pedido.PedidoId })"
-                                                   class="btn btn-outline-info btn-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Ver detalle">
+                                                <a asp-area="" asp-controller="Pedido" asp-action="Detalles"
+                                                   class="btn btn-outline-info btn-sm px-3 py-1 rounded-2 shadow-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
                                                 @if (pedido.Estado == EstadoPedido.Pendiente && esAdmin)
                                                 {
-                                                    <button type="button" class="btn btn-outline-success btn-sm"
-                                                            onclick="cambiarEstado(@pedido.PedidoId, 1, 'Enviado')"
+                                                    <button type="button" class="btn btn-outline-success btn-sm px-3 py-1 rounded-2 shadow-sm"
+                                                            onclick="enviarPedido(@pedido.PedidoId)"
                                                             data-bs-toggle="tooltip" data-bs-placement="bottom" title="Marcar como enviado">
                                                         <i class="bi bi-truck"></i>
                                                     </button>
-                                                    <button type="button" class="btn btn-outline-danger btn-sm"
-                                                            onclick="cambiarEstado(@pedido.PedidoId, 3, 'Cancelado')"
+                                                    <button type="button" class="btn btn-outline-danger btn-sm px-3 py-1 rounded-2 shadow-sm"
+                                                            onclick="cancelarPedido(@pedido.PedidoId)"
                                                             data-bs-toggle="tooltip" data-bs-placement="bottom" title="Cancelar pedido">
                                                         <i class="bi bi-x-circle"></i>
                                                     </button>
                                                 }
                                                 else if (pedido.Estado == EstadoPedido.Enviado)
                                                 {
-                                                    <button type="button" class="btn btn-outline-success btn-sm"
-                                                            onclick="cambiarEstado(@pedido.PedidoId, 2, 'Entregado')"
+                                                    <button type="button" class="btn btn-outline-success btn-sm px-3 py-1 rounded-2 shadow-sm"
+                                                            onclick="entregarPedido(@pedido.PedidoId)"
                                                             data-bs-toggle="tooltip" data-bs-placement="bottom" title="Marcar como entregado">
                                                         <i class="bi bi-check-circle"></i>
                                                     </button>
@@ -332,53 +389,31 @@
             </div>
         </div>
     </div>
-
-    <!-- Paginación -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <nav aria-label="Paginación de pedidos">
-                <ul class="pagination justify-content-center" id="paginacion">
-                    <!-- La paginación será generada por JavaScript -->
-                </ul>
-            </nav>
-        </div>
-    </div>
 </div>
 
 <!-- Modal de Cambio de Estado -->
-<div class="modal fade" id="modalCambioEstado" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Cambiar Estado del Pedido</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-0">
-                <div class="text-center py-3">
-                    <div class="mb-3">
-                        <i id="iconoEstado" class="display-4"></i>
-                    </div>
-                    <p id="mensajeCambioEstado" class="mb-0 fs-6"></p>
-                </div>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" id="botonConfirmarEstado" class="btn">Confirmar</button>
-            </div>
-        </div>
-    </div>
-</div>
+<partial name="_ModalCambiarEstado" />
 
 <!-- Formularios Ocultos -->
 <div style="display: none;">
     @foreach (var pedido in Model)
     {
-        <form id="formularioCambioEstado@(pedido.PedidoId)" asp-controller="Pedido" asp-action="CambiarEstado" method="post">
+        <form id="enviarPedido@(pedido.PedidoId)" asp-area="Admin" asp-controller="Pedido" asp-action="Enviar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
-            <input type="hidden" name="nuevoEstado" id="nuevoEstado@(pedido.PedidoId)" />
+        </form>
+
+        <form id="entregarPedido@(pedido.PedidoId)" asp-area="Admin" asp-controller="Pedido" asp-action="Entregar" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
+        </form>
+
+        <form id="cancelarPedido@(pedido.PedidoId)" asp-controller="Pedido" asp-action="Cancelar" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
         </form>
     }
 </div>
-
-<script src="~/js/Admin/Pedidos.js" asp-append-version="true"></script>
+@section Scripts{
+    <script src="~/js/Admin/Pedido/Index.js" asp-append-version="true"></script>
+}
