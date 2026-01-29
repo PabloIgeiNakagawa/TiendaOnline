@@ -20,12 +20,13 @@
         let contadorVisible = 0;
 
         filas.forEach(fila => {
+            const id = fila.dataset.id.toLowerCase();
             const nombre = fila.dataset.nombre.toLowerCase();
             const email = fila.dataset.email.toLowerCase();
             const rol = fila.dataset.rol;
             const estado = fila.dataset.estado;
 
-            const coincideBusqueda = nombre.includes(terminoBusqueda) || email.includes(terminoBusqueda);
+            const coincideBusqueda = nombre.includes(terminoBusqueda) || email.includes(terminoBusqueda) || id.includes(terminoBusqueda);
             const coincideRol = !valorRol || rol === valorRol;
             const coincideEstado = !valorEstado || estado === valorEstado;
 
@@ -93,30 +94,36 @@
     });
 });
 
-// Modal de confirmación
-function confirmarAccion(idUsuario, accion, nombreUsuario) {
-    const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
-    const iconoConfirmacion = document.getElementById('iconoConfirmacion');
-    const mensajeConfirmacion = document.getElementById('mensajeConfirmacion');
-    const botonConfirmar = document.getElementById('botonConfirmar');
+function darBaja(idUsuario, nombreUsuario) {
+    const modal = new bootstrap.Modal(document.getElementById('modalCambioEstado'));
+    const iconoEstado = document.getElementById('iconoEstado');
+    const mensajeCambioEstado = document.getElementById('mensajeCambioEstado');
+    const botonDerecho = document.getElementById('botonDerecho');
 
-    if (accion === 'baja') {
-        iconoConfirmacion.className = 'bi bi-exclamation-triangle text-warning display-4';
-        mensajeConfirmacion.textContent = `¿Estás seguro de que quieres dar de baja a ${nombreUsuario}?`;
-        botonConfirmar.className = 'btn btn-danger';
-        botonConfirmar.textContent = 'Dar de Baja';
-        botonConfirmar.onclick = () => {
-            document.getElementById(`formularioBaja${idUsuario}`).submit();
-        };
-    } else {
-        iconoConfirmacion.className = 'bi bi-check-circle text-success display-4';
-        mensajeConfirmacion.textContent = `¿Estás seguro de que quieres dar de alta a ${nombreUsuario}?`;
-        botonConfirmar.className = 'btn btn-success';
-        botonConfirmar.textContent = 'Dar de Alta';
-        botonConfirmar.onclick = () => {
-            document.getElementById(`formularioAlta${idUsuario}`).submit();
-        };
-    }
+    iconoEstado.className = 'bi bi-exclamation-triangle text-warning display-4';
+    mensajeCambioEstado.textContent = `¿Estás seguro de que quieres dar de baja a ${nombreUsuario}?`;
+    botonDerecho.className = 'btn btn-danger';
+    botonDerecho.textContent = 'Dar de Baja';
+    botonDerecho.onclick = () => {
+        document.getElementById(`formularioBaja${idUsuario}`).submit();
+    };
+
+    modal.show();
+}
+
+function darAlta(idUsuario, nombreUsuario) {
+    const modal = new bootstrap.Modal(document.getElementById('modalCambioEstado'));
+    const iconoEstado = document.getElementById('iconoEstado');
+    const mensajeCambioEstado = document.getElementById('mensajeCambioEstado');
+    const botonDerecho = document.getElementById('botonDerecho');
+
+    iconoEstado.className = 'bi bi-check-circle text-success display-4';
+    mensajeCambioEstado.textContent = `¿Estás seguro de que quieres dar de alta a ${nombreUsuario}?`;
+    botonDerecho.className = 'btn btn-success';
+    botonDerecho.textContent = 'Dar de Alta';
+    botonDerecho.onclick = () => {
+        document.getElementById(`formularioAlta${idUsuario}`).submit();
+    };
 
     modal.show();
 }
@@ -199,7 +206,7 @@ function exportarACSV() {
     const csv = [];
 
     // Encabezados
-    const encabezados = ['Nombre y Apellido', 'Correo Electrónico', 'Rol', 'Estado'];
+    const encabezados = ['ID Usuario', 'Nombre y Apellido', 'Correo Electrónico', 'Rol', 'Estado'];
     csv.push(encabezados.map(h => limpiarDatoCSV(h)).join(separador));
 
     // Filas de datos
@@ -207,18 +214,20 @@ function exportarACSV() {
         const celdas = fila.querySelectorAll('td');
         if (celdas.length >= 4) {
             // Extraer datos limpios
-            const nombre = celdas[0].textContent.trim();
-            const email = celdas[1].textContent.trim();
+            const idUsuario = celdas[0].textContent.trim();
+            const nombre = celdas[1].textContent.trim();
+            const email = celdas[2].textContent.trim();
 
             // Limpiar rol (remover HTML si hay badges)
-            const rolElement = celdas[2].querySelector('.badge') || celdas[2];
+            const rolElement = celdas[3].querySelector('.badge') || celdas[3];
             const rol = rolElement.textContent.trim();
 
             // Limpiar estado (remover HTML de badges)
-            const estadoElement = celdas[3].querySelector('.badge') || celdas[3];
+            const estadoElement = celdas[4].querySelector('.badge') || celdas[4];
             const estado = estadoElement.textContent.trim();
 
             const datosFila = [
+                limpiarDatoCSV(idUsuario),
                 limpiarDatoCSV(nombre),
                 limpiarDatoCSV(email),
                 limpiarDatoCSV(rol),
