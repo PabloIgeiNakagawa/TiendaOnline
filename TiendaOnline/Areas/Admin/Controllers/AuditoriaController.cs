@@ -16,7 +16,7 @@ namespace TiendaOnline.Areas.Admin.Controllers
             _auditoriaService = auditoriaService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Logs()
         {
             var model = await _auditoriaService.ObtenerAuditoriasAsync();
             return View(model);

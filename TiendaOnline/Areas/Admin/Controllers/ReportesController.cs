@@ -15,7 +15,7 @@ namespace TiendaOnline.Areas.Admin.Controllers
             _reportesService = reportesService;
         }
         
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Dashboard()
         {
             var model = await _reportesService.ObtenerDashboardAsync(0);
             return View(model);

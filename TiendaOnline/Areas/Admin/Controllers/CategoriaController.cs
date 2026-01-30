@@ -18,7 +18,7 @@ namespace TiendaOnline.Areas.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Listado()
         {
             var categorias = await _categoriaService.ObtenerCategoriasAsync();
             return View(categorias);
