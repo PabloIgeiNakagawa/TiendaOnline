@@ -41,7 +41,7 @@ namespace TiendaOnline.Controllers
         [HttpPost]
         public async Task<IActionResult> FinalizarCompra([FromForm] List<ItemCarrito> carrito)
         {
-            if (carrito == null || !carrito.Any())
+            if (carrito == null || carrito.Count == 0)
             {
                 TempData["MensajeError"] = "El carrito está vacío.";
                 return RedirectToAction("Index", "Carrito");

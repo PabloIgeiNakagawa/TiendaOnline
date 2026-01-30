@@ -254,10 +254,10 @@
 
 <!-- Formularios Ocultos -->
 <div style="display: none;">
-    <form id="formularioBaja@(Model.UsuarioId)" asp-controller="Usuario" asp-action="DarBajaUsuario" asp-route-id="@Model.UsuarioId" method="post">
+    <form id="formularioBaja@(Model.UsuarioId)" asp-area="Admin" asp-controller="Usuario" asp-action="DarBaja" asp-route-id="@Model.UsuarioId" method="post">
         @Html.AntiForgeryToken()
     </form>
-    <form id="formularioAlta@(Model.UsuarioId)" asp-controller="Usuario" asp-action="DarAltaUsuario" asp-route-id="@Model.UsuarioId" method="post">
+    <form id="formularioAlta@(Model.UsuarioId)" asp-area="Admin" asp-controller="Usuario" asp-action="DarAlta" asp-route-id="@Model.UsuarioId" method="post">
         @Html.AntiForgeryToken()
     </form>
 </div>

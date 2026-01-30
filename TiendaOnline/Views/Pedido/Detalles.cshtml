@@ -627,19 +627,16 @@
 <div class="d-none">
     @if (esAdmin)
     {
-        <form id="enviarPedido@(Model.PedidoId)" asp-controller="Pedido" asp-action="Enviar" method="post">
+        <form id="enviarPedido@(Model.PedidoId)" asp-area="Admin" asp-controller="Pedido" asp-action="Enviar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
         </form>
 
-        <form id="entregarPedido@(Model.PedidoId)" asp-controller="Pedido" asp-action="Entregar" method="post">
+        <form id="entregarPedido@(Model.PedidoId)" asp-area="Admin" asp-controller="Pedido" asp-action="Entregar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
         </form>
-    }
 
-    @if (!esAdmin && esPropioPedido)
-    {
         <form id="cancelarPedido@(Model.PedidoId)" asp-controller="Pedido" asp-action="Cancelar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@Model.PedidoId" />

@@ -96,6 +96,10 @@ namespace TiendaOnline.Controllers
                 ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
             });
 
+            if (usuario.Rol.ToString() == "Administrador")
+            {
+                return RedirectToAction("Index", "Home", new { area = "Admin" });
+            }
             return RedirectToAction("Index", "Home");
         }
 

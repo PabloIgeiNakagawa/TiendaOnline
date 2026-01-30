@@ -138,7 +138,7 @@
                         <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center pt-3 border-top gap-2">
                             @if(User.IsInRole("Administrador"))
                             {
-                                <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-outline-danger">
+                                <a asp-area="Admin" asp-controller="Usuario" asp-action="Index" class="btn btn-outline-danger">
                                     <i class="bi bi-x-circle me-1"></i>Cancelar
                                 </a>
                             }

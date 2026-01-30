@@ -45,7 +45,7 @@ namespace TiendaOnline.Controllers
                 });
             }
             HttpContext.Session.SetObject(CarritoKey, carrito);
-            TempData["MensajeExito"] = "Producto agregado al carrito correctamente.";
+            TempData["MensajeExito"] = "Producto agregado al carrito.";
             return RedirectToAction("Index", "Carrito");
         }
 
@@ -63,7 +63,7 @@ namespace TiendaOnline.Controllers
                     HttpContext.Session.SetObject(CarritoKey, carrito);
                 }
             }
-            TempData["MensajeExito"] = "Producto eliminado del carrito correctamente.";
+            TempData["MensajeExito"] = "Producto eliminado del carrito.";
             return RedirectToAction("Index", "Carrito");
         }
 
@@ -80,7 +80,7 @@ namespace TiendaOnline.Controllers
             }
 
             HttpContext.Session.SetObject(CarritoKey, carrito);
-            TempData["MensajeExito"] = "Cantidad actualizada correctamente.";
+            TempData["MensajeExito"] = "Cantidad actualizada.";
             return RedirectToAction("Index", "Carrito");
         }
 

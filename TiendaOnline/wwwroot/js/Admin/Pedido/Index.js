@@ -72,9 +72,9 @@
 
         // Actualizar contadores
         totalPedidos.textContent = contadorVisible
-        montoTotal.textContent = montoTotalVisible.toLocaleString("es-CO", {
+        montoTotal.textContent = montoTotalVisible.toLocaleString("es-AR", {
             style: "currency",
-            currency: "COP",
+            currency: "ARS",
             minimumFractionDigits: 0,
         })
 

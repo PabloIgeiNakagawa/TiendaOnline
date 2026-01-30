@@ -23,6 +23,7 @@ namespace TiendaOnline.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Enviar(int pedidoId)
         {
             if (pedidoId <= 0)
