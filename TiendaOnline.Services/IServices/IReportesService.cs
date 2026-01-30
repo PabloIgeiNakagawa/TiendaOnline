@@ -1,9 +1,9 @@
-﻿using TiendaOnline.Domain.Entities;
+﻿using TiendaOnline.Domain.DTOs;
 
 namespace TiendaOnline.Services.IServices
 {
     public interface IReportesService
     {
-        Task<DashboardViewModel> ObtenerDashboardAsync(int periodo);
+        Task<DashboardDTO> ObtenerDatosAsync();
     }
 }
