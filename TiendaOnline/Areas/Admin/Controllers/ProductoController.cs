@@ -34,7 +34,7 @@ namespace TiendaOnline.Areas.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Agregar()
+        public async Task<IActionResult> AgregarProducto()
         {
             await CargarCategoriasEnViewBag();
             return View(new AgregarProductoViewModel());
@@ -97,7 +97,7 @@ namespace TiendaOnline.Areas.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Editar(int id)
+        public async Task<IActionResult> EditarProducto(int id)
         {
             var producto = await _productoService.ObtenerProductoAsync(id);
             if (producto == null) return NotFound();
