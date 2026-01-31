@@ -95,7 +95,7 @@
 
                                 <div class="ms-3">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <h6 class="mb-0 fw-bold text-info-emphasis">@cambio.Usuario</h6>
+                                        <h6 class="mb-0 fw-bold">@cambio.Usuario</h6>
                                         <span class="badge rounded-pill border border-secondary-subtle text-secondary fw-normal">
                                             <i class="bi bi-clock me-1"></i> @cambio.FechaRelativa
                                         </span>
@@ -134,9 +134,11 @@
                                     <span class="badge bg-@pedido.ClaseColor">@pedido.HorasTranscurridas.ToString("0") hs</span>
                                 </div>
                                 <div class="small text-muted mb-2">Cliente: @pedido.Cliente</div>
-                                <a asp-area="" asp-controller="Pedido" asp-action="Detalles" asp-route-id="@pedido.PedidoId" class="btn btn-sm btn-outline-secondary w-100">
-                                    Revisar Ahora
-                                </a>
+                                <div class="d-flex justify-content-end">
+                                    <a asp-area="" asp-controller="Pedido" asp-action="Detalles" asp-route-id="@pedido.PedidoId" class="btn btn-sm btn-outline-primary">
+                                        Revisar Ahora
+                                    </a>
+                                </div>
                             </div>
                         }
                     }

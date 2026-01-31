@@ -43,7 +43,7 @@ namespace TiendaOnline.Areas.Admin.Controllers
             {
                 await _usuarioService.CrearUsuarioAsync(usuario);
                 TempData["MensajeExito"] = "El usuario se creó correctamente.";
-                return RedirectToAction("Usuarios", "Admin");
+                return RedirectToAction("Usuario", "Listado", new { area = "Admin" });
             }
             catch (EmailDuplicadoException ex)
             {

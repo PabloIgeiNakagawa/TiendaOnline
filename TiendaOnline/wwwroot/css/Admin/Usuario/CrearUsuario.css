@@ -32,11 +32,6 @@
         padding: 1rem 0.75rem;
     }
 
-    /* Asegurar que el texto seleccionado no se superponga */
-    .form-floating > .form-select option {
-        color: #212529;
-    }
-
     .form-floating > .form-select:focus {
         border-color: #2563eb;
         box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
