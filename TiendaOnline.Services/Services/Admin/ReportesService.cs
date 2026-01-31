@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using TiendaOnline.Data;
-using TiendaOnline.Services.IServices;
-using TiendaOnline.Domain.DTOs;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Domain.DTOs.Admin.Reportes;
+using TiendaOnline.Services.IServices.Admin;
 
-namespace TiendaOnline.Services.Services
+namespace TiendaOnline.Services.Services.Admin
 {
     public class ReportesService : IReportesService
     {
@@ -163,7 +163,7 @@ namespace TiendaOnline.Services.Services
             var totalVentas = ventas.Sum(v => v.TotalVentas);
             foreach (var venta in ventas)
             {
-                venta.PorcentajeDelTotal = totalVentas > 0 ? (int)((venta.TotalVentas / totalVentas) * 100) : 0;
+                venta.PorcentajeDelTotal = totalVentas > 0 ? (int)(venta.TotalVentas / totalVentas * 100) : 0;
             }
 
             return ventas;
@@ -264,7 +264,7 @@ namespace TiendaOnline.Services.Services
         private decimal CalcularPorcentajeCambio(decimal valorAnterior, decimal valorActual)
         {
             if (valorAnterior == 0) return valorActual > 0 ? 100 : 0;
-            return ((valorActual - valorAnterior) / valorAnterior) * 100;
+            return (valorActual - valorAnterior) / valorAnterior * 100;
         }
 
         private string ObtenerNombreMes(int mes, int anio)
@@ -273,6 +273,6 @@ namespace TiendaOnline.Services.Services
             return cultura.DateTimeFormat.GetMonthName(mes) + " " + anio;
         }
     }
-}   
+}
 
 

@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Services.IServices;
+using TiendaOnline.Services.IServices.Admin;
 
-namespace TiendaOnline.Services.Services
+namespace TiendaOnline.Services.Services.Admin
 {
     public class AuditoriaService : IAuditoriaService
     {

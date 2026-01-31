@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Data;
-using TiendaOnline.Domain.Entities; 
+using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Services.IServices;
 using TiendaOnline.Services.Services;
-using TiendaOnline.Infrastructure.ExternalServices; 
+using TiendaOnline.Infrastructure.ExternalServices;
+using TiendaOnline.Services.IServices.Admin;
+using TiendaOnline.Services.Services.Admin;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +52,9 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IProductoService, ProductoService>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IPedidoService, PedidoService>();
+
+// Administración
+builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IReportesService, ReportesService>();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 

@@ -1,100 +1,145 @@
-﻿@{
-    ViewData["Title"] = "Panel de Administración";
+﻿@model TiendaOnline.Areas.Admin.ViewModels.Home.HomeViewModel
+@{
+    ViewData["Title"] = "Inicio";
 }
+@section Styles{
+    <style>
+        .luz-parpadeante {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); /* Color verde por defecto */
+            animation: pulso-verde 2s infinite;
+        }
 
+        /* Si está offline (rojo), cambiamos el color del pulso */
+        .bg-danger.luz-parpadeante {
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            animation: pulso-rojo 2s infinite;
+        }
+
+        @@keyframes pulso-verde {
+            0% {
+                transform: translate(-50%, -50%) scale(0.95);
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+            }
+
+            70% {
+                transform: translate(-50%, -50%) scale(1);
+                box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(0.95);
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+            }
+        }
+
+        @@keyframes pulso-rojo {
+            0% {
+                transform: translate(-50%, -50%) scale(0.95);
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+
+            70% {
+                transform: translate(-50%, -50%) scale(1);
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(0.95);
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
+    </style>
+}
 <div class="container-fluid py-4">
-    <!-- Encabezado del Panel -->
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <!-- Encabezado -->
-                <div class="text-center mb-5">
-                    <h1 class="display-5 fw-bold text-dark mb-3">
-                        <i class="bi bi-speedometer2 me-3 text-primary"></i>
-                        Panel de Administración
-                    </h1>
-                    <p class="lead text-muted">Selecciona la sección que deseas administrar</p>
+    <div class="d-md-flex justify-content-md-between align-items-md-center mb-4">
+        <div>
+            <h2 class="mb-1 fw-bold">
+                <i class="bi bi-house-door me-2 text-primary"></i>
+                Panel de Control
+            </h2>
+            <p class="text-muted mb-0">Estado operativo del sistema en tiempo real.</p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <span class="badge rounded-pill border border-secondary p-2 px-3 position-relative @(Model.EstaDbOnline ? "bg-success" : "bg-danger")">
+                <i class="bi bi-database-fill me-1"></i>
+                DB: @(Model.EstaDbOnline ? "Online" : "Offline")
+
+                <span class="position-absolute top-0 start-100 translate-middle p-1 @(Model.EstaDbOnline ? "bg-success" : "bg-danger") border border-light rounded-circle @(Model.EstaDbOnline ? "luz-parpadeante" : "")">
+                    <span class="visually-hidden">Estado</span>
+                </span>
+            </span>
+            <span class="badge rounded-pill bg-secondary border border-secondary p-2 px-3">
+                App version: v@(Model.VersionApp)
+            </span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card border-secondary-subtle shadow-sm h-100 bg-transparent">
+                <div class="card-header border-secondary-subtle bg-transparent py-3">
+                    <h5 class="card-title mb-0 text-body">
+                        <i class="bi bi-journal-text me-2 text-primary"></i>Actividad Reciente
+                    </h5>
                 </div>
+                <div class="card-body">
+                    <div class="position-relative ps-4">
+                        <div class="position-absolute top-0 bottom-0 start-0 border-start border-secondary-subtle" style="margin-left: 10px;"></div>
 
-                <!-- Enlaces de Administración -->
-                <div class="admin-links">
-                    <a asp-controller="Admin" asp-action="Productos" class="admin-link">
-                        <div class="link-icon products">
-                            <i class="bi bi-box-seam-fill"></i>
-                        </div>
-                        <div class="link-content">
-                            <h5 class="link-title">Productos</h5>
-                            <p class="link-description">Gestionar catálogo de productos</p>
-                        </div>
-                        <div class="link-arrow">
-                            <i class="bi bi-chevron-right"></i>
-                        </div>
-                    </a>
+                        @foreach (var cambio in Model.UltimosCambios)
+                        {
+                            <div class="position-relative mb-4">
+                                <div class="position-absolute top-0 start-0 translate-middle-x bg-primary rounded-circle shadow"
+                                     style="width: 12px; height: 12px; margin-left: -13px; margin-top: 6px; z-index: 2;"></div>
 
-                    <a asp-controller="Admin" asp-action="Categorias" class="admin-link">
-                        <div class="link-icon categories">
-                            <i class="bi bi-tags-fill"></i>
-                        </div>
-                        <div class="link-content">
-                            <h5 class="link-title">Categorías</h5>
-                            <p class="link-description">Gestionar catálogo de productos</p>
-                        </div>
-                        <div class="link-arrow">
-                            <i class="bi bi-chevron-right"></i>
-                        </div>
-                    </a>
+                                <div class="ms-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <h6 class="mb-0 fw-bold text-info-emphasis">@cambio.Usuario</h6>
+                                        <span class="badge rounded-pill border border-secondary-subtle text-secondary fw-normal">
+                                            <i class="bi bi-clock me-1"></i> @cambio.FechaRelativa
+                                        </span>
+                                    </div>
+                                    <p class="mb-1 text-body-secondary small">@cambio.Accion</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                    <a asp-controller="Admin" asp-action="Usuarios" class="admin-link">
-                        <div class="link-icon users">
-                            <i class="bi bi-people-fill"></i>
+        <div class="col-lg-4 mb-4">
+            <div class="card border-secondary shadow-sm h-100">
+                <div class="card-header border-secondary bg-transparent py-3">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-exclamation-triangle me-2 text-warning"></i>Atención Requerida
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (!Model.PedidosEstancados.Any())
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-check2-circle fs-1 text-success opacity-50"></i>
+                            <p class="text-muted mt-2">Todo al día. No hay pedidos demorados.</p>
                         </div>
-                        <div class="link-content">
-                            <h5 class="link-title">Usuarios</h5>
-                            <p class="link-description">Administrar cuentas de usuarios</p>
-                        </div>
-                        <div class="link-arrow">
-                            <i class="bi bi-chevron-right"></i>
-                        </div>
-                    </a>
-
-                    <a asp-controller="Admin" asp-action="Pedidos" class="admin-link">
-                        <div class="link-icon orders">
-                            <i class="bi bi-bag-check-fill"></i>
-                        </div>
-                        <div class="link-content">
-                            <h5 class="link-title">Pedidos</h5>
-                            <p class="link-description">Procesar y gestionar pedidos</p>
-                        </div>
-                        <div class="link-arrow">
-                            <i class="bi bi-chevron-right"></i>
-                        </div>
-                    </a>
-
-                    <a asp-controller="Admin" asp-action="Reportes" class="admin-link">
-                        <div class="link-icon reports">
-                            <i class="bi bi-graph-up"></i>
-                        </div>
-                        <div class="link-content">
-                            <h5 class="link-title">Reportes de Ventas</h5>
-                            <p class="link-description">Análisis y estadísticas de ventas</p>
-                        </div>
-                        <div class="link-arrow">
-                            <i class="bi bi-chevron-right"></i>
-                        </div>
-                    </a>
-
-                    <a asp-controller="Admin" asp-action="Auditorias" class="admin-link">
-                        <div class="link-icon audit">
-                            <i class="bi bi-shield-check"></i>
-                        </div>
-                        <div class="link-content">
-                            <h5 class="link-title">Auditorías</h5>
-                            <p class="link-description">Registros y logs del sistema</p>
-                        </div>
-                        <div class="link-arrow">
-                            <i class="bi bi-chevron-right"></i>
-                        </div>
-                    </a>
+                    }
+                    else
+                    {
+                        @foreach (var pedido in Model.PedidosEstancados)
+                        {
+                            <div class="alert bg-body-tertiary border-@pedido.ClaseColor border-start border-1 mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <strong>Pedido #@pedido.PedidoId</strong>
+                                    <span class="badge bg-@pedido.ClaseColor">@pedido.HorasTranscurridas.ToString("0") hs</span>
+                                </div>
+                                <div class="small text-muted mb-2">Cliente: @pedido.Cliente</div>
+                                <a asp-area="" asp-controller="Pedido" asp-action="Detalles" asp-route-id="@pedido.PedidoId" class="btn btn-sm btn-outline-secondary w-100">
+                                    Revisar Ahora
+                                </a>
+                            </div>
+                        }
+                    }
                 </div>
             </div>
         </div>
