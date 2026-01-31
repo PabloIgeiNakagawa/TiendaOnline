@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Domain.Entities;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace TiendaOnline.Data
 {
@@ -17,47 +18,69 @@ namespace TiendaOnline.Data
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            // 1. Obtener el ID del usuario actual desde los Claims (Auth)
             int? currentUserId = _userSession.GetUserId();
 
-            // 2. Capturar los cambios antes de procesarlos
-            var entradasAuditoria = new List<Auditoria>();
+            // Identificar las entradas para auditar (excluyendo la propia tabla Auditoria)
+            var entradasParaAuditar = ChangeTracker.Entries()
+                .Where(e => e.Entity is not Auditoria &&
+                            e.State != EntityState.Detached &&
+                            e.State != EntityState.Unchanged)
+                .ToList();
 
-            foreach (var entry in ChangeTracker.Entries())
+            var listaTemporal = new List<(EntityEntry Entry, Auditoria Auditoria)>();
+
+            foreach (var entry in entradasParaAuditar)
             {
-                // Evitar auditar la propia tabla de auditoría para no crear un bucle infinito
-                if (entry.Entity is Auditoria || entry.State == EntityState.Detached || entry.State == EntityState.Unchanged)
-                    continue;
+                var nombreTabla = entry.Entity.GetType().Name;
 
                 var auditoria = new Auditoria
                 {
                     UsuarioId = currentUserId ?? -1,
-                    Accion = entry.State.ToString(),
+                    TablaAfectada = nombreTabla,
                     Fecha = DateTime.Now,
-                    // Serializamos solo las propiedades de la tabla (evita el error de referencia circular)
-                    DatosAnteriores = entry.State == EntityState.Modified || entry.State == EntityState.Deleted
+                    Accion = entry.State switch
+                    {
+                        EntityState.Added => $"Creó {nombreTabla}",
+                        EntityState.Modified => $"Actualizó {nombreTabla}",
+                        EntityState.Deleted => $"Eliminó {nombreTabla}",
+                        _ => entry.State.ToString()
+                    },
+                    // Capturamos valores anteriores antes de que se pierdan
+                    DatosAnteriores = (entry.State == EntityState.Modified || entry.State == EntityState.Deleted)
                         ? JsonConvert.SerializeObject(entry.OriginalValues.ToObject())
-                        : "{}",
-                    DatosNuevos = entry.State == EntityState.Added || entry.State == EntityState.Modified
-                        ? JsonConvert.SerializeObject(entry.CurrentValues.ToObject())
                         : "{}"
                 };
 
-                entradasAuditoria.Add(auditoria);
+                listaTemporal.Add((entry, auditoria));
             }
 
-            // 3. Guardar los cambios principales
+            // Aquí se generan los IDs reales en la DB
             var resultado = await base.SaveChangesAsync(cancellationToken);
 
-            // 4. Si se guardaron cambios, insertar las auditorías
-            if (entradasAuditoria.Any())
+            // Ahora que tenemos IDs reales, completamos los campos
+            if (listaTemporal.Any())
             {
-                Auditorias.AddRange(entradasAuditoria);
+                foreach (var item in listaTemporal)
+                {
+                    // Datos nuevos con el ID ya asignado por SQL
+                    item.Auditoria.DatosNuevos = item.Entry.State != EntityState.Deleted
+                        ? JsonConvert.SerializeObject(item.Entry.CurrentValues.ToObject())
+                        : "{}";
+
+                    // Obtener el ID de la entidad dinámicamente (sea CategoriaId, ProductoId, etc.)
+                    var primaryKey = item.Entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
+                    item.Auditoria.EntidadId = primaryKey?.CurrentValue?.ToString() ?? "0";
+
+                    Auditorias.Add(item.Auditoria);
+                }
+
+                // Insertamos las filas de auditoría
                 await base.SaveChangesAsync(cancellationToken);
             }
 
             return resultado;
         }
+
 
         public DbSet<Auditoria> Auditorias { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }

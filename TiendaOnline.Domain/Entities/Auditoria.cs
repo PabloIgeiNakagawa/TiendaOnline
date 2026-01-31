@@ -16,6 +16,12 @@ namespace TiendaOnline.Domain.Entities
         public string Accion { get; set; }
 
         [Required]
+        public string TablaAfectada { get; set; }
+
+        [Required]
+        public string EntidadId { get; set; }
+
+        [Required]
         public string DatosAnteriores { get; set; }
 
         [Required]
