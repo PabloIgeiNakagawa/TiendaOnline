@@ -48,8 +48,11 @@ Para asegurar la escalabilidad y mantenibilidad, el proyecto implementa:
 
 ### 🎨 Interfaz y UX
 * **Modo Oscuro / Claro:** Implementado mediante Bootstrap y persistencia en Local Storage.
-
 * **Diseño Responsive:** Adaptabilidad total para móviles, tablets y escritorio utilizando Bootstrap.
+
+### 🖼️ Gestión de Medios con Cloudinary
+* **Almacenamiento en la Nube:** Implementación de Cloudinary API para la carga, almacenamiento y optimización de imágenes de productos.
+* **Arquitectura Desacoplada:** El servicio de imágenes está implementado en la capa de Infrastructure, permitiendo cambiar el proveedor de almacenamiento sin afectar la lógica de negocio en Core.
 
 ---
 
