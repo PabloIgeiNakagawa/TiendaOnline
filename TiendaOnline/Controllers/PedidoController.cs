@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TiendaOnline.Domain.DTOs;
+using TiendaOnline.Helpers;
 using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Controllers
@@ -39,24 +40,27 @@ namespace TiendaOnline.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> FinalizarCompra([FromForm] List<ItemCarrito> carrito)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> FinalizarCompra()
         {
+            var carrito = HttpContext.Session.GetObject<List<ItemCarrito>>("Carrito");
+
             if (carrito == null || carrito.Count == 0)
             {
                 TempData["MensajeError"] = "El carrito está vacío.";
                 return RedirectToAction("Index", "Carrito");
             }
 
-            var claim = User.FindFirst("UsuarioId");
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (claim == null)
             {
                 return Unauthorized();
             }
-
             int usuarioId = int.Parse(claim.Value);
 
             int pedidoId = await _pedidoService.CrearPedidoAsync(carrito, usuarioId);
 
+            HttpContext.Session.Remove("Carrito");
             TempData["MensajeExito"] = "¡Pedido realizado con éxito!";
             return RedirectToAction("Detalles", new { id = pedidoId });
         }

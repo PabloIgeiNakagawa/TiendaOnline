@@ -180,13 +180,6 @@
                     @if (usuarioEstaAutenticado)
                     {
                         <form asp-controller="Pedido" asp-action="FinalizarCompra" method="post">
-                            @for (int i = 0; i < Model.Count; i++)
-                            {
-                                <input type="hidden" name="[@i].ProductoId" value="@Model[i].ProductoId" />
-                                <input type="hidden" name="[@i].Cantidad" value="@Model[i].Cantidad" />
-                                <input type="hidden" name="[@i].Precio" value="@Model[i].Precio" />
-                            }
-
                             <button type="submit" class="btn btn-success fw-bold w-100 mt-4 d-flex align-items-center justify-content-center gap-2 rounded-2">
                                 <i class="bi bi-credit-card"></i> Finalizar compra
                             </button>

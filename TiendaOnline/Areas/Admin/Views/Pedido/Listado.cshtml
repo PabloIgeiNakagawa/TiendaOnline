@@ -353,18 +353,18 @@
                                         </td>
                                         <td class="py-3">
                                             <div class="d-flex justify-content-center gap-1">
-                                                <a asp-area="" asp-controller="Pedido" asp-action="Detalles"
-                                                   class="btn btn-outline-info btn-sm px-3 py-1 rounded-2 shadow-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Ver detalle">
+                                                <a asp-area="" asp-controller="Pedido" asp-action="Detalles" asp-route-id="@pedido.PedidoId"
+                                                   class="btn btn-outline-info btn-sm rounded-2 shadow-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
                                                 @if (pedido.Estado == EstadoPedido.Pendiente && esAdmin)
                                                 {
-                                                    <button type="button" class="btn btn-outline-success btn-sm px-3 py-1 rounded-2 shadow-sm"
+                                                    <button type="button" class="btn btn-outline-success btn-sm rounded-2 shadow-sm"
                                                             onclick="enviarPedido(@pedido.PedidoId)"
                                                             data-bs-toggle="tooltip" data-bs-placement="bottom" title="Marcar como enviado">
                                                         <i class="bi bi-truck"></i>
                                                     </button>
-                                                    <button type="button" class="btn btn-outline-danger btn-sm px-3 py-1 rounded-2 shadow-sm"
+                                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-2 shadow-sm"
                                                             onclick="cancelarPedido(@pedido.PedidoId)"
                                                             data-bs-toggle="tooltip" data-bs-placement="bottom" title="Cancelar pedido">
                                                         <i class="bi bi-x-circle"></i>
@@ -372,7 +372,7 @@
                                                 }
                                                 else if (pedido.Estado == EstadoPedido.Enviado)
                                                 {
-                                                    <button type="button" class="btn btn-outline-success btn-sm px-3 py-1 rounded-2 shadow-sm"
+                                                    <button type="button" class="btn btn-outline-success btn-sm rounded-2 shadow-sm"
                                                             onclick="entregarPedido(@pedido.PedidoId)"
                                                             data-bs-toggle="tooltip" data-bs-placement="bottom" title="Marcar como entregado">
                                                         <i class="bi bi-check-circle"></i>

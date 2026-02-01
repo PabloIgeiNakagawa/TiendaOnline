@@ -52,16 +52,30 @@ namespace TiendaOnline.Services.Services
         {
             var pedido = new Pedido
             {
-                UsuarioId = usuarioId, // Usamos el parámetro que recibe la función
+                UsuarioId = usuarioId,
                 FechaPedido = DateTime.Now,
                 Estado = EstadoPedido.Pendiente,
-                DetallesPedido = carrito.Select(item => new DetallePedido
-                {
-                    ProductoId = item.ProductoId,
-                    Cantidad = item.Cantidad,
-                    PrecioUnitario = item.Precio
-                }).ToList()
+                DetallesPedido = new List<DetallePedido>()
             };
+
+            foreach (var item in carrito)
+            {
+                var productoDb = await _context.Productos.FindAsync(item.ProductoId);
+
+                if (productoDb == null) throw new Exception("Producto no encontrado");
+
+                if (productoDb.Stock < item.Cantidad)
+                    throw new Exception($"Sin stock para {productoDb.Nombre}");
+
+                productoDb.Stock -= item.Cantidad;
+
+                pedido.DetallesPedido.Add(new DetallePedido
+                {
+                    ProductoId = productoDb.ProductoId,
+                    Cantidad = item.Cantidad,
+                    PrecioUnitario = productoDb.Precio
+                });
+            }
 
             _context.Pedidos.Add(pedido);
 
@@ -75,7 +89,8 @@ namespace TiendaOnline.Services.Services
             var pedido = await _context.Pedidos.FindAsync(pedidoId);
             if (pedido == null) throw new Exception("Pedido no encontrado.");
 
-            var estadoAnterior = new { pedido.Estado, pedido.FechaEnvio };
+            if (pedido.Estado != EstadoPedido.Pendiente)
+                throw new Exception("El pedido no se puede enviar porque no está en estado Pendiente (Estado actual: " + pedido.Estado + ")");
 
             pedido.Estado = EstadoPedido.Enviado;
             pedido.FechaEnvio = DateTime.Now;
@@ -88,7 +103,8 @@ namespace TiendaOnline.Services.Services
             var pedido = await _context.Pedidos.FindAsync(pedidoId);
             if (pedido == null) throw new Exception("Pedido no encontrado.");
 
-            var estadoAnterior = new { pedido.Estado, pedido.FechaEntrega };
+            if (pedido.Estado != EstadoPedido.Enviado)
+                throw new Exception($"No se puede entregar: el pedido aún figura como {pedido.Estado}.");
 
             pedido.Estado = EstadoPedido.Entregado;
             pedido.FechaEntrega = DateTime.Now;
@@ -101,7 +117,8 @@ namespace TiendaOnline.Services.Services
             var pedido = await _context.Pedidos.FindAsync(pedidoId);
             if (pedido == null) throw new Exception("Pedido no encontrado.");
 
-            var estadoAnterior = new { pedido.Estado, pedido.FechaCancelado };
+            if (pedido.Estado == EstadoPedido.Entregado)
+                throw new Exception("No se puede cancelar un pedido que ya ha sido entregado.");
 
             pedido.Estado = EstadoPedido.Cancelado;
             pedido.FechaCancelado = DateTime.Now;
