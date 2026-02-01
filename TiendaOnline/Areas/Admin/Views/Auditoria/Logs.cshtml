@@ -1,0 +1,305 @@
+﻿@model IEnumerable<TiendaOnline.Domain.Entities.Auditoria>
+@{
+    ViewData["Title"] = "Auditoría del Sistema";
+}
+
+<div class="container-fluid py-4">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 fw-bold">
+                        <i class="bi bi-shield-check me-2 text-primary"></i>
+                        Auditoría del Sistema
+                    </h2>
+                    <p class="text-muted mb-0">Registro completo de todas las acciones realizadas en el sistema</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary rounded-2" onclick="exportarAuditoriaCSV()">
+                        <i class="bi bi-download me-1"></i>Exportar
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary rounded-2 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-funnel me-1"></i>Filtrar por Período
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-periodo="hoy">Hoy</a></li>
+                            <li><a class="dropdown-item" href="#" data-periodo="semana">Última Semana</a></li>
+                            <li><a class="dropdown-item" href="#" data-periodo="mes">Último Mes</a></li>
+                            <li><a class="dropdown-item" href="#" data-periodo="todos">Todos</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card rounded-3 bg-primary text-white border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Total de Registros</h6>
+                            <h3 class="mb-0" id="totalRegistros">@Model.Count()</h3>
+                        </div>
+                        <div class="ms-3">
+                            <i class="bi bi-file-text" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card rounded-3 bg-success text-white border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Registros Hoy</h6>
+                            <h3 class="mb-0" id="registrosHoy">@Model.Count(a => a.Fecha.Date == DateTime.Today)</h3>
+                        </div>
+                        <div class="ms-3">
+                            <i class="bi bi-calendar-day" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card rounded-3 bg-info text-white border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Usuarios Activos</h6>
+                            <h3 class="mb-0" id="usuariosActivos">@Model.Select(a => a.UsuarioId).Distinct().Count()</h3>
+                        </div>
+                        <div class="ms-3">
+                            <i class="bi bi-people" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card rounded-3 bg-warning text-white border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">Acciones Únicas</h6>
+                            <h3 class="mb-0" id="accionesUnicas">@Model.Select(a => a.Accion).Distinct().Count()</h3>
+                        </div>
+                        <div class="ms-3">
+                            <i class="bi bi-lightning" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card rounded-3 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="filtroUsuario" class="form-label fw-semibold">
+                                <i class="bi bi-person me-1"></i>Usuario
+                            </label>
+                            <select id="filtroUsuario" class="form-select">
+                                <option value="">Todos los usuarios</option>
+                                @foreach (var usuario in Model.Select(a => a.Usuario).Distinct())
+                                {
+                                    <option value="@usuario.UsuarioId">@usuario.Nombre @usuario.Apellido</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroAccion" class="form-label fw-semibold">
+                                <i class="bi bi-activity me-1"></i>Acción
+                            </label>
+                            <select id="filtroAccion" class="form-select">
+                                <option value="">Todas las acciones</option>
+                                @foreach (var accion in Model.Select(a => a.Accion).Distinct())
+                                {
+                                    <option value="@accion">@accion</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroFechaDesde" class="form-label fw-semibold">
+                                <i class="bi bi-calendar me-1"></i>Desde
+                            </label>
+                            <input type="date" id="filtroFechaDesde" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtroFechaHasta" class="form-label fw-semibold">
+                                <i class="bi bi-calendar me-1"></i>Hasta
+                            </label>
+                            <input type="date" id="filtroFechaHasta" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-secondary rounded-2" id="limpiarFiltros">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Auditoría -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card rounded-3 shadow-sm border-0">
+                <div class="card-header border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-semibold">
+                            <span id="registrosVisibles">@Model.Count()</span> registros de auditoría
+                        </h5>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="tablaAuditoria">
+                            <thead  >
+                                <tr>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-clock me-2 text-primary"></i>
+                                            Fecha y Hora
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-person me-2 text-primary"></i>
+                                            Usuario
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-activity me-2 text-primary"></i>
+                                            Acción
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-file-diff me-2 text-primary"></i>
+                                            Cambios
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3 text-center">
+                                        <i class="bi bi-gear me-1 text-primary"></i>Acciones
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var auditoria in Model.OrderByDescending(a => a.Fecha))
+                                {
+                                    <tr class="fila-auditoria"
+                                        data-usuario="@auditoria.UsuarioId"
+                                        data-accion="@auditoria.Accion"
+                                        data-fecha="@auditoria.Fecha.ToString("yyyy-MM-dd")">
+                                        <td class="py-3">
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-semibold">@auditoria.Fecha.ToString("dd/MM/yyyy")</span>
+                                                <small class="text-muted">@auditoria.Fecha.ToString("HH:mm:ss")</small>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            <div>
+                                                <div class="fw-semibold">@auditoria.Usuario.Nombre @auditoria.Usuario.Apellido</div>
+                                                <small class="text-muted">@auditoria.Usuario.Email</small>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            @{
+                                                string claseAccion = auditoria.Accion.ToLower() switch
+                                                {
+                                                    var x when x.Contains("crear") || x.Contains("registrar") => "bg-success",
+                                                    var x when x.Contains("editar") || x.Contains("actualizar") => "bg-warning",
+                                                    var x when x.Contains("eliminar") || x.Contains("baja") => "bg-danger",
+                                                    var x when x.Contains("login") || x.Contains("acceso") => "bg-info",
+                                                    _ => "bg-secondary"
+                                                };
+                                            }
+                                            <span class="badge @claseAccion px-3 py-2 rounded-pill small fw-medium">
+                                                @auditoria.Accion
+                                            </span>
+                                        </td>
+                                        <td class="py-3">
+                                            <button class="btn btn-sm btn-outline-primary rounded-2"
+                                                    onclick="verCambios(@auditoria.AuditoriaId, '@Html.Raw(Html.Encode(auditoria.DatosAnteriores))', '@Html.Raw(Html.Encode(auditoria.DatosNuevos))')"
+                                                    data-bs-toggle="tooltip"
+                                                    title="Ver detalles de los cambios">
+                                                <i class="bi bi-eye me-1"></i>Ver Cambios
+                                            </button>
+                                        </td>
+                                        <td class="py-3 text-center">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <button class="btn btn-sm btn-outline-info rounded-2"
+                                                        onclick="verDetalles(@auditoria.AuditoriaId)"
+                                                        data-bs-toggle="tooltip"
+                                                        title="Ver detalles completos">
+                                                    <i class="bi bi-info-circle"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de detalle de los cambios -->
+<div class="modal fade" id="modalCambios" tabindex="-1" aria-labelledby="etiquetaModalCambios" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="etiquetaModalCambios">
+                    <i class="bi bi-file-diff me-2"></i>Detalles de los Cambios
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-arrow-left-circle me-2"></i>Datos Anteriores
+                        </h6>
+                        <div class="bg-body-secondary p-3 rounded">
+                            <pre id="datosAnteriores" class="text-wrap text-break small lh-sm mb-0"></pre>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-arrow-right-circle me-2"></i>Datos Nuevos
+                        </h6>
+                        <div class="bg-body-secondary p-3 rounded">
+                            <pre id="datosNuevos" class="text-wrap text-break small lh-sm mb-0"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary rounded-2" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div> 
+@section Scripts{
+    <script src="~/js/Admin/Auditoria/Index.js"></script>
+}

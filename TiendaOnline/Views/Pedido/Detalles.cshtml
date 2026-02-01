@@ -1,4 +1,4 @@
-﻿@model TiendaOnline.Models.Pedido
+﻿@model TiendaOnline.Domain.Entities.Pedido
 @{
     ViewData["Title"] = $"Pedido #{Model.PedidoId.ToString("D6")}";
     var total = Model.DetallesPedido?.Sum(d => d.Cantidad * d.PrecioUnitario) ?? 0;
@@ -10,7 +10,67 @@
     var esPropioPedido = User.Identity.IsAuthenticated && Model.UsuarioId.ToString() == User.Claims.FirstOrDefault(c => c.Type == "UsuarioId")?.Value;
 }
 
-<link rel="stylesheet" href="~/css/Pedido/Detalles.css" asp-append-version="true" />
+@section Styles{
+    <style>
+        .timeline::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 8px;
+            width: 2px;
+            background-color: #e9ecef;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "›";
+            color: #6c757d;
+        }
+
+        @@keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Impresión */
+        @@media print {
+            .btn, .breadcrumb, .timeline::before {
+                display: none !important;
+            }
+
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #dee2e6 !important;
+            }
+
+            .container-fluid {
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .timeline-icon {
+                border: 1px solid #dee2e6 !important;
+            }
+
+            .col-lg-8,
+            .col-lg-4 {
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: 0 0 100% !important;
+            }
+        }
+    </style>
+}
 
 <div class="container-fluid py-4">
     <!-- Breadcrumb y Acciones -->
@@ -20,20 +80,20 @@
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item">
-                            <a href="@Url.Action("Index", "Home")" class="text-decoration-none">
+                            <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
                                 <i class="bi bi-house-door"></i> Inicio
                             </a>
                         </li>
                         @if (esAdmin)
                         {
                             <li class="breadcrumb-item">
-                                <a href="@Url.Action("Index", "Pedido")" class="text-decoration-none">Gestión de Pedidos</a>
+                                <a asp-controller="Pedido" asp-action="Index" class="text-decoration-none">Gestión de Pedidos</a>
                             </li>
                         }
                         else
                         {
                             <li class="breadcrumb-item">
-                                <a href="@Url.Action("MisPedidos", "Pedido")" class="text-decoration-none">Mis Pedidos</a>
+                                <a asp-controller="Pedido" asp-action="MisPedidos" class="text-decoration-none">Mis Pedidos</a>
                             </li>
                         }
                         <li class="breadcrumb-item active" aria-current="page">
@@ -41,7 +101,7 @@
                         </li>
                     </ol>
                 </nav>
-                <div class="d-flex gap-2 mt-2 mt-md-0">
+                <div class="d-flex gap-2 mt-4 mt-md-0">
                     <button class="btn btn-outline-secondary" onclick="imprimirPedido()">
                         <i class="bi bi-printer me-2"></i>Imprimir
                     </button>
@@ -50,13 +110,13 @@
                         <button class="btn btn-outline-primary" onclick="exportarPDF()">
                             <i class="bi bi-file-earmark-pdf me-2"></i>Exportar PDF
                         </button>
-                        <a href="@Url.Action("Index", "Pedido")" class="btn btn-outline-dark">
+                        <a asp-controller="Pedido" asp-action="Index" class="btn btn-secondary">
                             <i class="bi bi-arrow-left me-2"></i>Volver
                         </a>
                     }
                     else
                     {
-                        <a href="@Url.Action("MisPedidos", "Pedido")" class="btn btn-outline-dark">
+                        <a asp-controller="Pedido" asp-action="MisPedidos" class="btn btn-secondary">
                             <i class="bi bi-arrow-left me-2"></i>Mis Pedidos
                         </a>
                     }
@@ -69,8 +129,8 @@
         <!-- Información del Pedido -->
         <div class="col-lg-8">
             <!-- Cabecera del Pedido -->
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white border-bottom-0 pb-0">
+            <div class="card rounded-3 shadow border-0 mb-4 overflow-hidden">
+                <div class="card-header bg-transparent border-0 p-4 pb-0">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 fw-bold">
                             @if (esAdmin)
@@ -86,22 +146,22 @@
                             @switch (Model.Estado)
                             {
                                 case EstadoPedido.Pendiente:
-                                    <span class="badge estado-pendiente">
+                                    <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1 ms-md-0">
                                         <i class="bi bi-clock me-1"></i>Pendiente
                                     </span>
                                     break;
                                 case EstadoPedido.Enviado:
-                                    <span class="badge estado-enviado">
+                                    <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-info-subtle text-info-emphasis border border-info-subtle ms-1 ms-md-0">
                                         <i class="bi bi-truck me-1"></i>Enviado
                                     </span>
                                     break;
                                 case EstadoPedido.Entregado:
-                                    <span class="badge estado-entregado">
+                                    <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-success-subtle text-success-emphasis border border-success-subtle ms-1 ms-md-0">
                                         <i class="bi bi-check-circle me-1"></i>Entregado
                                     </span>
                                     break;
                                 case EstadoPedido.Cancelado:
-                                    <span class="badge estado-cancelado">
+                                    <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-danger-subtle text-danger-emphasis border border-danger-subtle ms-1 ms-md-0">
                                         <i class="bi bi-x-circle me-1"></i>Cancelado
                                     </span>
                                     break;
@@ -109,19 +169,19 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="info-group">
-                                <div class="info-label">Número de Pedido</div>
-                                <div class="info-value">#@Model.PedidoId.ToString("D6")</div>
+                            <div class="mb-3">
+                                <div class="small text-secondary mb-1">Número de Pedido</div>
+                                <div class="fw-medium">#@Model.PedidoId.ToString("D6")</div>
                             </div>
-                            <div class="info-group">
-                                <div class="info-label">Fecha de Pedido</div>
-                                <div class="info-value">@Model.FechaPedido.ToString("dd/MM/yyyy HH:mm")</div>
+                            <div class="mb-3">
+                                <div class="small text-secondary mb-1">Fecha de Pedido</div>
+                                <div class="fw-medium">@Model.FechaPedido.ToString("dd/MM/yyyy HH:mm")</div>
                             </div>
-                            <div class="info-group">
-                                <div class="info-label">
+                            <div class="mb-3">
+                                <div class="small text-secondary mb-1">
                                     @if (Model.Estado == EstadoPedido.Entregado)
                                     {
                                         <text>Fecha de Entrega</text>
@@ -135,7 +195,7 @@
                                         <text>Fecha de Entrega</text>
                                     }
                                 </div>
-                                <div class="info-value">
+                                <div class="fw-medium">
                                     @if (Model.FechaEntrega.HasValue)
                                     {
                                         @Model.FechaEntrega.Value.ToString("dd/MM/yyyy HH:mm")
@@ -154,24 +214,24 @@
                         <div class="col-md-6">
                             @if (esAdmin)
                             {
-                                <div class="info-group">
-                                    <div class="info-label">Cliente</div>
-                                    <div class="info-value">@(Model.Usuario?.Nombre ?? "Cliente no disponible")</div>
+                                <div class="mb-3">
+                                    <div class="small text-secondary mb-1">Cliente</div>
+                                    <div class="fw-medium">@(Model.Usuario?.Nombre ?? "Cliente no disponible")</div>
                                 </div>
-                                <div class="info-group">
-                                    <div class="info-label">Email</div>
-                                    <div class="info-value">@(Model.Usuario?.Email ?? "Email no disponible")</div>
+                                <div class="mb-3">
+                                    <div class="small text-secondary mb-1">Email</div>
+                                    <div class="fw-medium">@(Model.Usuario?.Email ?? "Email no disponible")</div>
                                 </div>
-                                <div class="info-group">
-                                    <div class="info-label">Teléfono</div>
-                                    <div class="info-value">@(Model.Usuario?.Telefono ?? "Teléfono no disponible")</div>
+                                <div class="mb-3">
+                                    <div class="small text-secondary mb-1">Teléfono</div>
+                                    <div class="fw-medium">@(Model.Usuario?.Telefono ?? "Teléfono no disponible")</div>
                                 </div>
                             }
                             else
                             {
-                                <div class="info-group">
-                                    <div class="info-label">Estado del Pedido</div>
-                                    <div class="info-value">
+                                <div class="mb-3">
+                                    <div class="small text-secondary mb-1">Estado del Pedido</div>
+                                    <div class="fw-medium">
                                         @switch (Model.Estado)
                                         {
                                             case EstadoPedido.Pendiente:
@@ -203,9 +263,9 @@
                                 </div>
                                 @if (Model.Estado == EstadoPedido.Enviado)
                                 {
-                                    <div class="info-group">
-                                        <div class="info-label">Número de Seguimiento</div>
-                                        <div class="info-value">
+                                    <div class="mb-3">
+                                        <div class="small text-secondary mb-1">Número de Seguimiento</div>
+                                        <div class="fw-medium">
                                             <code>TRK@(Model.PedidoId.ToString("D6"))CO</code>
                                             <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarSeguimiento()">
                                                 <i class="bi bi-clipboard"></i>
@@ -213,9 +273,9 @@
                                         </div>
                                     </div>
                                 }
-                                <div class="info-group">
-                                    <div class="info-label">Método de Pago</div>
-                                    <div class="info-value">
+                                <div class="mb-3">
+                                    <div class="small text-secondary mb-1">Método de Pago</div>
+                                    <div class="fw-medium">
                                         <i class="bi bi-credit-card me-1"></i>
                                         Tarjeta de Crédito
                                     </div>
@@ -227,9 +287,9 @@
             </div>
 
             <!-- Productos del Pedido -->
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white border-bottom-0 pb-3">
-                    <h5 class="mb-0 fw-bold">
+            <div class="card rounded-3 shadow border-0 mb-4 overflow-hidden">
+                <div class="card-header bg-transparent border-0 p-4 pb-0">
+                    <h5 class="mb-3 fw-bold">
                         @if (esAdmin)
                         {
                             <text>Productos del Pedido</text>
@@ -240,110 +300,74 @@
                         }
                     </h5>
                 </div>
+                <!-- Tabla en tamaño MD -->
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="border-0 p-3">Producto</th>
-                                    <th class="border-0 p-3 text-center">Precio Unitario</th>
-                                    <th class="border-0 p-3 text-center">Cantidad</th>
-                                    <th class="border-0 p-3 text-center">Subtotal</th>
-                                    @if (!esAdmin && esPropioPedido)
-                                    {
-                                        <th class="border-0 py-3 text-center">Acciones</th>
-                                    }
+                        <table class="table table-hover align-middle d-none d-md-table">
+                            <thead class="table">
+                                <tr class="text-secondary">
+                                    <th class="p-3 border-bottom">Producto</th>
+                                    <th class="p-3 text-center border-bottom">Precio</th>
+                                    <th class="p-3 text-center border-bottom">Cantidad</th>
+                                    <th class="p-3 text-end border-bottom">Subtotal</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @if (Model.DetallesPedido != null && Model.DetallesPedido.Any())
-                                {
-                                    foreach (var detalle in Model.DetallesPedido)
-                                    {
-                                        <tr>
-                                            <td class="py-3">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="producto-imagen-mini me-3">
-                                                        @if (detalle.Producto?.ImagenUrl != null)
-                                                        {
-                                                            <img src=@detalle.Producto.ImagenUrl
-                                                                 alt="@detalle.Producto.Nombre" class="img-thumbnail"
-                                                                 style="width: 50px; height: 50px; object-fit: cover;" />
-                                                        }
-                                                        else
-                                                        {
-                                                            <div class="circulo-avatar">
-                                                                <i class="bi bi-box"></i>
-                                                            </div>
-                                                        }
-                                                    </div>
-                                                    <div>
-                                                        <div class="fw-semibold text-dark">
-                                                            @if (esAdmin)
-                                                            {
-                                                                <a href="@Url.Action("Detalle", "Producto", new { id = detalle.ProductoId })" class="text-decoration-none">
-                                                                    @(detalle.Producto?.Nombre ?? "Producto no disponible")
-                                                                </a>
-                                                            }
-                                                            else
-                                                            {
-                                                                @(detalle.Producto?.Nombre ?? "Producto no disponible")
-                                                            }
-                                                        </div>
-                                                        <small class="text-muted">
-                                                            @if (esAdmin)
-                                                            {
-                                                                <text>ID: @detalle.ProductoId</text>
-                                                            }
-                                                            else
-                                                            {
-                                                                @(detalle.Producto?.Descripcion ?? "")
-                                                            }
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="p-3 text-center">
-                                                @detalle.PrecioUnitario
-                                            </td>
-                                            <td class="p-3 text-center">
-                                                <span class="badge bg-light text-dark border px-3 py-2">
-                                                    @detalle.Cantidad
-                                                </span>
-                                            </td>
-                                            <td class="p-3 text-center fw-bold">
-                                                @((detalle.Cantidad * detalle.PrecioUnitario))
-                                            </td>
-                                            @if (!esAdmin && esPropioPedido)
-                                            {
-                                                <td class="py-3 text-center">
-                                                    <a href="@Url.Action("Detalle", "Producto", new { id = detalle.ProductoId })"
-                                                       class="btn btn-sm btn-outline-primary" title="Ver producto">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                </td>
-                                            }
-                                        </tr>
-                                    }
-                                }
-                                else
+                            <tbody class="border-top-0">
+                                @foreach (var detalle in Model.DetallesPedido)
                                 {
                                     <tr>
-                                        <td colspan="@(esAdmin || !esPropioPedido ? "4" : "5")" class="text-center py-4 text-muted">
-                                            <i class="bi bi-inbox display-6 mb-3 d-block"></i>
-                                            No hay productos en este pedido
+                                        <td class="py-3">
+                                            <div class="d-flex align-items-center">
+                                                <img src="@detalle.Producto.ImagenUrl" class="rounded border shadow-sm me-3"
+                                                     style="width: 50px; height: 50px; object-fit: cover;">
+                                                <span class="fw-semibold text-body">@detalle.Producto.Nombre</span>
+                                            </div>
                                         </td>
+                                        <td class="p-3 text-center text-body-secondary">$@detalle.PrecioUnitario</td>
+                                        <td class="p-3 text-center">
+                                            <span class="badge bg-body-secondary text-body border">@detalle.Cantidad</span>
+                                        </td>
+                                        <td class="p-3 text-end fw-bold text-body">$@(detalle.Cantidad * detalle.PrecioUnitario)</td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
+                        <!-- Cards en menor tamaño que MD -->
+                        <div class="d-md-none">
+                            @foreach (var detalle in Model.DetallesPedido)
+                            {
+                                <div class="card mb-3 shadow-sm border-secondary-subtle bg-body">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <img src="@detalle.Producto.ImagenUrl" class="rounded border me-3"
+                                                 style="width: 65px; height: 65px; object-fit: cover;">
+                                            <div class="overflow-hidden">
+                                                <h6 class="mb-1 fw-bold text-body text-truncate">@detalle.Producto.Nombre</h6>
+                                                <small class="text-body-secondary">Unitario: $@detalle.PrecioUnitario</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="row g-0 border-top pt-2 mt-2">
+                                            <div class="col-6">
+                                                <span class="d-block text-body-secondary small text-uppercase fw-semibold">Cantidad</span>
+                                                <span class="text-body fw-bold">@detalle.Cantidad</span>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <span class="d-block text-body-secondary small text-uppercase fw-semibold">Subtotal</span>
+                                                <span class="fw-bold fs-5">$@(detalle.Cantidad * detalle.PrecioUnitario)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Historial de Cambios -->
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white border-bottom-0 pb-3">
+            <div class="card rounded-3 shadow border-0 mb-4 overflow-hidden">
+                <div class="card-header bg-transparent border-0 p-4 pb-0">
                     <h5 class="mb-0 fw-bold">
                         @if (esAdmin)
                         {
@@ -355,14 +379,15 @@
                         }
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="timeline">
-                        <div class="timeline-item">
-                            <div class="timeline-icon bg-primary">
+                <div class="card-body p-4">
+                    <div class="timeline position-relative ps-4">
+                        <div class="position-relative pb-4">
+                            <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-body-secondary z-1"
+                                 style="left: -2rem; width: 32px; height: 32px;">
                                 <i class="bi bi-plus-circle"></i>
                             </div>
-                            <div class="timeline-content">
-                                <h6 class="mb-1">
+                            <div class="ps-2">
+                                <h6 class="fw-semibold mb-1">
                                     @if (esAdmin)
                                     {
                                         <text>Pedido creado</text>
@@ -388,12 +413,13 @@
 
                         @if (Model.Estado == EstadoPedido.Enviado || Model.Estado == EstadoPedido.Entregado)
                         {
-                            <div class="timeline-item">
-                                <div class="timeline-icon bg-info">
+                            <div class="position-relative pb-4">
+                                <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-info z-1"
+                                     style="left: -2rem; width: 32px; height: 32px;">
                                     <i class="bi bi-truck"></i>
                                 </div>
-                                <div class="timeline-content">
-                                    <h6 class="mb-1">
+                                <div class="ps-2">
+                                    <h6 class="fw-semibold mb-1">
                                         @if (esAdmin)
                                         {
                                             <text>Pedido enviado</text>
@@ -403,7 +429,7 @@
                                             <text>Pedido en camino</text>
                                         }
                                     </h6>
-                                    <p class="mb-0 text-muted">@DateTime.Now.AddDays(-2).ToString("dd/MM/yyyy HH:mm")</p>
+                                    <p class="mb-0 text-muted">@(Model.Estado == EstadoPedido.Enviado ? Model.FechaEnvio?.ToString("dd/MM/yyyy HH:mm") : Model.FechaEntrega?.ToString("dd/MM/yyyy HH:mm"))</p>
                                     <small class="text-muted">
                                         @if (esAdmin)
                                         {
@@ -420,12 +446,13 @@
 
                         @if (Model.Estado == EstadoPedido.Entregado)
                         {
-                            <div class="timeline-item">
-                                <div class="timeline-icon bg-success">
+                            <div class="position-relative pb-4">
+                                <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-success z-1"
+                                     style="left: -2rem; width: 32px; height: 32px;">
                                     <i class="bi bi-check-circle"></i>
                                 </div>
-                                <div class="timeline-content">
-                                    <h6 class="mb-1">
+                                <div class="ps-2">
+                                    <h6 class="fw-semibold mb-1">
                                         @if (esAdmin)
                                         {
                                             <text>Pedido entregado</text>
@@ -452,13 +479,14 @@
 
                         @if (Model.Estado == EstadoPedido.Cancelado)
                         {
-                            <div class="timeline-item">
-                                <div class="timeline-icon bg-danger">
+                            <div class="position-relative pb-4">
+                                <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-danger z-1"
+                                     style="left: -2rem; width: 32px; height: 32px;">
                                     <i class="bi bi-x-circle"></i>
                                 </div>
-                                <div class="timeline-content">
-                                    <h6 class="mb-1">Pedido cancelado</h6>
-                                    <p class="mb-0 text-muted">@DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy HH:mm")</p>
+                                <div class="ps-2">
+                                    <h6 class="fw-semibold mb-1">Pedido cancelado</h6>
+                                    <p class="mb-0 text-muted">@Model.FechaCancelado?.ToString("dd/MM/yyyy HH:mm")</p>
                                     <small class="text-muted">
                                         @if (esAdmin)
                                         {
@@ -480,40 +508,39 @@
         <!-- Resumen y Acciones -->
         <div class="col-lg-4">
             <!-- Resumen del Pedido -->
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white border-bottom-0 pb-0">
+            <div class="card bg-body-tertiary rounded-3 shadow-sm border-0 mb-4 overflow-hidden">
+                <div class="card-header bg-transparent border-0 p-4 pb-0">
                     <h5 class="mb-0 fw-bold">Resumen del Pedido</h5>
                 </div>
-                <div class="card-body">
-                    <div class="resumen-item">
-                        <div class="resumen-label">Subtotal</div>
-                        <div class="resumen-value">@subtotal.ToString("C0")</div>
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span>Subtotal</span>
+                        <div class="fw-medium">@subtotal.ToString("C0")</div>
                     </div>
-                    <div class="resumen-item">
-                        <div class="resumen-label">IVA (19%)</div>
-                        <div class="resumen-value">@impuestos.ToString("C0")</div>
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span>IVA (19%)</span>
+                        <div class="fw-medium">@impuestos.ToString("C0")</div>
                     </div>
-                    <div class="resumen-item">
-                        <div class="resumen-label">Envío</div>
-                        <div class="resumen-value">Gratis</div>
+                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                        <span>Envío</span>
+                        <div class="fw-medium">Gratis</div>
                     </div>
-                    <div class="resumen-total">
-                        <div class="resumen-label">Total</div>
-                        <div class="resumen-value">@totalConImpuestos.ToString("C0")</div>
+                    <div class="d-flex justify-content-between mt-4 pt-3">
+                        <span>Total</span>
+                        <div class="fw-medium fs-4">@totalConImpuestos.ToString("C0")</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Dirección de Envío -->
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white border-bottom-0 pb-0">
-                    <h5 class="mb-0 fw-bold">Dirección de Envío</h5>
+            <!-- Datos de entrega -->
+            <div class="card rounded-3 shadow border-0 mb-4 overflow-hidden">
+                <div class="card-header bg-transparent border-0 p-4 pb-0">
+                    <h5 class="mb-0 fw-bold">Datos de entrega</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <address class="mb-0">
-                        <strong>@(Model.Usuario?.Nombre ?? "Cliente")</strong><br>
-                        @(Model.Usuario?.Direccion ?? "Dirección no especificada")<br>
-                        Argentina<br>
+                        <i class="bi bi-person"></i> @(Model.Usuario?.Nombre ?? "Cliente")<br>
+                       <i class="bi bi-geo-alt"></i>  @(Model.Usuario?.Direccion ?? "Dirección no especificada")<br>
                         <i class="bi bi-telephone me-1"></i> @(Model.Usuario?.Telefono ?? "No disponible")<br>
                         <i class="bi bi-envelope me-1"></i> @(Model.Usuario?.Email ?? "No disponible")
                     </address>
@@ -521,8 +548,8 @@
             </div>
 
             <!-- Acciones del Pedido -->
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white border-bottom-0 pb-0">
+            <div class="card rounded-3 shadow border-0 mb-4 overflow-hidden">
+                <div class="card-header bg-transparent border-0 p-4 pb-0">
                     <h5 class="mb-0 fw-bold">
                         @if (esAdmin)
                         {
@@ -534,21 +561,21 @@
                         }
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     @if (esAdmin)
                     {
                         @if (Model.Estado == EstadoPedido.Pendiente)
                         {
-                            <button class="btn btn-info btn-lg w-100 mb-3" onclick="cambiarEstado(@Model.PedidoId, 1, 'Enviado')">
+                            <button class="btn btn-info btn-lg w-100 mb-3" onclick="enviarPedido(@Model.PedidoId)">
                                 <i class="bi bi-truck me-2"></i>Marcar como Enviado
                             </button>
-                            <button class="btn btn-danger btn-lg w-100" onclick="cambiarEstado(@Model.PedidoId, 3, 'Cancelado')">
+                            <button class="btn btn-danger btn-lg w-100" onclick="cancelarPedido(@Model.PedidoId)">
                                 <i class="bi bi-x-circle me-2"></i>Cancelar Pedido
                             </button>
                         }
                         else if (Model.Estado == EstadoPedido.Enviado && (esAdmin || esRepartidor))
                         {
-                            <button class="btn btn-success btn-lg w-100" onclick="cambiarEstado(@Model.PedidoId, 2, 'Entregado')">
+                            <button class="btn btn-success btn-lg w-100" onclick="entregarPedido(@Model.PedidoId)">
                                 <i class="bi bi-check-circle me-2"></i>Marcar como Entregado
                             </button>
                         }
@@ -564,19 +591,19 @@
                     {
                         @if (Model.Estado == EstadoPedido.Pendiente)
                         {
-                            <button class="btn btn-outline-danger btn-lg w-100 mb-3" onclick="cancelarPedidoUsuario(@Model.PedidoId)">
+                            <button class="btn btn-outline-danger btn-lg w-100 mb-3" onclick="cancelarPedido(@Model.PedidoId)">
                                 <i class="bi bi-x-circle me-2"></i>Cancelar Pedido
                             </button>
                         }
 
                         @if (Model.Estado == EstadoPedido.Entregado)
                         {
-                            <a href="@Url.Action("Index", "Producto")" class="btn btn-primary btn-lg w-100 mb-3">
+                            <a asp-controller="Producto" asp-action="Index" class="btn btn-primary btn-lg w-100 mb-3">
                                 <i class="bi bi-cart-plus me-2"></i>Comprar de Nuevo
                             </a>
                         }
 
-                        <a href="@Url.Action("Index", "Soporte")" class="btn btn-outline-info btn-lg w-100">
+                        <a asp-controller="Soporte" asp-action="Index" class="btn btn-outline-info btn-lg w-100">
                             <i class="bi bi-headset me-2"></i>Contactar Soporte
                         </a>
                     }
@@ -593,79 +620,31 @@
     </div>
 </div>
 
-<!-- Modal de Cambio de Estado (Admin) -->
-@if (esAdmin)
-{
-    <div class="modal fade" id="modalCambioEstado" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold">Cambiar Estado del Pedido</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body pt-0">
-                    <div class="text-center py-3">
-                        <div class="mb-3">
-                            <i id="iconoEstado" class="display-4"></i>
-                        </div>
-                        <p id="mensajeCambioEstado" class="mb-0 fs-6"></p>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" id="botonConfirmarEstado" class="btn">Confirmar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-<!-- Modal de Cancelación (Usuario) -->
-@if (!esAdmin && esPropioPedido)
-{
-    <div class="modal fade" id="modalCancelarPedido" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold">Cancelar Pedido</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body pt-0">
-                    <div class="text-center py-3">
-                        <div class="mb-3">
-                            <i class="bi bi-exclamation-triangle text-warning display-4"></i>
-                        </div>
-                        <p class="mb-0 fs-6">¿Estás seguro de que deseas cancelar tu pedido #@Model.PedidoId.ToString("D6")?</p>
-                        <small class="text-muted">Esta acción no se puede deshacer.</small>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, mantener pedido</button>
-                    <button type="button" id="botonCancelarPedido" class="btn btn-danger">Sí, cancelar pedido</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
+<!-- Modal de Cambio de Estado -->
+<partial name="_ModalCambiarEstado" />
 
 <!-- Formularios Ocultos -->
-<div style="display: none;">
+<div class="d-none">
     @if (esAdmin)
     {
-        <form id="formularioCambioEstado@(Model.PedidoId)" asp-controller="Pedido" asp-action="CambiarEstado" method="post">
+        <form id="enviarPedido@(Model.PedidoId)" asp-area="Admin" asp-controller="Pedido" asp-action="Enviar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
-            <input type="hidden" name="nuevoEstado" value="1" id="nuevoEstado@(Model.PedidoId)" />
         </form>
-    }
 
-    @if (!esAdmin && esPropioPedido)
-    {
-        <form id="formularioCancelarPedido@(Model.PedidoId)" asp-controller="Pedido" asp-action="CancelarPedidoUsuario" method="post">
+        <form id="entregarPedido@(Model.PedidoId)" asp-area="Admin" asp-controller="Pedido" asp-action="Entregar" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
+        </form>
+
+        <form id="cancelarPedido@(Model.PedidoId)" asp-controller="Pedido" asp-action="Cancelar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
         </form>
     }
 </div>
 
-<script src="~/js/Pedido/Detalles.js" asp-append-version="true"></script>
+@section Scripts{
+    <script src="~/js/Pedido/Detalles.js" asp-append-version="true"></script>
+}
+

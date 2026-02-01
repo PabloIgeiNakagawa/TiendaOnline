@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using TiendaOnline.Helpers;
-using TiendaOnline.IServices;
-using TiendaOnline.Models;
+using TiendaOnline.Services.IServices;
+using TiendaOnline.Domain.DTOs;
 
 namespace TiendaOnline.Controllers
 {
@@ -46,7 +45,7 @@ namespace TiendaOnline.Controllers
                 });
             }
             HttpContext.Session.SetObject(CarritoKey, carrito);
-            TempData["MensajeExito"] = "Producto agregado al carrito correctamente.";
+            TempData["MensajeExito"] = "Producto agregado al carrito.";
             return RedirectToAction("Index", "Carrito");
         }
 
@@ -64,7 +63,7 @@ namespace TiendaOnline.Controllers
                     HttpContext.Session.SetObject(CarritoKey, carrito);
                 }
             }
-            TempData["MensajeExito"] = "Producto eliminado del carrito correctamente.";
+            TempData["MensajeExito"] = "Producto eliminado del carrito.";
             return RedirectToAction("Index", "Carrito");
         }
 
@@ -81,7 +80,7 @@ namespace TiendaOnline.Controllers
             }
 
             HttpContext.Session.SetObject(CarritoKey, carrito);
-            TempData["MensajeExito"] = "Cantidad actualizada correctamente.";
+            TempData["MensajeExito"] = "Cantidad actualizada.";
             return RedirectToAction("Index", "Carrito");
         }
 

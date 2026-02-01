@@ -85,14 +85,6 @@
             });
         }
     });
-
-    // Mostrar modal de éxito si el formulario se envió exitosamente
-    @if (TempData["MensajeExito"] != null) {
-        <text>
-            const modalExito = new bootstrap.Modal(document.getElementById('modalExito'));
-            modalExito.show();
-        </text>
-    }
 });
 
 // Confirmar navegación con cambios no guardados
@@ -112,37 +104,3 @@ window.addEventListener('beforeunload', function (e) {
         e.returnValue = '';
     }
 });
-
-// Función para exportar datos del usuario (opcional)
-function exportarDatosUsuario() {
-    const usuario = {
-        id: '@Model.UsuarioId',
-        nombre: '@Model.Nombre',
-        apellido: '@Model.Apellido',
-        email: '@Model.Email',
-        telefono: '@Model.Telefono',
-        direccion: '@Model.Direccion',
-        rol: '@Model.Rol'
-    };
-
-    const csv = [
-        ['Campo', 'Valor'],
-        ['ID', usuario.id],
-        ['Nombre', usuario.nombre],
-        ['Apellido', usuario.apellido],
-        ['Email', usuario.email],
-        ['Teléfono', usuario.telefono],
-        ['Dirección', usuario.direccion],
-        ['Rol', usuario.rol]
-    ].map(row => row.map(field => `"${field}"`).join(',')).join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const enlace = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    enlace.setAttribute('href', url);
-    enlace.setAttribute('download', `usuario_${usuario.id}_${new Date().toISOString().split('T')[0]}.csv`);
-    enlace.style.visibility = 'hidden';
-    document.body.appendChild(enlace);
-    enlace.click();
-    document.body.removeChild(enlace);
-}

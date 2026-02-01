@@ -1,0 +1,419 @@
+﻿@model IEnumerable<TiendaOnline.Domain.Entities.Pedido>
+@{
+    ViewData["Title"] = "Gestión de Pedidos";
+    var esAdmin = User.IsInRole("Administrador");
+}
+
+@section Styles{
+    <style>
+        .ordenable {
+            transition: background-color 0.2s ease;
+            user-select: none;
+            cursor: pointer;
+        }
+
+            .ordenable:hover {
+                background-color: #e9ecef;
+            }
+
+        .icono-orden {
+            transition: transform 0.2s ease;
+            font-size: 0.8rem;
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @@keyframes spin{
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        #mensajeSinResultados {
+            animation: fadeInUp 0.3s ease-out;
+        }
+    </style>
+}
+
+<div class="container-fluid py-4">
+    <!-- Sección de Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 fw-bold">
+                        <i class="bi bi-receipt me-2 text-primary"></i>
+                        Gestión de Pedidos
+                    </h2>
+                    <p class="text-muted mb-0">Administra todos los pedidos del sistema</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="exportarACSV()">
+                        <i class="bi bi-download me-2"></i>Exportar
+                    </button>
+                    <button class="btn btn-primary" onclick="actualizarPedidos()">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Actualizar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-body-tertiary border-5 border-top-0 border-bottom-0 border-end-0 border-warning rounded-3 overflow-hidden position-relative">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 me-3 bg-warning bg-opacity-10 text-warning"
+                             style="width: 50px; height: 50px; font-size: 1.5rem;">
+                            <i class="bi bi-clock"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0" id="statsPendientes">@Model.Count(p => p.Estado == EstadoPedido.Pendiente)</h5>
+                            <small>Pendientes</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-body-tertiary border-5 border-top-0 border-bottom-0 border-end-0 border-info rounded-3 overflow-hidden position-relative">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 me-3 bg-info bg-opacity-10 text-info"
+                             style="width: 50px; height: 50px; font-size: 1.5rem;">
+                            <i class="bi bi-truck"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0" id="statsEnviados">@Model.Count(p => p.Estado == EstadoPedido.Enviado)</h5>
+                            <small>Enviados</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-body-tertiary border-5 border-top-0 border-bottom-0 border-end-0 border-success rounded-3 overflow-hidden position-relative">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 me-3 bg-success bg-opacity-10 text-success"
+                             style="width: 50px; height: 50px; font-size: 1.5rem;">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0" id="statsEntregados">@Model.Count(p => p.Estado == EstadoPedido.Entregado)</h5>
+                            <small>Entregados</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-body-tertiary border-5 border-top-0 border-bottom-0 border-end-0 border-danger rounded-3 overflow-hidden position-relative">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 me-3 bg-danger bg-opacity-10 text-danger"
+                             style="width: 50px; height: 50px; font-size: 1.5rem;">
+                            <i class="bi bi-x-circle"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0" id="statsCancelados">@Model.Count(p => p.Estado == EstadoPedido.Cancelado)</h5>
+                            <small>Cancelados</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="campoBusqueda" class="form-label fw-semibold">
+                                <i class="bi bi-search me-1"></i>Buscar
+                            </label>
+                            <input type="text" id="campoBusqueda" class="form-control" placeholder="ID pedido o cliente...">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="filtroEstado" class="form-label fw-semibold">
+                                <i class="bi bi-funnel me-1"></i>Estado
+                            </label>
+                            <select id="filtroEstado" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="0">Pendiente</option>
+                                <option value="1">Enviado</option>
+                                <option value="2">Entregado</option>
+                                <option value="3">Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="filtroFecha" class="form-label fw-semibold">
+                                <i class="bi bi-calendar me-1"></i>Período
+                            </label>
+                            <select id="filtroFecha" class="form-select">
+                                <option value="">Todas las fechas</option>
+                                <option value="hoy">Hoy</option>
+                                <option value="ayer">Ayer</option>
+                                <option value="semana">Esta semana</option>
+                                <option value="mes">Este mes</option>
+                                <option value="trimestre">Este trimestre</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="filtroMonto" class="form-label fw-semibold">
+                                <i class="bi bi-currency-dollar me-1"></i>Monto
+                            </label>
+                            <select id="filtroMonto" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="bajo">Menos de $50.000</option>
+                                <option value="medio">$50.000 - $200.000</option>
+                                <option value="alto">Más de $200.000</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end gap-2">
+                            <button type="button" id="limpiarFiltros" class="btn btn-outline-secondary flex-fill">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Pedidos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-semibold">
+                            <span id="totalPedidos">@Model.Count()</span> pedidos encontrados
+                        </h5>
+                        <div class="d-flex gap-2 align-items-center">
+                            <small class="text-muted">
+                                Total: <span id="montoTotal" class="fw-bold">@Model.Sum(p => p.DetallesPedido?.Sum(d => d.PrecioUnitario * d.Cantidad) ?? 0).ToString("C0")</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="tablaPedidos">
+                            <thead class="border-bottom">
+                                <tr>
+                                    <th class="ordenable border-0 py-3" data-columna="0">
+                                        <div class="d-flex align-items-center cursor-pointer">
+                                            <i class="bi bi-hash me-2 text-primary"></i>
+                                            ID Pedido
+                                            <i class="bi bi-chevron-expand ms-auto icono-orden"></i>
+                                        </div>
+                                    </th>
+                                    <th class="ordenable border-0 py-3" data-columna="1">
+                                        <div class="d-flex align-items-center cursor-pointer">
+                                            <i class="bi bi-person me-2 text-primary"></i>
+                                            Cliente
+                                            <i class="bi bi-chevron-expand ms-auto icono-orden"></i>
+                                        </div>
+                                    </th>
+                                    <th class="ordenable border-0 py-3" data-columna="2">
+                                        <div class="d-flex align-items-center cursor-pointer">
+                                            <i class="bi bi-calendar me-2 text-primary"></i>
+                                            Fecha Pedido
+                                            <i class="bi bi-chevron-expand ms-auto icono-orden"></i>
+                                        </div>
+                                    </th>
+                                    <th class="ordenable border-0 py-3" data-columna="3">
+                                        <div class="d-flex align-items-center cursor-pointer">
+                                            <i class="bi bi-truck me-2 text-primary"></i>
+                                            Fecha Entrega
+                                            <i class="bi bi-chevron-expand ms-auto icono-orden"></i>
+                                        </div>
+                                    </th>
+                                    <th class="ordenable border-0 py-3" data-columna="4">
+                                        <div class="d-flex align-items-center cursor-pointer">
+                                            <i class="bi bi-currency-dollar me-2 text-primary"></i>
+                                            Total
+                                            <i class="bi bi-chevron-expand ms-auto icono-orden"></i>
+                                        </div>
+                                    </th>
+                                    <th class="ordenable border-0 py-3" data-columna="5">
+                                        <div class="d-flex align-items-center cursor-pointer">
+                                            <i class="bi bi-flag me-2 text-primary"></i>
+                                            Estado
+                                            <i class="bi bi-chevron-expand ms-auto icono-orden"></i>
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3 text-center">
+                                        <i class="bi bi-gear me-1 text-primary"></i>Acciones
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pedido in Model)
+                                {
+                                    var total = pedido.DetallesPedido?.Sum(d => d.PrecioUnitario * d.Cantidad) ?? 0;
+                                    <tr class="fila-pedido"
+                                        data-id="@pedido.PedidoId"
+                                        data-cliente="@(pedido.Usuario?.Nombre?.ToLower() ?? "")"
+                                        data-estado="@((int)pedido.Estado)"
+                                        data-fecha="@pedido.FechaPedido.ToString("yyyy-MM-dd")"
+                                        data-total="@total">
+                                        <td class="py-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="fw-semibold px-3 py-2 text-uppercase"
+                                                     style="font-size: 0.9rem; letter-spacing: 0.5px;">
+                                                    #@pedido.PedidoId.ToString("D6")
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="cliente-info">
+                                                <div class="fw-semibold mb-1">@(pedido.Usuario == null ? "Cliente no disponible" : pedido.Usuario.Nombre + " " + pedido.Usuario.Apellido)</div>
+                                                <small class="text-muted">@(pedido.Usuario?.Email ?? "")</small>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            <div>
+                                                <div class="fw-semibold mb-1">@pedido.FechaPedido.ToString("dd/MM/yyyy")</div>
+                                                <small class="text-muted">@pedido.FechaPedido.ToString("HH:mm")</small>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            @if (pedido.FechaEntrega.HasValue)
+                                            {
+                                                <div class="fecha-info">
+                                                    <div class="fw-semibold">@pedido.FechaEntrega.Value.ToString("dd/MM/yyyy")</div>
+                                                    <small class="text-muted">@pedido.FechaEntrega.Value.ToString("HH:mm")</small>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Sin fecha</span>
+                                            }
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="fw-bold text-success">@total.ToString("C0")</div>
+                                        </td>
+                                        <td class="py-3">
+                                            @switch (pedido.Estado)
+                                            {
+                                                case EstadoPedido.Pendiente:
+                                                    <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"
+                                                          style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                                                        <i class="bi bi-clock me-1"></i>Pendiente
+                                                    </span>
+                                                    break;
+                                                case EstadoPedido.Enviado:
+                                                    <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-info bg-opacity-10 text-info border border-info border-opacity-25"
+                                                          style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                                                        <i class="bi bi-truck me-1"></i>Enviado
+                                                    </span>
+                                                    break;
+                                                case EstadoPedido.Entregado:
+                                                    <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-success bg-opacity-10 text-success border border-success border-opacity-25"
+                                                          style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                                                        <i class="bi bi-check-circle me-1"></i>Entregado
+                                                    </span>
+                                                    break;
+                                                case EstadoPedido.Cancelado:
+                                                    <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25"
+                                                          style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                                                        <i class="bi bi-x-circle me-1"></i>Cancelado
+                                                    </span>
+                                                    break;
+                                            }
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <a asp-area="" asp-controller="Pedido" asp-action="Detalles" asp-route-id="@pedido.PedidoId"
+                                                   class="btn btn-outline-info btn-sm rounded-2 shadow-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Ver detalle">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                @if (pedido.Estado == EstadoPedido.Pendiente && esAdmin)
+                                                {
+                                                    <button type="button" class="btn btn-outline-success btn-sm rounded-2 shadow-sm"
+                                                            onclick="enviarPedido(@pedido.PedidoId)"
+                                                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Marcar como enviado">
+                                                        <i class="bi bi-truck"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-2 shadow-sm"
+                                                            onclick="cancelarPedido(@pedido.PedidoId)"
+                                                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Cancelar pedido">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </button>
+                                                }
+                                                else if (pedido.Estado == EstadoPedido.Enviado)
+                                                {
+                                                    <button type="button" class="btn btn-outline-success btn-sm rounded-2 shadow-sm"
+                                                            onclick="entregarPedido(@pedido.PedidoId)"
+                                                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Marcar como entregado">
+                                                        <i class="bi bi-check-circle"></i>
+                                                    </button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Cambio de Estado -->
+<partial name="_ModalCambiarEstado" />
+
+<!-- Formularios Ocultos -->
+<div style="display: none;">
+    @foreach (var pedido in Model)
+    {
+        <form id="enviarPedido@(pedido.PedidoId)" asp-area="Admin" asp-controller="Pedido" asp-action="Enviar" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
+        </form>
+
+        <form id="entregarPedido@(pedido.PedidoId)" asp-area="Admin" asp-controller="Pedido" asp-action="Entregar" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
+        </form>
+
+        <form id="cancelarPedido@(pedido.PedidoId)" asp-controller="Pedido" asp-action="Cancelar" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
+        </form>
+    }
+</div>
+@section Scripts{
+    <script src="~/js/Admin/Pedido/Index.js" asp-append-version="true"></script>
+}

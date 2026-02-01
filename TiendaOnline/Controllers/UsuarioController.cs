@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 using System.Security.Claims;
-using TiendaOnline.Exceptions;
-using TiendaOnline.Models;
-using TiendaOnline.Services;
+using TiendaOnline.Domain.Exceptions;
+using TiendaOnline.Domain.Entities;
+using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Controllers
 {
@@ -82,6 +80,7 @@ namespace TiendaOnline.Controllers
 
             var claims = new List<Claim>
             {
+                new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
                 new Claim(ClaimTypes.Name, usuario.Nombre),
                 new Claim(ClaimTypes.Email, usuario.Email),
                 new Claim("UsuarioId", usuario.UsuarioId.ToString()),
@@ -97,6 +96,10 @@ namespace TiendaOnline.Controllers
                 ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
             });
 
+            if (usuario.Rol.ToString() == "Administrador")
+            {
+                return RedirectToAction("Index", "Home", new { area = "Admin" });
+            }
             return RedirectToAction("Index", "Home");
         }
 
@@ -112,26 +115,6 @@ namespace TiendaOnline.Controllers
         {
             var usuario = await _usuarioService.ObtenerUsuarioAsync(id);
             return View(usuario);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> DarAltaUsuario(int id)
-        {
-            await _usuarioService.DarAltaUsuarioAsync(id);
-            TempData["MensajeExito"] = "El usuario se dió de alta correctamente.";
-            return RedirectToAction("Usuarios", "Admin");
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> DarBajaUsuario(int id)
-        {
-            await _usuarioService.DarBajaUsuarioAsync(id);
-            TempData["MensajeExito"] = "El usuario se dió de baja correctamente.";
-            return RedirectToAction("Usuarios", "Admin");
         }
 
         [HttpGet]

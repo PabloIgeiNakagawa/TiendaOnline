@@ -1,18 +1,11 @@
-/* 1. RESET Y GENERALES */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+.breadcrumb {
+    --bs-breadcrumb-divider: '\203a'; /* Seria este signo ">" */
+    --bs-breadcrumb-divider-color: #6c757d;
 }
 
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #ffffff;
-}
-
-/* 2. ESTILOS GLOBALES DEL HEADER (Fuera de media queries) */
-.navbar {
-    background-color: #ffffff !important;
+/* Para aplicar el font-weight bold al separador */
+.breadcrumb-item::before {
+    font-weight: 700;
 }
 
 .brand-icon-wrapper {
@@ -28,7 +21,6 @@ body {
 }
 
 .nav-link {
-    color: #444 !important;
     transition: all 0.2s;
 }
 
@@ -41,20 +33,12 @@ body {
     color: #0d6efd !important;
 }
 
-.dropdown-menu {
-    border-radius: 12px;
-    padding: 0.5rem;
-    min-width: 180px;
-    font-size: 0.9rem;
-}
-
 .dropdown-item {
-    border-radius: 6px;
     transition: all 0.2s;
 }
 
 /* 3. RESPONSIVE (Solo para ajustes de pantalla) */
-@media (max-width: 991px) { /* Cambiado a 991px para cubrir tablets */
+@media (max-width: 991px) {
     .navbar-collapse {
         padding: 1rem 0;
     }

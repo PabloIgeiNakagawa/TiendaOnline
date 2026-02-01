@@ -1,49 +1,39 @@
-﻿@using TiendaOnline.Models
-@model TiendaOnline.Models.Usuario
+﻿@using TiendaOnline.Domain.Entities
+@model TiendaOnline.Domain.Entities.Usuario
 @{
     ViewData["Title"] = "Registrarse";
-    var esAdmin = User.IsInRole("Administrador");
-    var tituloFormulario = esAdmin ? "Crear Nuevo Usuario" : "Crear Cuenta";
 }
-
-<link rel="stylesheet" href="~/css/Usuario/Register.css" asp-append-version="true" />
+@section Styles {
+    <link rel="stylesheet" href="~/css/Usuario/Register.css" asp-append-version="true" />
+}
 
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-8 col-xl-6">
             <!-- Encabezado -->
             <div class="text-center mb-5">
-                <div class="icono-registro mb-3">
+                <div class="d-flex align-items-center justify-content-center mx-auto mb-3 text-white fs-2 rounded-4 bg-primary " style="width: 80px; height: 80px;">
                     <i class="bi bi-person-plus-fill"></i>
                 </div>
-                <h2 class="fw-bold text-dark mb-2">@tituloFormulario</h2>
-                <p class="text-muted">
-                    @if (esAdmin)
-                    {
-                        <text>Complete la información para crear un nuevo usuario en el sistema</text>
-                    }
-                    else
-                    {
-                        <text>Complete sus datos para crear su cuenta en TechStore</text>
-                    }
-                </p>
+                <h2 class="fw-bold mb-2">Crear cuenta</h2>
+                <p class="text-muted">Complete sus datos para crear su cuenta en TechStore</p>
             </div>
 
             <!-- Formulario -->
-            <div class="card shadow-lg border-0">
-                <div class="card-body p-5">
-                    <form asp-action="Register" method="post" id="formularioRegistro" novalidate>
+            <div class="shadow border-0 rounded-4 overflow-hidden">
+                <div class="p-5">
+                    <form asp-area="" asp-controller="Usuario" asp-action="Register" method="post" id="formularioRegistro" novalidate>
                         @Html.AntiForgeryToken()
 
                         <!-- Información Personal -->
-                        <div class="seccion-formulario mb-4">
-                            <h6 class="titulo-seccion mb-3">
+                        <div class="position-relative mb-4">
+                            <h6 class="border-bottom mb-3 text-secondary fw-semibold small text-uppercase pb-2" style="letter-spacing: 0.5px;">
                                 <i class="bi bi-person-circle me-2"></i>Información Personal
                             </h6>
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <input asp-for="Nombre" class="form-control" id="campoNombre" placeholder="Nombre" required />
+                                        <input asp-for="Nombre" class="form-control border-1" id="campoNombre" placeholder="Nombre" required />
                                         <label for="campoNombre">
                                             <i class="bi bi-person me-1"></i>Nombre
                                         </label>
@@ -84,7 +74,7 @@
 
                         <!-- Información de Contacto -->
                         <div class="seccion-formulario mb-4">
-                            <h6 class="titulo-seccion mb-3">
+                            <h6 class="border-bottom mb-3 text-secondary fw-semibold small text-uppercase pb-2" style="letter-spacing: 0.5px;">
                                 <i class="bi bi-envelope-at me-2"></i>Información de Contacto
                             </h6>
                             <div class="row g-3">
@@ -94,7 +84,7 @@
                                         <label for="campoEmail">
                                             <i class="bi bi-envelope me-1"></i>Correo Electrónico
                                         </label>
-                                        <span asp-validation-for="Email" class="text-danger small"></span>
+                                        <span asp-validation-for="Email" class="text-danger small d-block mt-1"></span>
                                     </div>
                                 </div>
                                 <div class="col-12">
@@ -103,7 +93,7 @@
                                         <label for="campoDireccion">
                                             <i class="bi bi-geo-alt me-1"></i>Dirección
                                         </label>
-                                        <span asp-validation-for="Direccion" class="text-danger small"></span>
+                                        <span asp-validation-for="Direccion" class="text-danger small d-block mt-1"></span>
                                     </div>
                                 </div>
                             </div>
@@ -111,7 +101,7 @@
 
                         <!-- Seguridad -->
                         <div class="seccion-formulario mb-4">
-                            <h6 class="titulo-seccion mb-3">
+                            <h6 class="border-bottom mb-3 text-secondary fw-semibold small text-uppercase pb-2" style="letter-spacing: 0.5px;">
                                 <i class="bi bi-shield-lock me-2"></i>Seguridad
                             </h6>
                             <div class="row g-3">
@@ -121,13 +111,7 @@
                                         <label for="campoContrasena">
                                             <i class="bi bi-lock me-1"></i>Contraseña
                                         </label>
-                                        <span asp-validation-for="Contrasena" class="text-danger small"></span>
-                                    </div>
-                                    <div class="indicador-fuerza mt-2">
-                                        <div class="barra-fuerza">
-                                            <div class="relleno-fuerza" id="barraFuerza"></div>
-                                        </div>
-                                        <small class="texto-fuerza" id="textoFuerza">Ingrese una contraseña</small>
+                                        <span asp-validation-for="Contrasena" class="text-danger small d-block mt-1"></span>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -136,89 +120,38 @@
                                         <label for="campoConfirmarContrasena">
                                             <i class="bi bi-lock-fill me-1"></i>Confirmar Contraseña
                                         </label>
-                                        <span asp-validation-for="ConfirmarContrasena" class="text-danger small"></span>
+                                        <span asp-validation-for="ConfirmarContrasena" class="text-danger small d-block mt-1"></span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Rol (Solo para Administradores) -->
-                        @if (esAdmin)
-                        {
-                            <div class="seccion-formulario mb-4">
-                                <h6 class="titulo-seccion mb-3">
-                                    <i class="bi bi-shield-check me-2"></i>Configuración de Acceso
-                                </h6>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <select asp-for="Rol" class="form-select" id="campoRol" asp-items="Html.GetEnumSelectList<Rol>()" required>
-                                                <option value="" disabled selected>Seleccione un rol</option>
-                                            </select>
-                                            <label for="campoRol">
-                                                <i class="bi bi-shield me-1"></i>Rol del Usuario
-                                            </label>
-                                            <span asp-validation-for="Rol" class="text-danger small"></span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="alert alert-info border-0 h-100 d-flex align-items-center">
-                                            <div>
-                                                <i class="bi bi-info-circle me-2"></i>
-                                                <strong>Roles:</strong><br>
-                                                <small>
-                                                    • <strong>Usuario:</strong> Acceso básico<br>
-                                                    • <strong>Administrador:</strong> Acceso completo
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                        else
-                        {
-                            <input type="hidden" asp-for="Rol" value="@((int)Rol.Usuario)" required />
-                        }
+                        <input type="hidden" asp-for="Rol" value="@((int)Rol.Usuario)" required />
 
-                        <!-- Términos y Condiciones (Solo para usuarios públicos) -->
-                        @if (!esAdmin)
-                        {
-                            <div class="seccion-formulario mb-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="aceptarTerminos" required>
-                                    <label class="form-check-label" for="aceptarTerminos">
-                                        Acepto los <a href="#" class="text-primary">términos y condiciones</a> y la
-                                        <a href="#" class="text-primary">política de privacidad</a>
-                                    </label>
-                                </div>
+                        <!-- Términos y Condiciones -->
+                        <div class="seccion-formulario mb-4">
+                            <div class="form-check">
+                                <input class="" type="checkbox" id="aceptarTerminos" required>
+                                <label class="form-check-label" for="aceptarTerminos">
+                                    Acepto los <a href="#" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">términos y condiciones</a> y la
+                                    <a href="#" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">política de privacidad</a>
+                                </label>
                             </div>
-                        }
+                        </div>
 
                         <!-- Botones -->
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary btn-lg px-4" id="botonEnviar">
-                                    <i class="bi bi-check-circle me-2"></i>
-                                    <span class="texto-boton">@(esAdmin ? "Crear Usuario" : "Crear Cuenta")</span>
-                                    <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-lg px-4" onclick="limpiarFormulario()">
-                                    <i class="bi bi-arrow-clockwise me-2"></i>Limpiar
-                                </button>
-                            </div>
-                            @if (esAdmin)
-                            {
-                                <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-outline-danger">
-                                    <i class="bi bi-x-circle me-1"></i>Cancelar
-                                </a>
-                            }
-                            else
-                            {
-                                <a asp-controller="Usuario" asp-action="Login" class="btn btn-outline-secondary">
-                                    <i class="bi bi-box-arrow-in-right me-1"></i>¿Ya tienes cuenta?
-                                </a>
-                            }
+                        <div class="d-lg-flex justify-content-between gap-2 align-items-center pt-3 border-top">
+                            <button type="submit" class="btn btn-primary fw-medium rounded-3 p-3 my-2 my-lg-0" id="botonEnviar">
+                                <i class="bi bi-check-circle me-2"></i>
+                                <span class="texto-boton">Crear Cuenta</span>
+                                <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+                            </button>
+                            <a class="btn btn-outline-secondary fw-medium rounded-3 p-3 my-2 my-lg-0 d-block" onclick="limpiarFormulario()">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Limpiar
+                            </a>
+                            <a asp-controller="Usuario" asp-action="Login" class="btn btn-outline-info fw-medium rounded-3 p-3 d-block" my-2 my-lg-0>
+                                <i class="bi bi-box-arrow-in-right me-1"></i>¿Ya tienes cuenta?
+                            </a>
                         </div>
                     </form>
                 </div>
@@ -226,10 +159,61 @@
         </div>
     </div>
 </div>
-<script src="~/js/Usuario/Register.js" asp-append-version="true"></script>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const formulario = document.getElementById('formularioRegistro');
+            const botonEnviar = document.getElementById('botonEnviar');
+
+            // Validación en tiempo real
+            const entradas = formulario.querySelectorAll('input, select');
+            entradas.forEach(entrada => {
+                entrada.addEventListener('blur', function () {
+                    validarCampo(this);
+                });
+
+                entrada.addEventListener('input', function () {
+                    if (this.classList.contains('is-invalid')) {
+                        validarCampo(this);
+                    }
+                });
+            });
+
+            function validarCampo(campo) {
+                const esValido = campo.checkValidity();
+                campo.classList.remove('is-valid', 'is-invalid');
+
+                if (campo.value.trim() !== '') {
+                    campo.classList.add(esValido ? 'is-valid' : 'is-invalid');
+                }
+            }
+
+            // Capitalización automática
+            const camposNombre = ['campoNombre', 'campoApellido'];
+            camposNombre.forEach(id => {
+                const entrada = document.getElementById(id);
+                if (entrada) {
+                    entrada.addEventListener('input', function (e) {
+                        const palabras = e.target.value.split(' ');
+                        const palabrasCapitalizadas = palabras.map(palabra =>
+                            palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
+                        );
+                        e.target.value = palabrasCapitalizadas.join(' ');
+                    });
+                }
+            });
+
+            // Función para limpiar formulario
+            window.limpiarFormulario = function () {
+                formulario.reset();
+                entradas.forEach(entrada => {
+                    entrada.classList.remove('is-valid', 'is-invalid');
+                });
+            };
+        });
+    </script>
 }
