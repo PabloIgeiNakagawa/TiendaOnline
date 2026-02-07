@@ -1,4 +1,4 @@
-﻿using TiendaOnline.Domain.DTOs.Admin.Reportes;
+﻿using TiendaOnline.Services.DTOs.Admin.Reportes;
 
 namespace TiendaOnline.Services.IServices.Admin
 {

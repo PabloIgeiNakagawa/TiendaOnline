@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Data;
-using TiendaOnline.Domain.DTOs;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Services.DTOs;
 using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Services.Services

@@ -1,5 +1,5 @@
-﻿using TiendaOnline.Domain.DTOs;
-using TiendaOnline.Domain.Entities;
+﻿using TiendaOnline.Domain.Entities;
+using TiendaOnline.Services.DTOs;
 namespace TiendaOnline.Services.IServices
 {
     public interface IPedidoService

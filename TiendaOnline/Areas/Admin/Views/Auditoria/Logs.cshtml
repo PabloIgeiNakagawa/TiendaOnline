@@ -1,4 +1,4 @@
-﻿@model IEnumerable<TiendaOnline.Domain.Entities.Auditoria>
+﻿@model TiendaOnline.Areas.Admin.ViewModels.Auditoria.LogsViewModel
 @{
     ViewData["Title"] = "Auditoría del Sistema";
 }
@@ -15,162 +15,104 @@
                     </h2>
                     <p class="text-muted mb-0">Registro completo de todas las acciones realizadas en el sistema</p>
                 </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary rounded-2" onclick="exportarAuditoriaCSV()">
-                        <i class="bi bi-download me-1"></i>Exportar
-                    </button>
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary rounded-2 dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-funnel me-1"></i>Filtrar por Período
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" data-periodo="hoy">Hoy</a></li>
-                            <li><a class="dropdown-item" href="#" data-periodo="semana">Última Semana</a></li>
-                            <li><a class="dropdown-item" href="#" data-periodo="mes">Último Mes</a></li>
-                            <li><a class="dropdown-item" href="#" data-periodo="todos">Todos</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Estadísticas Rápidas -->
-    <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card rounded-3 bg-primary text-white border-0">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="card-title mb-1">Total de Registros</h6>
-                            <h3 class="mb-0" id="totalRegistros">@Model.Count()</h3>
-                        </div>
-                        <div class="ms-3">
-                            <i class="bi bi-file-text" style="font-size: 2rem; opacity: 0.7;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card rounded-3 bg-success text-white border-0">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="card-title mb-1">Registros Hoy</h6>
-                            <h3 class="mb-0" id="registrosHoy">@Model.Count(a => a.Fecha.Date == DateTime.Today)</h3>
-                        </div>
-                        <div class="ms-3">
-                            <i class="bi bi-calendar-day" style="font-size: 2rem; opacity: 0.7;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card rounded-3 bg-info text-white border-0">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="card-title mb-1">Usuarios Activos</h6>
-                            <h3 class="mb-0" id="usuariosActivos">@Model.Select(a => a.UsuarioId).Distinct().Count()</h3>
-                        </div>
-                        <div class="ms-3">
-                            <i class="bi bi-people" style="font-size: 2rem; opacity: 0.7;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="card rounded-3 bg-warning text-white border-0">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="card-title mb-1">Acciones Únicas</h6>
-                            <h3 class="mb-0" id="accionesUnicas">@Model.Select(a => a.Accion).Distinct().Count()</h3>
-                        </div>
-                        <div class="ms-3">
-                            <i class="bi bi-lightning" style="font-size: 2rem; opacity: 0.7;"></i>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
     <!-- Filtros -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card rounded-3 shadow-sm border-0">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label for="filtroUsuario" class="form-label fw-semibold">
-                                <i class="bi bi-person me-1"></i>Usuario
-                            </label>
-                            <select id="filtroUsuario" class="form-select">
-                                <option value="">Todos los usuarios</option>
-                                @foreach (var usuario in Model.Select(a => a.Usuario).Distinct())
-                                {
-                                    <option value="@usuario.UsuarioId">@usuario.Nombre @usuario.Apellido</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="filtroAccion" class="form-label fw-semibold">
-                                <i class="bi bi-activity me-1"></i>Acción
-                            </label>
-                            <select id="filtroAccion" class="form-select">
-                                <option value="">Todas las acciones</option>
-                                @foreach (var accion in Model.Select(a => a.Accion).Distinct())
-                                {
-                                    <option value="@accion">@accion</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="filtroFechaDesde" class="form-label fw-semibold">
-                                <i class="bi bi-calendar me-1"></i>Desde
-                            </label>
-                            <input type="date" id="filtroFechaDesde" class="form-control">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="filtroFechaHasta" class="form-label fw-semibold">
-                                <i class="bi bi-calendar me-1"></i>Hasta
-                            </label>
-                            <input type="date" id="filtroFechaHasta" class="form-control">
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-outline-secondary rounded-2" id="limpiarFiltros">
-                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+    <form method="get" asp-area="Admin" asp-controller="Auditoria" asp-action="Logs">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card rounded-3 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold text-muted small">Mostrar</label>
+                                <select name="tamanoPagina" class="form-select" onchange="this.form.submit()">
+                                    @{
+                                        int[] opciones = { 10, 25, 50, 75, 100 };
+                                        foreach (var cantidad in opciones)
+                                        {
+                                            <option value="@cantidad" selected="@(Model.Paginacion.RegistrosPorPagina == cantidad ? "selected" : null)">
+                                                @cantidad registros
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-search me-1"></i>Búsqueda
+                                </label>
+                                <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Usuario, tabla o acción...">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-calendar me-1"></i>Desde
+                                </label>
+                                <input type="date" name="fechaDesde" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-calendar me-1"></i>Hasta
+                                </label>
+                                <input type="date" name="fechaHasta" class="form-control">
+                            </div>
+
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary flex-fill">
+                                    <i class="bi bi-filter me-1"></i>Filtrar
                                 </button>
+
+                                <a asp-area="Admin" asp-controller="Auditoria" asp-action="Logs"
+                                   class="btn btn-outline-secondary flex-fill">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </form>
+
+    <!-- Resumen resultados -->
+    <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+        <div class="text-muted small">
+            @if (Model.Paginacion.TotalRegistros > 0)
+            {
+                var desde = (Model.Paginacion.PaginaActual - 1) * Model.Paginacion.RegistrosPorPagina + 1;
+                var hasta = Math.Min(Model.Paginacion.PaginaActual * Model.Paginacion.RegistrosPorPagina, Model.Paginacion.TotalRegistros);
+
+                <span>
+                    Mostrando <strong>@desde</strong> a <strong>@hasta</strong> de
+                    <strong>@Model.Paginacion.TotalRegistros</strong> resultados encontrados
+                </span>
+            }
+            else
+            {
+                <span>No se encontraron resultados para los filtros aplicados.</span>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Busqueda))
+        {
+            <span class="text-muted small">
+                <i class="bi bi-info-circle me-1 text-primary"></i>
+                Filtrado por: "<strong>@Model.Busqueda</strong>"
+            </span>
+        }
     </div>
 
     <!-- Tabla de Auditoría -->
     <div class="row">
         <div class="col-12">
-            <div class="card rounded-3 shadow-sm border-0">
-                <div class="card-header border-bottom">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fw-semibold">
-                            <span id="registrosVisibles">@Model.Count()</span> registros de auditoría
-                        </h5>
-                    </div>
-                </div>
+            <div class="card rounded-3 shadow border-0 px-3">
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0" id="tablaAuditoria">
-                            <thead  >
+                            <thead>
                                 <tr>
                                     <th class="border-0 py-3">
                                         <div class="d-flex align-items-center">
@@ -190,66 +132,34 @@
                                             Acción
                                         </div>
                                     </th>
-                                    <th class="border-0 py-3">
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-file-diff me-2 text-primary"></i>
-                                            Cambios
-                                        </div>
-                                    </th>
                                     <th class="border-0 py-3 text-center">
                                         <i class="bi bi-gear me-1 text-primary"></i>Acciones
                                     </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var auditoria in Model.OrderByDescending(a => a.Fecha))
+                                @foreach (var item in Model.Paginacion.Items)
                                 {
-                                    <tr class="fila-auditoria"
-                                        data-usuario="@auditoria.UsuarioId"
-                                        data-accion="@auditoria.Accion"
-                                        data-fecha="@auditoria.Fecha.ToString("yyyy-MM-dd")">
+                                    <tr>
                                         <td class="py-3">
                                             <div class="d-flex flex-column">
-                                                <span class="fw-semibold">@auditoria.Fecha.ToString("dd/MM/yyyy")</span>
-                                                <small class="text-muted">@auditoria.Fecha.ToString("HH:mm:ss")</small>
+                                                <span class="fw-semibold">@item.Fecha.ToString("dd/MM/yyyy")</span>
+                                                <small class="text-muted">@item.Fecha.ToString("HH:mm:ss")</small>
                                             </div>
                                         </td>
                                         <td class="py-3">
                                             <div>
-                                                <div class="fw-semibold">@auditoria.Usuario.Nombre @auditoria.Usuario.Apellido</div>
-                                                <small class="text-muted">@auditoria.Usuario.Email</small>
+                                                <div class="fw-semibold">@item.UsuarioNombreCompleto</div>
+                                                <small class="text-muted">@item.UsuarioEmail</small>
                                             </div>
                                         </td>
                                         <td class="py-3">
-                                            @{
-                                                string claseAccion = auditoria.Accion.ToLower() switch
-                                                {
-                                                    var x when x.Contains("crear") || x.Contains("registrar") => "bg-success",
-                                                    var x when x.Contains("editar") || x.Contains("actualizar") => "bg-warning",
-                                                    var x when x.Contains("eliminar") || x.Contains("baja") => "bg-danger",
-                                                    var x when x.Contains("login") || x.Contains("acceso") => "bg-info",
-                                                    _ => "bg-secondary"
-                                                };
-                                            }
-                                            <span class="badge @claseAccion px-3 py-2 rounded-pill small fw-medium">
-                                                @auditoria.Accion
-                                            </span>
+                                            <span class="badge bg-info px-3 py-2 rounded-pill small fw-medium">@item.Accion</span>
                                         </td>
                                         <td class="py-3">
-                                            <button class="btn btn-sm btn-outline-primary rounded-2"
-                                                    onclick="verCambios(@auditoria.AuditoriaId, '@Html.Raw(Html.Encode(auditoria.DatosAnteriores))', '@Html.Raw(Html.Encode(auditoria.DatosNuevos))')"
-                                                    data-bs-toggle="tooltip"
-                                                    title="Ver detalles de los cambios">
-                                                <i class="bi bi-eye me-1"></i>Ver Cambios
-                                            </button>
-                                        </td>
-                                        <td class="py-3 text-center">
                                             <div class="d-flex justify-content-center gap-1">
-                                                <button class="btn btn-sm btn-outline-info rounded-2"
-                                                        onclick="verDetalles(@auditoria.AuditoriaId)"
-                                                        data-bs-toggle="tooltip"
-                                                        title="Ver detalles completos">
-                                                    <i class="bi bi-info-circle"></i>
+                                                <button class="btn btn-sm btn-primary" onclick="verDetalle('@item.AuditoriaId')">
+                                                    <i class="bi bi-eye me-1"></i> Ver Cambios
                                                 </button>
                                             </div>
                                         </td>
@@ -257,6 +167,54 @@
                                 }
                             </tbody>
                         </table>
+                        <nav class="mt-3">
+                            <ul class="pagination justify-content-end">
+                                <li class="page-item @(Model.Paginacion.PaginaActual == 1 ? "disabled" : "")">
+                                    <a class="page-link"
+                                       asp-area="Admin"
+                                       asp-controller="Auditoria"
+                                       asp-action="Logs"
+                                       asp-route-pagina="@(Model.Paginacion.PaginaActual - 1)"
+                                       asp-route-tamanoPagina="@Model.Paginacion.RegistrosPorPagina"
+                                       asp-route-busqueda="@Model.Busqueda"
+                                       asp-route-fechaDesde="@Context.Request.Query["fechaDesde"]"
+                                       asp-route-fechaHasta="@Context.Request.Query["fechaHasta"]">
+                                        Anterior
+                                    </a>
+                                </li>
+
+                                @for (int i = 1; i <= Model.Paginacion.TotalPaginas; i++)
+                                {
+                                    <li class="page-item @(i == Model.Paginacion.PaginaActual ? "active" : "")">
+                                        <a class="page-link"
+                                           asp-area="Admin"
+                                           asp-controller="Auditoria"
+                                           asp-action="Logs"
+                                           asp-route-pagina="@i"
+                                           asp-route-tamanoPagina="@Model.Paginacion.RegistrosPorPagina"
+                                           asp-route-busqueda="@Model.Busqueda"
+                                           asp-route-fechaDesde="@Context.Request.Query["fechaDesde"]"
+                                           asp-route-fechaHasta="@Context.Request.Query["fechaHasta"]">
+                                            @i
+                                        </a>
+                                    </li>
+                                }
+
+                                <li class="page-item @(Model.Paginacion.PaginaActual == Model.Paginacion.TotalPaginas ? "disabled" : "")">
+                                    <a class="page-link"
+                                       asp-area="Admin"
+                                       asp-controller="Auditoria"
+                                       asp-action="Logs"
+                                       asp-route-pagina="@(Model.Paginacion.PaginaActual + 1)"
+                                       asp-route-tamanoPagina="@Model.Paginacion.RegistrosPorPagina"
+                                       asp-route-busqueda="@Model.Busqueda"
+                                       asp-route-fechaDesde="@Context.Request.Query["fechaDesde"]"
+                                       asp-route-fechaHasta="@Context.Request.Query["fechaHasta"]">
+                                        Siguiente
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -280,8 +238,8 @@
                         <h6 class="text-muted mb-3">
                             <i class="bi bi-arrow-left-circle me-2"></i>Datos Anteriores
                         </h6>
-                        <div class="bg-body-secondary p-3 rounded">
-                            <pre id="datosAnteriores" class="text-wrap text-break small lh-sm mb-0"></pre>
+                        <div class="bg-body-secondary p-3 rounded"> 
+                            <pre id="datosAnteriores" class="small lh-sm mb-0" style="white-space: pre-wrap;"></pre>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -289,7 +247,7 @@
                             <i class="bi bi-arrow-right-circle me-2"></i>Datos Nuevos
                         </h6>
                         <div class="bg-body-secondary p-3 rounded">
-                            <pre id="datosNuevos" class="text-wrap text-break small lh-sm mb-0"></pre>
+                            <pre id="datosNuevos" class="small lh-sm mb-0" style="white-space: pre-wrap;"></pre>
                         </div>
                     </div>
                 </div>
@@ -300,6 +258,41 @@
         </div>
     </div>
 </div> 
+
 @section Scripts{
-    <script src="~/js/Admin/Auditoria/Index.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Inicializar tooltips
+            var listaTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltips = listaTooltips.map(function (elementoTooltip) {
+                return new bootstrap.Tooltip(elementoTooltip);
+            });
+        });
+
+        function verDetalle(id) {
+            const modal = new bootstrap.Modal(document.getElementById('modalCambios'));
+            modal.show();
+
+            document.getElementById('datosAnteriores').textContent = "Cargando...";
+            document.getElementById('datosNuevos').textContent = "Cargando...";
+
+            $.get("/Admin/Auditoria/ObtenerDetalle/" + id, function (data) {
+
+                const formatearJSON = (jsonString) => {
+                    if (!jsonString) return "Sin datos";
+                    try {
+                        const obj = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
+                        return JSON.stringify(obj, null, 2);
+                    } catch (e) {
+                        return jsonString;
+                    }
+                };
+
+                document.getElementById('datosAnteriores').textContent = formatearJSON(data.datosAnteriores);
+                document.getElementById('datosNuevos').textContent = formatearJSON(data.datosNuevos);
+            }).fail(function () {
+                alert("Error al cargar los detalles.");
+            });
+        }
+    </script>
 }
