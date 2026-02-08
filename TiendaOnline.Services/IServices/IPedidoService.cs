@@ -1,5 +1,7 @@
 ﻿using TiendaOnline.Domain.Entities;
+using TiendaOnline.Services.Commons.Models;
 using TiendaOnline.Services.DTOs;
+using TiendaOnline.Services.DTOs.Admin.Pedido;
 namespace TiendaOnline.Services.IServices
 {
     public interface IPedidoService
@@ -8,6 +10,7 @@ namespace TiendaOnline.Services.IServices
         Task<List<Pedido>> ObtenerPedidosDeUsuarioAsync(int id);
         Task<List<Pedido>> ObtenerPedidosAsync();
         Task<List<Pedido>> ObtenerPedidosConDetallesAsync();
+        Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(string? busqueda, EstadoPedido? estado, DateTime? desde, DateTime? hasta, string? monto, int pagina, int cantidad);
         Task<Pedido?> ObtenerPedidoConDetallesAsync(int id);
         Task<int> CrearPedidoAsync(List<ItemCarrito> carrito, int usuarioId);
         Task PedidoEnviadoAsync(int pedidoId);
