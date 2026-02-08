@@ -82,11 +82,8 @@
         <div class="text-muted small">
             @if (Model.Paginacion.TotalRegistros > 0)
             {
-                var desde = (Model.Paginacion.PaginaActual - 1) * Model.Paginacion.RegistrosPorPagina + 1;
-                var hasta = Math.Min(Model.Paginacion.PaginaActual * Model.Paginacion.RegistrosPorPagina, Model.Paginacion.TotalRegistros);
-
                 <span>
-                    Mostrando <strong>@desde</strong> a <strong>@hasta</strong> de
+                    Mostrando <strong>@Model.Paginacion.DesdeRegistro</strong> a <strong>@Model.Paginacion.HastaRegistro</strong> de
                     <strong>@Model.Paginacion.TotalRegistros</strong> resultados encontrados
                 </span>
             }

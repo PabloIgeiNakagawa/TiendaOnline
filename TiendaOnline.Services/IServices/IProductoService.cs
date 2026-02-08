@@ -1,4 +1,6 @@
 ﻿using TiendaOnline.Domain.Entities;
+using TiendaOnline.Services.Commons.Models;
+using TiendaOnline.Services.DTOs.Admin.Producto;
 
 namespace TiendaOnline.Services.IServices
 {
@@ -6,6 +8,7 @@ namespace TiendaOnline.Services.IServices
     {
         Task<Producto?> ObtenerProductoAsync(int id);
         Task<List<Producto>> ObtenerProductosAsync();
+        Task<PagedResult<ProductoListaDto>> ObtenerProductosPaginadosAsync(string? busqueda, int? categoriaId, string? estado, string? stock, int pagina, int registrosPorPagina);
         Task AgregarProductoAsync(Producto producto);
         Task DarBajaProductoAsync(int productoId);
         Task DarAltaProductoAsync(int productoId);

@@ -1,7 +1,6 @@
-﻿@model IEnumerable<TiendaOnline.Domain.Entities.Producto>
+﻿@model TiendaOnline.Areas.Admin.ViewModels.Producto.ProductoCatalogoViewModel
 @{
-    ViewData["Title"] = "Gestión de Productos";
-    var categorias = ViewBag.Categorias as List<Categoria>;
+    ViewData["Title"] = "Catálogo";
 }
 @section Styles{
     <link rel="stylesheet" href="~/css/Admin/Producto/Index.css" asp-append-version="true" />
@@ -15,7 +14,7 @@
                 <div>
                     <h2 class="mb-1 fw-bold">
                         <i class="bi bi-box-seam me-2 text-primary"></i>
-                        Gestión de Productos
+                        Catálogo
                     </h2>
                     <p class="text-muted mb-0">Administra los productos del sistema</p>
                 </div>
@@ -27,126 +26,165 @@
             </div>
         </div>
 
-    <!-- Filtros y Búsqueda -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card rounded-3 shadow-sm border-0">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label for="campoBusqueda" class="form-label fw-semibold">
-                                <i class="bi bi-search me-1"></i>Buscar
-                            </label>
-                            <input type="text" id="campoBusqueda" class="form-control" placeholder="Buscar por nombre o descripción...">
-                        </div>
-                        <div class="col-md-2">
-                            <label for="filtroCategoria" class="form-label fw-semibold">
-                                <i class="bi bi-funnel me-1"></i>Categoría
-                            </label>
-                            <select id="filtroCategoria" class="form-select">
-                                <option value="">Todas</option>
-                                @if (categorias != null)
-                                {
-                                    @foreach (var categoria in categorias)
-                                    {
-                                        <option value="@categoria.CategoriaId">@categoria.Nombre</option>
+    <!-- Filtros -->
+    <form method="get" asp-action="Catalogo">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card rounded-3 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold text-muted small">Mostrar</label>
+                                <select name="tamanoPagina" class="form-select" onchange="this.form.submit()">
+                                    @{
+                                        int[] opciones = { 10, 25, 50, 75, 100 };
+                                        foreach (var cantidad in opciones)
+                                        {
+                                            <option value="@cantidad" selected="@(Model.ProductosPaginados.RegistrosPorPagina == cantidad ? "selected" : null)">
+                                                @cantidad registros
+                                            </option>
+                                        }
                                     }
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="filtroStock" class="form-label fw-semibold">
-                                <i class="bi bi-boxes me-1"></i>Stock
-                            </label>
-                            <select id="filtroStock" class="form-select">
-                                <option value="">Todos</option>
-                                <option value="disponible">Con stock</option>
-                                <option value="agotado">Sin stock</option>
-                                <option value="bajo">Stock bajo (≤5)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="filtroEstado" class="form-label fw-semibold">
-                                <i class="bi bi-toggle-on me-1"></i>Estado
-                            </label>
-                            <select id="filtroEstado" class="form-select">
-                                <option value="">Todos</option>
-                                <option value="activo">Activos</option>
-                                <option value="inactivo">Inactivos</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end gap-2">
-                            <button type="button" id="limpiarFiltros" class="btn btn-outline-secondary flex-fill rounded-3">
-                                <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
-                            </button>
-                            <button class="btn btn-outline-primary rounded-3" onclick="exportarACSV()">
-                                <i class="bi bi-download"></i> Exportar
-                            </button>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold"><i class="bi bi-search me-1"></i>Buscar</label>
+                                <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Nombre o descripción...">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold"><i class="bi bi-funnel me-1"></i>Categoría</label>
+                                <select name="categoriaId" class="form-select">
+                                    <option value="">Todas</option>
+                                    @foreach (var cat in Model.Categorias)
+                                    {
+                                        <option value="@cat.CategoriaId" selected="@(Model.CategoriaSeleccionada == cat.CategoriaId)">@cat.Nombre</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold"><i class="bi bi-boxes me-1"></i>Stock</label>
+                                <select name="stock" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="disponible" selected="@(Model.StockSeleccionado == "disponible")">Con stock</option>
+                                    <option value="agotado" selected="@(Model.StockSeleccionado == "agotado")">Sin stock</option>
+                                    <option value="bajo" selected="@(Model.StockSeleccionado == "bajo")">Stock bajo (≤5)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold"><i class="bi bi-toggle-on me-1"></i>Estado</label>
+                                <select name="estado" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="activo" selected="@(Model.EstadoSeleccionado == "activo")">Activos</option>
+                                    <option value="inactivo" selected="@(Model.EstadoSeleccionado == "inactivo")">Inactivos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary rounded-3 flex-fill">
+                                    <i class="bi bi-filter me-1"></i>Filtrar
+                                </button>
+                                <a asp-action="Catalogo" class="btn btn-outline-secondary rounded-3 flex-fill">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 
     <!-- Tabla de Productos -->
     <div class="row">
         <div class="col-12">
             <div class="card rounded-3 shadow-sm border-0">
                 <div class="card-header border-bottom">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <h5 class="mb-0 fw-semibold">
-                            <span id="totalProductos">@Model.Count()</span> productos encontrados
-                        </h5>
-                        <div class="d-flex gap-2">
-                            <small class="text-muted">
-                                <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i>
-                                Activos: <span id="contadorActivos">@Model.Count(p => p.Activo)</span>
-                                <i class="bi bi-circle-fill text-danger me-1 ms-3" style="font-size: 0.5rem;"></i>
-                                Inactivos: <span id="contadorInactivos">@Model.Count(p => !p.Activo)</span>
-                            </small>
+                    @* Cambiamos d-flex por flex-column (móvil) y flex-md-row (desktop) *@
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3 px-1">
+
+                        @* Sección del contador *@
+                        <div class="text-muted small">
+                            @if (Model.ProductosPaginados.TotalRegistros > 0)
+                            {
+                                <span>
+                                    Mostrando <strong>@Model.ProductosPaginados.DesdeRegistro</strong> a
+                                    <strong>@Model.ProductosPaginados.HastaRegistro</strong> de
+                                    <strong>@Model.ProductosPaginados.TotalRegistros</strong> productos
+                                </span>
+                            }
+                            else
+                            {
+                                <span>
+                                    <i class="bi bi-exclamation-circle me-1 text-warning"></i>
+                                    No se encontraron resultados.
+                                </span>
+                            }
+                        </div>
+
+                        @* Sección de filtros activos: flex-wrap es clave para que no se desborde *@
+                        <div class="d-flex flex-wrap gap-2">
+                            @if (!string.IsNullOrEmpty(Model.Busqueda))
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-search me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Búsqueda:</span> "<strong>@Model.Busqueda</strong>"
+                                </span>
+                            }
+
+                            @if (Model.CategoriaSeleccionada.HasValue)
+                            {
+                                var catNombre = Model.Categorias.FirstOrDefault(c => c.CategoriaId == Model.CategoriaSeleccionada)?.Nombre;
+                                <span class="text-muted small">
+                                    <i class="bi bi-tag me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Categoría:</span> <strong>@catNombre</strong>
+                                </span>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.StockSeleccionado))
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-boxes me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Stock:</span> <strong>@Model.StockSeleccionado</strong>
+                                </span>
+                            }
+                            @if (Model.EstadoSeleccionado != null)
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-toggle-on me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Estado:</span> <strong>@Model.EstadoSeleccionado</strong>
+                                </span>
+                            }
                         </div>
                     </div>
                 </div>
                 <div class="card-body p-0">
                     <!-- Vista de Tabla (Desktop) -->
                     <div class="d-none d-lg-block">
-                        <table class="table table-hover mb-0" id="tablaProductos">
+                        <table class="table table-hover mb-0">
                             <thead>
                                 <tr>
-                                    <th class="ordenable border-0 py-3" data-columna="0">
+                                    <th class="border-0 py-3">
                                         <div role="button" class="d-flex align-items-center">
-                                            <i class="bi bi-box me-2 text-primary"></i>
-                                            Producto
-                                            <i class="bi bi-chevron-expand ms-auto icono-orden"></i>
+                                            <i class="bi bi-box me-2 text-primary"></i>Producto
                                         </div>
                                     </th>
-                                    <th class="ordenable border-0 py-3" data-columna="1">
+                                    <th class="border-0 py-3">
                                         <div role="button" class="d-flex align-items-center">
-                                            <i class="bi bi-tag me-2 text-primary"></i>
-                                            Categoría
-                                            <i class="bi bi-chevron-expand ms-auto icono-orden"></i>
+                                            <i class="bi bi-tag me-2 text-primary"></i>Categoría
                                         </div>
                                     </th>
-                                    <th class="ordenable border-0 py-3" data-columna="2">
+                                    <th class="border-0 py-3">
                                         <div role="button" class="d-flex align-items-center">
-                                            <i class="bi bi-currency-dollar me-2 text-primary"></i>
-                                            Precio
-                                            <i class="bi bi-chevron-expand ms-auto icono-orden"></i>
+                                            <i class="bi bi-currency-dollar me-2 text-primary"></i>Precio
                                         </div>
                                     </th>
-                                    <th class="ordenable border-0 py-3" data-columna="3">
+                                    <th class="border-0 py-3">
                                         <div role="button" class="d-flex align-items-center">
-                                            <i class="bi bi-boxes me-2 text-primary"></i>
-                                            Stock
-                                            <i class="bi bi-chevron-expand ms-auto icono-orden"></i>
+                                            <i class="bi bi-boxes me-2 text-primary"></i>Stock
                                         </div>
                                     </th>
-                                    <th class="ordenable border-0 py-3" data-columna="4">
+                                    <th class="border-0 py-3">
                                         <div role="button" class="d-flex align-items-center">
-                                            <i class="bi bi-toggle-on me-2 text-primary"></i>
-                                            Estado
-                                            <i class="bi bi-chevron-expand ms-auto icono-orden"></i>
+                                            <i class="bi bi-toggle-on me-2 text-primary"></i>Estado
                                         </div>
                                     </th>
                                     <th class="border-0 py-3 text-center">
@@ -155,15 +193,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var producto in Model)
+                                @foreach (var producto in Model.ProductosPaginados.Items)
                                 {
-                                    <tr class="fila-producto @(producto.Activo ? "" : "table-secondary")"
-                                        data-nombre="@producto.Nombre.ToLower()"
-                                        data-descripcion="@producto.Descripcion.ToLower()"
-                                        data-categoria="@producto.CategoriaId"
-                                        data-stock="@(producto.Stock > 0 ? (producto.Stock <= 5 ? "bajo" : "disponible") : "agotado")"
-                                        data-estado="@(producto.Activo ? "activo" : "inactivo")"
-                                        data-precio="@producto.Precio">
+                                    <tr class="f@(producto.Activo ? "" : "table-secondary")">
                                         <td class="py-3">
                                             <div class="d-flex align-items-center">
                                                 <div class="producto-imagen-mini me-3">
@@ -175,6 +207,7 @@
                                                          role="button"
                                                          data-bs-toggle="tooltip"
                                                          data-bs-placement="top"
+                                                         data-bs-title="Click para ampliar"
                                                          title="Click para ampliar" />
                                                 </div>
                                                 <div>
@@ -184,9 +217,9 @@
                                         </td>
                                         <td class="py-3">
                                             <div>
-                                                @if (producto.Categoria != null)
+                                                @if (producto.CategoriaId != null)
                                                 {
-                                                    <span class="badge bg-secondary border small fw-medium text-uppercase" style="letter-spacing: 0.5px;">@producto.Categoria.Nombre</span>
+                                                    <span class="badge bg-secondary border small fw-medium text-uppercase" style="letter-spacing: 0.5px;">@producto.CategoriaNombre</span>
                                                 }
                                                 else
                                                 {
@@ -240,7 +273,7 @@
                                                 {
                                                     <button type="button" class="btn btn-outline-danger btn-sm rounded-3"
                                                             onclick="darBaja('@producto.ProductoId', '@producto.Nombre')"
-                                                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Dar de baja">
+                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de baja">
                                                         <i class="bi bi-toggle-off"></i>
                                                     </button>
                                                 }
@@ -248,16 +281,16 @@
                                                 {
                                                     <button type="button" class="btn btn-outline-success btn-sm rounded-3"
                                                             onclick="darAlta('@producto.ProductoId', '@producto.Nombre')"
-                                                            data-bs-toggle="tooltip" data-bs-placement="bottom" title="Dar de alta">
+                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de alta">
                                                         <i class="bi bi-toggle-on"></i>
                                                     </button>
                                                 }
                                                 <a asp-area="Admin" asp-controller="Producto" asp-action="EditarProducto" asp-route-id="@producto.ProductoId"
-                                                   class="btn btn-outline-primary btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Editar producto">
+                                                   class="btn btn-outline-primary btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar producto">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
                                                 <a asp-area="" asp-controller="Producto" asp-action="Detalles" asp-route-id="@producto.ProductoId"
-                                                   class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Ver detalle">
+                                                   class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
                                             </div>
@@ -270,15 +303,9 @@
 
                     <!-- Vista de Cards (Mobile/Tablet) -->
                     <div class="d-lg-none p-3" id="tablaProductos">
-                        @foreach (var producto in Model)
+                        @foreach (var producto in Model.ProductosPaginados.Items)
                         {
-                            <div class="card mb-3 fila-producto @(producto.Activo ? "" : "bg-light")"
-                                 data-nombre="@producto.Nombre.ToLower()"
-                                 data-descripcion="@producto.Descripcion.ToLower()"
-                                 data-categoria="@producto.CategoriaId"
-                                 data-stock="@(producto.Stock > 0 ? (producto.Stock <= 5 ? "bajo" : "disponible") : "agotado")"
-                                 data-estado="@(producto.Activo ? "activo" : "inactivo")"
-                                 data-precio="@producto.Precio">
+                            <div class="card mb-3 fila-producto @(producto.Activo ? "" : "bg-light")">
                                 <div class="card-body">
                                     <div class="d-flex align-items-start mb-3">
                                         <div class="producto-imagen-mini me-3">
@@ -291,9 +318,9 @@
                                         </div>
                                         <div class="flex-grow-1">
                                             <h6 class="fw-semibold mb-1 @(producto.Activo ? "" : "text-muted")">@producto.Nombre</h6>
-                                            @if (producto.Categoria != null)
+                                            @if (producto.CategoriaId != null)
                                             {
-                                                <span class="badge bg-secondary border small fw-medium text-uppercase" style="letter-spacing: 0.5px;">@producto.Categoria.Nombre</span>
+                                                <span class="badge bg-secondary border small fw-medium text-uppercase" style="letter-spacing: 0.5px;">@producto.CategoriaNombre</span>
                                             }
                                             else
                                             {
@@ -385,6 +412,58 @@
                             </div>
                         }
                     </div>
+
+                    <nav class="mt-3">
+                        <ul class="pagination justify-content-end">
+                            <li class="page-item @(Model.ProductosPaginados.PaginaActual == 1 ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-area="Admin"
+                                   asp-controller="Producto"
+                                   asp-action="Catalogo"
+                                   asp-route-pagina="@(Model.ProductosPaginados.PaginaActual - 1)"
+                                   asp-route-tamanoPagina="@Model.ProductosPaginados.RegistrosPorPagina"
+                                   asp-route-busqueda="@Model.Busqueda"
+                                   asp-route-categoriaId="@Model.CategoriaSeleccionada"
+                                   asp-route-stock="@Model.StockSeleccionado"
+                                   asp-route-estado="@Model.EstadoSeleccionado">
+                                    Anterior
+                                </a>
+                            </li>
+
+                            @for (int i = 1; i <= Model.ProductosPaginados.TotalPaginas; i++)
+                            {
+                                <li class="page-item @(i == Model.ProductosPaginados.PaginaActual ? "active" : "")">
+                                    <a class="page-link"
+                                       asp-area="Admin"
+                                       asp-controller="Producto"
+                                       asp-action="Catalogo"
+                                       asp-route-pagina="@i"
+                                       asp-route-tamanoPagina="@Model.ProductosPaginados.RegistrosPorPagina"
+                                       asp-route-busqueda="@Model.Busqueda"
+                                       asp-route-categoriaId="@Model.CategoriaSeleccionada"
+                                       asp-route-stock="@Model.StockSeleccionado"
+                                       asp-route-estado="@Model.EstadoSeleccionado">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="page-item @(Model.ProductosPaginados.PaginaActual == Model.ProductosPaginados.TotalPaginas ? "disabled" : "")">
+                                <a class="page-link"
+                                   asp-area="Admin"
+                                   asp-controller="Producto"
+                                   asp-action="Catalogo"
+                                   asp-route-pagina="@(Model.ProductosPaginados.PaginaActual + 1)"
+                                   asp-route-tamanoPagina="@Model.ProductosPaginados.RegistrosPorPagina"
+                                   asp-route-busqueda="@Model.Busqueda"
+                                   asp-route-categoriaId="@Model.CategoriaSeleccionada"
+                                   asp-route-stock="@Model.StockSeleccionado"
+                                   asp-route-estado="@Model.EstadoSeleccionado">
+                                    Siguiente
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>
@@ -421,7 +500,7 @@
 
 <!-- Formularios Ocultos -->
 <div style="display: none;">
-    @foreach (var producto in Model)
+    @foreach (var producto in Model.ProductosPaginados.Items)
     {
         <form id="formularioBaja@(producto.ProductoId)" asp-area="Admin" asp-controller="Producto" asp-action="DarBaja" asp-route-id="@producto.ProductoId" method="post">
             @Html.AntiForgeryToken()
@@ -433,8 +512,6 @@
 </div>
 
 @section Scripts{
-    <script src="~/js/Admin/Producto/Index/ExportarCSV.js" asp-append-version="true"></script>
-    <script src="~/js/Admin/Producto/Index/Filtros.js" asp-append-version="true"></script>
-    <script src="~/js/Admin/Producto/Index/Modales.js" asp-append-version="true"></script>
+    <script src="~/js/Admin/Producto/Catalogo.js" asp-append-version="true"></script>
 }
 
