@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Services.Commons.Models;
+using TiendaOnline.Services.DTOs.Admin.Categoria;
 using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Services.Services
@@ -64,6 +66,44 @@ namespace TiendaOnline.Services.Services
 
             // CONDICIÓN: Tiene que tener un padre Y NO tener hijos
             return categoria.CategoriaPadreId != null && !categoria.Subcategorias.Any();
+        }
+
+        public async Task<PagedResult<CategoriaListadoDto>> ObtenerCategoriasPaginadasAsync(int pagina, int cantidad, string? buscar, string? nivel)
+        {
+            var query = _context.Categorias
+                .Include(c => c.CategoriaPadre)
+                .Include(c => c.Productos)
+                .Include(c => c.Subcategorias)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(buscar))
+                query = query.Where(c => c.Nombre.Contains(buscar));
+
+            if (nivel == "Principal")
+                query = query.Where(c => c.CategoriaPadreId == null);
+            else if (nivel == "Subcategoría")
+                query = query.Where(c => c.CategoriaPadreId != null);
+
+            var total = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(c => c.CategoriaPadreId)
+                .ThenBy(c => c.Nombre)
+                .Skip((pagina - 1) * cantidad)
+                .Take(cantidad)
+                .Select(c => new CategoriaListadoDto
+                {
+                    CategoriaId = c.CategoriaId,
+                    Nombre = c.Nombre,
+                    CategoriaPadreId = c.CategoriaPadreId,
+                    CategoriaPadreNombre = c.CategoriaPadre != null ? c.CategoriaPadre.Nombre : null,
+                    CantidadProductos = c.Productos.Count,
+                    CantidadSubcategorias = c.Subcategorias.Count,
+                    Activa = true
+                })
+                .ToListAsync();
+
+            return new PagedResult<CategoriaListadoDto>(items, total, pagina, cantidad);
         }
 
         public async Task AgregarCategoriaAsync(Categoria categoria)
