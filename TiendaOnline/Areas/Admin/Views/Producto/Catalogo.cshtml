@@ -382,7 +382,7 @@
                                             {
                                                 <button type="button" class="btn btn-outline-danger btn-sm rounded-3"
                                                         onclick="darBaja('@producto.ProductoId', '@producto.Nombre')"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Dar de baja">
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de baja">
                                                     <i class="bi bi-toggle-off"></i>
                                                 </button>
                                             }
@@ -390,16 +390,16 @@
                                             {
                                                 <button type="button" class="btn btn-outline-success btn-sm rounded-3"
                                                         onclick="darAlta('@producto.ProductoId', '@producto.Nombre')"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Dar de alta">
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de alta">
                                                     <i class="bi bi-toggle-on"></i>
                                                 </button>
                                             }
                                             <a asp-area="Admin" asp-controller="Producto" asp-action="EditarProducto" asp-route-id="@producto.ProductoId"
-                                               class="btn btn-outline-primary btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Editar producto">
+                                               class="btn btn-outline-primary btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar producto">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <a asp-area="" asp-controller="Producto" asp-action="Detalles" asp-route-id="@producto.ProductoId"
-                                               class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Ver detalle">
+                                               class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
                                                 <i class="bi bi-eye"></i>
                                             </a>
                                         </div>
@@ -408,62 +408,73 @@
                             </div>
                         }
                     </div>
-
-                    <nav class="mt-3">
-                        <ul class="pagination justify-content-end">
-                            <li class="page-item @(Model.ProductosPaginados.PaginaActual == 1 ? "disabled" : "")">
-                                <a class="page-link"
-                                   asp-area="Admin"
-                                   asp-controller="Producto"
-                                   asp-action="Catalogo"
-                                   asp-route-pagina="@(Model.ProductosPaginados.PaginaActual - 1)"
-                                   asp-route-tamanoPagina="@Model.ProductosPaginados.RegistrosPorPagina"
-                                   asp-route-busqueda="@Model.Busqueda"
-                                   asp-route-categoriaId="@Model.CategoriaSeleccionada"
-                                   asp-route-stock="@Model.StockSeleccionado"
-                                   asp-route-estado="@Model.EstadoSeleccionado">
-                                    Anterior
-                                </a>
-                            </li>
-
-                            @for (int i = 1; i <= Model.ProductosPaginados.TotalPaginas; i++)
-                            {
-                                <li class="page-item @(i == Model.ProductosPaginados.PaginaActual ? "active" : "")">
-                                    <a class="page-link"
-                                       asp-area="Admin"
-                                       asp-controller="Producto"
-                                       asp-action="Catalogo"
-                                       asp-route-pagina="@i"
-                                       asp-route-tamanoPagina="@Model.ProductosPaginados.RegistrosPorPagina"
-                                       asp-route-busqueda="@Model.Busqueda"
-                                       asp-route-categoriaId="@Model.CategoriaSeleccionada"
-                                       asp-route-stock="@Model.StockSeleccionado"
-                                       asp-route-estado="@Model.EstadoSeleccionado">
-                                        @i
-                                    </a>
-                                </li>
-                            }
-
-                            <li class="page-item @(Model.ProductosPaginados.PaginaActual == Model.ProductosPaginados.TotalPaginas ? "disabled" : "")">
-                                <a class="page-link"
-                                   asp-area="Admin"
-                                   asp-controller="Producto"
-                                   asp-action="Catalogo"
-                                   asp-route-pagina="@(Model.ProductosPaginados.PaginaActual + 1)"
-                                   asp-route-tamanoPagina="@Model.ProductosPaginados.RegistrosPorPagina"
-                                   asp-route-busqueda="@Model.Busqueda"
-                                   asp-route-categoriaId="@Model.CategoriaSeleccionada"
-                                   asp-route-stock="@Model.StockSeleccionado"
-                                   asp-route-estado="@Model.EstadoSeleccionado">
-                                    Siguiente
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Paginación -->
+    <nav aria-label="Navegación de productos" class="mt-3">
+        <ul class="pagination justify-content-center justify-content-md-end mb-0">
+            @{
+                var paginacion = Model.ProductosPaginados;
+                int radio = 2; // Páginas a mostrar alrededor de la actual
+                int actual = paginacion.PaginaActual;
+                int total = paginacion.TotalPaginas;
+            }
+
+            @* Botón Anterior *@
+            <li class="page-item @(actual == 1 ? "disabled" : "")">
+                <a class="page-link" asp-area="Admin" asp-controller="Producto" asp-action="Catalogo"
+                   asp-route-pagina="@(actual - 1)"
+                   asp-route-tamanoPagina="@paginacion.RegistrosPorPagina"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-categoriaId="@Model.CategoriaSeleccionada"
+                   asp-route-stock="@Model.StockSeleccionado"
+                   asp-route-estado="@Model.EstadoSeleccionado">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+
+            @for (int i = 1; i <= total; i++)
+            {
+                // Lógica de Truncado
+                // Mostramos: Primera, Última y el rango alrededor de la actual
+                if (i == 1 || i == total || (i >= actual - radio && i <= actual + radio))
+                {
+                    <li class="page-item @(i == actual ? "active" : "")">
+                        <a class="page-link" asp-area="Admin" asp-controller="Producto" asp-action="Catalogo"
+                           asp-route-pagina="@i"
+                           asp-route-tamanoPagina="@paginacion.RegistrosPorPagina"
+                           asp-route-busqueda="@Model.Busqueda"
+                           asp-route-categoriaId="@Model.CategoriaSeleccionada"
+                           asp-route-stock="@Model.StockSeleccionado"
+                           asp-route-estado="@Model.EstadoSeleccionado">
+                            @i
+                        </a>
+                    </li>
+                }
+                // Si estamos en el límite del radio, ponemos los puntos suspensivos
+                else if (i == actual - radio - 1 || i == actual + radio + 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                }
+            }
+
+            @* Botón Siguiente *@
+            <li class="page-item @(actual == total ? "disabled" : "")">
+                <a class="page-link" asp-area="Admin" asp-controller="Producto" asp-action="Catalogo"
+                   asp-route-pagina="@(actual + 1)"
+                   asp-route-tamanoPagina="@paginacion.RegistrosPorPagina"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-categoriaId="@Model.CategoriaSeleccionada"
+                   asp-route-stock="@Model.StockSeleccionado"
+                   asp-route-estado="@Model.EstadoSeleccionado">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 <!-- Modal de Confirmación -->
