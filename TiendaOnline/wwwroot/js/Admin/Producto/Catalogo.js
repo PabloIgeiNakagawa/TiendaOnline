@@ -1,4 +1,8 @@
-﻿// Función para mostrar imagen en modal
+﻿// Inicializar Tooltips
+const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+// Función para mostrar imagen en modal
 function mostrarImagenModal(urlImagen, nombreProducto) {
     const modal = new bootstrap.Modal(document.getElementById('modalImagenProducto'));
     const imagenModal = document.getElementById('imagenProductoModal');

@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Services.IServices;
+using TiendaOnline.Services.Commons.Models;
+using TiendaOnline.Services.DTOs.Admin.Usuario;
 
 namespace TiendaOnline.Services.Services
 {
@@ -31,6 +33,40 @@ namespace TiendaOnline.Services.Services
         public async Task<Usuario?> ObtenerUsuarioAsync(int usuarioId)
         {
             return await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
+        }
+
+        public async Task<PagedResult<UsuarioListadoDto>> ObtenerUsuariosPaginadosAsync(int pagina, int cantidad, string? buscar, string? rol, bool? activo)
+        {
+            var query = _context.Usuarios.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(buscar))
+                query = query.Where(u => u.Nombre.Contains(buscar) || u.Apellido.Contains(buscar) || u.Email.Contains(buscar));
+
+            if (!string.IsNullOrEmpty(rol) && Enum.TryParse<Rol>(rol, out var rolEnum))
+            {
+                query = query.Where(u => u.Rol == rolEnum);
+            }
+
+            if (activo.HasValue)
+                query = query.Where(u => u.Activo == activo.Value);
+
+            var total = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(u => u.Apellido)
+                .Skip((pagina - 1) * cantidad)
+                .Take(cantidad)
+                .Select(u => new UsuarioListadoDto
+                {
+                    UsuarioId = u.UsuarioId,
+                    NombreCompleto = $"{u.Nombre} {u.Apellido}",
+                    Email = u.Email,
+                    RolNombre = u.Rol.ToString(),
+                    Activo = u.Activo
+                })
+                .ToListAsync();
+
+            return new PagedResult<UsuarioListadoDto>(items, total, pagina, cantidad);
         }
 
         public async Task CrearUsuarioAsync(Usuario usuario)

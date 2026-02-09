@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using TiendaOnline.Domain.DTOs;
 using TiendaOnline.Helpers;
+using TiendaOnline.Services.DTOs;
 using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Controllers

@@ -38,11 +38,14 @@ builder.Services.AddAuthentication("CookieAuth")
     {
         config.LoginPath = "/Usuario/Login";
         config.LogoutPath = "/Usuario/Logout";
+        // Por seguridad
         config.Cookie.HttpOnly = true;
         #if DEBUG
             config.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         #else
-            config.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            /* En producción, se recomienda usar Always para asegurar que las cookies solo se envíen a través de HTTPS. 
+               Pero por el somee lo dejamos en SameAsRequest para evitar problemas. */ 
+            config.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; 
         #endif
             config.Cookie.SameSite = SameSiteMode.Strict;
     });

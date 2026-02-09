@@ -2,7 +2,7 @@
 using System.Globalization;
 using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Domain.DTOs.Admin.Reportes;
+using TiendaOnline.Services.DTOs.Admin.Reportes;
 using TiendaOnline.Services.IServices.Admin;
 
 namespace TiendaOnline.Services.Services.Admin

@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Domain.DTOs
+﻿namespace TiendaOnline.Services.DTOs
 {
     public class ItemCarrito
     {

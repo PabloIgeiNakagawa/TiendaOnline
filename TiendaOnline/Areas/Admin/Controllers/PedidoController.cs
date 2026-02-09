@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TiendaOnline.Areas.Admin.ViewModels.Pedido;
+using TiendaOnline.Domain.Entities;
 using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Areas.Admin.Controllers
@@ -16,14 +18,34 @@ namespace TiendaOnline.Areas.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Listado()
+        public async Task<IActionResult> Listado(string? busqueda, EstadoPedido? estado, DateTime? fechaDesde, DateTime? fechaHasta, string? filtroMonto, int pagina = 1, int tamanoPagina = 10)
         {
-            var pedidos = await _pedidoService.ObtenerPedidosConDetallesAsync();
-            return View(pedidos);
+            // Llamamos al service con todos los filtros
+            var pagedResult = await _pedidoService.ObtenerPedidosPaginadosAsync(
+                busqueda?.Trim(),
+                estado,
+                fechaDesde,
+                fechaHasta,
+                filtroMonto,
+                pagina,
+                tamanoPagina
+            );
+
+            // Llenamos el ViewModel para que la vista sepa qué filtros están activos
+            var viewModel = new PedidoListadoViewModel
+            {
+                PedidosPaginados = pagedResult,
+                Busqueda = busqueda,
+                Estado = estado,
+                FechaDesde = fechaDesde,
+                FechaHasta = fechaHasta,
+                FiltroMonto = filtroMonto
+            };
+
+            return View(viewModel);
         }
 
         [HttpPost]
-        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Enviar(int pedidoId)
         {
             if (pedidoId <= 0)
@@ -49,7 +71,6 @@ namespace TiendaOnline.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Cancelar(int pedidoId)
         {
             if (pedidoId <= 0)

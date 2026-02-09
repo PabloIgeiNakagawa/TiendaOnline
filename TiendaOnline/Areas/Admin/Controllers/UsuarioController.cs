@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TiendaOnline.Areas.Admin.ViewModels.Usuario;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Services.IServices;
@@ -18,10 +19,26 @@ namespace TiendaOnline.Areas.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Listado()
+        public async Task<IActionResult> Listado(int pagina = 1, int tamanoPagina = 10, string? busqueda = null, string? rol = null, string? estado = null)
         {
-            var usuarios = await _usuarioService.ObtenerUsuariosAsync();
-            return View(usuarios);
+            bool? estadoBool = estado switch
+            {
+                "activo" => true,
+                "inactivo" => false,
+                _ => null
+            };
+
+            var pagedResult = await _usuarioService.ObtenerUsuariosPaginadosAsync(pagina, tamanoPagina, busqueda, rol, estadoBool);
+
+            var viewModel = new UsuarioListadoViewModel
+            {
+                UsuariosPaginados = pagedResult,
+                Busqueda = busqueda,
+                RolSeleccionado = rol,
+                EstadoSeleccionado = estadoBool
+            };
+
+            return View(viewModel);
         }
 
         [HttpGet]

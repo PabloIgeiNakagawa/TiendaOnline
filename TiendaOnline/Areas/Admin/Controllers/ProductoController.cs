@@ -5,6 +5,7 @@ using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Services.IServices;
 using TiendaOnline.Areas.Admin.ViewModels.Producto;
+using TiendaOnline.Services.DTOs.Admin.Categoria;
 
 namespace TiendaOnline.Areas.Admin.Controllers
 {
@@ -24,13 +25,36 @@ namespace TiendaOnline.Areas.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Catalogo()
+        public async Task<IActionResult> Catalogo(string? busqueda, int? categoriaId, string? estado, string? stock, int pagina = 1, int tamanoPagina = 10)
         {
-            var productos = await _productoService.ObtenerProductosAsync();
-            var categorias = await _categoriaService.ObtenerCategoriasAsync();
+            if (pagina < 1) pagina = 1;
+            if (tamanoPagina < 1) tamanoPagina = 10;
 
-            ViewBag.Categorias = categorias;
-            return View(productos);
+            // Obtenemos los productos paginados y filtrados
+            var pagedResult = await _productoService.ObtenerProductosPaginadosAsync(
+                busqueda, categoriaId, estado, stock, pagina, tamanoPagina);
+
+            // Obtenemos las categorías para el select (usando DTO)
+            var categoriasEntidad = await _categoriaService.ObtenerCategoriasHojaAsync();
+            var categoriasDto = categoriasEntidad.Select(c => new CategoriaDto
+            {
+                CategoriaId = c.CategoriaId,
+                Nombre = c.Nombre
+            }).ToList();
+
+            var viewModel = new ProductoCatalogoViewModel
+            {
+                ProductosPaginados = pagedResult,
+                Categorias = categoriasDto,
+                Busqueda = busqueda,
+                CategoriaSeleccionada = categoriaId,
+                EstadoSeleccionado = estado,
+                StockSeleccionado = stock,
+                TotalActivos = pagedResult.Items.Count(x => x.Activo),
+                TotalInactivos = pagedResult.Items.Count(x => !x.Activo)
+            };
+
+            return View(viewModel);
         }
 
         [HttpGet]

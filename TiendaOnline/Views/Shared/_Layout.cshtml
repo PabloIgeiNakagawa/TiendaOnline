@@ -1,6 +1,6 @@
 ﻿@using System.Security.Claims
 @using TiendaOnline.Helpers
-@using TiendaOnline.Domain.DTOs
+@using TiendaOnline.Services.DTOs
 @{
     var idUsuario = User.Claims.FirstOrDefault(c => c.Type == "UsuarioId")?.Value;
     bool usuarioEstaAutenticado = User.Identity.IsAuthenticated;

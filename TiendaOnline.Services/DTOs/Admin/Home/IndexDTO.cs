@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Domain.DTOs.Admin.Home
+﻿namespace TiendaOnline.Services.DTOs.Admin.Home
 {
     public class IndexDTO
     {
