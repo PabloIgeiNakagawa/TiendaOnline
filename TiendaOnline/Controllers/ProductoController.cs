@@ -1,29 +1,39 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Services.IServices;
+using TiendaOnline.ViewModels.Producto;
 
 public class ProductoController : Controller
 {
     private readonly IProductoService _productoService;
     private readonly ICategoriaService _categoriaService;
-    private readonly IImagenService _imagenService;
 
-    public ProductoController(IProductoService productoService, ICategoriaService categoriaService, IImagenService imagenService)
+    public ProductoController(IProductoService productoService, ICategoriaService categoriaService)
     {
         _productoService = productoService;
         _categoriaService = categoriaService;
-        _imagenService = imagenService;
     }
 
-    public async Task<IActionResult> Index(string busqueda)
+    public async Task<IActionResult> Index(string busqueda, int? categoriaId, decimal? min, decimal? max, string orden, int pagina = 1)
     {
-        var categoriasRaiz = await _categoriaService.ObtenerCategoriasRaizAsync();
-        var productos = await _productoService.ObtenerProductosAsync();
+        ViewData["Title"] = "Catálogo de Productos";
 
-        ViewBag.CategoriasRaiz = categoriasRaiz;
-        ViewBag.Busqueda = busqueda; 
+        int registrosPorPagina = 18;
 
-        return View(productos);
+        var productosPaginados = await _productoService.ObtenerProductosTiendaPaginadoAsync(
+            busqueda, categoriaId, min, max, orden, pagina, registrosPorPagina);
+
+        var viewModel = new ProductoIndexViewModel
+        {
+            Paginacion = productosPaginados,
+            Busqueda = busqueda,
+            CategoriaId = categoriaId,
+            PrecioMin = min,
+            PrecioMax = max,
+            Orden = orden,
+            CategoriasRaiz = (List<TiendaOnline.Domain.Entities.Categoria>)await _categoriaService.ObtenerCategoriasRaizAsync()
+        };
+
+        return View(viewModel);
     }
 
     [HttpGet]
