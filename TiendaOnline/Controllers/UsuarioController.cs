@@ -5,6 +5,7 @@ using System.Security.Claims;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Services.IServices;
+using TiendaOnline.ViewModels.Cuenta;
 
 namespace TiendaOnline.Controllers
 {
@@ -55,7 +56,7 @@ namespace TiendaOnline.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(Login model)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
             {

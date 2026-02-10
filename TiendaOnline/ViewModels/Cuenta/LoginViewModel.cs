@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TiendaOnline.Domain.Entities
+namespace TiendaOnline.ViewModels.Cuenta
 {
-    public class Login
+    public class LoginViewModel
     {
         [Required]
         [EmailAddress]
