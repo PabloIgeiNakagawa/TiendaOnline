@@ -15,12 +15,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta property="og:title" content="TechStore PC - Tu tienda de componentes">
     <meta property="og:description" content="Encuentra el mejor hardware para tu setup.">
-    <meta property="og:image" content="~/img/logo-social.png">
+    <meta property="og:image" content="~/img/TechStore-Logo.png">
     <meta property="og:type" content="website">
     <title>@ViewData["Title"] - TechStore PC</title>
 
     <meta name="description" content="Tu tienda de confianza para componentes de PC">
-    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="~/img/TechStore-Logo.png" asp-append-version="true">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,11 +44,8 @@
 
         <nav class="navbar navbar-expand-lg navbar-light py-3">
             <div class="container">
-                <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
-                    <div class="brand-icon-wrapper me-2">
-                        <i class="bi bi-cpu-fill"></i>
-                    </div>
-                    <span class="fw-bold fs-3">TECH<span class="text-primary">STORE</span></span>
+                <a class="d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                    <img src="~/img/TechStore-Logo.png" style="width: 50px; height: 50px;" />
                 </a>
 
                 <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navegacionPrincipal">
@@ -59,16 +56,16 @@
 
                     <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link fw-semibold px-3 text-uppercase small" asp-controller="Home" asp-action="Index">Inicio</a>
+                            <a class="nav-link fw-semibold px-3 text-uppercase small text-center text-md-start mt-2 mt-md-0" asp-controller="Home" asp-action="Index">Inicio</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link fw-semibold px-3 text-uppercase small" asp-controller="Producto" asp-action="Index">Productos</a>
+                            <a class="nav-link fw-semibold px-3 text-uppercase small text-center text-md-start" asp-controller="Producto" asp-action="Index">Productos</a>
                         </li>
                     </ul>
 
                     <div class="me-lg-3 my-2 my-lg-0">
                         <form class="d-flex position-relative" method="get" asp-controller="Producto" asp-action="Index">
-                            <input class="form-control bg-body-secondary border-0 rounded-pill ps-4"
+                            <input class="form-control bg-body-secondary border-0 rounded-pill ps-4 w-100"
                                    style="font-size: 0.9rem; width: 240px;"
                                    type="search" name="busqueda" placeholder="Buscar hardware..." aria-label="Buscar">
                         </form>
@@ -86,7 +83,7 @@
                                 }
                             </div>
 
-                            <span class="d-lg-none ms-2">Carrito</span>
+                            <span class="d-lg-none ms-2 fw-semibold text-uppercase small">Carrito</span>
 
                             @if (conteoProductos > 0)
                             {
@@ -99,13 +96,13 @@
 
                     <div class="me-lg-3 d-grid d-lg-block my-2 my-lg-0">
                         <button class="btn btn-link nav-link py-2 px-0 px-lg-2" id="bd-theme" type="button" onclick="toggleTheme()" title="Cambiar tema">
-                            <i id="theme-icon" class="bi bi-sun fs-3"></i>
-                            <span id="modo-actual" class="d-lg-none ms-2">Claro</span>
+                            <i id="theme-icon" class="bi bi-sun fs-5"></i>
+                            <span id="modo-actual" class="d-lg-none fw-semibold text-uppercase small">Claro</span>
                         </button>
                     </div>
 
                     <div class="dropdown me-lg-3 d-grid d-lg-block my-2 my-lg-0">
-                        <button class="btn btn-primary rounded-pill px-4 d-flex align-items-center justify-content-center gap-2 shadow-sm" type="button" data-bs-toggle="dropdown">
+                        <button class="btn btn-primary btn-sm rounded-3 px-4 d-flex align-items-center justify-content-center gap-2 shadow-sm" type="button" data-bs-toggle="dropdown">
                             <i class="bi bi-person-circle fs-5"></i>
                             <span class="fw-medium small">
                                 @if (User.Identity.IsAuthenticated)
@@ -196,13 +193,8 @@
             <div class="row gy-4">
                 <div class="col-lg-4 col-md-6">
                     <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3">
-                        <div class="brand-icon-wrapper me-2" style="width: 32px; height: 32px;">
-                            <i class="bi bi-cpu-fill fs-6"></i>
-                        </div>                        
-                        <div>
-                            <h5 class="mb-0 fw-bold">TECH<span class="text-primary">STORE</span></h5>
-                            <small class="text-secondary">Expertos en componentes de PC</small>
-                        </div>
+                        <img src="~/img/TechStore-Logo.png" class="me-2" style="width: 30px; height: 30px;" />
+                        <small class="text-uppercase fw-bold">Expertos en componentes de PC</small>
                     </div>
                     <p class="text-secondary small mb-4 text-center text-md-start">
                         Tu tienda de confianza para armar la PC de tus sueños. Componentes de alto rendimiento y asesoramiento especializado.
@@ -258,7 +250,7 @@
 
             <hr class="my-4 border-secondary opacity-25">
 
-            <div class="text-center">
+            <div class="text-center fw-bold">
                 &copy; 2026 TechStore PC. Todos los derechos reservados.
             </div>
         </div>
