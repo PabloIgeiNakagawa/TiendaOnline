@@ -23,6 +23,7 @@ namespace TiendaOnline.Controllers
         [HttpGet]
         public async Task<IActionResult> EditarUsuario(int id)
         {
+            ViewData["Title"] = "Editar Usuario";
             var usuario = await _usuarioService.ObtenerUsuarioAsync(id);
             return View(usuario);
         }
