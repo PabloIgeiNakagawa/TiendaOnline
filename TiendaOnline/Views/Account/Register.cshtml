@@ -1,28 +1,21 @@
-﻿@using TiendaOnline.Domain.Entities
-@model TiendaOnline.Domain.Entities.Usuario
-@{
-    ViewData["Title"] = "Registrarse";
-}
-@section Styles {
-    <link rel="stylesheet" href="~/css/Usuario/Register.css" asp-append-version="true" />
-}
+﻿@model TiendaOnline.ViewModels.Account.RegisterViewModel
 
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-8 col-xl-6">
             <!-- Encabezado -->
-            <div class="text-center mb-5">
+            <div class="text-center">
                 <div class="d-flex align-items-center justify-content-center mx-auto mb-3 text-white fs-2 rounded-4 bg-primary " style="width: 80px; height: 80px;">
                     <i class="bi bi-person-plus-fill"></i>
                 </div>
-                <h2 class="fw-bold mb-2">Crear cuenta</h2>
+                <h2 class="fw-bold mb-2">Registrarse</h2>
                 <p class="text-muted">Complete sus datos para crear su cuenta en TechStore</p>
             </div>
 
             <!-- Formulario -->
             <div class="shadow border-0 rounded-4 overflow-hidden">
                 <div class="p-5">
-                    <form asp-area="" asp-controller="Usuario" asp-action="Register" method="post" id="formularioRegistro" novalidate>
+                    <form asp-area="" asp-controller="Account" asp-action="Register" method="post" id="formularioRegistro" novalidate>
                         @Html.AntiForgeryToken()
 
                         <!-- Información Personal -->
@@ -126,8 +119,6 @@
                             </div>
                         </div>
 
-                        <input type="hidden" asp-for="Rol" value="@((int)Rol.Usuario)" required />
-
                         <!-- Términos y Condiciones -->
                         <div class="seccion-formulario mb-4">
                             <div class="form-check">
@@ -141,17 +132,17 @@
 
                         <!-- Botones -->
                         <div class="d-lg-flex justify-content-between gap-2 align-items-center pt-3 border-top">
-                            <button type="submit" class="btn btn-primary fw-medium rounded-3 p-3 my-2 my-lg-0" id="botonEnviar">
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-info fw-medium rounded-3 d-block" my-2 my-lg-0>
+                                <i class="bi bi-box-arrow-in-right me-1"></i>¿Ya tienes cuenta?
+                            </a>
+                            <a class="btn btn-outline-secondary fw-medium rounded-3 my-2 my-lg-0 d-block" onclick="limpiarFormulario()">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Limpiar
+                            </a>
+                            <button type="submit" class="btn btn-primary fw-medium rounded-3 my-2 my-lg-0" id="botonEnviar">
                                 <i class="bi bi-check-circle me-2"></i>
                                 <span class="texto-boton">Crear Cuenta</span>
                                 <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
                             </button>
-                            <a class="btn btn-outline-secondary fw-medium rounded-3 p-3 my-2 my-lg-0 d-block" onclick="limpiarFormulario()">
-                                <i class="bi bi-arrow-clockwise me-2"></i>Limpiar
-                            </a>
-                            <a asp-controller="Usuario" asp-action="Login" class="btn btn-outline-info fw-medium rounded-3 p-3 d-block" my-2 my-lg-0>
-                                <i class="bi bi-box-arrow-in-right me-1"></i>¿Ya tienes cuenta?
-                            </a>
                         </div>
                     </form>
                 </div>

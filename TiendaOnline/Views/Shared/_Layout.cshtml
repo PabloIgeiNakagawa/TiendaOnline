@@ -112,12 +112,12 @@
                                     <li><a class="dropdown-item" asp-controller="Pedido" asp-action="MisPedidos">Mis Pedidos</a></li>
                                 }
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" asp-controller="Usuario" asp-action="Logout">Salir</a></li>
+                                <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout">Salir</a></li>
                             }
                             else
                             {
-                                <li><a class="dropdown-item" asp-controller="Usuario" asp-action="Login"><i class="bi bi-person"></i> Ingresar</a></li>
-                                <li><a class="dropdown-item" asp-controller="Usuario" asp-action="Register"><i class="bi bi-person-plus"></i> Registrarse</a></li>
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Login"><i class="bi bi-person"></i> Ingresar</a></li>
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Register"><i class="bi bi-person-plus"></i> Registrarse</a></li>
                             }
                         </ul>
                     </div>
@@ -132,7 +132,7 @@
         <div class="border-top bg-body-tertiary">
             <div class="container">
                 <div class="collapse navbar-collapse d-lg-flex justify-content-center" id="navegacionInferior">
-                    <ul class="navbar-nav flex-row gap-4 py-2 justify-content-center">
+                    <ul class="navbar-nav flex-row gap-3 justify-content-center">
                         <li class="nav-item">
                             <a class="nav-link fw-semibold px-3 text-body-secondary" asp-controller="Home" asp-action="Index">Inicio</a>
                         </li>

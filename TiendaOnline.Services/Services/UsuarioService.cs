@@ -6,6 +6,7 @@ using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Services.IServices;
 using TiendaOnline.Services.Commons.Models;
 using TiendaOnline.Services.DTOs.Admin.Usuario;
+using TiendaOnline.Services.DTOs.Usuario;
 
 namespace TiendaOnline.Services.Services
 {
@@ -69,16 +70,28 @@ namespace TiendaOnline.Services.Services
             return new PagedResult<UsuarioListadoDto>(items, total, pagina, cantidad);
         }
 
-        public async Task CrearUsuarioAsync(Usuario usuario)
+        public async Task CrearUsuarioAsync(UsuarioCreateDto usuarioDto)
         {
-            usuario.Email = usuario.Email.Trim().ToLower();
+            usuarioDto.Email = usuarioDto.Email.Trim().ToLower();
 
-            if (await _context.Usuarios.AnyAsync(u => u.Email == usuario.Email))
-                throw new EmailDuplicadoException(usuario.Email);
+            if (await _context.Usuarios.AnyAsync(u => u.Email == usuarioDto.Email))
+                throw new EmailDuplicadoException(usuarioDto.Email);
 
-            usuario.Contrasena = _passwordHasher.HashPassword(usuario, usuario.Contrasena);
+            var nuevoUsuario = new Usuario
+            {
+                Nombre = usuarioDto.Nombre,
+                Apellido = usuarioDto.Apellido,
+                Email = usuarioDto.Email,
+                Telefono = usuarioDto.Telefono,
+                Direccion = usuarioDto.Direccion,
+                FechaNacimiento = usuarioDto.FechaNacimiento,
+                Rol = (Rol)usuarioDto.RolId,
+                FechaCreacion = DateTime.Now
+            };
 
-            _context.Usuarios.Add(usuario);
+            nuevoUsuario.Contrasena = _passwordHasher.HashPassword(nuevoUsuario, usuarioDto.Contrasena);
+
+            _context.Usuarios.Add(nuevoUsuario);
             await _context.SaveChangesAsync();
         }
 

@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Admin TechStore PC</title>
+    <title>@ViewData["Title"] - Admin TechStore</title>
 
-    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="~/img/TechStore-Logo.png" asp-append-version="true">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,6 +33,17 @@
             min-height: 100vh;
         }
 
+        /* Cuando el botón NO está colapsado (abierto), rotamos el icono */
+        [data-bs-toggle="collapse"][aria-expanded="true"] .bi-chevron-down {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease; /* Para que la rotación sea suave */
+        }
+
+        /* Estado inicial para que la transición funcione al cerrar también */
+        .bi-chevron-down {
+            transition: transform 0.3s ease;
+        }
+
         @@media (max-width: 768px) {
             .sidebar {
                 margin-left: calc(-1 * 260px);
@@ -52,8 +63,9 @@
 </head>
 <body>
     <aside class="sidebar bg-body-tertiary d-flex flex-column">
-        <div class="p-4 mb-2">
-            <h5 class="fw-bold mb-0 text-uppercase">Panel de control</h5>
+        <div class="p-4 mb-2 d-flex flex-column align-items-center text-center">
+            <img src="~/img/TechStore-Logo.png" alt="TechStore Logo" width="50" height="50" asp-append-version="true" loading="eager" class="img-fluid mb-2" />
+            <h5 class="fw-bold mb-0 text-uppercase mt-2">Panel de control</h5>
         </div>
 
         <nav class="nav flex-column flex-grow-1">
@@ -152,7 +164,7 @@
         </button>
 
         <div class="p-3 border-top border-secondary mt-auto">
-            <a class="nav-link py-2 px-3 my-1 mx-3 fw-medium rounded-2 text-danger" asp-area="" asp-controller="Usuario" asp-action="Logout">
+            <a class="nav-link py-2 px-3 my-1 mx-3 fw-medium rounded-2 text-danger" asp-area="" asp-controller="Account" asp-action="Logout">
                 <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
             </a>
             <a class="nav-link py-2 px-3 my-1 mx-3 fw-medium rounded-2 text-danger" asp-area="" asp-controller="Home" asp-action="Index">

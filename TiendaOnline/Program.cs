@@ -61,6 +61,9 @@ builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<IReportesService, ReportesService>();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 
+// Servicio de autenticación
+builder.Services.AddScoped<IAuthService, AuthService>();
+
 // Servicio para manejar la sesión del usuario
 builder.Services.AddScoped<IUserSessionService, UserSessionService>();
 

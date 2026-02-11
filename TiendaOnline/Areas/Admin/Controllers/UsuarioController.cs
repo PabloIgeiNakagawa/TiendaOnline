@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Areas.Admin.ViewModels.Usuario;
-using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
+using TiendaOnline.Services.DTOs.Usuario;
 using TiendaOnline.Services.IServices;
+using TiendaOnline.ViewModels.Account;
 
 namespace TiendaOnline.Areas.Admin.Controllers
 {
@@ -44,28 +45,38 @@ namespace TiendaOnline.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult CrearUsuario()
         {
+            ViewData["Title"] = "Crear Usuario";
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CrearUsuario(Usuario usuario)
+        public async Task<IActionResult> CrearUsuario(RegisterViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(usuario);
-            }
+            if (!ModelState.IsValid) return View(model);
 
             try
             {
-                await _usuarioService.CrearUsuarioAsync(usuario);
-                TempData["MensajeExito"] = "El usuario se creó correctamente.";
+                var dto = new UsuarioCreateDto
+                {
+                    Nombre = model.Nombre,
+                    Apellido = model.Apellido,
+                    Email = model.Email,
+                    Telefono = model.Telefono,
+                    Direccion = model.Direccion,
+                    FechaNacimiento = model.FechaNacimiento,
+                    Contrasena = model.Contrasena,
+                    RolId = model.RolId
+                };
+
+                await _usuarioService.CrearUsuarioAsync(dto);
+                TempData["MensajeExito"] = "Usuario creado correctamente.";
                 return RedirectToAction("Usuario", "Listado", new { area = "Admin" });
             }
-            catch (EmailDuplicadoException ex)
+            catch (EmailDuplicadoException)
             {
-                ModelState.AddModelError("Email", ex.Message);
-                return View(usuario);
+                ModelState.AddModelError("Email", "Este correo ya está registrado.");
+                return View(model);
             }
         }
 
