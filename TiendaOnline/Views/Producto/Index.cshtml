@@ -2,8 +2,6 @@
 @model TiendaOnline.ViewModels.Producto.ProductoIndexViewModel
 
 @{
-    ViewData["Title"] = "Catálogo de Productos";
-
     // 1. DICCIONARIO MAESTRO
     // Creamos un diccionario base solo con los valores que existen.
     // Esto mantiene la URL limpia y sirve de base para clonar en cada link.
@@ -206,7 +204,7 @@
                         <div class="col">
                             <div class="card h-100 border-1 transition-hover">
                                 <a asp-controller="Producto" asp-action="Detalles" asp-route-id="@producto.ProductoId" class="text-decoration-none">
-                                    <div class="position-relative p-3 text-center p-3" style="height: 220px;">
+                                    <div class="position-relative text-center" style="height: 220px;">
                                         @if (producto.Stock <= 0)
                                         {
                                             <span class="position-absolute top-0 start-0 m-3 badge bg-danger">Agotado</span>
@@ -235,7 +233,7 @@
                                             <form asp-controller="Carrito" asp-action="Agregar" method="post">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@producto.ProductoId" />
-                                                <button type="submit" class="btn btn-primary btn-sm rounded-pill">
+                                                <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100">
                                                     <i class="bi bi-cart-plus me-1"></i> Agregar al carrito
                                                 </button>
                                             </form>
