@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Areas.Admin.ViewModels.MovimientoStock;
-using TiendaOnline.Domain.Entities;
 using TiendaOnline.Services.DTOs.Admin.MovimientoStock;
+using TiendaOnline.Services.IServices;
 using TiendaOnline.Services.IServices.Admin;
 
 namespace TiendaOnline.Areas.Admin.Controllers
@@ -12,10 +12,12 @@ namespace TiendaOnline.Areas.Admin.Controllers
     public class MovimientoStockController : Controller
     {
         private readonly IMovimientoStockService _movimientoService;
+        private readonly IProductoService _productoService;
 
-        public MovimientoStockController(IMovimientoStockService movimientoService)
+        public MovimientoStockController(IMovimientoStockService movimientoService, IProductoService productoService)
         {
             _movimientoService = movimientoService;
+            _productoService = productoService;
         }
 
         [HttpGet]
@@ -42,8 +44,8 @@ namespace TiendaOnline.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Historial(int id)
         {
+            ViewData["Title"] = "Historial";
             var historial = await _movimientoService.ObtenerHistorialPorProductoAsync(id);
-            // Podés pasar el producto en el ViewBag para el título de la página
             return View(historial);
         }
 
@@ -51,20 +53,22 @@ namespace TiendaOnline.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegistrarEntrada(RegistroStockDto dto)
         {
+            // Validación de Servidor
             if (!ModelState.IsValid)
             {
-                TempData["MensajeError"] = "Datos inválidos. Revisá el formulario.";
-                return RedirectToAction("Details", "Productos", new { id = dto.ProductoId });
+                TempData["MensajeError"] = "Datos de entrada inválidos. Revisá la cantidad y observaciones.";
+                return RedirectToAction("Movimientos", "MovimientoStock");
             }
 
             try
             {
                 await _movimientoService.RegistrarEntradaAsync(dto);
-                TempData["MensajeExito"] = "¡Stock incrementado con éxito!";
+                TempData["MensajeExito"] = "¡Entrada de mercadería registrada!";
             }
             catch (Exception ex)
             {
-                TempData["MensajeError"] = "Error: " + ex.Message;
+                // En un entorno real, aquí iría un _logger.LogError(ex);
+                TempData["MensajeError"] = "Error al procesar la entrada: " + ex.Message;
             }
 
             return RedirectToAction("Movimientos", "MovimientoStock");
@@ -74,17 +78,21 @@ namespace TiendaOnline.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegistrarAjuste(AjusteManualDto dto)
         {
+            if (!ModelState.IsValid)
+            {
+                var error = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage;
+                TempData["MensajeError"] = error ?? "Datos de ajuste inválidos.";
+                return RedirectToAction("Movimientos", "MovimientoStock");
+            }
+
             try
             {
-                if (ModelState.IsValid)
-                {
-                    await _movimientoService.RegistrarAjusteManualAsync(dto);
-                    TempData["MensajeExito"] = "Se aplicó el ajuste de stock correctamente.";
-                }
+                await _movimientoService.RegistrarAjusteManualAsync(dto);
+                TempData["MensajeExito"] = "Ajuste de inventario aplicado correctamente.";
             }
             catch (Exception ex)
             {
-                TempData["MensajeError"] = ex.Message;
+                TempData["MensajeError"] = "No se pudo aplicar el ajuste: " + ex.Message;
             }
 
             return RedirectToAction("Movimientos", "MovimientoStock");

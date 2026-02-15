@@ -190,8 +190,8 @@
                                             }
                                         </td>
                                         <td class="text-center">
-                                            <span class="fw-bold @(item.Tipo.ToLower().Contains("salida") ? "text-danger" : "text-success")">
-                                                @(item.Tipo.ToLower().Contains("salida") ? "" : "+")@item.Cantidad
+                                            <span class="fw-bold @(item.Cantidad < 0 ? "text-danger" : "text-success")">
+                                                @(item.Cantidad < 0 ? "" : "+")@item.Cantidad
                                             </span>
                                         </td>
                                         <td class="text-muted small">
@@ -199,14 +199,21 @@
                                             <div><i class="bi bi-clock me-1"></i>@item.Fecha.ToString("HH:mm")</div>
                                         </td>
                                         <td>
-                                            <a asp-area="" asp-controller="Pedido" asp-action="Detalles" asp-route-id="@item.PedidoId"
-                                               class="d-flex justify-content-center align-items-center fw-semibold text-uppercase"
-                                               style="font-size: 0.9rem; letter-spacing: 0.5px;"
-                                               data-bs-toggle="tooltip"
-                                               data-bs-placement="top"
-                                               data-bs-title="Ver detalles del pedido">
-                                                #@item.PedidoId
-                                            </a>
+                                            @if(item.PedidoId.HasValue)
+                                            {
+                                                <a asp-area="" asp-controller="Pedido" asp-action="Detalles" asp-route-id="@item.PedidoId"
+                                                   class="d-flex justify-content-center align-items-center fw-semibold text-uppercase"
+                                                   style="font-size: 0.9rem; letter-spacing: 0.5px;"
+                                                   data-bs-toggle="tooltip"
+                                                   data-bs-placement="top"
+                                                   data-bs-title="Ver detalles del pedido">
+                                                    #@item.PedidoId
+                                                </a>
+                                            } 
+                                            else
+                                            {
+                                                <span class="d-flex justify-content-center align-items-center fw-semibold">-</span>
+                                            }
                                         </td>
                                         <td class="text-muted small text-truncate" style="max-width: 200px;" title="@item.Observaciones">
                                             @item.Observaciones
@@ -233,8 +240,8 @@
                                         <span class="badge @(item.Tipo.ToLower().Contains("salida") ? "bg-danger" : "bg-success")">
                                             @item.Tipo
                                         </span>
-                                        <span class="fw-bold fs-5 @(item.Tipo.ToLower().Contains("salida") ? "text-danger" : "text-success")">
-                                            @(item.Tipo.ToLower().Contains("salida") ? "" : "+")@item.Cantidad
+                                        <span class="fw-bold fs-5 @(item.Cantidad < 0  ? "text-danger" : "text-success")">
+                                            @(item.Cantidad < 0 ? "" : "+")@item.Cantidad
                                         </span>
                                     </div>
                                     <div class="p-2 rounded small text-muted">
