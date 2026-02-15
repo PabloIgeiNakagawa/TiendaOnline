@@ -81,13 +81,13 @@ namespace TiendaOnline.Data
             return resultado;
         }
 
-
         public DbSet<Auditoria> Auditorias { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Producto> Productos { get; set; }
         public DbSet<Pedido> Pedidos { get; set; }
         public DbSet<DetallePedido> DetallesPedido { get; set; }
         public DbSet<Categoria> Categorias { get; set; }
+        public DbSet<MovimientoStock> MovimientosStock { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -102,6 +102,53 @@ namespace TiendaOnline.Data
                 .WithMany(c => c.Subcategorias)
                 .HasForeignKey(c => c.CategoriaPadreId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            //  Configuración de MovimientoStock
+            modelBuilder.Entity<MovimientoStock>(entity =>
+            {
+                // Guardar el Enum como String para que la DB sea legible (Desnormalización controlada)
+                entity.Property(m => m.Tipo)
+                    .HasConversion<string>()
+                    .HasMaxLength(30)
+                    .IsRequired();
+
+                entity.Property(m => m.Fecha)
+                    .HasDefaultValueSql("GETDATE()"); // El servidor pone la fecha
+
+                // Relación con Producto: Un producto tiene muchos movimientos
+                entity.HasOne(m => m.Producto)
+                    .WithMany(p => p.Movimientos)
+                    .HasForeignKey(m => m.ProductoId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(m => m.Pedido)
+                    .WithMany(p => p.Movimientos)
+                    .HasForeignKey(m => m.PedidoId)
+                    .OnDelete(DeleteBehavior.SetNull); // Si se borra el pedido, el movimiento queda como historial
+
+                // Índice para que los reportes de stock por producto vuelen
+                entity.HasIndex(m => m.ProductoId);
+                entity.HasIndex(m => m.Fecha);
+            });
+
+            // Configuración de DetallePedido
+            modelBuilder.Entity<DetallePedido>(entity =>
+            {
+                entity.Property(dp => dp.PrecioUnitario)
+                    .HasPrecision(18, 2);
+
+                // Relación con Pedido
+                entity.HasOne(dp => dp.Pedido)
+                    .WithMany(p => p.DetallesPedido)
+                    .HasForeignKey(dp => dp.PedidoId)
+                    .OnDelete(DeleteBehavior.Cascade); // Si borras el pedido, se borran sus líneas
+
+                // Relación con Producto
+                entity.HasOne(dp => dp.Producto)
+                    .WithMany()
+                    .HasForeignKey(dp => dp.ProductoId)
+                    .OnDelete(DeleteBehavior.Restrict); // No se borra un producto que está en un pedido
+            });
 
             base.OnModelCreating(modelBuilder);
         }

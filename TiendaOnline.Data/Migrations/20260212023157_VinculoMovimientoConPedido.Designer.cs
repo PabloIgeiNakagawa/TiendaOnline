@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TiendaOnline.Data;
 
@@ -11,9 +12,11 @@ using TiendaOnline.Data;
 namespace TiendaOnline.Data.Migrations
 {
     [DbContext(typeof(TiendaContext))]
-    partial class TiendaContextModelSnapshot : ModelSnapshot
+    [Migration("20260212023157_VinculoMovimientoConPedido")]
+    partial class VinculoMovimientoConPedido
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -343,9 +346,8 @@ namespace TiendaOnline.Data.Migrations
             modelBuilder.Entity("TiendaOnline.Domain.Entities.MovimientoStock", b =>
                 {
                     b.HasOne("TiendaOnline.Domain.Entities.Pedido", "Pedido")
-                        .WithMany("Movimientos")
-                        .HasForeignKey("PedidoId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .WithMany()
+                        .HasForeignKey("PedidoId");
 
                     b.HasOne("TiendaOnline.Domain.Entities.Producto", "Producto")
                         .WithMany("Movimientos")
@@ -390,8 +392,6 @@ namespace TiendaOnline.Data.Migrations
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Pedido", b =>
                 {
                     b.Navigation("DetallesPedido");
-
-                    b.Navigation("Movimientos");
                 });
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Producto", b =>

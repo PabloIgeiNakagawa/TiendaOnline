@@ -84,7 +84,7 @@
                 </a>
                 <div class="collapse" id="menuReportes">
                     <div class="nav flex-column ms-4 border-start ps-3 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-area="Admin" asp-controller="Reportes" asp-action="Dashboard">Dashboard</a>
+                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-controller="Reportes" asp-action="Dashboard">Dashboard</a>
                     </div>
                 </div>
             </div>
@@ -97,8 +97,8 @@
                 </a>
                 <div class="collapse" id="menuProducto">
                     <div class="nav flex-column ms-4 border-start ps-3 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-area="Admin" asp-controller="Producto" asp-action="Catalogo">Catálogo</a>
-                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-area="Admin" asp-controller="Producto" asp-action="AgregarProducto">Nuevo Producto</a>
+                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-controller="Producto" asp-action="Catalogo">Catálogo</a>
+                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-controller="Producto" asp-action="AgregarProducto">Nuevo Producto</a>
                     </div>
                 </div>
             </div>
@@ -111,8 +111,8 @@
                 </a>
                 <div class="collapse" id="menuCategorias">
                     <div class="nav flex-column ms-4 border-start ps-3 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-area="Admin" asp-controller="Categoria" asp-action="Listado">Listado</a>
-                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-area="Admin" asp-controller="Categoria" asp-action="AgregarCategoria">Nueva Categoría</a>
+                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-controller="Categoria" asp-action="Listado">Listado</a>
+                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-controller="Categoria" asp-action="AgregarCategoria">Nueva Categoría</a>
                     </div>
                 </div>
             </div>
@@ -125,8 +125,8 @@
                 </a>
                 <div class="collapse" id="menuUsuarios">
                     <div class="nav flex-column ms-4 border-start ps-3 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-area="Admin" asp-controller="Usuario" asp-action="Listado">Listado</a>
-                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-area="Admin" asp-controller="Usuario" asp-action="CrearUsuario">Nuevo Usuario</a>
+                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-controller="Usuario" asp-action="Listado">Listado</a>
+                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-controller="Usuario" asp-action="CrearUsuario">Nuevo Usuario</a>
                     </div>
                 </div>
             </div>
@@ -139,7 +139,7 @@
                 </a>
                 <div class="collapse" id="menuPedidos">
                     <div class="nav flex-column ms-4 border-start ps-3 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-area="Admin" asp-controller="Pedido" asp-action="Listado">Listado</a>
+                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-controller="Pedido" asp-action="Listado">Listado</a>
                     </div>
                 </div>
             </div>
@@ -152,7 +152,20 @@
                 </a>
                 <div class="collapse" id="menuAuditoria">
                     <div class="nav flex-column ms-4 border-start ps-3 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-area="Admin" asp-controller="Auditoria" asp-action="Logs">Logs</a>
+                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-controller="Auditoria" asp-action="Logs">Logs</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Movimientos stock -->
+            <div class="nav-item mx-3">
+                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 text-body d-flex justify-content-between align-items-center"
+                   data-bs-toggle="collapse" href="#menuMovimientos" role="button" aria-expanded="false">
+                    <span><i class="bi bi-arrow-left-right me-2"></i> Movimientos</span>
+                    <i class="bi bi-chevron-down small"></i>
+                </a>
+                <div class="collapse" id="menuMovimientos">
+                    <div class="nav flex-column ms-4 border-start ps-3 mb-2">
+                        <a class="nav-link py-1 px-3 my-1 text-body-secondary small" asp-controller="MovimientoStock" asp-action="Movimientos">Movimientos</a>
                     </div>
                 </div>
             </div>
