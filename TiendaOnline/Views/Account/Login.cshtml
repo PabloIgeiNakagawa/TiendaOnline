@@ -1,0 +1,139 @@
+﻿@model TiendaOnline.ViewModels.Account.LoginViewModel
+
+@section Styles{
+    <style>
+        .form-floating .form-control {
+            padding: 1rem 1rem 1rem 3rem;
+            transition: all 0.3s ease;
+        }
+
+            .form-floating .form-control:focus ~ label,
+            .form-floating .form-control:not(:placeholder-shown) ~ label {
+                color: #667eea;
+                transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+            }
+
+            .form-floating .form-control:focus ~ .input-icon {
+                color: #667eea;
+            }
+
+        .input-icon {
+            left: 1rem;
+            transform: translateY(-50%);
+            z-index: 3;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle {
+            right: 1rem;
+            transform: translateY(-50%);
+            z-index: 3;
+            padding: 0.25rem;
+            transition: all 0.3s ease;
+        }
+
+            .password-toggle:hover {
+                color: #667eea;
+            }
+    </style>
+}
+
+<div class="d-flex justify-content-center align-items-center my-5">
+    <div class="position-relative rounded-4 shadow overflow-hidden w-100" style="max-width: 400px;">
+        <!-- Header -->
+        <div class="position-relative text-center pt-4 px-3 rounded-top-4">
+            <img src="~/img/TechStore-Logo.png" alt="TechStore Logo" width="100" height="100" asp-append-version="true" class="img-fluid" />
+            <h2 class="fw-bold mb-2">Bienvenido</h2>
+            <p class="small opacity-75">Inicia sesión en tu cuenta</p>
+        </div>
+
+        <!-- Body -->
+        <div class="px-4 pb-5 pt-4">
+
+            <!-- Formulario -->
+            <form asp-action="Login" method="post" id="loginForm">
+                @Html.AntiForgeryToken()
+
+                <!-- Email -->
+                <div class="form-floating mb-4">
+                    <input asp-for="Email"
+                           type="email"
+                           class="form-control rounded-3"
+                           id="email"
+                           placeholder="correo@ejemplo.com"
+                           autocomplete="email"
+                           required />
+                    <label class="ps-5 text-body-secondary" for="email">Correo Electrónico</label>
+                    <i class="bi bi-envelope input-icon position-absolute top-50 text-body"></i>
+                    <span asp-validation-for="Email" class="d-block small mt-2 text-danger"></span>
+                </div>
+
+                <!-- Contraseña -->
+                <div class="form-floating mb-4">
+                    <input asp-for="Contrasena"
+                           type="password"
+                           class="form-control rounded-3"
+                           id="password"
+                           placeholder="••••••••"
+                           autocomplete="current-password"
+                           required />
+                    <label class="ps-5 text-body-secondary" for="password">Contraseña</label>
+                    <i class="bi bi-lock input-icon position-absolute top-50 text-body"></i>
+                    <button type="button" class="password-toggle position-absolute top-50 bg-transparent border-0 text-body-tertiary cursor-pointer border-1" onclick="togglePassword()">
+                        <i class="bi bi-eye" id="passwordIcon"></i>
+                    </button>
+                    <span asp-validation-for="Contrasena" class="d-block small mt-2 text-danger"></span>
+                </div>
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+                }
+
+                <!-- Recordar y Olvidé contraseña -->
+                <div class="d-flex justify-content-end mb-4">
+                    <a href="#" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
+
+                <!-- Botón de login -->
+                <button type="submit" class="btn btn-login btn-primary w-100 p-3 rounded-3 fs-6 fw-semibold text-uppercase position-relative overflow-hidden" id="loginBtn">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    Iniciar Sesión
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="d-flex align-items-center my-4">
+                <hr class="flex-grow-1 text-muted opacity-25">
+                <span class="mx-3 small text-muted text-uppercase">O</span>
+                <hr class="flex-grow-1 text-muted opacity-25">
+            </div>
+
+            <!-- Enlace de registro -->
+            <div class="text-center mt-4 text-secondary">
+                ¿No tienes una cuenta?
+                <a class="fw-semibold text-decoration-none link-underline-opacity-100-hover" asp-controller="Usuario" asp-action="Register">Regístrate aquí</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Solo función para mostrar/ocultar contraseña
+        function togglePassword() {
+            var passwordInput = document.getElementById('password');
+            var passwordIcon = document.getElementById('passwordIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.className = 'bi bi-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.className = 'bi bi-eye';
+            }
+        }
+    </script>
+}

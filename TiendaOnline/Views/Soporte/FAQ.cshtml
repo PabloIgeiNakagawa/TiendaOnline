@@ -1,0 +1,212 @@
+﻿@section Styles{
+    <style>
+        :root {
+            --bs-accordion-border-radius: 12px;
+            --bs-accordion-inner-border-radius: 12px;
+        }
+
+        .accordion-button {
+            font-weight: 600;
+            color: #444;
+            padding: 1.2rem;
+        }
+
+            .accordion-button:not(.collapsed) {
+                background-color: #fff;
+                color: var(--bs-primary);
+                box-shadow: none;
+            }
+
+            .accordion-button:focus {
+                box-shadow: none;
+                border-color: rgba(0,0,0,.125);
+            }
+
+        .accordion-item {
+            transition: transform 0.2s ease;
+        }
+
+            .accordion-item:hover {
+                transform: translateY(-2px);
+            }
+
+        .icon-box {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Ajuste de sombras suaves */
+        .shadow-sm {
+            box-shadow: 0 .125rem .25rem rgba(0,0,0,.040) !important;
+        }
+    </style>
+}
+
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold">¿Cómo podemos ayudarte?</h1>
+        <p class="lead text-muted mx-auto" style="max-width: 600px;">
+            Todo lo que necesitas saber sobre tu próxima build, compatibilidad y procesos de compra en un solo lugar.
+        </p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+
+            <div class="d-flex align-items-center mb-3 mt-4">
+                <div class="icon-box bg-primary-subtle text-primary rounded-3 p-2 me-3">
+                    <i class="bi bi-truck fs-4"></i>
+                </div>
+                <h3 class="h4 mb-0 fw-bold">Envíos y Entregas</h3>
+            </div>
+
+            <div class="accordion mb-5" id="accordionEnvios">
+                <div class="accordion-item border-0 shadow-sm mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#envio1">
+                            ¿Cuánto tarda en llegar mi pedido?
+                        </button>
+                    </h2>
+                    <div id="envio1" class="accordion-collapse collapse" data-bs-parent="#accordionEnvios">
+                        <div class="accordion-body text-secondary">
+                            Los envíos dentro de la ciudad tardan entre <strong>24 a 48 horas hábiles</strong>. Para envíos nacionales, el tiempo estimado es de 3 a 5 días hábiles dependiendo de la logística.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item border-0 shadow-sm mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#envio2">
+                            ¿Hacen envíos de PCs armadas?
+                        </button>
+                    </h2>
+                    <div id="envio2" class="accordion-collapse collapse" data-bs-parent="#accordionEnvios">
+                        <div class="accordion-body text-secondary">
+                            ¡Sí! Las PCs se envían con protección especial interna (espuma expandible) para que la placa de video y el cooler no sufran daños. <strong>Importante:</strong> Recomendamos filmar el unboxing por seguridad.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center mb-3 mt-4">
+                <div class="icon-box bg-success-subtle text-success rounded-3 p-2 me-3">
+                    <i class="bi bi-shield-check fs-4"></i>
+                </div>
+                <h3 class="h4 mb-0 fw-bold">Garantía y Compatibilidad</h3>
+            </div>
+
+            <div class="accordion mb-5" id="accordionGarantia">
+                <div class="accordion-item border-0 shadow-sm mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#garantia1">
+                            ¿Qué pasa si mi componente es incompatible?
+                        </button>
+                    </h2>
+                    <div id="garantia1" class="accordion-collapse collapse" data-bs-parent="#accordionGarantia">
+                        <div class="accordion-body text-secondary">
+                            Ofrecemos asesoría previa gratuita. Si compraste algo incompatible (ej. RAM DDR4 en mother DDR5), tienes <strong>7 días</strong> para el cambio si el empaque está sellado.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item border-0 shadow-sm mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#garantia2">
+                            ¿Cómo tramito un RMA o falla técnica?
+                        </button>
+                    </h2>
+                    <div id="garantia2" class="accordion-collapse collapse" data-bs-parent="#accordionGarantia">
+                        <div class="accordion-body text-secondary">
+                            Debes presentar factura de compra y empaque original. El proceso de revisión técnica demora entre <strong>7 y 15 días hábiles</strong> para determinar si aplica cambio directo o reparación de fábrica.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center mb-3 mt-4">
+                <div class="icon-box bg-warning-subtle text-warning-emphasis rounded-3 p-2 me-3">
+                    <i class="bi bi-credit-card fs-4"></i>
+                </div>
+                <h3 class="h4 mb-0 fw-bold">Pagos y Facturación</h3>
+            </div>
+
+            <div class="accordion mb-5" id="accordionPagos">
+                <div class="accordion-item border-0 shadow-sm mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pago1">
+                            ¿Tienen cuotas sin interés o descuentos?
+                        </button>
+                    </h2>
+                    <div id="pago1" class="accordion-collapse collapse" data-bs-parent="#accordionPagos">
+                        <div class="accordion-body text-secondary">
+                            Ofrecemos <strong>3 cuotas sin interés</strong> con crédito bancario. Pagando por transferencia o efectivo, obtienes un <strong>10% de descuento</strong> automático.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item border-0 shadow-sm mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pago2">
+                            ¿Emiten factura A para empresas?
+                        </button>
+                    </h2>
+                    <div id="pago2" class="accordion-collapse collapse" data-bs-parent="#accordionPagos">
+                        <div class="accordion-body text-secondary">
+                            Sí, emitimos Factura A y B. Solo debes cargar tu CUIT en el proceso de compra o enviarlo por mail inmediatamente después de realizar el pedido.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center mb-3 mt-4">
+                <div class="icon-box bg-danger-subtle text-danger rounded-3 p-2 me-3">
+                    <i class="bi bi-cpu fs-4"></i>
+                </div>
+                <h3 class="h4 mb-0 fw-bold">Armado y Servicio Técnico</h3>
+            </div>
+
+            <div class="accordion mb-5" id="accordionServicio">
+                <div class="accordion-item border-0 shadow-sm mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#servicio1">
+                            ¿El armado de la PC tiene costo extra?
+                        </button>
+                    </h2>
+                    <div id="servicio1" class="accordion-collapse collapse" data-bs-parent="#accordionServicio">
+                        <div class="accordion-body text-secondary">
+                            Si compras todos los componentes con nosotros, el <strong>armado y testeo de estabilidad es gratuito</strong>. Incluye actualización de BIOS y gestión de cables.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item border-0 shadow-sm mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#servicio2">
+                            ¿Hacen mantenimiento de hardware?
+                        </button>
+                    </h2>
+                    <div id="servicio2" class="accordion-collapse collapse" data-bs-parent="#accordionServicio">
+                        <div class="accordion-body text-secondary">
+                            Sí, realizamos limpieza integral, cambio de pasta térmica y optimización de software. Consulta turnos disponibles vía WhatsApp.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 bg-body-tertiary p-5 rounded-4 text-center mt-5 shadow">
+                <div class="card-body">
+                    <h3 class="fw-bold mb-3">¿Aún tienes dudas técnicas?</h3>
+                    <p class="mb-4">Nuestro equipo de expertos está listo para ayudarte a configurar tu setup ideal.</p>
+                    <div class="d-grid d-md-flex justify-content-center gap-3">
+                        <a href="https://wa.me/tunumero" class="btn btn-success btn-lg px-4 rounded-pill">
+                            <i class="bi bi-whatsapp me-2"></i> WhatsApp Técnico
+                        </a>
+                        <a asp-controller="Home" asp-action="Contacto" class="btn btn-outline-info btn-lg px-4 rounded-pill">
+                            <i class="bi bi-envelope me-2"></i> Formulario de Contacto
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

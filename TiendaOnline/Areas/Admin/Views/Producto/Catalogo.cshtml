@@ -1,10 +1,4 @@
 ﻿@model TiendaOnline.Areas.Admin.ViewModels.Producto.ProductoCatalogoViewModel
-@{
-    ViewData["Title"] = "Catálogo";
-}
-@section Styles{
-    <link rel="stylesheet" href="~/css/Admin/Producto/Index.css" asp-append-version="true" />
-}
 
 <div class="container-fluid py-4">
     <!-- Sección de Encabezado -->
@@ -33,15 +27,15 @@
                 <div class="card rounded-3 shadow-sm border-0">
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-2">
-                                <label class="form-label fw-bold text-muted small">Mostrar</label>
+                            <div class="col-md-1">
+                                <label class="form-label fw-bold text-muted small">Ver</label>
                                 <select name="tamanoPagina" class="form-select" onchange="this.form.submit()">
                                     @{
                                         int[] opciones = { 10, 25, 50, 75, 100 };
                                         foreach (var cantidad in opciones)
                                         {
                                             <option value="@cantidad" selected="@(Model.ProductosPaginados.RegistrosPorPagina == cantidad ? "selected" : null)">
-                                                @cantidad registros
+                                                @cantidad
                                             </option>
                                         }
                                     }
@@ -78,12 +72,12 @@
                                     <option value="inactivo" selected="@(Model.EstadoSeleccionado == "inactivo")">Inactivos</option>
                                 </select>
                             </div>
-                            <div class="col-md-3 d-flex align-items-end gap-2">
+                            <div class="col-md-2 d-flex align-items-end gap-2">
                                 <button type="submit" class="btn btn-primary rounded-3 flex-fill">
-                                    <i class="bi bi-filter me-1"></i>Filtrar
+                                    <i class="bi bi-filter me-1"></i>
                                 </button>
                                 <a asp-action="Catalogo" class="btn btn-outline-secondary rounded-3 flex-fill">
-                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                    <i class="bi bi-arrow-clockwise me-1"></i>
                                 </a>
                             </div>
                         </div>
@@ -289,6 +283,11 @@
                                                    class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
+                                                <button type="button" class="btn btn-outline-warning btn-sm rounded-3"
+                                                        onclick="abrirModalMovimiento('@producto.ProductoId', '@producto.Nombre', '@producto.Stock')"
+                                                        data-bs-toggle="tooltip" title="Movimiento de Stock">
+                                                    <i class="bi bi-arrow-left-right"></i>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -382,7 +381,7 @@
                                             {
                                                 <button type="button" class="btn btn-outline-danger btn-sm rounded-3"
                                                         onclick="darBaja('@producto.ProductoId', '@producto.Nombre')"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Dar de baja">
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de baja">
                                                     <i class="bi bi-toggle-off"></i>
                                                 </button>
                                             }
@@ -390,80 +389,96 @@
                                             {
                                                 <button type="button" class="btn btn-outline-success btn-sm rounded-3"
                                                         onclick="darAlta('@producto.ProductoId', '@producto.Nombre')"
-                                                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Dar de alta">
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de alta">
                                                     <i class="bi bi-toggle-on"></i>
                                                 </button>
                                             }
                                             <a asp-area="Admin" asp-controller="Producto" asp-action="EditarProducto" asp-route-id="@producto.ProductoId"
-                                               class="btn btn-outline-primary btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Editar producto">
+                                               class="btn btn-outline-primary btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar producto">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <a asp-area="" asp-controller="Producto" asp-action="Detalles" asp-route-id="@producto.ProductoId"
-                                               class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Ver detalle">
+                                               class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
                                                 <i class="bi bi-eye"></i>
                                             </a>
+                                            <button type="button" class="btn btn-outline-warning btn-sm rounded-3"
+                                                    onclick="abrirModalMovimiento('@producto.ProductoId', '@producto.Nombre', '@producto.Stock')"
+                                                    data-bs-toggle="tooltip" title="Stock">
+                                                <i class="bi bi-arrow-left-right"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         }
                     </div>
-
-                    <nav class="mt-3">
-                        <ul class="pagination justify-content-end">
-                            <li class="page-item @(Model.ProductosPaginados.PaginaActual == 1 ? "disabled" : "")">
-                                <a class="page-link"
-                                   asp-area="Admin"
-                                   asp-controller="Producto"
-                                   asp-action="Catalogo"
-                                   asp-route-pagina="@(Model.ProductosPaginados.PaginaActual - 1)"
-                                   asp-route-tamanoPagina="@Model.ProductosPaginados.RegistrosPorPagina"
-                                   asp-route-busqueda="@Model.Busqueda"
-                                   asp-route-categoriaId="@Model.CategoriaSeleccionada"
-                                   asp-route-stock="@Model.StockSeleccionado"
-                                   asp-route-estado="@Model.EstadoSeleccionado">
-                                    Anterior
-                                </a>
-                            </li>
-
-                            @for (int i = 1; i <= Model.ProductosPaginados.TotalPaginas; i++)
-                            {
-                                <li class="page-item @(i == Model.ProductosPaginados.PaginaActual ? "active" : "")">
-                                    <a class="page-link"
-                                       asp-area="Admin"
-                                       asp-controller="Producto"
-                                       asp-action="Catalogo"
-                                       asp-route-pagina="@i"
-                                       asp-route-tamanoPagina="@Model.ProductosPaginados.RegistrosPorPagina"
-                                       asp-route-busqueda="@Model.Busqueda"
-                                       asp-route-categoriaId="@Model.CategoriaSeleccionada"
-                                       asp-route-stock="@Model.StockSeleccionado"
-                                       asp-route-estado="@Model.EstadoSeleccionado">
-                                        @i
-                                    </a>
-                                </li>
-                            }
-
-                            <li class="page-item @(Model.ProductosPaginados.PaginaActual == Model.ProductosPaginados.TotalPaginas ? "disabled" : "")">
-                                <a class="page-link"
-                                   asp-area="Admin"
-                                   asp-controller="Producto"
-                                   asp-action="Catalogo"
-                                   asp-route-pagina="@(Model.ProductosPaginados.PaginaActual + 1)"
-                                   asp-route-tamanoPagina="@Model.ProductosPaginados.RegistrosPorPagina"
-                                   asp-route-busqueda="@Model.Busqueda"
-                                   asp-route-categoriaId="@Model.CategoriaSeleccionada"
-                                   asp-route-stock="@Model.StockSeleccionado"
-                                   asp-route-estado="@Model.EstadoSeleccionado">
-                                    Siguiente
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Paginación -->
+    <nav aria-label="Navegación de productos" class="mt-3">
+        <ul class="pagination justify-content-center justify-content-md-end mb-0">
+            @{
+                var paginacion = Model.ProductosPaginados;
+                int radio = 2; // Páginas a mostrar alrededor de la actual
+                int actual = paginacion.PaginaActual;
+                int total = paginacion.TotalPaginas;
+            }
+
+            @* Botón Anterior *@
+            <li class="page-item @(actual == 1 ? "disabled" : "")">
+                <a class="page-link" asp-area="Admin" asp-controller="Producto" asp-action="Catalogo"
+                   asp-route-pagina="@(actual - 1)"
+                   asp-route-tamanoPagina="@paginacion.RegistrosPorPagina"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-categoriaId="@Model.CategoriaSeleccionada"
+                   asp-route-stock="@Model.StockSeleccionado"
+                   asp-route-estado="@Model.EstadoSeleccionado">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+
+            @for (int i = 1; i <= total; i++)
+            {
+                // Lógica de Truncado
+                // Mostramos: Primera, Última y el rango alrededor de la actual
+                if (i == 1 || i == total || (i >= actual - radio && i <= actual + radio))
+                {
+                    <li class="page-item @(i == actual ? "active" : "")">
+                        <a class="page-link" asp-area="Admin" asp-controller="Producto" asp-action="Catalogo"
+                           asp-route-pagina="@i"
+                           asp-route-tamanoPagina="@paginacion.RegistrosPorPagina"
+                           asp-route-busqueda="@Model.Busqueda"
+                           asp-route-categoriaId="@Model.CategoriaSeleccionada"
+                           asp-route-stock="@Model.StockSeleccionado"
+                           asp-route-estado="@Model.EstadoSeleccionado">
+                            @i
+                        </a>
+                    </li>
+                }
+                // Si estamos en el límite del radio, ponemos los puntos suspensivos
+                else if (i == actual - radio - 1 || i == actual + radio + 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                }
+            }
+
+            @* Botón Siguiente *@
+            <li class="page-item @(actual == total ? "disabled" : "")">
+                <a class="page-link" asp-area="Admin" asp-controller="Producto" asp-action="Catalogo"
+                   asp-route-pagina="@(actual + 1)"
+                   asp-route-tamanoPagina="@paginacion.RegistrosPorPagina"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-categoriaId="@Model.CategoriaSeleccionada"
+                   asp-route-stock="@Model.StockSeleccionado"
+                   asp-route-estado="@Model.EstadoSeleccionado">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 <!-- Modal de Confirmación -->
@@ -494,6 +509,84 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalMovimientoStock" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-secondary shadow">
+            <form id="formStock" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title d-flex align-items-center">
+                        <i class="bi bi-box-seam me-2 text-primary"></i> Movimiento de Stock
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="p-3 mb-4 rounded bg-body-tertiary border border-secondary-subtle">
+                        <input type="hidden" id="mov_ProductoId" name="ProductoId" />
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-secondary d-block">Producto</small>
+                                <strong id="mov_NombreProducto" class="fs-5">...</strong>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-secondary d-block">Stock Actual</small>
+                                <span id="mov_StockActual" class="fs-6">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary-emphasis small text-uppercase">Tipo de Operación</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-body-secondary border-secondary"><i class="bi bi-arrow-left-right text-primary"></i></span>
+                            <select id="selectTipo" class="form-select border-secondary-subtle focus-ring focus-ring-primary" required>
+                                <option value="Entrada" data-url="@Url.Action("RegistrarEntrada", "MovimientoStock")">
+                                    Entrada de Mercadería (+)
+                                </option>
+                                <option value="Ajuste" data-url="@Url.Action("RegistrarAjuste", "MovimientoStock")">
+                                    Ajuste Manual (-)
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary-emphasis small text-uppercase">Cantidad</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-body-secondary border-secondary"><i class="bi bi-plus-slash-minus text-primary"></i></span>
+                            <input type="number" id="inputCantidad" name="Cantidad"
+                                   class="form-control border-secondary-subtle"
+                                   placeholder="0" required />
+                        </div>
+                        <div class="form-text mt-2" id="helpCantidad">
+                            <i class="bi bi-info-circle"></i> Para entradas usar positivos.
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label fw-bold text-secondary-emphasis small text-uppercase">Observaciones</label>
+                        <textarea id="inputObs" name="Observaciones"
+                                  class="form-control border-secondary-subtle"
+                                  rows="3" placeholder="Escribe el motivo o detalle aquí..."></textarea>
+                        <div class="form-text mt-2" id="helpObs">
+                            Opcional para entradas.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                        <i class="bi bi-check-lg me-1"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Formularios Ocultos -->
 <div style="display: none;">
     @foreach (var producto in Model.ProductosPaginados.Items)
@@ -508,6 +601,115 @@
 </div>
 
 @section Scripts{
-    <script src="~/js/Admin/Producto/Catalogo.js" asp-append-version="true"></script>
+    <script>
+        // Inicializar Tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+        // Función para mostrar imagen en modal
+        function mostrarImagenModal(urlImagen, nombreProducto) {
+            const modal = new bootstrap.Modal(document.getElementById('modalImagenProducto'));
+            const imagenModal = document.getElementById('imagenProductoModal');
+            const nombreModal = document.getElementById('nombreProductoModal');
+
+            // Establecer imagen y nombre
+            imagenModal.src = urlImagen;
+            imagenModal.alt = nombreProducto;
+            nombreModal.textContent = nombreProducto;
+
+            // Mostrar modal
+            modal.show();
+        }
+
+        // Modal de confirmación
+        function darBaja(idProducto, nombreProducto) {
+            const modal = new bootstrap.Modal(document.getElementById('modalCambioEstado'));
+            const titulo = document.getElementById('modalTitulo');
+            const iconoEstado = document.getElementById('iconoEstado');
+            const mensajeCambioEstado = document.getElementById('mensajeCambioEstado');
+            const botonDerecho = document.getElementById('botonDerecho');
+
+            iconoEstado.className = 'bi bi-exclamation-triangle text-warning display-4';
+            mensajeCambioEstado.textContent = `¿Estás seguro de que quieres dar de baja el producto ${nombreProducto}? El producto no estará disponible para la venta.`;
+            botonDerecho.className = 'btn btn-danger';
+            botonDerecho.textContent = 'Dar de Baja';
+            botonDerecho.onclick = () => {
+                document.getElementById(`formularioBaja${idProducto}`).submit();
+            };
+
+            modal.show();
+        }
+
+        function darAlta(idProducto, nombreProducto) {
+            const modal = new bootstrap.Modal(document.getElementById('modalCambioEstado'));
+            const titulo = document.getElementById('modalTitulo');
+            const iconoEstado = document.getElementById('iconoEstado');
+            const mensajeCambioEstado = document.getElementById('mensajeCambioEstado');
+            const botonDerecho = document.getElementById('botonDerecho');
+
+            iconoEstado.className = 'bi bi-check-circle text-success display-4';
+            mensajeCambioEstado.textContent = `¿Estás seguro de que quieres dar de alta el producto ${nombreProducto}? El producto estará disponible para la venta.`;
+            botonDerecho.className = 'btn btn-success';
+            botonDerecho.textContent = 'Dar de Alta';
+            botonDerecho.onclick = () => {
+                document.getElementById(`formularioAlta${idProducto}`).submit();
+            };
+
+            modal.show();
+        }
+
+        function abrirModalMovimiento(id, nombre, stock) {
+            document.getElementById('mov_ProductoId').value = id;
+            document.getElementById('mov_NombreProducto').innerText = nombre;
+            document.getElementById('mov_StockActual').innerText = stock + " unidades";
+
+            var myModal = new bootstrap.Modal(document.getElementById('modalMovimientoStock'));
+            myModal.show();
+        }
+
+        // Formulario de stock
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('formStock');
+            const select = document.getElementById('selectTipo');
+            const inputCantidad = document.getElementById('inputCantidad');
+            const inputObs = document.getElementById('inputObs');
+            const helpCantidad = document.getElementById('helpCantidad');
+            const helpObs = document.getElementById('helpObs');
+
+            // Función que reconfigura el form según lo que se elija
+            const configurarFormulario = () => {
+                const opcion = select.options[select.selectedIndex];
+                const tipo = select.value;
+
+                // 1. Cambiar el Action del Formulario
+                form.action = opcion.getAttribute('data-url');
+
+                // 2. Ajustar validaciones HTML5 según el tipo
+                if (tipo === 'Entrada') {
+                    // Entrada: Solo positivos, Obs opcional
+                    inputCantidad.setAttribute('min', '1');
+                    inputObs.removeAttribute('required');
+                    inputObs.removeAttribute('minlength');
+
+                    helpCantidad.innerText = "Ingresá la cantidad a sumar al stock.";
+                    helpObs.innerText = "Opcional.";
+                } else {
+                    // Ajuste: Permite negativos, Obs obligatoria (mínimo 10 chars según tu DTO)
+                    inputCantidad.removeAttribute('min');
+                    inputObs.setAttribute('required', 'required');
+                    inputObs.setAttribute('minlength', '10');
+
+                    helpCantidad.innerText = "Ingresá la cantidad a sumar o restar al stock.";
+                    helpObs.innerText = "Requerido. Explicá el motivo (mín. 10 letras).";
+                }
+            };
+
+            // Escuchar cambios
+            select.addEventListener('change', configurarFormulario);
+
+            // Ejecutar al inicio por si el navegador guardó la selección
+            configurarFormulario();
+        });
+    </script>
 }
 

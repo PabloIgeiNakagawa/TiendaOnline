@@ -32,6 +32,7 @@ namespace TiendaOnline.Domain.Entities
 
         public Usuario Usuario { get; set; }
 
-        public ICollection<DetallePedido> DetallesPedido { get; set; }
+        public ICollection<DetallePedido> DetallesPedido { get; set; } = new List<DetallePedido>();
+        public virtual ICollection<MovimientoStock> Movimientos { get; set; } = new List<MovimientoStock>();
     }
 }

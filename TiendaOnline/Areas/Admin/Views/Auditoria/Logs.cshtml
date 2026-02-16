@@ -164,59 +164,77 @@
                                 }
                             </tbody>
                         </table>
-                        <nav class="mt-3">
-                            <ul class="pagination justify-content-end">
-                                <li class="page-item @(Model.Paginacion.PaginaActual == 1 ? "disabled" : "")">
-                                    <a class="page-link"
-                                       asp-area="Admin"
-                                       asp-controller="Auditoria"
-                                       asp-action="Logs"
-                                       asp-route-pagina="@(Model.Paginacion.PaginaActual - 1)"
-                                       asp-route-tamanoPagina="@Model.Paginacion.RegistrosPorPagina"
-                                       asp-route-busqueda="@Model.Busqueda"
-                                       asp-route-fechaDesde="@Context.Request.Query["fechaDesde"]"
-                                       asp-route-fechaHasta="@Context.Request.Query["fechaHasta"]">
-                                        Anterior
-                                    </a>
-                                </li>
-
-                                @for (int i = 1; i <= Model.Paginacion.TotalPaginas; i++)
-                                {
-                                    <li class="page-item @(i == Model.Paginacion.PaginaActual ? "active" : "")">
-                                        <a class="page-link"
-                                           asp-area="Admin"
-                                           asp-controller="Auditoria"
-                                           asp-action="Logs"
-                                           asp-route-pagina="@i"
-                                           asp-route-tamanoPagina="@Model.Paginacion.RegistrosPorPagina"
-                                           asp-route-busqueda="@Model.Busqueda"
-                                           asp-route-fechaDesde="@Context.Request.Query["fechaDesde"]"
-                                           asp-route-fechaHasta="@Context.Request.Query["fechaHasta"]">
-                                            @i
-                                        </a>
-                                    </li>
-                                }
-
-                                <li class="page-item @(Model.Paginacion.PaginaActual == Model.Paginacion.TotalPaginas ? "disabled" : "")">
-                                    <a class="page-link"
-                                       asp-area="Admin"
-                                       asp-controller="Auditoria"
-                                       asp-action="Logs"
-                                       asp-route-pagina="@(Model.Paginacion.PaginaActual + 1)"
-                                       asp-route-tamanoPagina="@Model.Paginacion.RegistrosPorPagina"
-                                       asp-route-busqueda="@Model.Busqueda"
-                                       asp-route-fechaDesde="@Context.Request.Query["fechaDesde"]"
-                                       asp-route-fechaHasta="@Context.Request.Query["fechaHasta"]">
-                                        Siguiente
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Paginación -->
+    <nav aria-label="Navegación de auditoría" class="mt-3">
+        <ul class="pagination justify-content-center justify-content-md-end mb-0">
+            @{
+                // Variables para simplificar la lectura
+                int actual = Model.Paginacion.PaginaActual;
+                int total = Model.Paginacion.TotalPaginas;
+                int radio = 2;
+
+                string fDesde = Context.Request.Query["fechaDesde"];
+                string fHasta = Context.Request.Query["fechaHasta"];
+            }
+
+            @* Botón Anterior *@
+            <li class="page-item @(actual == 1 ? "disabled" : "")">
+                <a class="page-link"
+                   asp-area="Admin" asp-controller="Auditoria" asp-action="Logs"
+                   asp-route-pagina="@(actual - 1)"
+                   asp-route-tamanoPagina="@Model.Paginacion.RegistrosPorPagina"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-fechaDesde="@fDesde"
+                   asp-route-fechaHasta="@fHasta">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+
+            @* Lógica de Números con Truncado *@
+            @for (int i = 1; i <= total; i++)
+            {
+                // Condición de truncado: Primera, Última y rango de 2 alrededor de la actual
+                if (i == 1 || i == total || (i >= actual - radio && i <= actual + radio))
+                {
+                    <li class="page-item @(i == actual ? "active" : "")">
+                        <a class="page-link"
+                           asp-area="Admin" asp-controller="Auditoria" asp-action="Logs"
+                           asp-route-pagina="@i"
+                           asp-route-tamanoPagina="@Model.Paginacion.RegistrosPorPagina"
+                           asp-route-busqueda="@Model.Busqueda"
+                           asp-route-fechaDesde="@fDesde"
+                           asp-route-fechaHasta="@fHasta">
+                            @i
+                        </a>
+                    </li>
+                }
+                // Mostrar puntos suspensivos
+                else if (i == actual - radio - 1 || i == actual + radio + 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                }
+            }
+
+            @* Botón Siguiente *@
+            <li class="page-item @(actual == total ? "disabled" : "")">
+                <a class="page-link"
+                   asp-area="Admin" asp-controller="Auditoria" asp-action="Logs"
+                   asp-route-pagina="@(actual + 1)"
+                   asp-route-tamanoPagina="@Model.Paginacion.RegistrosPorPagina"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-fechaDesde="@fDesde"
+                   asp-route-fechaHasta="@fHasta">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 <!-- Modal de detalle de los cambios -->

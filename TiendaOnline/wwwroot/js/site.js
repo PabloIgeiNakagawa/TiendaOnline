@@ -20,10 +20,10 @@ function updateThemeUI(theme) {
     if (!icon) return;
 
     if (theme === 'dark') {
-        icon.className = 'bi bi-moon fs-3';
+        icon.className = 'bi bi-moon fs-4';
         if (texto) texto.innerText = 'Oscuro';
     } else {
-        icon.className = 'bi bi-sun fs-3';
+        icon.className = 'bi bi-sun fs-4';
         if (texto) texto.innerText = 'Claro';
     }
 }

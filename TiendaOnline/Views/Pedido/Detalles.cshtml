@@ -1,4 +1,5 @@
-﻿@model TiendaOnline.Domain.Entities.Pedido
+﻿@using System.Security.Claims
+@model TiendaOnline.Domain.Entities.Pedido
 @{
     ViewData["Title"] = $"Pedido #{Model.PedidoId.ToString("D6")}";
     var total = Model.DetallesPedido?.Sum(d => d.Cantidad * d.PrecioUnitario) ?? 0;
@@ -7,7 +8,7 @@
     var totalConImpuestos = total + impuestos;
     var esAdmin = User.IsInRole("Administrador");
     var esRepartidor = User.IsInRole("Repartidor");
-    var esPropioPedido = User.Identity.IsAuthenticated && Model.UsuarioId.ToString() == User.Claims.FirstOrDefault(c => c.Type == "UsuarioId")?.Value;
+    var esPropioPedido = User.Identity.IsAuthenticated && Model.UsuarioId.ToString() == User.FindFirstValue(ClaimTypes.NameIdentifier);
 }
 
 @section Styles{
@@ -20,11 +21,6 @@
             left: 8px;
             width: 2px;
             background-color: #e9ecef;
-        }
-
-        .breadcrumb-item + .breadcrumb-item::before {
-            content: "›";
-            color: #6c757d;
         }
 
         @@keyframes spin {
@@ -87,13 +83,13 @@
                         @if (esAdmin)
                         {
                             <li class="breadcrumb-item">
-                                <a asp-controller="Pedido" asp-action="Index" class="text-decoration-none">Gestión de Pedidos</a>
+                                <a asp-area="Admin" asp-controller="Pedido" asp-action="Listado" class="text-decoration-none">Gestión de Pedidos</a>
                             </li>
                         }
                         else
                         {
                             <li class="breadcrumb-item">
-                                <a asp-controller="Pedido" asp-action="MisPedidos" class="text-decoration-none">Mis Pedidos</a>
+                                <a asp-area="" asp-controller="Pedido" asp-action="MisPedidos" class="text-decoration-none">Mis Pedidos</a>
                             </li>
                         }
                         <li class="breadcrumb-item active" aria-current="page">
@@ -102,14 +98,8 @@
                     </ol>
                 </nav>
                 <div class="d-flex gap-2 mt-4 mt-md-0">
-                    <button class="btn btn-outline-secondary" onclick="imprimirPedido()">
-                        <i class="bi bi-printer me-2"></i>Imprimir
-                    </button>
                     @if (esAdmin || esRepartidor)
                     {
-                        <button class="btn btn-outline-primary" onclick="exportarPDF()">
-                            <i class="bi bi-file-earmark-pdf me-2"></i>Exportar PDF
-                        </button>
                         <a asp-controller="Pedido" asp-action="Index" class="btn btn-secondary">
                             <i class="bi bi-arrow-left me-2"></i>Volver
                         </a>
@@ -508,7 +498,7 @@
         <!-- Resumen y Acciones -->
         <div class="col-lg-4">
             <!-- Resumen del Pedido -->
-            <div class="card bg-body-tertiary rounded-3 shadow-sm border-0 mb-4 overflow-hidden">
+            <div class="card rounded-3 shadow border-0 mb-4 overflow-hidden">
                 <div class="card-header bg-transparent border-0 p-4 pb-0">
                     <h5 class="mb-0 fw-bold">Resumen del Pedido</h5>
                 </div>
@@ -645,6 +635,99 @@
 </div>
 
 @section Scripts{
-    <script src="~/js/Pedido/Detalles.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Inicializar tooltips
+            var listaTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltips = listaTooltips.map((elementoTooltip) => new bootstrap.Tooltip(elementoTooltip))
+        })
+        function enviarPedido(pedidoId) {
+            const modal = new bootstrap.Modal(document.getElementById("modalCambioEstado"));
+            const mensajeCambioEstado = document.getElementById("mensajeCambioEstado");
+            const botonDerecho = document.getElementById("botonDerecho");
+            const iconoEstado = document.getElementById("iconoEstado");
+            mensajeCambioEstado.textContent = `¿Confirmas que el pedido #${pedidoId.toString().padStart(6, "0")} ha sido enviado?`;
+            iconoEstado.className = "bi bi-truck text-info display-4";
+            botonDerecho.className = "btn btn-info";
+            botonDerecho.textContent = "Marcar como Enviado";
+            botonDerecho.onclick = () => {
+                // Mostrar loading
+                botonDerecho.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Procesando...'
+                botonDerecho.disabled = true
+
+                // Enviar formulario
+                document.getElementById(`enviarPedido${pedidoId}`).submit()
+            }
+
+            modal.show()
+        }
+
+        function entregarPedido(pedidoId) {
+            const modal = new bootstrap.Modal(document.getElementById("modalCambioEstado"));
+            const mensajeCambioEstado = document.getElementById("mensajeCambioEstado");
+            const botonDerecho = document.getElementById("botonDerecho");
+            const iconoEstado = document.getElementById("iconoEstado");
+            mensajeCambioEstado.textContent = `¿Confirmas que el pedido #${pedidoId.toString().padStart(6, "0")} ha sido entregado?`;
+            iconoEstado.className = "bi bi-check-circle text-success display-4";
+            botonDerecho.className = "btn btn-success";
+            botonDerecho.textContent = "Marcar como Entregado";
+            botonDerecho.onclick = () => {
+                // Mostrar loading
+                botonDerecho.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Procesando...'
+                botonDerecho.disabled = true
+
+                // Enviar formulario
+                document.getElementById(`entregarPedido${pedidoId}`).submit()
+            }
+
+            modal.show()
+        }
+
+        function cancelarPedido(pedidoId) {
+            const modal = new bootstrap.Modal(document.getElementById("modalCambioEstado"));
+            const mensajeCambioEstado = document.getElementById("mensajeCambioEstado");
+            const botonDerecho = document.getElementById("botonDerecho");
+            const iconoEstado = document.getElementById("iconoEstado");
+            mensajeCambioEstado.textContent = `¿Estás seguro de cancelar el pedido #${pedidoId.toString().padStart(6, "0")}?`;
+            iconoEstado.className = "bi bi-x-circle text-danger display-4";
+            botonDerecho.className = "btn btn-danger";
+            botonDerecho.textContent = "Cancelar Pedido";
+            botonDerecho.onclick = () => {
+                // Mostrar loading
+                botonDerecho.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Procesando...'
+                botonDerecho.disabled = true
+
+                // Enviar formulario
+                document.getElementById(`cancelarPedido${pedidoId}`).submit()
+            }
+
+            modal.show()
+        }
+
+        // Copiar número de seguimiento
+        function copiarSeguimiento() {
+            const numeroSeguimiento = document.querySelector("code").textContent
+            navigator.clipboard
+                .writeText(numeroSeguimiento)
+                .then(() => {
+                    // Mostrar feedback visual
+                    const boton = document.querySelector('[onclick="copiarSeguimiento()"]')
+                    const iconoOriginal = boton.innerHTML
+                    boton.innerHTML = '<i class="bi bi-check"></i>'
+                    boton.classList.add("btn-success")
+                    boton.classList.remove("btn-outline-primary")
+
+                    setTimeout(() => {
+                        boton.innerHTML = iconoOriginal
+                        boton.classList.remove("btn-success")
+                        boton.classList.add("btn-outline-primary")
+                    }, 2000)
+                })
+                .catch(() => {
+                    alert("No se pudo copiar el número de seguimiento")
+                })
+        }
+
+    </script>
 }
 

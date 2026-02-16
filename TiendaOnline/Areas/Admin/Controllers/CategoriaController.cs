@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using TiendaOnline.Areas.Admin.ViewModels.Categoria;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Services.IServices;
 
@@ -18,10 +19,18 @@ namespace TiendaOnline.Areas.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Listado()
+        public async Task<IActionResult> Listado(int pagina = 1, int tamanoPagina = 10, string? busqueda = null, string? nivel = null)
         {
-            var categorias = await _categoriaService.ObtenerCategoriasAsync();
-            return View(categorias);
+            var pagedResult = await _categoriaService.ObtenerCategoriasPaginadasAsync(pagina, tamanoPagina, busqueda, nivel);
+
+            var viewModel = new CategoriaListadoViewModel
+            {
+                Paginacion = pagedResult,
+                Busqueda = busqueda,
+                NivelSeleccionado = nivel
+            };
+
+            return View(viewModel);
         }
 
         [HttpGet]

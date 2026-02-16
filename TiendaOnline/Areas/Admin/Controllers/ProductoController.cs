@@ -27,6 +27,8 @@ namespace TiendaOnline.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Catalogo(string? busqueda, int? categoriaId, string? estado, string? stock, int pagina = 1, int tamanoPagina = 10)
         {
+            ViewData["Title"] = "Catálogo";
+
             if (pagina < 1) pagina = 1;
             if (tamanoPagina < 1) tamanoPagina = 10;
 
@@ -60,6 +62,7 @@ namespace TiendaOnline.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> AgregarProducto()
         {
+            ViewData["Title"] = "Agregar Producto";
             await CargarCategoriasEnViewBag();
             return View(new AgregarProductoViewModel());
         }

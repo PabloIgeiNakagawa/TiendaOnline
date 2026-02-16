@@ -1,4 +1,6 @@
 ﻿using TiendaOnline.Domain.Entities;
+using TiendaOnline.Services.Commons.Models;
+using TiendaOnline.Services.DTOs.Admin.Categoria;
 
 namespace TiendaOnline.Services.IServices
 {
@@ -11,6 +13,7 @@ namespace TiendaOnline.Services.IServices
         Task<IEnumerable<Categoria>> ObtenerCategoriasHojaAsync();
         Task<List<Categoria>> ObtenerArbolCategoriasAsync(); // Lista jerárquica (Raíces + Subcategorías)
         Task<bool> EsCategoriaHojaAsync(int id);
+        Task<PagedResult<CategoriaListadoDto>> ObtenerCategoriasPaginadasAsync(int pagina, int cantidad, string? buscar, string? nivel);
 
         // Escritura
         Task AgregarCategoriaAsync(Categoria categoria);

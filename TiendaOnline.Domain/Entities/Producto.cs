@@ -35,6 +35,6 @@ namespace TiendaOnline.Domain.Entities
         public int CategoriaId { get; set; }
         public Categoria? Categoria { get; set; }
 
-        public ICollection<DetallePedido> DetallesPedido { get; set; } = new List<DetallePedido>();
+        public ICollection<MovimientoStock> Movimientos { get; set; } = new List<MovimientoStock>();
     }
 }

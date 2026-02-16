@@ -1,279 +1,332 @@
-﻿@using TiendaOnline.Domain.Entities
-@model IEnumerable<TiendaOnline.Domain.Entities.Producto>
+﻿@using TiendaOnline.Services.DTOs
+@model TiendaOnline.ViewModels.Producto.ProductoIndexViewModel
+
 @{
-    ViewData["Title"] = "Productos";
-    var categorias = ViewBag.Categorias as List<Categoria>;
-    string busqueda = ViewBag.Busqueda;
+    // 1. DICCIONARIO MAESTRO
+    // Creamos un diccionario base solo con los valores que existen.
+    // Esto mantiene la URL limpia y sirve de base para clonar en cada link.
+    var filtrosBase = new Dictionary<string, string>();
+
+    if (!string.IsNullOrEmpty(Model.Busqueda)) filtrosBase.Add("busqueda", Model.Busqueda);
+    if (Model.CategoriaId.HasValue) filtrosBase.Add("categoriaId", Model.CategoriaId.Value.ToString());
+    if (Model.PrecioMin.HasValue) filtrosBase.Add("min", Model.PrecioMin.Value.ToString());
+    if (Model.PrecioMax.HasValue) filtrosBase.Add("max", Model.PrecioMax.Value.ToString());
+    if (!string.IsNullOrEmpty(Model.Orden)) filtrosBase.Add("orden", Model.Orden);
+
+    // Siempre enviamos el tamaño de página
+    filtrosBase.Add("tamanoPagina", Model.Paginacion.RegistrosPorPagina.ToString());
 }
-@section Styles{
-    <link rel="stylesheet" href="~/css/Producto/Index.css" asp-append-version="true" />
+
+@section Styles {
+    <style>
+        .card {
+            transition: all 0.3s ease;
+        }
+
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+            }
+    </style>
 }
 
 <div class="container-fluid py-4">
-    <!-- Encabezado -->
     <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="mb-1 fw-bold">
-                        <i class="bi bi-box-seam-fill me-2 text-primary"></i>
-                        Catálogo de Productos
-                    </h2>
-                    <p class="text-muted mb-0">Descubre nuestra amplia gama de componentes de PC</p>
-                </div>
-                <div class="d-flex gap-2">
-                    <div class="dropdown">
-                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-funnel me-1"></i>Ordenar
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><button class="dropdown-item" data-orden="nombre">Nombre A-Z</button></li>
-                            <li><button class="dropdown-item" data-orden="precio-asc">Precio: Menor a Mayor</button></li>
-                            <li><button class="dropdown-item" data-orden="precio-desc">Precio: Mayor a Menor</button></li>
-                        </ul>
-                    </div>
-                </div>
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1 fw-bold">
+                    <i class="bi bi-box-seam-fill me-2 text-primary"></i>@ViewData["Title"]
+                </h2>
+                <p class="text-muted mb-0">Descubre nuestra amplia gama de componentes</p>
+            </div>
+
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-sort-down me-1"></i>
+                    @switch (Model.Orden)
+                    {
+                        case "precio-asc":
+                            <text>Precio: Menor a Mayor</text>
+                            break;
+                        case "precio-desc":
+                            <text>Precio: Mayor a Menor</text>
+                            break;
+                        default:
+                            <text>Nombre A-Z</text>
+                            break;
+                    }
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    @{
+                        var rNombre = new Dictionary<string, string>(filtrosBase) { ["orden"] = "nombre", ["pagina"] = "1" };
+                    }
+                    <li><a class="dropdown-item" asp-action="Index" asp-all-route-data="rNombre">Nombre A-Z</a></li>
+
+                    @{
+                        var rAsc = new Dictionary<string, string>(filtrosBase) { ["orden"] = "precio-asc", ["pagina"] = "1" };
+                    }
+                    <li><a class="dropdown-item" asp-action="Index" asp-all-route-data="rAsc">Precio: Menor a Mayor</a></li>
+
+                    @{
+                        var rDesc = new Dictionary<string, string>(filtrosBase) { ["orden"] = "precio-desc", ["pagina"] = "1" };
+                    }
+                    <li><a class="dropdown-item" asp-action="Index" asp-all-route-data="rDesc">Precio: Mayor a Menor</a></li>
+                </ul>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <!-- Sidebar de Filtros -->
         <div class="col-lg-3 col-md-4">
-            <div class="card rounded-3 shadow-sm border-0 mb-4">
-                <div class="card-header border-bottom">
-                    <h5 class="mb-0 fw-semibold">
-                        <i class="bi bi-funnel me-2 text-primary"></i>Filtros
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    <!-- Búsqueda -->
-                    <div class="border-bottom">
-                        <div class="p-3 bg-body-tertiary fw-semibold text-secondary small border-bottom">
-                            <i class="bi bi-search me-2"></i>Buscar
-                        </div>
-                        <div class="p-3">
-                            <input type="text" id="busquedaProducto" class="form-control" placeholder="Buscar productos..." value="@busqueda">
-                        </div>
+            <form asp-action="Index" method="get" id="formFiltros">
+                <input type="hidden" name="orden" value="@Model.Orden" />
+                <input type="hidden" name="categoriaId" value="@Model.CategoriaId" />
+                <input type="hidden" name="tamanoPagina" value="@Model.Paginacion.RegistrosPorPagina" />
+
+                <div class="card rounded-3 shadow-sm border-0 mb-4">
+                    <div class="card-header border-bottom">
+                        <h5 class="mb-0 fw-semibold"><i class="bi bi-funnel me-2 text-primary"></i>Filtros</h5>
                     </div>
 
-                    <!-- Categorías -->
-                    <div class="border-bottom">
-                        <div class="p-3 bg-body-tertiary fw-semibold text-secondary small border-bottom">
-                            <i class="bi bi-tags me-2"></i>Categorías
+                    <div class="card-body p-0">
+                        <div class="border-bottom">
+                            <div class="p-3 bg-body-tertiary fw-semibold text-secondary small border-bottom">
+                                <i class="bi bi-search me-2"></i>Buscar
+                            </div>
+                            <div class="p-3">
+                                <input type="text" name="busqueda" id="busquedaProducto" class="form-control"
+                                       placeholder="Buscar productos..." value="@Model.Busqueda">
+                            </div>
                         </div>
-                        <div class="p-3">
-                            <div role="button" class="categoria-item d-flex justify-content-between align-items-center py-2 rounded-2 mb-1 active" data-categoria="" id="item-todas">
-                                <span class="small">Todas las categorías</span>
-                                <span class="categoria-count">@Model.Count()</span>
+
+                        <div class="border-bottom">
+                            <div class="p-3 bg-body-tertiary fw-semibold text-secondary small border-bottom">
+                                <i class="bi bi-tags me-2"></i>Categorías
                             </div>
 
-                            <div class="accordion accordion-flush" id="accCategorias">
-                                @foreach (var cat in (List<Categoria>)ViewBag.CategoriasRaiz)
-                                {
-                                    var tieneHijos = cat.Subcategorias != null && cat.Subcategorias.Any();
-                                    var collapseId = "collapse" + cat.CategoriaId;
+                            @{
+                                var rTodas = new Dictionary<string, string>(filtrosBase);
+                                rTodas.Remove("categoriaId");
+                                rTodas["pagina"] = "1";
+                            }
 
-                                    <div class="accordion-item border-0">
-                                        <div role="button" class="categoria-item d-flex justify-content-between align-items-center py-2 rounded-2 mb-1" data-categoria="@cat.CategoriaId">
-                                            @if (tieneHijos)
-                                            {
-                                                <i class="bi bi-chevron-right me-2 small toggle-icon"
-                                                   data-bs-toggle="collapse"
-                                                   data-bs-target="#@collapseId"
-                                                   style="cursor: pointer;"></i>
-                                            }
-                                            <span class="small flex-grow-1">@cat.Nombre</span>
-                                        </div>
+                            <div class="p-3">
+                                <a asp-action="Index" asp-all-route-data="rTodas"
+                                   class="text-decoration-none d-flex align-items-center py-2 px-2 rounded-2 mb-1 @(Model.CategoriaId == null ? "bg-primary-subtle text-primary fw-bold" : "text-reset")">
+                                    <span class="small">Todas las categorías</span>
+                                </a>
+                            </div>
+                            
 
+                            @foreach (var cat in Model.CategoriasRaiz)
+                            {
+                                var esActiva = Model.CategoriaId == cat.CategoriaId;
+                                var tieneHijos = cat.Subcategorias?.Any() ?? false;
+                                var esPadreDeActiva = cat.Subcategorias?.Any(s => s.CategoriaId == Model.CategoriaId) ?? false;
+                                var collapseId = "cat-" + cat.CategoriaId;
+
+                                <div class="categoria-group mb-2">
+                                    <div class="d-flex align-items-center py-1 px-2 rounded-2 @(esActiva ? "bg-primary-subtle text-primary fw-bold" : "text-reset")">
                                         @if (tieneHijos)
                                         {
-                                            <div id="@collapseId" class="collapse" data-bs-parent="#accCategorias">
-                                                <div class="ms-3 ps-2 border-start">
-                                                    @foreach (var sub in cat.Subcategorias)
-                                                    {
-                                                        <div role="button" class="categoria-item d-flex justify-content-between align-items-center py-2 rounded-2 mb-1" data-categoria="@sub.CategoriaId">
-                                                            <span class="small">@sub.Nombre</span>
-                                                            <span class="categoria-count">@sub.Productos.Count</span>
-                                                        </div>
-                                                    }
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Rango de Precios -->
-                    <div class="border-bottom">
-                        <div class="p-3 bg-body-tertiary fw-semibold text-secondary small border-bottom">
-                            <i class="bi bi-currency-dollar me-2"></i>Rango de Precio
-                        </div>
-                        <div class="p-3">
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <input type="number" id="precioMin" class="form-control form-control-sm" placeholder="Mín">
-                                </div>
-                                <div class="col-6">
-                                    <input type="number" id="precioMax" class="form-control form-control-sm" placeholder="Máx">
-                                </div>
-                            </div>
-                            <button class="btn btn-primary btn-sm w-100 mt-2" id="aplicarFiltroPrecios">
-                                Aplicar
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Limpiar Filtros -->
-                    <div class="p-3 border-top">
-                        <button class="btn btn-outline-secondary w-100" id="limpiarFiltros">
-                            <i class="bi bi-arrow-clockwise me-1"></i>Limpiar Filtros
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Productos -->
-        <div class="col-lg-9 col-md-8">
-            <nav aria-label="breadcrumb" class="mb-3">
-                <ol class="breadcrumb p-2 shadow-sm rounded" id="tiendaBreadcrumb">
-                    <li class="breadcrumb-item"><a href="#" class="text-decoration-none" onclick="resetearFiltroCategoria()">Tienda</a></li>
-                    <li class="breadcrumb-item active" id="breadcrumbActual">Todos los productos</li>
-                </ol>
-            </nav>
-            <!-- Barra de Resultados -->
-            <div class="p-3 rounded-3 border mb-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="resultados-texto">
-                        Mostrando <span id="productosVisibles">@Model.Count()</span> de <span id="totalProductos">@Model.Count()</span> productos
-                    </span>
-                    <div class="vista-controles">
-                        <button class="btn btn-sm btn-outline-secondary active" data-vista="grid">
-                            <i class="bi bi-grid-3x3-gap"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary" data-vista="list">
-                            <i class="bi bi-list"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Grid de Productos -->
-            <div id="productosContainer" class="productos-grid">
-                @foreach (var producto in Model)
-                {
-                    <a asp-controller="Producto" 
-                        asp-action="Detalles" 
-                        asp-route-id="@producto.ProductoId"
-                        class="text-decoration-none producto-link"
-                        data-categoria="@producto.CategoriaId"
-                        data-categoria-padre="@producto.Categoria?.CategoriaPadreId"
-                        data-precio="@producto.Precio"
-                        data-nombre="@producto.Nombre.ToLower()"
-                        data-stock="@(producto.Stock > 0 ? "true" : "false")"
-                        title="Ver detalles">
-                        <div class="producto-card">
-                            <div class="card h-100 shadow-sm border-0">
-                                <!-- Imagen del Producto -->
-                                <div class="position-relative overflow-hidden bg-body-tertiary producto-imagen">
-                                    @if (producto.Stock <= 0)
-                                    {
-                                        <div class="position-absolute top-0 start-0 m-3 px-3 py-1 bg-danger text-white rounded-pill small fw-lighter z-1">Agotado</div>
-                                    }
-                                    else if (producto.Stock <= 5)
-                                    {
-                                        <div class="position-absolute top-0 start-0 m-3 px-3 py-1 bg-warning text-white rounded-pill small fw-bold z-1">Últimas unidades</div>
-                                    }
-                                    <img src="@(producto.ImagenUrl != null ? producto.ImagenUrl : "/img/placeholder.svg?height=250&width=250")"
-                                         class="card-img-top"
-                                         alt="@producto.Nombre"
-                                         loading="lazy" />
-                                </div>
-
-                                <!-- Información del Producto -->
-                                <div class="card-body d-flex flex-column">
-                                    <div class="mb-2">
-                                        @if (producto.Categoria != null)
-                                        {
-                                            <span class="bg-body-secondary border fw-semibold px-2 py-1 rounded-pill small">@producto.Categoria.Nombre</span>
-                                        }
-                                    </div>
-
-                                    <h6 class="producto-titulo fw-semibold mb-2 lh-sm overflow-hidden">@producto.Nombre</h6>
-
-                                    <p class="producto-descripcion text-secondary small mb-3 overflow-hidden">@producto.Descripcion</p>
-
-                                    <!-- Stock -->
-                                    <div class="producto-stock mb-2">
-                                        @if (producto.Stock > 0)
-                                        {
-                                            <small class="text-success">
-                                                <i class="bi bi-check-circle me-1"></i>
-                                                @producto.Stock unidades disponibles
-                                            </small>
+                                            <i class="bi bi-chevron-right me-1 flecha-toggle @(esPadreDeActiva || esActiva ? "rotate-90" : "")"
+                                               data-bs-toggle="collapse" data-bs-target="#@collapseId" style="cursor: pointer; padding:5px; transition: transform 0.2s;"></i>
                                         }
                                         else
                                         {
-                                            <small class="text-danger">
-                                                <i class="bi bi-x-circle me-1"></i>
-                                                Sin stock
-                                            </small>
+                                            <span class="me-4"></span>
                                         }
+
+                                        @{
+                                            var rCat = new Dictionary<string, string>(filtrosBase) { ["categoriaId"] = cat.CategoriaId.ToString(), ["pagina"] = "1" };
+                                        }
+                                        <a asp-action="Index" asp-all-route-data="rCat" class="text-decoration-none flex-grow-1 small @(esActiva ? "bg-primary-subtle text-primary fw-bold" : "text-reset")">
+                                            @cat.Nombre
+                                        </a>
                                     </div>
 
-                                    <!-- Precio -->
-                                    <div class="border-top pt-3 mt-auto">
-                                        <span class="fs-4 fw-bold">$@producto.Precio.ToString("N0")</span>
-                                    </div>
+                                    @if (tieneHijos)
+                                    {
+                                        <div id="@collapseId" class="collapse @(esPadreDeActiva || esActiva ? "show" : "")">
+                                            <div class="ms-4 ps-2 border-start mt-1">
+                                                @foreach (var sub in cat.Subcategorias)
+                                                {
+                                                    var rSub = new Dictionary<string, string>(filtrosBase) { ["categoriaId"] = sub.CategoriaId.ToString(), ["pagina"] = "1" };
+                                                    <a asp-action="Index" asp-all-route-data="rSub"
+                                                       class="d-block py-2 px-2 small text-decoration-none rounded-2 @(Model.CategoriaId == sub.CategoriaId ? "bg-primary-subtle text-primary fw-bold" : "text-reset")">
+                                                        @sub.Nombre
+                                                    </a>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="border-bottom">
+                            <div class="p-3 bg-body-tertiary fw-semibold text-secondary small border-bottom">
+                                <i class="bi bi-currency-dollar me-2"></i>Rango de Precio
+                            </div>
+                            <div class="p-3">
+                                <label class="form-label small fw-bold text-secondary mb-2">PRECIO</label>
+                                <div class="row g-2">
+                                    <div class="col-6"><input type="number" name="min" class="form-control form-control-sm" placeholder="Mín" value="@Model.PrecioMin"></div>
+                                    <div class="col-6"><input type="number" name="max" class="form-control form-control-sm" placeholder="Máx" value="@Model.PrecioMax"></div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm w-100 mt-3">Aplicar</button>
+                            </div>
+                        </div>
+                        
+                        <div class="p-3 border-top text-center">
+                            <a asp-action="Index" class="text-decoration-none small text-muted"><i class="bi bi-x-circle me-1"></i>Limpiar todo</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
 
-                                    <!-- Botones de Acción -->
-                                    <div class="d-flex gap-2 mt-3">
+        <div class="col-lg-9 col-md-8">
+            <div class="p-3 rounded-3 border mb-4 shadow-sm d-flex justify-content-between align-items-center">
+                <span class="text-muted small">
+                    Mostrando <strong>@Model.Paginacion.Items.Count()</strong> de <strong>@Model.Paginacion.TotalRegistros</strong>
+                </span>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" onclick="cambiarVista('grid')"><i class="bi bi-grid-3x3-gap"></i></button>
+                    <button class="btn btn-outline-secondary" onclick="cambiarVista('list')"><i class="bi bi-list"></i></button>
+                </div>
+            </div>
+
+            <div id="productosContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                @if (Model.Paginacion.Items.Any())
+                {
+                    foreach (var producto in Model.Paginacion.Items)
+                    {
+                        <div class="col">
+                            <div class="card h-100 border-1 transition-hover">
+                                <a asp-controller="Producto" asp-action="Detalles" asp-route-id="@producto.ProductoId" class="text-decoration-none">
+                                    <div class="position-relative text-center" style="height: 220px;">
+                                        @if (producto.Stock <= 0)
+                                        {
+                                            <span class="position-absolute top-0 start-0 m-3 badge bg-danger">Agotado</span>
+                                        }
+                                        else if (producto.Stock <= 5)
+                                        {
+                                            <span class="position-absolute top-0 start-0 m-3 badge bg-warning text-dark">Últimas unidades</span>
+                                        }
+
+                                        <img src="@(string.IsNullOrEmpty(producto.ImagenUrl) ? "/img/placeholder.png" : producto.ImagenUrl)"
+                                             class="img-fluid h-100 object-fit-contain" alt="@producto.Nombre" loading="lazy">
+                                    </div>
+                                </a>
+                                <div class="card-body d-flex flex-column border-top">
+                                    <small class="text-muted mb-1">@producto.CategoriaNombre</small>
+                                    <h6 class="card-title fw-bold text-truncate" title="@producto.Nombre">@producto.Nombre</h6>
+                                    <div class="mt-auto pt-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <span class="fs-5 fw-bold">$@producto.Precio.ToString("N0")</span>
+                                            <small class="@(producto.Stock > 0 ? "text-success" : "text-danger") fw-semibold">
+                                                @(producto.Stock > 0 ? "Disponible" : "Sin Stock")
+                                            </small>
+                                        </div>
                                         @if (producto.Stock > 0)
                                         {
-                                            <form asp-controller="Carrito" asp-action="Agregar" method="post" class="d-inline">
+                                            <form asp-controller="Carrito" asp-action="Agregar" method="post">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@producto.ProductoId" />
-                                                <button type="submit" class="btn btn-primary flex-fill me-2 agregar-carrito">
-                                                    <i class="bi bi-bag-plus me-1"></i>Agregar
+                                                <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100">
+                                                    <i class="bi bi-cart-plus me-1"></i> Agregar al carrito
                                                 </button>
                                             </form>
                                         }
                                         else
                                         {
-                                            <button class="btn btn-outline-secondary flex-fill me-2" disabled>
-                                                <i class="bi bi-x-circle me-1"></i>Agotado
+                                            <button class="btn btn-secondary btn-sm rounded-pill w-100 disabled" disabled>
+                                                Agotado
                                             </button>
                                         }
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </a>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <div class="text-center py-5">
+                            <i class="bi bi-search text-muted opacity-25" style="font-size: 4rem;"></i>
+                            <h4 class="mt-3 text-secondary">No encontramos productos</h4>
+                            <p class="text-muted">Intenta ajustar los filtros.</p>
+                            <a asp-action="Index" class="btn btn-outline-primary mt-2">Limpiar Filtros</a>
+                        </div>
+                    </div>
                 }
             </div>
 
-            <!-- Mensaje cuando no hay productos -->
-            <div id="noProductos" class="text-center py-5" style="display: none;">
-                <div class="mb-3">
-                    <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
-                </div>
-                <h5 class="text-muted">No se encontraron productos</h5>
-                <p class="text-muted">Intenta ajustar los filtros o buscar con otros términos</p>
-                <button class="btn btn-primary" id="limpiarBusqueda">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar Filtros
-                </button>
-            </div>
+            @if (Model.Paginacion.TotalPaginas > 1)
+            {
+                <nav aria-label="Navegación de productos" class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        @{
+                            int paginaActual = Model.Paginacion.PaginaActual;
+                            int totalPaginas = Model.Paginacion.TotalPaginas;
+                            int rango = 2;
+                        }
 
-            <!-- Paginación -->
-            <nav aria-label="Paginación de productos" class="mt-4">
-                <ul class="pagination justify-content-center" id="paginacion">
-                    <!-- La paginación será generada por JavaScript -->
-                </ul>
-            </nav>
+                        <li class="page-item @(paginaActual == 1 ? "disabled" : "")">
+                            @{
+                                var rPrev = new Dictionary<string, string>(filtrosBase) { ["pagina"] = (paginaActual - 1).ToString() };
+                            }
+                            <a class="page-link" asp-action="Index" asp-all-route-data="rPrev"><i class="bi bi-chevron-left"></i></a>
+                        </li>
+
+                        @for (int i = 1; i <= totalPaginas; i++)
+                        {
+                            if (i == 1 || i == totalPaginas || (i >= paginaActual - rango && i <= paginaActual + rango))
+                            {
+                                // IMPORTANTE: Creamos una variable nueva para ESTE botón específico
+                                var rPagina = new Dictionary<string, string>(filtrosBase) { ["pagina"] = i.ToString() };
+                                <li class="page-item @(i == paginaActual ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-all-route-data="rPagina">@i</a>
+                                </li>
+                            }
+                            else if (i == paginaActual - rango - 1 || i == paginaActual + rango + 1)
+                            {
+                                <li class="page-item disabled"><span class="page-link border-0">...</span></li>
+                            }
+                        }
+
+                        <li class="page-item @(paginaActual == totalPaginas ? "disabled" : "")">
+                            @{
+                                var rNext = new Dictionary<string, string>(filtrosBase) { ["pagina"] = (paginaActual + 1).ToString() };
+                            }
+                            <a class="page-link" asp-action="Index" asp-all-route-data="rNext"><i class="bi bi-chevron-right"></i></a>
+                        </li>
+                    </ul>
+                </nav>
+            }
         </div>
     </div>
 </div>
-<script src="~/js/Producto/Index.js" asp-append-version="true"></script>
+
+@section Scripts {
+    <script>
+        function cambiarVista(vista) {
+            const container = document.getElementById('productosContainer');
+            if (vista === 'list') {
+                container.classList.remove('row-cols-md-2', 'row-cols-lg-3');
+                container.classList.add('row-cols-1');
+            } else {
+                container.classList.add('row-cols-md-2', 'row-cols-lg-3');
+                container.classList.remove('row-cols-1');
+            }
+        }
+
+        // Pequeño script para rotar la flecha si usas CSS custom
+        document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(el => {
+            el.addEventListener('click', function() {
+                this.classList.toggle('rotate-90');
+            });
+        });
+    </script>
+}

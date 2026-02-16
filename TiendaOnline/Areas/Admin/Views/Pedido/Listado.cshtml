@@ -248,65 +248,80 @@
                                 }
                             </tbody>
                         </table>
-                        <nav class="mt-3">
-                            <ul class="pagination justify-content-end">
-                                <li class="page-item @(Model.PedidosPaginados.PaginaActual == 1 ? "disabled" : "")">
-                                    <a class="page-link"
-                                       asp-area="Admin"
-                                       asp-controller="Pedido"
-                                       asp-action="Listado"
-                                       asp-route-pagina="@(Model.PedidosPaginados.PaginaActual - 1)"
-                                       asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
-                                       asp-route-busqueda="@Model.Busqueda"
-                                       asp-route-estado="@Model.Estado"
-                                       asp-route-filtroMonto="@Model.FiltroMonto"
-                                       asp-route-fechaDesde="@Model.FechaDesde?.ToString("yyyy-MM-dd")"
-                                       asp-route-fechaHasta="@Model.FechaHasta?.ToString("yyyy-MM-dd")">
-                                        Anterior
-                                    </a>
-                                </li>
-
-                                @for (int i = 1; i <= Model.PedidosPaginados.TotalPaginas; i++)
-                                {
-                                    <li class="page-item @(i == Model.PedidosPaginados.PaginaActual ? "active" : "")">
-                                        <a class="page-link"
-                                           asp-area="Admin"
-                                           asp-controller="Pedido"
-                                           asp-action="Listado"
-                                           asp-route-pagina="@i"
-                                           asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
-                                           asp-route-busqueda="@Model.Busqueda"
-                                           asp-route-estado="@Model.Estado"
-                                           asp-route-filtroMonto="@Model.FiltroMonto"
-                                           asp-route-fechaDesde="@Model.FechaDesde?.ToString("yyyy-MM-dd")"
-                                           asp-route-fechaHasta="@Model.FechaHasta?.ToString("yyyy-MM-dd")">
-                                            @i
-                                        </a>
-                                    </li>
-                                }
-
-                                <li class="page-item @(Model.PedidosPaginados.PaginaActual == Model.PedidosPaginados.TotalPaginas ? "disabled" : "")">
-                                    <a class="page-link"
-                                       asp-area="Admin"
-                                       asp-controller="Pedido"
-                                       asp-action="Listado"
-                                       asp-route-pagina="@(Model.PedidosPaginados.PaginaActual + 1)"
-                                       asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
-                                       asp-route-busqueda="@Model.Busqueda"
-                                       asp-route-estado="@Model.Estado"
-                                       asp-route-filtroMonto="@Model.FiltroMonto"
-                                       asp-route-fechaDesde="@Model.FechaDesde?.ToString("yyyy-MM-dd")"
-                                       asp-route-fechaHasta="@Model.FechaHasta?.ToString("yyyy-MM-dd")">
-                                        Siguiente
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Paginación -->
+    <nav aria-label="Navegación de pedidos" class="mt-3">
+        <ul class="pagination justify-content-center justify-content-md-end mb-0">
+            @{
+                // Variables para que el código no sea eterno
+                int actual = Model.PedidosPaginados.PaginaActual;
+                int total = Model.PedidosPaginados.TotalPaginas;
+                int radio = 2;
+            }
+
+            @* Botón Anterior *@
+            <li class="page-item @(actual == 1 ? "disabled" : "")">
+                <a class="page-link"
+                   asp-area="Admin" asp-controller="Pedido" asp-action="Listado"
+                   asp-route-pagina="@(actual - 1)"
+                   asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-estado="@Model.Estado"
+                   asp-route-filtroMonto="@Model.FiltroMonto"
+                   asp-route-fechaDesde="@Model.FechaDesde?.ToString("yyyy-MM-dd")"
+                   asp-route-fechaHasta="@Model.FechaHasta?.ToString("yyyy-MM-dd")">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+
+            @* Lógica de Números con Truncado *@
+            @for (int i = 1; i <= total; i++)
+            {
+                // Mostramos: primera, última, y las que están cerca de la actual (radio 2)
+                if (i == 1 || i == total || (i >= actual - radio && i <= actual + radio))
+                {
+                    <li class="page-item @(i == actual ? "active" : "")">
+                        <a class="page-link"
+                           asp-area="Admin" asp-controller="Pedido" asp-action="Listado"
+                           asp-route-pagina="@i"
+                           asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
+                           asp-route-busqueda="@Model.Busqueda"
+                           asp-route-estado="@Model.Estado"
+                           asp-route-filtroMonto="@Model.FiltroMonto"
+                           asp-route-fechaDesde="@Model.FechaDesde?.ToString("yyyy-MM-dd")"
+                           asp-route-fechaHasta="@Model.FechaHasta?.ToString("yyyy-MM-dd")">
+                            @i
+                        </a>
+                    </li>
+                }
+                // Puntos suspensivos
+                else if (i == actual - radio - 1 || i == actual + radio + 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                }
+            }
+
+            @* Botón Siguiente *@
+            <li class="page-item @(actual == total ? "disabled" : "")">
+                <a class="page-link"
+                   asp-area="Admin" asp-controller="Pedido" asp-action="Listado"
+                   asp-route-pagina="@(actual + 1)"
+                   asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-estado="@Model.Estado"
+                   asp-route-filtroMonto="@Model.FiltroMonto"
+                   asp-route-fechaDesde="@Model.FechaDesde?.ToString("yyyy-MM-dd")"
+                   asp-route-fechaHasta="@Model.FechaHasta?.ToString("yyyy-MM-dd")">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 <!-- Modal de Cambio de Estado -->

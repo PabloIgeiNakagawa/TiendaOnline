@@ -1,4 +1,4 @@
-﻿@model IEnumerable<TiendaOnline.Domain.Entities.Categoria>
+﻿@model TiendaOnline.Areas.Admin.ViewModels.Categoria.CategoriaListadoViewModel
 @{
     ViewData["Title"] = "Gestión de Categorías";
 }
@@ -6,7 +6,7 @@
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-md-flex justify-content-md-between align-items-md-center">
                 <div>
                     <h2 class="mb-1 fw-bold">
                         <i class="bi bi-tags me-2 text-primary"></i>
@@ -14,7 +14,7 @@
                     </h2>
                     <p class="text-muted mb-0">Organiza la estructura de hardware y componentes</p>
                 </div>
-                <a asp-controller="Categoria" asp-action="AgregarCategoria" class="btn btn-primary btn-lg shadow-sm">
+                <a asp-controller="Categoria" asp-action="AgregarCategoria" class="btn btn-primary btn-lg shadow-sm mt-2 mt-md-0">
                     <i class="bi bi-plus-circle me-2"></i>
                     Nueva Categoría
                 </a>
@@ -22,45 +22,86 @@
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="campoBusqueda" class="form-label fw-semibold">
-                                <i class="bi bi-search me-1"></i>Buscar
-                            </label>
-                            <input type="text" id="campoBusqueda" class="form-control" placeholder="Buscar por nombre de categoría...">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="filtroTipo" class="form-label fw-semibold">
-                                <i class="bi bi-funnel me-1"></i>Nivel
-                            </label>
-                            <select id="filtroTipo" class="form-select">
-                                <option value="">Todos los niveles</option>
-                                <option value="Principal">Categorías Principales</option>
-                                <option value="Subcategoría">Subcategorías</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" id="limpiarFiltros" class="btn btn-outline-secondary w-100">
-                                <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
-                            </button>
+    <!-- Filtros -->
+    <form method="get" asp-action="Listado">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-2">
+                                <label for="busqueda" class="form-label fw-semibold">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </label>
+                                <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Buscar por nombre de categoría...">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="nivel" class="form-label fw-semibold">
+                                    <i class="bi bi-funnel me-1"></i>Nivel
+                                </label>
+                                <select name="nivel" class="form-select" onchange="this.form.submit()">
+                                    <option value="">Todos los niveles</option>
+                                    <option value="Principal" selected='@(Model.NivelSeleccionado == "Principal")'>Categorías Principales</option>
+                                    <option value="Subcategoría" selected='@(Model.NivelSeleccionado == "Subcategoría")'>Subcategorías</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary rounded-3 flex-fill">
+                                    <i class="bi bi-filter me-1"></i>Filtrar
+                                </button>
+                                <a asp-action="Listado" class="btn btn-outline-secondary rounded-3 flex-fill">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 
+    <!-- Tabla -->
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm border-0">
                 <div class="card-header border-bottom">
-                    <h5 class="mb-0 fw-semibold">
-                        <span id="totalCategorias">@Model.Count()</span> categorías registradas
-                    </h5>
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 px-1">
+                        <div class="text-muted small">
+                            @if (Model.Paginacion.TotalRegistros > 0)
+                            {
+                                <span>
+                                    Mostrando <strong>@Model.Paginacion.DesdeRegistro</strong> a
+                                    <strong>@Model.Paginacion.HastaRegistro</strong> de
+                                    <strong>@Model.Paginacion.TotalRegistros</strong> productos
+                                </span>
+                            }
+                            else
+                            {
+                                <span>
+                                    <i class="bi bi-exclamation-circle me-1 text-warning"></i>
+                                    No se encontraron resultados.
+                                </span>
+                            }
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            @if (!string.IsNullOrEmpty(Model.Busqueda))
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-search me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Búsqueda:</span> "<strong>@Model.Busqueda</strong>"
+                                </span>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.NivelSeleccionado))
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-funnel me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Rol:</span> <strong>@Model.NivelSeleccionado</strong>
+                                </span>
+                            }
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -82,7 +123,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var item in Model)
+                                @foreach (var item in Model.Paginacion.Items)
                                 {
                                     bool esPrincipal = item.CategoriaPadreId == null;
                                     <tr class="fila-categoria" data-nombre="@item.Nombre" data-tipo="@(esPrincipal ? "Principal" : "Subcategoría")">
@@ -95,7 +136,7 @@
                                                     @if (!esPrincipal)
                                                     {
                                                         <small class="text-muted d-block mb-1">
-                                                            @item.CategoriaPadre.Nombre <i class="bi bi-chevron-right mx-1 small"></i>
+                                                            @item.CategoriaPadreNombre <i class="bi bi-chevron-right mx-1 small"></i>
                                                         </small>
                                                     }
                                                     <div class="fw-semibold">@item.Nombre</div>
@@ -104,8 +145,8 @@
                                         </td>
                                         <td class="py-3">
                                             <span class="text-muted small">
-                                                <i class="bi bi-box me-1"></i>@item.Productos.Count Productos<br />
-                                                <i class="bi bi-node-plus me-1"></i>@item.Subcategorias.Count Subcategorías
+                                                <i class="bi bi-box me-1"></i>@item.CantidadProductos Productos<br />
+                                                <i class="bi bi-node-plus me-1"></i>@item.CantidadSubcategorias Subcategorías
                                             </span>
                                         </td>
                                         <td class="py-3">
@@ -123,7 +164,7 @@
 
                                                 <button type="button" class="btn btn-outline-danger btn-sm"
                                                         onclick="eliminarCategoria('@item.CategoriaId', '@item.Nombre')"
-                                                        title="Eliminar" @(item.Productos.Any() || item.Subcategorias.Any() ? "disabled" : "")>
+                                                        title="Eliminar" @(item.CantidadProductos == 0 || item.CantidadSubcategorias == 0 ? "disabled" : "")>
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
@@ -137,6 +178,54 @@
             </div>
         </div>
     </div>
+
+    <!-- Paginación -->
+    <nav aria-label="Navegación de categorías" class="mt-3">
+        <ul class="pagination justify-content-center justify-content-md-end mb-0">
+            @{
+                int paginaActual = Model.Paginacion.PaginaActual;
+                int totalPaginas = Model.Paginacion.TotalPaginas;
+                int radio = 2;
+            }
+
+            @* Anterior *@
+            <li class="page-item @(paginaActual == 1 ? "disabled" : "")">
+                <a class="page-link" asp-action="Listado"
+                   asp-route-pagina="@(paginaActual - 1)"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-nivel="@Model.NivelSeleccionado">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+
+            @for (int i = 1; i <= totalPaginas; i++)
+            {
+                if (i == 1 || i == totalPaginas || (i >= paginaActual - radio && i <= paginaActual + radio))
+                {
+                    <li class="page-item @(i == paginaActual ? "active" : "")">
+                        <a class="page-link" asp-action="Listado"
+                           asp-route-pagina="@i"
+                           asp-route-busqueda="@Model.Busqueda"
+                           asp-route-nivel="@Model.NivelSeleccionado">@i</a>
+                    </li>
+                }
+                else if (i == paginaActual - radio - 1 || i == paginaActual + radio + 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                }
+            }
+
+            @* Siguiente *@
+            <li class="page-item @(paginaActual == totalPaginas ? "disabled" : "")">
+                <a class="page-link" asp-action="Listado"
+                   asp-route-pagina="@(paginaActual + 1)"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-nivel="@Model.NivelSeleccionado">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 <!-- Modal eliminar categoria -->
@@ -144,7 +233,7 @@
 
 <!-- Formularios Ocultos -->
 <div style="display: none;">
-    @foreach (var categoria in Model)
+    @foreach (var categoria in Model.Paginacion.Items)
     {
         <form id="eliminarCategoria@(categoria.CategoriaId)" asp-area="Admin" asp-controller="Categoria" asp-action="Eliminar" method="post">
             <input type="hidden" name="id" value="@categoria.CategoriaId" />

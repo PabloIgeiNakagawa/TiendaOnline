@@ -5,16 +5,19 @@ using TiendaOnline.Services.Commons.Models;
 using TiendaOnline.Services.DTOs;
 using TiendaOnline.Services.DTOs.Admin.Pedido;
 using TiendaOnline.Services.IServices;
+using TiendaOnline.Services.IServices.Admin;
 
 namespace TiendaOnline.Services.Services
 {
     public class PedidoService : IPedidoService
     {
         private readonly TiendaContext _context;
+        private readonly IMovimientoStockService _movimientoStockService;
 
-        public PedidoService(TiendaContext context)
+        public PedidoService(TiendaContext context, IMovimientoStockService movimientoStockService)
         {
             _context = context;
+            _movimientoStockService = movimientoStockService;
         }
 
         public async Task<Pedido?> ObtenerPedidoAsync(int id)
@@ -100,38 +103,71 @@ namespace TiendaOnline.Services.Services
 
         public async Task<int> CrearPedidoAsync(List<ItemCarrito> carrito, int usuarioId)
         {
-            var pedido = new Pedido
+            // Iniciamos una transacción. Si algo falla, NO se resta stock ni se crea pedido.
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                UsuarioId = usuarioId,
-                FechaPedido = DateTime.Now,
-                Estado = EstadoPedido.Pendiente,
-                DetallesPedido = new List<DetallePedido>()
-            };
+                // Traemos todos los productos necesarios en UNA sola consulta (Mejora de rendimiento)
+                var productoIds = carrito.Select(c => c.ProductoId).ToList();
+                var productosDb = await _context.Productos
+                    .Where(p => productoIds.Contains(p.ProductoId))
+                    .ToListAsync();
 
-            foreach (var item in carrito)
-            {
-                var productoDb = await _context.Productos.FindAsync(item.ProductoId);
-
-                if (productoDb == null) throw new Exception("Producto no encontrado");
-
-                if (productoDb.Stock < item.Cantidad)
-                    throw new Exception($"Sin stock para {productoDb.Nombre}");
-
-                productoDb.Stock -= item.Cantidad;
-
-                pedido.DetallesPedido.Add(new DetallePedido
+                var pedido = new Pedido
                 {
-                    ProductoId = productoDb.ProductoId,
-                    Cantidad = item.Cantidad,
-                    PrecioUnitario = productoDb.Precio
-                });
+                    UsuarioId = usuarioId,
+                    FechaPedido = DateTime.Now,
+                    Estado = EstadoPedido.Pendiente,
+                    DetallesPedido = new List<DetallePedido>()
+                };
+
+                foreach (var item in carrito)
+                {
+                    var producto = productosDb.FirstOrDefault(p => p.ProductoId == item.ProductoId);
+                    if (producto == null) throw new Exception("Producto no encontrado");
+
+                    if (producto.Stock < item.Cantidad)
+                        throw new Exception($"Sin stock para {producto.Nombre}");
+
+                    // Restamos Stock en la tabla Producto
+                    producto.Stock -= item.Cantidad;
+
+                    // Registramos el movimiento de stock (SALIDA)
+                    // Pasamos cantidad negativa porque es una salida
+                    _movimientoStockService.GenerarMovimiento(
+                        producto,
+                        -item.Cantidad,
+                        TipoMovimiento.SalidaVenta,
+                        null, // Se vincula solo al agregar el pedido al contexto
+                        "Venta Pedido Online"
+                    );
+
+                    // Agregamos el detalle al pedido
+                    pedido.DetallesPedido.Add(new DetallePedido
+                    {
+                        ProductoId = producto.ProductoId,
+                        Cantidad = item.Cantidad,
+                        PrecioUnitario = producto.Precio
+                    });
+                }
+
+                _context.Pedidos.Add(pedido);
+
+                // Guardamos todo junto
+                await _context.SaveChangesAsync();
+
+                // Si llegamos acá, confirmamos los cambios en la DB
+                await transaction.CommitAsync();
+
+                return pedido.PedidoId;
             }
-
-            _context.Pedidos.Add(pedido);
-
-            await _context.SaveChangesAsync();
-
-            return pedido.PedidoId;
+            catch (Exception)
+            {
+                // Si hubo error, deshacemos todo (el stock vuelve a su valor original)
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task PedidoEnviadoAsync(int pedidoId)
@@ -164,16 +200,57 @@ namespace TiendaOnline.Services.Services
 
         public async Task PedidoCanceladoAsync(int pedidoId)
         {
-            var pedido = await _context.Pedidos.FindAsync(pedidoId);
-            if (pedido == null) throw new Exception("Pedido no encontrado.");
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            if (pedido.Estado == EstadoPedido.Entregado)
-                throw new Exception("No se puede cancelar un pedido que ya ha sido entregado.");
+            try
+            {
+                // Traemos el pedido con sus detalles (Importante usar .Include)
+                var pedido = await _context.Pedidos
+                    .Include(p => p.DetallesPedido)
+                    .ThenInclude(dp => dp.Producto) // Traemos el producto para devolverle el stock
+                    .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
 
-            pedido.Estado = EstadoPedido.Cancelado;
-            pedido.FechaCancelado = DateTime.Now;
+                if (pedido == null) throw new Exception("Pedido no encontrado.");
 
-            await _context.SaveChangesAsync();
+                // Validaciones de negocio
+                if (pedido.Estado == EstadoPedido.Cancelado)
+                    throw new Exception("El pedido ya estaba cancelado.");
+
+                if (pedido.Estado == EstadoPedido.Entregado)
+                    throw new Exception("No se puede cancelar un pedido que ya ha sido entregado.");
+
+                if (pedido.Estado == EstadoPedido.Enviado) 
+                    throw new Exception("El pedido ya fue enviado, debe procesarse como devolución.");
+
+                // Devolver el stock por cada detalle
+                foreach (var detalle in pedido.DetallesPedido)
+                {
+                    // Sumamos lo que antes restamos
+                    detalle.Producto.Stock += detalle.Cantidad;
+
+                    // Registramos el movimiento de entrada por cancelación
+                    // Cantidad positiva porque entra de nuevo
+                    _movimientoStockService.GenerarMovimiento(
+                        detalle.Producto,
+                        detalle.Cantidad,
+                        TipoMovimiento.CancelacionPedido,
+                        pedido.PedidoId,
+                        $"Devolución por cancelación de Pedido #{pedido.PedidoId}"
+                    );
+                }
+
+                // Cambiamos el estado
+                pedido.Estado = EstadoPedido.Cancelado;
+                pedido.FechaCancelado = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
     }
 }

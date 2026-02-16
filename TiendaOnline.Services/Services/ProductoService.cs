@@ -5,6 +5,7 @@ using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Services.Commons.Models;
 using TiendaOnline.Services.DTOs.Admin.Producto;
+using TiendaOnline.Services.DTOs;
 
 namespace TiendaOnline.Services.Services
 {
@@ -29,9 +30,55 @@ namespace TiendaOnline.Services.Services
         public async Task<List<Producto>> ObtenerProductosAsync()
         {
             return await _context.Productos
-                                 .AsNoTracking() // Solo lectura: mucho más rápido y ligero
+                                 .AsNoTracking()
                                  .Include(p => p.Categoria)
-                                 .ToListAsync();
+            .ToListAsync();
+        }
+
+        public async Task<PagedResult<ProductoDto>> ObtenerProductosTiendaPaginadoAsync(string busqueda, int? categoriaId, decimal? min, decimal? max, string orden, int pagina, int cantidad)
+        {
+            var query = _context.Productos
+                .AsNoTracking()
+                .AsQueryable();
+
+            // Filtros
+            if (!string.IsNullOrEmpty(busqueda))
+                query = query.Where(p => p.Nombre.Contains(busqueda) || p.Descripcion.Contains(busqueda));
+
+            if (categoriaId.HasValue)
+                query = query.Where(p => p.CategoriaId == categoriaId || p.Categoria.CategoriaPadreId == categoriaId);
+
+            if (min.HasValue) query = query.Where(p => p.Precio >= min.Value);
+            if (max.HasValue) query = query.Where(p => p.Precio <= max.Value);
+
+            // Orden
+            query = orden switch
+            {
+                "precio-asc" => query.OrderBy(p => p.Precio),
+                "precio-desc" => query.OrderByDescending(p => p.Precio),
+                _ => query.OrderBy(p => p.Nombre)
+            };
+
+            int total = await query.CountAsync();
+
+            // Mapeo a DTO y Paginación
+            var items = await query
+                .Skip((pagina - 1) * cantidad)
+                .Take(cantidad)
+                .Select(p => new ProductoDto
+                {
+                    ProductoId = p.ProductoId,
+                    Nombre = p.Nombre,
+                    Descripcion = p.Descripcion,
+                    Precio = p.Precio,
+                    Stock = p.Stock,
+                    ImagenUrl = p.ImagenUrl,
+                    CategoriaNombre = p.Categoria.Nombre,
+                    CategoriaId = p.CategoriaId
+                })
+                .ToListAsync();
+
+            return new PagedResult<ProductoDto>(items, total, pagina, cantidad);
         }
 
         public async Task<PagedResult<ProductoListaDto>> ObtenerProductosPaginadosAsync(string? busqueda, int? categoriaId, string? estado, string? stock, int pagina, int registrosPorPagina)
