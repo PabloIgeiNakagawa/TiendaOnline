@@ -4,7 +4,9 @@ using TiendaOnline.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
+// Busca las vistas en Features
+builder.Services.AddControllersWithViews().AddFeatureFolders();
+
 // HttpContext
 builder.Services.AddHttpContextAccessor();
 

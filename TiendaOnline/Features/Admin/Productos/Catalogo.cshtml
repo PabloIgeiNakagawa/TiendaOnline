@@ -1,0 +1,716 @@
+﻿@using TiendaOnline.Features.Admin.Productos
+@model ProductoCatalogoViewModel
+
+<div class="container-fluid py-4">
+    <!-- Sección de Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-md-flex justify-content-md-between align-items-md-center">
+                <div>
+                    <h2 class="mb-1 fw-bold">
+                        <i class="bi bi-box-seam me-2 text-primary"></i>
+                        Catálogo
+                    </h2>
+                    <p class="text-muted mb-0">Administra los productos del sistema</p>
+                </div>
+                <a asp-controller="Productos" asp-action="AgregarProducto" class="btn btn-primary btn-lg shadow-sm rounded-3 mt-3 mt-md-0">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Nuevo Producto
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    <!-- Filtros -->
+    <form method="get" asp-action="Catalogo">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card rounded-3 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-1">
+                                <label class="form-label fw-bold text-muted small">Ver</label>
+                                <select name="tamanoPagina" class="form-select" onchange="this.form.submit()">
+                                    @{
+                                        int[] opciones = { 10, 25, 50, 75, 100 };
+                                        foreach (var cantidad in opciones)
+                                        {
+                                            <option value="@cantidad" selected="@(Model.ProductosPaginados.RegistrosPorPagina == cantidad ? "selected" : null)">
+                                                @cantidad
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold"><i class="bi bi-search me-1"></i>Buscar</label>
+                                <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Nombre o descripción...">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold"><i class="bi bi-funnel me-1"></i>Categoría</label>
+                                <select name="categoriaId" class="form-select">
+                                    <option value="">Todas</option>
+                                    @foreach (var cat in Model.Categorias)
+                                    {
+                                        <option value="@cat.CategoriaId" selected="@(Model.CategoriaSeleccionada == cat.CategoriaId)">@cat.Nombre</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold"><i class="bi bi-boxes me-1"></i>Stock</label>
+                                <select name="stock" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="disponible" selected="@(Model.StockSeleccionado == "disponible")">Con stock</option>
+                                    <option value="agotado" selected="@(Model.StockSeleccionado == "agotado")">Sin stock</option>
+                                    <option value="bajo" selected="@(Model.StockSeleccionado == "bajo")">Stock bajo (≤5)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold"><i class="bi bi-toggle-on me-1"></i>Estado</label>
+                                <select name="estado" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="activo" selected="@(Model.EstadoSeleccionado == "activo")">Activos</option>
+                                    <option value="inactivo" selected="@(Model.EstadoSeleccionado == "inactivo")">Inactivos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary rounded-3 flex-fill">
+                                    <i class="bi bi-filter me-1"></i>
+                                </button>
+                                <a asp-action="Catalogo" class="btn btn-outline-secondary rounded-3 flex-fill">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Tabla de Productos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card rounded-3 shadow-sm border-0">
+                <div class="card-header border-bottom">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3 px-1">
+                        <div class="text-muted small">
+                            @if (Model.ProductosPaginados.TotalRegistros > 0)
+                            {
+                                <span>
+                                    Mostrando <strong>@Model.ProductosPaginados.DesdeRegistro</strong> a
+                                    <strong>@Model.ProductosPaginados.HastaRegistro</strong> de
+                                    <strong>@Model.ProductosPaginados.TotalRegistros</strong> productos
+                                </span>
+                            }
+                            else
+                            {
+                                <span>
+                                    <i class="bi bi-exclamation-circle me-1 text-warning"></i>
+                                    No se encontraron resultados.
+                                </span>
+                            }
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            @if (!string.IsNullOrEmpty(Model.Busqueda))
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-search me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Búsqueda:</span> "<strong>@Model.Busqueda</strong>"
+                                </span>
+                            }
+
+                            @if (Model.CategoriaSeleccionada.HasValue)
+                            {
+                                var catNombre = Model.Categorias.FirstOrDefault(c => c.CategoriaId == Model.CategoriaSeleccionada)?.Nombre;
+                                <span class="text-muted small">
+                                    <i class="bi bi-tag me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Categoría:</span> <strong>@catNombre</strong>
+                                </span>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.StockSeleccionado))
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-boxes me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Stock:</span> <strong>@Model.StockSeleccionado</strong>
+                                </span>
+                            }
+                            @if (Model.EstadoSeleccionado != null)
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-toggle-on me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Estado:</span> <strong>@Model.EstadoSeleccionado</strong>
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Vista de Tabla (Desktop) -->
+                    <div class="d-none d-lg-block">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="border-0 py-3">
+                                        <div role="button" class="d-flex align-items-center">
+                                            <i class="bi bi-box me-2 text-primary"></i>Producto
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div role="button" class="d-flex align-items-center">
+                                            <i class="bi bi-tag me-2 text-primary"></i>Categoría
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div role="button" class="d-flex align-items-center">
+                                            <i class="bi bi-currency-dollar me-2 text-primary"></i>Precio
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div role="button" class="d-flex align-items-center">
+                                            <i class="bi bi-boxes me-2 text-primary"></i>Stock
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div role="button" class="d-flex align-items-center">
+                                            <i class="bi bi-toggle-on me-2 text-primary"></i>Estado
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3 text-center">
+                                        <i class="bi bi-gear me-1 text-primary"></i>Acciones
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var producto in Model.ProductosPaginados.Items)
+                                {
+                                    <tr class="f@(producto.Activo ? "" : "table-secondary")">
+                                        <td class="py-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="producto-imagen-mini me-3">
+                                                    <img src="@producto.ImagenUrl"
+                                                         alt="@producto.Nombre"
+                                                         class="img-thumbnail @(producto.Activo ? "" : "opacity-50")"
+                                                         style="width: 50px; height: 50px; object-fit: cover; cursor: pointer;"
+                                                         onclick="mostrarImagenModal('@producto.ImagenUrl', '@producto.Nombre')"
+                                                         role="button"
+                                                         data-bs-toggle="tooltip"
+                                                         data-bs-placement="top"
+                                                         data-bs-title="Click para ampliar"
+                                                         title="Click para ampliar" />
+                                                </div>
+                                                <div>
+                                                    <div class="fw-semibold @(producto.Activo ? "" : "text-muted")">@producto.Nombre</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            <div>
+                                                @if (producto.CategoriaId != null)
+                                                {
+                                                    <span class="badge bg-secondary border small fw-medium text-uppercase" style="letter-spacing: 0.5px;">@producto.CategoriaNombre</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Sin categoría</span>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="@(producto.Activo ? "" : "text-muted") fw-semibold">@producto.Precio.ToString("C", new System.Globalization.CultureInfo("es-CO"))</div>
+                                        </td>
+                                        <td class="py-3">
+                                            @if (producto.Stock > 0)
+                                            {
+                                                if (producto.Stock <= 5)
+                                                {
+                                                    <span class="badge bg-warning px-3 py-2 rounded-pill fw-medium text-uppercase" style="letter-spacing: 0.5px;">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>@producto.Stock unidades
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success px-3 py-2 rounded-pill fw-medium text-uppercase" style="letter-spacing: 0.5px;">
+                                                        <i class="bi bi-check-circle me-1"></i>@producto.Stock unidades
+                                                    </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger px-3 py-2 rounded-pill fw-medium text-uppercase" style="letter-spacing: 0.5px;">
+                                                    <i class="bi bi-x-circle me-1"></i>Agotado
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="py-3">
+                                            @if (producto.Activo)
+                                            {
+                                                <span class="badge bg-success px-3 py-2 rounded-pill fw-medium text-uppercase" style="letter-spacing: 0.5px;">
+                                                    <i class="bi bi-check-circle me-1"></i>Activo
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger px-3 py-2 rounded-pill fw-medium text-uppercase" style="letter-spacing: 0.5px;">
+                                                    <i class="bi bi-x-circle me-1"></i>Inactivo
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                @if (producto.Activo)
+                                                {
+                                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-3"
+                                                            onclick="darBaja('@producto.ProductoId', '@producto.Nombre')"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de baja">
+                                                        <i class="bi bi-toggle-off"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="btn btn-outline-success btn-sm rounded-3"
+                                                            onclick="darAlta('@producto.ProductoId', '@producto.Nombre')"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de alta">
+                                                        <i class="bi bi-toggle-on"></i>
+                                                    </button>
+                                                }
+                                                <a asp-area="Admin" asp-controller="Productos" asp-action="EditarProducto" asp-route-id="@producto.ProductoId"
+                                                   class="btn btn-outline-primary btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar producto">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a asp-area="" asp-controller="Productos" asp-action="Detalles" asp-route-id="@producto.ProductoId"
+                                                   class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-warning btn-sm rounded-3"
+                                                        onclick="abrirModalMovimiento('@producto.ProductoId', '@producto.Nombre', '@producto.Stock')"
+                                                        data-bs-toggle="tooltip" title="Movimiento de Stock">
+                                                    <i class="bi bi-arrow-left-right"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Vista de Cards (Mobile/Tablet) -->
+                    <div class="d-lg-none p-3" id="tablaProductos">
+                        @foreach (var producto in Model.ProductosPaginados.Items)
+                        {
+                            <div class="card mb-3 fila-producto @(producto.Activo ? "" : "bg-light")">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="producto-imagen-mini me-3">
+                                            <img src="@producto.ImagenUrl"
+                                                 alt="@producto.Nombre"
+                                                 class="img-thumbnail @(producto.Activo ? "" : "opacity-50")"
+                                                 style="width: 70px; height: 70px; object-fit: cover; cursor: pointer;"
+                                                 onclick="mostrarImagenModal('@producto.ImagenUrl', '@producto.Nombre')"
+                                                 role="button" />
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="fw-semibold mb-1 @(producto.Activo ? "" : "text-muted")">@producto.Nombre</h6>
+                                            @if (producto.CategoriaId != null)
+                                            {
+                                                <span class="badge bg-secondary border small fw-medium text-uppercase" style="letter-spacing: 0.5px;">@producto.CategoriaNombre</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">Sin categoría</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-currency-dollar text-primary me-1"></i>Precio
+                                            </small>
+                                            <div class="@(producto.Activo ? "" : "text-muted") fw-semibold">
+                                                @producto.Precio.ToString("C", new System.Globalization.CultureInfo("es-CO"))
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-boxes text-primary me-1"></i>Stock
+                                            </small>
+                                            @if (producto.Stock > 0)
+                                            {
+                                                if (producto.Stock <= 5)
+                                                {
+                                                    <span class="badge bg-warning px-2 py-1 fw-medium text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>@producto.Stock und.
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success px-2 py-1 fw-medium text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">
+                                                        <i class="bi bi-check-circle me-1"></i>@producto.Stock und.
+                                                    </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger px-2 py-1 fw-medium text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">
+                                                    <i class="bi bi-x-circle me-1"></i>Agotado
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            @if (producto.Activo)
+                                            {
+                                                <span class="badge bg-success px-2 py-1 fw-medium text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">
+                                                    <i class="bi bi-check-circle me-1"></i>Activo
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger px-2 py-1 fw-medium text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">
+                                                    <i class="bi bi-x-circle me-1"></i>Inactivo
+                                                </span>
+                                            }
+                                        </div>
+                                        <div class="d-flex gap-1">
+                                            @if (producto.Activo)
+                                            {
+                                                <button type="button" class="btn btn-outline-danger btn-sm rounded-3"
+                                                        onclick="darBaja('@producto.ProductoId', '@producto.Nombre')"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de baja">
+                                                    <i class="bi bi-toggle-off"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-outline-success btn-sm rounded-3"
+                                                        onclick="darAlta('@producto.ProductoId', '@producto.Nombre')"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de alta">
+                                                    <i class="bi bi-toggle-on"></i>
+                                                </button>
+                                            }
+                                            <a asp-area="Admin" asp-controller="Productos" asp-action="EditarProducto" asp-route-id="@producto.ProductoId"
+                                               class="btn btn-outline-primary btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar producto">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a asp-area="" asp-controller="Productos" asp-action="Detalles" asp-route-id="@producto.ProductoId"
+                                               class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-warning btn-sm rounded-3"
+                                                    onclick="abrirModalMovimiento('@producto.ProductoId', '@producto.Nombre', '@producto.Stock')"
+                                                    data-bs-toggle="tooltip" title="Stock">
+                                                <i class="bi bi-arrow-left-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    <nav aria-label="Navegación de productos" class="mt-3">
+        <ul class="pagination justify-content-center justify-content-md-end mb-0">
+            @{
+                var paginacion = Model.ProductosPaginados;
+                int radio = 2; // Páginas a mostrar alrededor de la actual
+                int actual = paginacion.PaginaActual;
+                int total = paginacion.TotalPaginas;
+            }
+
+            @* Botón Anterior *@
+            <li class="page-item @(actual == 1 ? "disabled" : "")">
+                <a class="page-link" asp-area="Admin" asp-controller="Productos" asp-action="Catalogo"
+                   asp-route-pagina="@(actual - 1)"
+                   asp-route-tamanoPagina="@paginacion.RegistrosPorPagina"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-categoriaId="@Model.CategoriaSeleccionada"
+                   asp-route-stock="@Model.StockSeleccionado"
+                   asp-route-estado="@Model.EstadoSeleccionado">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+
+            @for (int i = 1; i <= total; i++)
+            {
+                // Lógica de Truncado
+                // Mostramos: Primera, Última y el rango alrededor de la actual
+                if (i == 1 || i == total || (i >= actual - radio && i <= actual + radio))
+                {
+                    <li class="page-item @(i == actual ? "active" : "")">
+                        <a class="page-link" asp-area="Admin" asp-controller="Productos" asp-action="Catalogo"
+                           asp-route-pagina="@i"
+                           asp-route-tamanoPagina="@paginacion.RegistrosPorPagina"
+                           asp-route-busqueda="@Model.Busqueda"
+                           asp-route-categoriaId="@Model.CategoriaSeleccionada"
+                           asp-route-stock="@Model.StockSeleccionado"
+                           asp-route-estado="@Model.EstadoSeleccionado">
+                            @i
+                        </a>
+                    </li>
+                }
+                // Si estamos en el límite del radio, ponemos los puntos suspensivos
+                else if (i == actual - radio - 1 || i == actual + radio + 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                }
+            }
+
+            @* Botón Siguiente *@
+            <li class="page-item @(actual == total ? "disabled" : "")">
+                <a class="page-link" asp-area="Admin" asp-controller="Productos" asp-action="Catalogo"
+                   asp-route-pagina="@(actual + 1)"
+                   asp-route-tamanoPagina="@paginacion.RegistrosPorPagina"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-categoriaId="@Model.CategoriaSeleccionada"
+                   asp-route-stock="@Model.StockSeleccionado"
+                   asp-route-estado="@Model.EstadoSeleccionado">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<!-- Modal de Confirmación -->
+<partial name="_ModalCambiarEstado" />
+
+<!-- Modal para Imagen Ampliada -->
+<div class="modal fade" id="modalImagenProducto" tabindex="-1" aria-labelledby="modalImagenProductoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-semibold" id="modalImagenProductoLabel">
+                    <i class="bi bi-image me-2 text-primary"></i>
+                    <span id="nombreProductoModal"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="text-center p-4">
+                    <img id="imagenProductoModal" class="img-fluid rounded" style="max-height: 70vh; object-fit: contain;">
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalMovimientoStock" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-secondary shadow">
+            <form id="formStock" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title d-flex align-items-center">
+                        <i class="bi bi-box-seam me-2 text-primary"></i> Movimiento de Stock
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="p-3 mb-4 rounded bg-body-tertiary border border-secondary-subtle">
+                        <input type="hidden" id="mov_ProductoId" name="ProductoId" />
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-secondary d-block">Producto</small>
+                                <strong id="mov_NombreProducto" class="fs-5">...</strong>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-secondary d-block">Stock Actual</small>
+                                <span id="mov_StockActual" class="fs-6">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary-emphasis small text-uppercase">Tipo de Operación</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-body-secondary border-secondary"><i class="bi bi-arrow-left-right text-primary"></i></span>
+                            <select id="selectTipo" class="form-select border-secondary-subtle focus-ring focus-ring-primary" required>
+                                <option value="Entrada" data-url="@Url.Action("RegistrarEntrada", "MovimientosStock")">
+                                    Entrada de Mercadería (+)
+                                </option>
+                                <option value="Ajuste" data-url="@Url.Action("RegistrarAjuste", "MovimientosStock")">
+                                    Ajuste Manual (-)
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary-emphasis small text-uppercase">Cantidad</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-body-secondary border-secondary"><i class="bi bi-plus-slash-minus text-primary"></i></span>
+                            <input type="number" id="inputCantidad" name="Cantidad"
+                                   class="form-control border-secondary-subtle"
+                                   placeholder="0" required />
+                        </div>
+                        <div class="form-text mt-2" id="helpCantidad">
+                            <i class="bi bi-info-circle"></i> Para entradas usar positivos.
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label fw-bold text-secondary-emphasis small text-uppercase">Observaciones</label>
+                        <textarea id="inputObs" name="Observaciones"
+                                  class="form-control border-secondary-subtle"
+                                  rows="3" placeholder="Escribe el motivo o detalle aquí..."></textarea>
+                        <div class="form-text mt-2" id="helpObs">
+                            Opcional para entradas.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                        <i class="bi bi-check-lg me-1"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Formularios Ocultos -->
+<div style="display: none;">
+    @foreach (var producto in Model.ProductosPaginados.Items)
+    {
+        <form id="formularioBaja@(producto.ProductoId)" asp-area="Admin" asp-controller="Productos" asp-action="DarBaja" asp-route-id="@producto.ProductoId" method="post">
+            @Html.AntiForgeryToken()
+        </form>
+        <form id="formularioAlta@(producto.ProductoId)" asp-area="Admin" asp-controller="Productos" asp-action="DarAlta" asp-route-id="@producto.ProductoId" method="post">
+            @Html.AntiForgeryToken()
+        </form>
+    }
+</div>
+
+@section Scripts{
+    <script>
+        // Inicializar Tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+        // Función para mostrar imagen en modal
+        function mostrarImagenModal(urlImagen, nombreProducto) {
+            const modal = new bootstrap.Modal(document.getElementById('modalImagenProducto'));
+            const imagenModal = document.getElementById('imagenProductoModal');
+            const nombreModal = document.getElementById('nombreProductoModal');
+
+            // Establecer imagen y nombre
+            imagenModal.src = urlImagen;
+            imagenModal.alt = nombreProducto;
+            nombreModal.textContent = nombreProducto;
+
+            // Mostrar modal
+            modal.show();
+        }
+
+        // Modal de confirmación
+        function darBaja(idProducto, nombreProducto) {
+            const modal = new bootstrap.Modal(document.getElementById('modalCambioEstado'));
+            const titulo = document.getElementById('modalTitulo');
+            const iconoEstado = document.getElementById('iconoEstado');
+            const mensajeCambioEstado = document.getElementById('mensajeCambioEstado');
+            const botonDerecho = document.getElementById('botonDerecho');
+
+            iconoEstado.className = 'bi bi-exclamation-triangle text-warning display-4';
+            mensajeCambioEstado.textContent = `¿Estás seguro de que quieres dar de baja el producto ${nombreProducto}? El producto no estará disponible para la venta.`;
+            botonDerecho.className = 'btn btn-danger';
+            botonDerecho.textContent = 'Dar de Baja';
+            botonDerecho.onclick = () => {
+                document.getElementById(`formularioBaja${idProducto}`).submit();
+            };
+
+            modal.show();
+        }
+
+        function darAlta(idProducto, nombreProducto) {
+            const modal = new bootstrap.Modal(document.getElementById('modalCambioEstado'));
+            const titulo = document.getElementById('modalTitulo');
+            const iconoEstado = document.getElementById('iconoEstado');
+            const mensajeCambioEstado = document.getElementById('mensajeCambioEstado');
+            const botonDerecho = document.getElementById('botonDerecho');
+
+            iconoEstado.className = 'bi bi-check-circle text-success display-4';
+            mensajeCambioEstado.textContent = `¿Estás seguro de que quieres dar de alta el producto ${nombreProducto}? El producto estará disponible para la venta.`;
+            botonDerecho.className = 'btn btn-success';
+            botonDerecho.textContent = 'Dar de Alta';
+            botonDerecho.onclick = () => {
+                document.getElementById(`formularioAlta${idProducto}`).submit();
+            };
+
+            modal.show();
+        }
+
+        function abrirModalMovimiento(id, nombre, stock) {
+            document.getElementById('mov_ProductoId').value = id;
+            document.getElementById('mov_NombreProducto').innerText = nombre;
+            document.getElementById('mov_StockActual').innerText = stock + " unidades";
+
+            var myModal = new bootstrap.Modal(document.getElementById('modalMovimientoStock'));
+            myModal.show();
+        }
+
+        // Formulario de stock
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('formStock');
+            const select = document.getElementById('selectTipo');
+            const inputCantidad = document.getElementById('inputCantidad');
+            const inputObs = document.getElementById('inputObs');
+            const helpCantidad = document.getElementById('helpCantidad');
+            const helpObs = document.getElementById('helpObs');
+
+            // Función que reconfigura el form según lo que se elija
+            const configurarFormulario = () => {
+                const opcion = select.options[select.selectedIndex];
+                const tipo = select.value;
+
+                // 1. Cambiar el Action del Formulario
+                form.action = opcion.getAttribute('data-url');
+
+                // 2. Ajustar validaciones HTML5 según el tipo
+                if (tipo === 'Entrada') {
+                    // Entrada: Solo positivos, Obs opcional
+                    inputCantidad.setAttribute('min', '1');
+                    inputObs.removeAttribute('required');
+                    inputObs.removeAttribute('minlength');
+
+                    helpCantidad.innerText = "Ingresá la cantidad a sumar al stock.";
+                    helpObs.innerText = "Opcional.";
+                } else {
+                    // Ajuste: Permite negativos, Obs obligatoria (mínimo 10 chars según tu DTO)
+                    inputCantidad.removeAttribute('min');
+                    inputObs.setAttribute('required', 'required');
+                    inputObs.setAttribute('minlength', '10');
+
+                    helpCantidad.innerText = "Ingresá la cantidad a sumar o restar al stock.";
+                    helpObs.innerText = "Requerido. Explicá el motivo (mín. 10 letras).";
+                }
+            };
+
+            // Escuchar cambios
+            select.addEventListener('change', configurarFormulario);
+
+            // Ejecutar al inicio por si el navegador guardó la selección
+            configurarFormulario();
+        });
+    </script>
+}
+

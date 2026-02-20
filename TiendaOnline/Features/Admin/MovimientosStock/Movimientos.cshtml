@@ -1,0 +1,343 @@
+﻿@using TiendaOnline.Features.Admin.MovimientosStock
+@model MovimientosViewModel
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-md-flex justify-content-md-between align-items-md-center">
+                <div>
+                    <h2 class="mb-1 fw-bold">
+                        <i class="bi bi-arrow-left-right me-2 text-primary"></i>
+                        Movimientos de Stock
+                    </h2>
+                    <p class="text-muted mb-0">Historial de entradas, salidas y ajustes de inventario</p>
+                </div>
+                <a asp-controller="MovimientosStock" asp-action="Nuevo" class="btn btn-primary btn-lg shadow-sm rounded-3 mt-3 mt-md-0">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Nuevo Movimiento
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="get" asp-action="Movimientos">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card rounded-3 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-1">
+                                <label class="form-label fw-bold text-muted small">Ver</label>
+                                <select name="RegistrosPorPagina" class="form-select" onchange="this.form.submit()">
+                                    @{
+                                        int[] opciones = { 20, 50, 100 };
+                                        foreach (var cantidad in opciones)
+                                        {
+                                            <option value="@cantidad" selected="@(Model.Filtros.RegistrosPorPagina == cantidad ? "selected" : null)">
+                                                @cantidad
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold"><i class="bi bi-search me-1"></i>Producto</label>
+                                <input type="text" name="Busqueda" value="@Model.Filtros.Busqueda" class="form-control" placeholder="Nombre del producto...">
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold"><i class="bi bi-funnel me-1"></i>Tipo</label>
+                                <select name="TipoMovimientoId" class="form-select">
+                                    <option value="">Todos</option>
+                                    @foreach (var tipo in Model.TiposMovimiento)
+                                    {
+                                        <option value="@tipo.Id" selected="@(Model.Filtros.TipoMovimientoId == tipo.Id)">@tipo.Nombre</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold"><i class="bi bi-calendar-event me-1"></i>Desde</label>
+                                <input type="date" name="Desde" value="@(Model.Filtros.Desde?.ToString("yyyy-MM-dd"))" class="form-control">
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold"><i class="bi bi-calendar-event me-1"></i>Hasta</label>
+                                <input type="date" name="Hasta" value="@(Model.Filtros.Hasta?.ToString("yyyy-MM-dd"))" class="form-control">
+                            </div>
+
+                            <div class="col-md-2 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary rounded-3 flex-fill">
+                                    <i class="bi bi-filter"></i>
+                                </button>
+                                <a asp-action="Index" class="btn btn-outline-secondary rounded-3 flex-fill" title="Limpiar filtros">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card rounded-3 shadow-sm border-0">
+                <div class="card-header border-bottom py-3">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 px-1">
+                        <div class="text-muted small">
+                            @if (Model.MovimientosPaginados.TotalRegistros > 0)
+                            {
+                                <span>
+                                    Mostrando <strong>@Model.MovimientosPaginados.DesdeRegistro</strong> a
+                                    <strong>@Model.MovimientosPaginados.HastaRegistro</strong> de
+                                    <strong>@Model.MovimientosPaginados.TotalRegistros</strong> productos
+                                </span>
+                            }
+                            else
+                            {
+                                <span>
+                                    <i class="bi bi-exclamation-circle me-1 text-warning"></i>
+                                    No se encontraron resultados.
+                                </span>
+                            }
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            @if (!string.IsNullOrEmpty(Model.Filtros.Busqueda))
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-search me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Búsqueda:</span> "<strong>@Model.Filtros.Busqueda</strong>"
+                                </span>
+                            }
+
+                            @if (Model.Filtros.TipoMovimientoId.HasValue)
+                            {
+                                var tipoSeleccionado = Model.TiposMovimiento
+                                .FirstOrDefault(t => t.Id == Model.Filtros.TipoMovimientoId)?.Nombre;
+
+                                <span class="text-muted small">
+                                    <i class="bi bi-tag me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Tipo de movimiento:</span>
+                                    <strong>@tipoSeleccionado</strong>
+                                </span>
+                            }
+
+                            @if (Model.Filtros.Desde.HasValue)
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-calendar-event me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Desde:</span> <strong>@Model.Filtros.Desde?.ToString("yyyy-MM-dd")</strong>
+                                </span>
+                            }
+                            @if (Model.Filtros.Hasta.HasValue)
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-calendar-event me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Hasta:</span> <strong>@Model.Filtros.Hasta?.ToString("yyyy-MM-dd")</strong>
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="d-none d-lg-block">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th class="border-0 py-3 ps-4"><i class="bi bi-box me-2 text-primary"></i>Producto</th>
+                                    <th class="border-0 py-3"><i class="bi bi-funnel me-2 text-primary"></i>Tipo</th>
+                                    <th class="border-0 py-3 text-center"><i class="bi bi-123 me-2 text-primary"></i>Cantidad</th>
+                                    <th class="border-0 py-3"><i class="bi bi-calendar me-2 text-primary"></i>Fecha</th>
+                                    <th class="border-0 py-3"><i class="bi bi-cart-check me-2 text-primary"></i>Pedido</th>
+                                    <th class="border-0 py-3"><i class="bi bi-chat-left-text me-2 text-primary"></i>Observaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.MovimientosPaginados.Items)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center">
+                                                <img src="@item.ImagenUrl" alt="@item.ProductoNombre"
+                                                     class="rounded border me-3"
+                                                     style="width: 40px; height: 40px; object-fit: cover; cursor: zoom-in;"
+                                                     onclick="mostrarImagenModal('@item.ImagenUrl', '@item.ProductoNombre')">
+                                                <span class="fw-semibold">@item.ProductoNombre</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if (item.Tipo.ToLower().Contains("entrada"))
+                                            {
+                                                <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill border border-success border-opacity-25">
+                                                    <i class="bi bi-arrow-down-circle me-1"></i>@item.Tipo
+                                                </span>
+                                            }
+                                            else if (item.Tipo.ToLower().Contains("salida"))
+                                            {
+                                                <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill border border-danger border-opacity-25">
+                                                    <i class="bi bi-arrow-up-circle me-1"></i>@item.Tipo
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill border border-warning border-opacity-25">
+                                                    <i class="bi bi-pencil-square me-1"></i>@item.Tipo
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="fw-bold @(item.Cantidad < 0 ? "text-danger" : "text-success")">
+                                                @(item.Cantidad < 0 ? "" : "+")@item.Cantidad
+                                            </span>
+                                        </td>
+                                        <td class="text-muted small">
+                                            <div><i class="bi bi-calendar3 me-1"></i>@item.Fecha.ToString("dd/MM/yyyy")</div>
+                                            <div><i class="bi bi-clock me-1"></i>@item.Fecha.ToString("HH:mm")</div>
+                                        </td>
+                                        <td>
+                                            @if(item.PedidoId.HasValue)
+                                            {
+                                                <a asp-area="" asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@item.PedidoId"
+                                                   class="d-flex justify-content-center align-items-center fw-semibold text-uppercase"
+                                                   style="font-size: 0.9rem; letter-spacing: 0.5px;"
+                                                   data-bs-toggle="tooltip"
+                                                   data-bs-placement="top"
+                                                   data-bs-title="Ver detalles del pedido">
+                                                    #@item.PedidoId
+                                                </a>
+                                            } 
+                                            else
+                                            {
+                                                <span class="d-flex justify-content-center align-items-center fw-semibold">-</span>
+                                            }
+                                        </td>
+                                        <td class="text-muted small text-truncate" style="max-width: 200px;" title="@item.Observaciones">
+                                            @item.Observaciones
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-lg-none p-3">
+                        @foreach (var item in Model.MovimientosPaginados.Items)
+                        {
+                            <div class="card mb-3 border shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex mb-3">
+                                        <img src="@item.ImagenUrl" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                        <div>
+                                            <h6 class="mb-1 fw-bold">@item.ProductoNombre</h6>
+                                            <small class="text-muted">@item.Fecha.ToString("dd/MM/yyyy HH:mm")</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge @(item.Tipo.ToLower().Contains("salida") ? "bg-danger" : "bg-success")">
+                                            @item.Tipo
+                                        </span>
+                                        <span class="fw-bold fs-5 @(item.Cantidad < 0  ? "text-danger" : "text-success")">
+                                            @(item.Cantidad < 0 ? "" : "+")@item.Cantidad
+                                        </span>
+                                    </div>
+                                    <div class="p-2 rounded small text-muted">
+                                        <i class="bi bi-cart-check me-1 text-primary"></i> @item.PedidoId <br />
+                                        <i class="bi bi-chat-left-text me-1 text-primary"></i> @item.Observaciones
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.MovimientosPaginados.TotalPaginas > 1)
+    {
+        <nav aria-label="Navegación" class="mt-4">
+            <ul class="pagination justify-content-center">
+                @{
+                    var pag = Model.MovimientosPaginados;
+                    var filtros = Model.Filtros;
+                }
+
+                <li class="page-item @(pag.PaginaActual == 1 ? "disabled" : "")">
+                    <a class="page-link shadow-none" asp-action="Movimientos"
+                       asp-route-Pagina="@(pag.PaginaActual - 1)"
+                       asp-route-RegistrosPorPagina="@filtros.RegistrosPorPagina"
+                       asp-route-Busqueda="@filtros.Busqueda"
+                       asp-route-TipoMovimientoId="@filtros.TipoMovimientoId"
+                       asp-route-Desde="@(filtros.Desde?.ToString("yyyy-MM-dd"))"
+                       asp-route-Hasta="@(filtros.Hasta?.ToString("yyyy-MM-dd"))">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+
+                @for (int i = 1; i <= pag.TotalPaginas; i++)
+                {
+                    if (i == 1 || i == pag.TotalPaginas || (i >= pag.PaginaActual - 2 && i <= pag.PaginaActual + 2))
+                    {
+                        <li class="page-item @(i == pag.PaginaActual ? "active" : "")">
+                            <a class="page-link shadow-none" asp-action="Movimientos"
+                               asp-route-Pagina="@i"
+                               asp-route-RegistrosPorPagina="@filtros.RegistrosPorPagina"
+                               asp-route-Busqueda="@filtros.Busqueda"
+                               asp-route-TipoMovimientoId="@filtros.TipoMovimientoId"
+                               asp-route-Desde="@(filtros.Desde?.ToString("yyyy-MM-dd"))"
+                               asp-route-Hasta="@(filtros.Hasta?.ToString("yyyy-MM-dd"))">
+                                @i
+                            </a>
+                        </li>
+                    }
+                    else if (i == pag.PaginaActual - 3 || i == pag.PaginaActual + 3)
+                    {
+                        <li class="page-item disabled"><span class="page-link border-0">...</span></li>
+                    }
+                }
+
+                <li class="page-item @(pag.PaginaActual == pag.TotalPaginas ? "disabled" : "")">
+                    <a class="page-link shadow-none" asp-action="Movimientos"
+                       asp-route-Pagina="@(pag.PaginaActual + 1)"
+                       asp-route-RegistrosPorPagina="@filtros.RegistrosPorPagina"
+                       asp-route-Busqueda="@filtros.Busqueda"
+                       asp-route-TipoMovimientoId="@filtros.TipoMovimientoId"
+                       asp-route-Desde="@(filtros.Desde?.ToString("yyyy-MM-dd"))"
+                       asp-route-Hasta="@(filtros.Hasta?.ToString("yyyy-MM-dd"))">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>
+
+<div class="modal fade" id="modalImagenProducto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-0 text-center position-relative bg-dark rounded">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+                <img id="imgModalSrc" src="" class="img-fluid rounded" style="max-height: 80vh;">
+                <h6 id="imgModalTitle" class="text-white py-2 m-0"></h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+        function mostrarImagenModal(url, titulo) {
+            document.getElementById('imgModalSrc').src = url;
+            document.getElementById('imgModalTitle').textContent = titulo;
+            new bootstrap.Modal(document.getElementById('modalImagenProducto')).show();
+        }
+    </script>
+}
