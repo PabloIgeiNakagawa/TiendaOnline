@@ -36,5 +36,6 @@ namespace TiendaOnline.Domain.Entities
         public Categoria? Categoria { get; set; }
 
         public ICollection<MovimientoStock> Movimientos { get; set; } = new List<MovimientoStock>();
+        public virtual ICollection<OfertaProducto> Ofertas { get; set; } = new List<OfertaProducto>();
     }
 }

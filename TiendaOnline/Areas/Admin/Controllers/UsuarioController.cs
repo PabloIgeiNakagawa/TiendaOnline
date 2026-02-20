@@ -51,7 +51,7 @@ namespace TiendaOnline.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CrearUsuario(RegisterViewModel model)
+        public async Task<IActionResult> CrearUsuario(UsuarioCreateDto model)
         {
             if (!ModelState.IsValid) return View(model);
 
@@ -63,7 +63,6 @@ namespace TiendaOnline.Areas.Admin.Controllers
                     Apellido = model.Apellido,
                     Email = model.Email,
                     Telefono = model.Telefono,
-                    Direccion = model.Direccion,
                     FechaNacimiento = model.FechaNacimiento,
                     Contrasena = model.Contrasena,
                     RolId = model.RolId
@@ -73,9 +72,9 @@ namespace TiendaOnline.Areas.Admin.Controllers
                 TempData["MensajeExito"] = "Usuario creado correctamente.";
                 return RedirectToAction("Usuario", "Listado", new { area = "Admin" });
             }
-            catch (EmailDuplicadoException)
+            catch (EmailDuplicadoException ex)
             {
-                ModelState.AddModelError("Email", "Este correo ya está registrado.");
+                ModelState.AddModelError("Email", ex.Message);
                 return View(model);
             }
         }

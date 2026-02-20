@@ -1,4 +1,4 @@
-﻿@model TiendaOnline.Domain.Entities.Usuario
+﻿@model TiendaOnline.ViewModels.Usuario.UsuarioUpdateViewModel
 
 <div class="container-fluid py-4">
     <!-- Breadcrumb -->
@@ -91,20 +91,11 @@
                                         <span asp-validation-for="Telefono" class="text-danger small mt-1"></span>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input asp-for="Direccion" class="form-control" id="campoDireccion" placeholder="Dirección" />
-                                        <label for="campoDireccion">
-                                            <i class="bi bi-geo-alt me-1"></i>Dirección
-                                        </label>
-                                        <span asp-validation-for="Direccion" class="text-danger small mt-1"></span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
                         <!-- Sección de Rol (Solo para Administradores) -->
-                        @if (User.IsInRole("Administrador"))
+                        @* @if (User.IsInRole("Administrador"))
                         {
                             <div class="mb-4">
                                 <h6 class="text-muted mb-3 fw-semibold">
@@ -129,7 +120,7 @@
                                     </div>
                                 </div>
                             </div>
-                        }
+                        } *@
 
                         <!-- Botones de Acción -->
                         <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center pt-3 border-top gap-2">

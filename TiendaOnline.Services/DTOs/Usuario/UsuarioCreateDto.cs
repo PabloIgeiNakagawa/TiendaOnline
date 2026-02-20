@@ -1,4 +1,6 @@
-﻿namespace TiendaOnline.Services.DTOs.Usuario
+﻿using TiendaOnline.Domain.Entities;
+
+namespace TiendaOnline.Services.DTOs.Usuario
 {
     public class UsuarioCreateDto
     {
@@ -7,7 +9,6 @@
         public DateTime FechaNacimiento { get; set; }
         public string Telefono { get; set; }
         public string Email { get; set; }
-        public string Direccion { get; set; }
         public string Contrasena { get; set; }
         public int RolId { get; set; }
     }

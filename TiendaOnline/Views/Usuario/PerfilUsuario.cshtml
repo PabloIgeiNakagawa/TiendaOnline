@@ -1,8 +1,4 @@
-﻿@model TiendaOnline.Domain.Entities.Usuario
-@{
-    ViewData["Title"] = "Perfil de Usuario";
-    var esPropioPerfil = User.Claims.FirstOrDefault(c => c.Type == "UsuarioId")?.Value == Model.UsuarioId.ToString();
-}
+﻿@model TiendaOnline.ViewModels.Usuario.UsuarioPerfilViewModel
 
 <div class="container-fluid py-4">
     <!-- Migas de Pan -->
@@ -14,14 +10,7 @@
                 </a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">
-                @if (esPropioPerfil)
-                {
-                    <text>Mi Perfil</text>
-                }
-                else
-                {
-                    <text>Perfil de Usuario</text>
-                }
+                @(Model.esPropioPerfil ? "Mi Perfil" : "Perfil de Usuario")
             </li>
         </ol>
     </nav>
@@ -43,7 +32,7 @@
                         </div>
                     </div>
                     <div class="acciones-perfil">
-                        @if (esPropioPerfil || User.IsInRole("Administrador"))
+                        @if (Model.esPropioPerfil || User.IsInRole("Administrador"))
                         {
                             <a asp-controller="Usuario" asp-action="EditarUsuario" asp-route-id="@Model.UsuarioId"
                                class="btn btn-primary">
@@ -247,7 +236,6 @@
         }
     </div>
 </div>
-
 
 <!-- Modal de Confirmación -->
 <partial name="_ModalCambiarEstado" />

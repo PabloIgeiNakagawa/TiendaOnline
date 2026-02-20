@@ -7,13 +7,12 @@ namespace TiendaOnline.Services.IServices
 {
     public interface IUsuarioService
     {
-        Task<Usuario?> ObtenerPorEmailAsync(string email);
-        Task<List<Usuario>> ObtenerUsuariosAsync();
+        Task<UsuarioPerfilDto> ObtenerPerfil(int usuarioId);
         Task<Usuario?> ObtenerUsuarioAsync(int usuarioId);
         Task<PagedResult<UsuarioListadoDto>> ObtenerUsuariosPaginadosAsync(int pagina, int cantidad, string? buscar, string? rol, bool? activo);
         Task CrearUsuarioAsync(UsuarioCreateDto usuario);
         Task DarAltaUsuarioAsync(int usuarioId);
         Task DarBajaUsuarioAsync(int usuarioId);
-        Task EditarUsuarioAsync(int id, Usuario usuarioEditado);
+        Task EditarUsuarioAsync(UsuarioUpdateDto dto);
     }
 }

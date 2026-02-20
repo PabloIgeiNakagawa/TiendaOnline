@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
-using TiendaOnline.Services.DTOs.Usuario;
+using TiendaOnline.Services.DTOs.Account;
 using TiendaOnline.Services.IServices;
 using TiendaOnline.ViewModels.Account;
 
@@ -11,12 +11,10 @@ namespace TiendaOnline.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly IUsuarioService _usuarioService;
         private readonly IAuthService _authService;
 
-        public AccountController(IUsuarioService usuarioService, IAuthService authService)
+        public AccountController(IAuthService authService)
         {
-            _usuarioService = usuarioService;
             _authService = authService;
         }
 
@@ -35,25 +33,24 @@ namespace TiendaOnline.Controllers
 
             try
             {
-                var dto = new UsuarioCreateDto
+                var dto = new RegisterDto
                 {
                     Nombre = model.Nombre,
                     Apellido = model.Apellido,
                     Email = model.Email,
                     Telefono = model.Telefono,
-                    Direccion = model.Direccion,
                     FechaNacimiento = model.FechaNacimiento,
                     Contrasena = model.Contrasena,
                     RolId = (int)Rol.Usuario
                 };
 
-                await _usuarioService.CrearUsuarioAsync(dto);
-
+                await _authService.Register(dto);
+                TempData["MensajeExito"] = "¡Te has registrado!";
                 return RedirectToAction("Login");
             }
-            catch (EmailDuplicadoException)
+            catch (EmailDuplicadoException ex)
             {
-                ModelState.AddModelError("Email", "Este correo ya está registrado.");
+                ModelState.AddModelError("Email", ex.Message);
                 return View(model);
             }
         }
@@ -71,41 +68,26 @@ namespace TiendaOnline.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            // Llamamos a la lógica de negocio pura
-            var usuarioDto = await _authService.ValidarCredencialesAsync(model.Email, model.Contrasena);
+            var principal = await _authService.GenerarPrincipalAsync(model.Email, model.Contrasena);
 
-            if (usuarioDto == null)
+            if (principal == null)
             {
                 ModelState.AddModelError("", "Email o contraseña incorrectos.");
                 return View(model);
             }
 
-            // Crear la identidad
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, usuarioDto.UsuarioId.ToString()),
-                new Claim(ClaimTypes.Name, usuarioDto.Nombre),
-                new Claim(ClaimTypes.Email, usuarioDto.Email),
-                new Claim(ClaimTypes.Role, usuarioDto.Rol)
-            };
-
-            var identity = new ClaimsIdentity(claims, "CookieAuth");
-            var principal = new ClaimsPrincipal(identity);
-
-            // Persistencia física: La Cookie
             await HttpContext.SignInAsync("CookieAuth", principal, new AuthenticationProperties
             {
                 IsPersistent = true,
                 ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
             });
 
-            // Redirección basada en lógica de UI
-            if (usuarioDto.Rol == "Administrador")
-                return RedirectToAction("Index", "Home", new { area = "Admin" });
-
-            return RedirectToAction("Index", "Home");
+            var role = principal.FindFirstValue(ClaimTypes.Role);
+            return role == "Administrador"
+                ? RedirectToAction("Index", "Home", new { area = "Admin" })
+                : RedirectToAction("Index", "Home");
         }
-
+        
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync("CookieAuth");

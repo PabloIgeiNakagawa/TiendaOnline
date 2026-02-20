@@ -2,7 +2,7 @@
 @using TiendaOnline.Helpers
 @using TiendaOnline.Services.DTOs
 @{
-    var idUsuario = User.Claims.FirstOrDefault(c => c.Type == "UsuarioId")?.Value;
+    var idUsuario = User?.FindFirstValue(ClaimTypes.NameIdentifier);
     bool usuarioEstaAutenticado = User.Identity.IsAuthenticated;
     var carritoLayout = Context.Session.GetObject<List<ItemCarrito>>("Carrito") ?? new List<ItemCarrito>();
 
