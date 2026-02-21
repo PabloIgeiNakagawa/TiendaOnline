@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Domain.Entities;
 
-namespace TiendaOnline.Controllers
+namespace TiendaOnline.Features.Tienda.Home
 {
     public class HomeController : Controller
     {
@@ -15,11 +15,13 @@ namespace TiendaOnline.Controllers
 
         public IActionResult Index()
         {
+            ViewData["Title"] = "Inicio";
             return View();
         }
 
         public IActionResult Privacy()
         {
+            ViewData["Title"] = "Política de Privacidad";
             return View();
         }
 
