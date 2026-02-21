@@ -28,8 +28,35 @@ namespace TiendaOnline.Domain.Entities
         public EstadoPedido Estado { get; set; } = EstadoPedido.Pendiente;
 
         [Required]
-        public int UsuarioId { get; set; }
+        public bool EsEnvioADomicilio { get; set; }
 
+        [MaxLength(100)]
+        public string? EnvioCalle { get; set; }
+
+        [MaxLength(10)]
+        public string? EnvioNumero { get; set; }
+
+        [MaxLength(10)]
+        public string? EnvioPiso { get; set; }
+
+        [MaxLength(10)]
+        public string? EnvioDepartamento { get; set; }
+
+        [MaxLength(250)]
+        public string? EnvioObservaciones { get; set; }
+
+        [MaxLength(100)]
+        public string? EnvioLocalidad { get; set; }
+
+        [MaxLength(100)]
+        public string? EnvioProvincia { get; set; }
+
+        [MaxLength(15)]
+        public string? EnvioCodigoPostal { get; set; }
+
+        // ---- Relaciones ----
+        [Required]
+        public int UsuarioId { get; set; }
         public Usuario Usuario { get; set; }
 
         public ICollection<DetallePedido> DetallesPedido { get; set; } = new List<DetallePedido>();

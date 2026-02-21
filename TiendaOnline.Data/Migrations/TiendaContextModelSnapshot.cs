@@ -119,6 +119,72 @@ namespace TiendaOnline.Data.Migrations
                     b.ToTable("DetallesPedido");
                 });
 
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.Direccion", b =>
+                {
+                    b.Property<int>("DireccionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DireccionId"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Calle")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CodigoPostal")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.Property<string>("Departamento")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("EsPrincipal")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Etiqueta")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Localidad")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("Piso")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Provincia")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("DireccionId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("Direcciones");
+                });
+
             modelBuilder.Entity("TiendaOnline.Domain.Entities.MovimientoStock", b =>
                 {
                     b.Property<int>("MovimientoStockId")
@@ -162,6 +228,37 @@ namespace TiendaOnline.Data.Migrations
                     b.ToTable("MovimientosStock");
                 });
 
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.OfertaProducto", b =>
+                {
+                    b.Property<int>("OfertaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OfertaId"));
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("FechaFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaInicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("PrecioOferta")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.HasKey("OfertaId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("OfertaProducto", (string)null);
+                });
+
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Pedido", b =>
                 {
                     b.Property<int>("PedidoId")
@@ -169,6 +266,41 @@ namespace TiendaOnline.Data.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PedidoId"));
+
+                    b.Property<string>("EnvioCalle")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("EnvioCodigoPostal")
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.Property<string>("EnvioDepartamento")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("EnvioLocalidad")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("EnvioNumero")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("EnvioObservaciones")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("EnvioPiso")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("EnvioProvincia")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("EsEnvioADomicilio")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Estado")
                         .HasColumnType("int");
@@ -192,7 +324,7 @@ namespace TiendaOnline.Data.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Pedidos");
+                    b.ToTable("Pedidos", (string)null);
                 });
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Producto", b =>
@@ -255,10 +387,6 @@ namespace TiendaOnline.Data.Migrations
 
                     b.Property<string>("Contrasena")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Direccion")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -340,6 +468,17 @@ namespace TiendaOnline.Data.Migrations
                     b.Navigation("Producto");
                 });
 
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.Direccion", b =>
+                {
+                    b.HasOne("TiendaOnline.Domain.Entities.Usuario", "Usuario")
+                        .WithMany("Direcciones")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("TiendaOnline.Domain.Entities.MovimientoStock", b =>
                 {
                     b.HasOne("TiendaOnline.Domain.Entities.Pedido", "Pedido")
@@ -358,12 +497,23 @@ namespace TiendaOnline.Data.Migrations
                     b.Navigation("Producto");
                 });
 
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.OfertaProducto", b =>
+                {
+                    b.HasOne("TiendaOnline.Domain.Entities.Producto", "Producto")
+                        .WithMany("Ofertas")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+                });
+
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Pedido", b =>
                 {
                     b.HasOne("TiendaOnline.Domain.Entities.Usuario", "Usuario")
                         .WithMany("Pedidos")
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Usuario");
@@ -397,10 +547,14 @@ namespace TiendaOnline.Data.Migrations
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Producto", b =>
                 {
                     b.Navigation("Movimientos");
+
+                    b.Navigation("Ofertas");
                 });
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Usuario", b =>
                 {
+                    b.Navigation("Direcciones");
+
                     b.Navigation("Pedidos");
                 });
 #pragma warning restore 612, 618

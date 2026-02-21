@@ -1,0 +1,76 @@
+﻿@model TiendaOnline.Domain.Entities.Categoria
+@{
+    ViewData["Title"] = "Nueva Categoría";
+}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="text-center mb-5">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle shadow-sm fs-2 mb-3"
+                     style="width: 80px; height: 80px;">
+                    <i class="bi bi-tag-fill"></i>
+                </div>
+                <h2 class="fw-bold mb-2">Crear Nueva Categoría</h2>
+                <p class="text-muted">Defina el nombre y la posición jerárquica en el catálogo</p>
+            </div>
+
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <form asp-action="Crear" method="post" id="formularioCategoria">
+                        @Html.AntiForgeryToken()
+
+                        @* Resumen de errores (Aquí aparecerá el error si hay bucles infinitos) *@
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 small"></div>
+
+                        <div class="seccion-formulario mb-4">
+                            <h6 class="titulo-seccion mb-3">
+                                <i class="bi bi-info-circle me-2"></i>Detalles Principales
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input asp-for="Nombre" class="form-control" id="campoNombre" placeholder="Nombre de la categoría" required />
+                                        <label for="campoNombre">
+                                            <i class="bi bi-alphabet me-1"></i>Nombre de la Categoría
+                                        </label>
+                                        <span asp-validation-for="Nombre" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="seccion-formulario mb-4">
+                            <h6 class="titulo-seccion mb-3">
+                                <i class="bi bi-diagram-3 me-2"></i>Categoría Padre
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <select asp-for="CategoriaPadreId" class="form-select" id="campoPadre" asp-items="ViewBag.Categorias">
+                                            <option value="">Elegir categoría superior</option>
+                                        </select>
+                                        <label for="campoPadre">
+                                            <i class="bi bi-layers me-1"></i>Categoría Superior (Opcional)
+                                        </label>
+                                        <span asp-validation-for="CategoriaPadreId" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end align-items-center pt-3 border-top">
+                            <div class="d-flex gap-2">
+                                <a asp-area="Admin" asp-controller="Categorias" asp-action="Listado" class="btn btn-outline-secondary btn-lg px-4">
+                                    <i class="bi bi-arrow-left me-2"></i>Volver
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-lg px-4">
+                                    <i class="bi bi-save me-2"></i>Guardar Categoría
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

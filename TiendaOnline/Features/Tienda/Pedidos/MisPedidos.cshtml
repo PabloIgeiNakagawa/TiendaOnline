@@ -1,0 +1,203 @@
+﻿@model IEnumerable<TiendaOnline.Domain.Entities.Pedido>
+@section Styles{
+    <style>
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 3rem;
+        }
+
+            .timeline::before {
+                content: '';
+                position: absolute;
+                left: 1rem;
+                top: 0;
+                bottom: 0;
+                width: 2px;
+                background: #e2e8f0;
+            }
+    </style>
+}
+<div class="container-fluid py-4">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 fw-bold">
+                        <i class="bi bi-bag-check-fill me-2 text-primary"></i>
+                        Mis Pedidos
+                    </h2>
+                    <p class="text-muted mb-0">Historial completo de tus compras y pedidos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Pedidos -->
+    <div class="row">
+        <div class="col-12">
+            <div style="min-height: 400px;">
+                @if (Model.Any())
+                {
+                    @foreach (var pedido in Model.OrderByDescending(p => p.FechaPedido))
+                    {
+                        <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+                            <!-- Card header -->
+                            <div class="card-header border-bottom py-3">
+                                <div class="row align-items-center g-3">
+                                    <div class="col-12 col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-3 p-2 me-3 border">
+                                                <i class="bi bi-box-seam text-primary fs-4"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="fw-bold mb-0">Pedido #@pedido.PedidoId</h6>
+                                                <div class="text-muted small d-flex align-items-center mt-1">
+                                                    <i class="bi bi-calendar3 me-1"></i>
+                                                    @pedido.FechaPedido.ToString("dd MMM yyyy · HH:mm")
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-6 d-flex align-items-center justify-content-md-end gap-2">
+                                        @{
+                                            // Agregamos opacity-10 para un look moderno de "Soft Badge"
+                                            string claseEstado = pedido.Estado switch
+                                            {
+                                                EstadoPedido.Pendiente => "text-bg-warning",
+                                                EstadoPedido.Enviado => "text-bg-primary",
+                                                EstadoPedido.Entregado => "text-bg-success",
+                                                EstadoPedido.Cancelado => "text-bg-danger",
+                                                _ => "text-bg-secondary"
+                                            };
+                                        }
+
+                                        <span class="badge @claseEstado border-0 px-3 py-2 rounded-pill fw-semibold shadow-sm">
+                                            <i class="bi bi-dot"></i> @pedido.Estado.ToString()
+                                        </span>
+
+                                        <div class="vr mx-2 d-none d-md-block text-secondary opacity-25"></div>
+
+                                        <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@pedido.PedidoId"
+                                           class="btn btn-outline-secondary border-1 rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                           style="width: 38px; height: 38px;"
+                                           data-bs-toggle="tooltip"
+                                           title="Ver detalles completos">
+                                            <i class="bi bi-eye-fill"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contenido del Pedido -->
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="px-4">
+                                            <h6 class="mb-3">
+                                                <i class="bi bi-clock-history me-2"></i>Estado del Pedido
+                                            </h6>
+                                            <div class="timeline">
+                                                <div class="position-absolute start-0 d-flex align-items-center justify-content-center rounded-circle bg-body-secondary text-secondary z-1"
+                                                     style="width: 2rem; height: 2rem; font-size: 0.875rem;">
+                                                    <i class="bi bi-cart-check"></i>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <h6 class="m-0 small fw-semibold">Pedido Realizado</h6>
+                                                    <small class="text-muted">@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</small>
+                                                </div>
+
+                                                <div class="position-absolute start-0 d-flex align-items-center justify-content-center rounded-circle bg-body-secondary text-secondary z-1"
+                                                     style="width: 2rem; height: 2rem; font-size: 0.875rem;">
+                                                    <i class="bi bi-truck"></i>
+                                                </div>
+                                                <div class="mb-2">
+                                                    @if (pedido.FechaEnvio.HasValue)
+                                                    {
+                                                        <h6 class="m-0 small fw-semibold">Enviado</h6>
+                                                        <small class="text-muted">@pedido.FechaEnvio.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                                                    }
+                                                    else
+                                                    {
+                                                        <h6 class="m-0 small fw-semibold">Pendiente de envío</h6>
+                                                    }
+                                                </div>
+
+                                                <div class="position-absolute start-0 d-flex align-items-center justify-content-center rounded-circle bg-body-secondary text-secondary z-1"
+                                                     style="width: 2rem; height: 2rem; font-size: 0.875rem;">
+                                                    @if (pedido.Estado == EstadoPedido.Cancelado)
+                                                    {
+                                                        <i class="bi bi-x-circle"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="bi bi-check-circle"></i>
+                                                    }
+                                                </div>
+                                                <div class="mb-2">
+                                                    @if (pedido.FechaCancelado.HasValue)
+                                                    {
+                                                        <h6 class="m-0 small fw-semibold">Cancelado</h6>
+                                                        <small class="text-muted">@pedido.FechaCancelado.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                                                    }
+                                                    else
+                                                    {
+                                                        @if (pedido.FechaEntrega.HasValue)
+                                                        {
+                                                            <h6 class="m-0 small fw-semibold">Entregado</h6>
+                                                            <small class="text-muted">@pedido.FechaEntrega.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                                                        }
+                                                        else
+                                                        {
+                                                            <h6 class="m-0 small fw-semibold">Pendiente de entrega</h6>
+                                                        }
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="bi bi-bag-x text-muted" style="font-size: 4rem;"></i>
+                        </div>
+                        <h5 class="text-muted">No tienes pedidos aún</h5>
+                        <p class="text-muted">¡Explora nuestro catálogo y realiza tu primera compra!</p>
+                        <a asp-controller="Productos" asp-action="Index" class="btn btn-primary">
+                            <i class="bi bi-shop me-2"></i>Ver Productos
+                        </a>
+                    </div>
+                }
+            </div>
+
+            <!-- Mensaje cuando no hay resultados filtrados -->
+            <div id="noResultados" class="text-center py-5" style="display: none;">
+                <div class="mb-3">
+                    <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="text-muted">No se encontraron pedidos</h5>
+                <p class="text-muted">Intenta ajustar los filtros de búsqueda</p>
+                <button class="btn btn-primary" id="limpiarBusqueda">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts{
+    <script>
+        // Inicializar tooltips
+            var listaTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltips = listaTooltips.map(function (elementoTooltip) {
+                return new bootstrap.Tooltip(elementoTooltip);
+            });
+    </script>
+}

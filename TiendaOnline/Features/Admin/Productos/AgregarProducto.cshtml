@@ -1,0 +1,508 @@
+﻿@using TiendaOnline.Features.Admin.Productos
+@model AgregarProductoViewModel
+
+@section Styles{
+    <style>
+        .image-upload-container {
+            position: relative;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+            .image-upload-container:hover {
+                border-color: #0d6efd;
+            }
+
+            .image-upload-container.dragover {
+                border-color: #198754;
+                background: #d1e7dd;
+            }
+
+        .loading-spinner {
+            display: none;
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 1rem;
+        }
+    </style>
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+                    <i class="bi bi-house-door"></i> Inicio
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-controller="Productos" asp-action="Catalogo" class="text-decoration-none">Productos</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Agregar Producto</li>
+        </ol>
+    </nav>
+
+    <div class="mx-auto rounded-3 shadow overflow-hidden" style="max-width: 800px;">
+        <!-- Header -->
+        <div class="bg-primary py-5 px-4 text-center text-white">
+            <h2 class="mb-2">
+                <i class="bi bi-plus-circle me-2"></i>
+                Agregar Nuevo Producto
+            </h2>
+            <p class="mb-0 opacity-75">Complete la información del producto</p>
+        </div>
+
+        <!-- Formulario -->
+        <div class="p-4">
+            <form asp-action="AgregarProducto" method="post" enctype="multipart/form-data" id="formProducto" novalidate>
+                @Html.AntiForgeryToken()
+
+                <!-- Información básica -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Información Básica
+                        </h5>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <!-- Nombre -->
+                        <div class="form-floating mb-4">
+                            <input asp-for="Nombre"
+                                   class="form-control"
+                                   id="nombre"
+                                   placeholder="Nombre del producto"
+                                   maxlength="50"
+                                   required />
+                            <label for="nombre">
+                                <i class="bi bi-box me-1"></i>Nombre del Producto
+                            </label>
+                            <span asp-validation-for="Nombre" class="invalid-feedback"></span>
+                            <div class="form-text">
+                                <span id="nombreContador">0</span>/50 caracteres
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <!-- Categoria -->
+                        <div class="form-floating mb-4">
+                            <select asp-for="CategoriaId"
+                                    asp-items="ViewBag.Categorias"
+                                    class="form-select"
+                                    id="categoria"
+                                    required>
+                                <option value="">Seleccione una categoría</option>
+                            </select>
+                            <label for="categoria">
+                                <i class="bi bi-tag me-1"></i>Categoría
+                            </label>
+                            <span asp-validation-for="CategoriaId" class="invalid-feedback"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <!-- Descripción -->
+                        <div class="form-floating mb-4">
+                            <textarea asp-for="Descripcion"
+                                      class="form-control"
+                                      id="descripcion"
+                                      placeholder="Descripción"
+                                      style="height: 100px"></textarea>
+                            <label for="descripcion">Descripción</label>
+                            <span asp-validation-for="Descripcion" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Precio y Stock -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-currency-dollar me-2"></i>
+                            Precio y Inventario
+                        </h5>
+                    </div>
+                </div>
+
+                <div class="row col-md-12 g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="form-floating mb-4">
+                            <input asp-for="Precio"
+                                   type="number"
+                                   step="0.01"
+                                   min="0"
+                                   class="form-control"
+                                   id="precio"
+                                   placeholder="0.00"
+                                   required />
+                            <label for="precio">
+                                <i class="bi bi-currency-dollar me-1"></i>Precio (ARS)
+                            </label>
+                            <span asp-validation-for="Precio" class="invalid-feedback"></span>
+                            <div class="form-text">
+                                Precio en pesos argentinos
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="form-floating mb-4">
+                            <input asp-for="Stock"
+                                   type="number"
+                                   min="0"
+                                   class="form-control"
+                                   id="stock"
+                                   placeholder="0"
+                                   required />
+                            <label for="stock">
+                                <i class="bi bi-boxes me-1"></i>Stock Inicial
+                            </label>
+                            <span asp-validation-for="Stock" class="invalid-feedback"></span>
+                            <div class="form-text">
+                                Cantidad disponible en inventario
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Imagen -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-image me-2"></i>
+                            Imagen del Producto
+                        </h5>
+                    </div>
+                </div>
+
+                <div class="image-upload-container" onclick="document.getElementById('imagenArchivo').click()">
+                    <input type="file" asp-for="ImagenArchivo"
+                           name="ImagenArchivo"
+                           id="imagenArchivo"
+                           class="d-none"
+                           accept="image/*"
+                           required />
+
+                    <div id="uploadPlaceholder">
+                        <i class="bi bi-cloud-upload fs-1 text-secondary mb-3"></i>
+                        <h6>Haga clic para seleccionar una imagen</h6>
+                        <p class="text-muted mb-0">o arrastre y suelte aquí</p>
+                        <small class="text-muted">PNG, JPG, JPEG hasta 5MB</small>
+                    </div>
+
+                    <img id="imagePreview"
+                         class="d-none mx-auto my-3 rounded-3 shadow-sm img-thumbnail object-fit-cover"
+                         style="max-width: 200px; max-height: 200px;"
+                         alt="Vista previa" />
+
+                    <div id="fileInfo" class="d-none mt-3 p-3 bg-primary-subtle border-start border-4 border-primary rounded-2 shadow-sm">
+                        <i class="bi bi-file-image me-2"></i>
+                        <span id="fileName"></span>
+                        <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeImage(event)">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="row mt-5">
+                    <div class="col-12">
+                        <div class="d-flex gap-3 justify-content-end">
+                            <a asp-controller="Productos" asp-action="Catalogo" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="btnSubmit">
+                                <span class="btn-text">
+                                    <i class="bi bi-plus-circle me-2"></i>Agregar Producto
+                                </span>
+                                <span class="loading-spinner">
+                                    <i class="bi bi-arrow-repeat spin me-2"></i>Guardando...
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts{
+    <script>
+            document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('formProducto');
+            const imagenInput = document.getElementById('imagenArchivo');
+            const imagePreview = document.getElementById('imagePreview');
+            const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const uploadContainer = document.querySelector('.image-upload-container');
+            const btnSubmit = document.getElementById('btnSubmit');
+            const btnText = btnSubmit.querySelector('.btn-text');
+            const loadingSpinner = btnSubmit.querySelector('.loading-spinner');
+
+            // Contadores de caracteres
+            setupCharacterCounter('nombre', 'nombreContador', 50);
+            setupCharacterCounter('descripcion', 'descripcionContador', 150);
+
+            // Validación en tiempo real
+            setupRealTimeValidation();
+
+            // Manejo de imagen
+            imagenInput.addEventListener('change', handleImageSelect);
+
+            // Drag and drop
+            setupDragAndDrop();
+
+            // Validación del formulario
+            form.addEventListener('submit', handleFormSubmit);
+
+            function setupCharacterCounter(inputId, counterId, maxLength) {
+                const input = document.getElementById(inputId);
+                const counter = document.getElementById(counterId);
+
+                input.addEventListener('input', function () {
+                    const length = this.value.length;
+                    counter.textContent = length;
+
+                    if (length > maxLength * 0.8) {
+                        counter.parentElement.classList.add('text-warning');
+                    } else {
+                        counter.parentElement.classList.remove('text-warning');
+                    }
+
+                    if (length >= maxLength) {
+                        counter.parentElement.classList.add('text-danger');
+                        counter.parentElement.classList.remove('text-warning');
+                    } else {
+                        counter.parentElement.classList.remove('text-danger');
+                    }
+                });
+            }
+
+            function setupRealTimeValidation() {
+                const inputs = form.querySelectorAll('input, select, textarea');
+
+                inputs.forEach(input => {
+                    input.addEventListener('blur', validateField);
+                    input.addEventListener('input', function () {
+                        if (this.classList.contains('is-invalid')) {
+                            validateField.call(this);
+                        }
+                    });
+                });
+            }
+
+            function validateField() {
+                const field = this;
+                const value = field.value.trim();
+                let isValid = true;
+                let message = '';
+
+                // Validaciones específicas
+                switch (field.id) {
+                    case 'nombre':
+                        if (!value) {
+                            isValid = false;
+                            message = 'El nombre es requerido';
+                        } else if (value.length > 50) {
+                            isValid = false;
+                            message = 'El nombre no puede exceder 50 caracteres';
+                        }
+                        break;
+
+                    case 'descripcion':
+                        if (!value) {
+                            isValid = false;
+                            message = 'La descripción es requerida';
+                        } else if (value.length > 150) {
+                            isValid = false;
+                            message = 'La descripción no puede exceder 150 caracteres';
+                        }
+                        break;
+
+                    case 'precio':
+                        const precio = parseFloat(value);
+                        if (!value) {
+                            isValid = false;
+                            message = 'El precio es requerido';
+                        } else if (isNaN(precio) || precio <= 0) {
+                            isValid = false;
+                            message = 'El precio debe ser mayor a 0';
+                        } else if (precio > 999999999) {
+                            isValid = false;
+                            message = 'El precio es demasiado alto';
+                        }
+                        break;
+
+                    case 'stock':
+                        const stock = parseInt(value);
+                        if (!value) {
+                            isValid = false;
+                            message = 'El stock es requerido';
+                        } else if (isNaN(stock) || stock < 0) {
+                            isValid = false;
+                            message = 'El stock debe ser mayor o igual a 0';
+                        }
+                        break;
+
+                    case 'categoria':
+                        if (!value) {
+                            isValid = false;
+                            message = 'Debe seleccionar una categoría';
+                        }
+                        break;
+                }
+
+                // Aplicar estilos de validación
+                const feedback = field.parentElement.querySelector('.invalid-feedback');
+
+                if (isValid) {
+                    field.classList.remove('is-invalid');
+                    field.classList.add('is-valid');
+                    if (feedback) feedback.textContent = '';
+                } else {
+                    field.classList.remove('is-valid');
+                    field.classList.add('is-invalid');
+                    if (feedback) feedback.textContent = message;
+                }
+
+                return isValid;
+            }
+
+            function handleImageSelect(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    validateAndPreviewImage(file);
+                }
+            }
+
+            function validateAndPreviewImage(file) {
+                // Validar tipo de archivo
+                if (!file.type.startsWith('image/')) {
+                    alert('Por favor seleccione un archivo de imagen válido');
+                    return;
+                }
+
+                // Validar tamaño (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('La imagen no puede ser mayor a 5MB');
+                    return;
+                }
+
+                // Mostrar vista previa
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.classList.remove('d-none');
+                    imagePreview.style.display = 'block';
+                    uploadPlaceholder.style.display = 'none';
+                    fileInfo.classList.remove('d-none');
+                    fileInfo.style.display = 'block';
+                    fileName.textContent = file.name;
+                    uploadContainer.classList.add('has-image');
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function setupDragAndDrop() {
+                uploadContainer.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    this.classList.add('dragover');
+                });
+
+                uploadContainer.addEventListener('dragleave', function (e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                });
+
+                uploadContainer.addEventListener('drop', function (e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        imagenInput.files = files;
+                        validateAndPreviewImage(files[0]);
+                    }
+                });
+            }
+
+            function handleFormSubmit(e) {
+                e.preventDefault();
+
+                // Validar todos los campos
+                const inputs = form.querySelectorAll('input, select, textarea');
+                let isFormValid = true;
+
+                inputs.forEach(input => {
+                    if (!validateField.call(input)) {
+                        isFormValid = false;
+                    }
+                });
+
+                // Validar imagen
+                if (!imagenInput.files[0]) {
+                    alert('Por favor seleccione una imagen para el producto');
+                    isFormValid = false;
+                }
+
+                if (isFormValid) {
+                    // Mostrar loading
+                    btnSubmit.disabled = true;
+                    btnText.style.display = 'none';
+                    loadingSpinner.style.display = 'inline';
+
+                    // Enviar formulario
+                    form.submit();
+                } else {
+                    // Scroll al primer error
+                    const firstError = form.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                }
+            }
+
+            // Función global para remover imagen
+            window.removeImage = function (e) {
+                e.stopPropagation();
+                imagenInput.value = '';
+                imagePreview.style.display = 'none';
+                uploadPlaceholder.style.display = 'block';
+                fileInfo.style.display = 'none';
+                uploadContainer.classList.remove('has-image');
+            };
+        });
+
+        // Animación de spin
+        const style = document.createElement('style');
+        style.textContent = `
+                .spin {
+                    animation: spin 1s linear infinite;
+                }
+
+            @@keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+            `;
+        document.head.appendChild(style);
+    </script>
+}

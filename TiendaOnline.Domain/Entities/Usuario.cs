@@ -36,7 +36,7 @@ namespace TiendaOnline.Domain.Entities
         [Display(Name = "Fecha de Nacimiento")]
         [DataType(DataType.Date)]
         [Column(TypeName = "date")]
-        public DateTime FechaNacimiento {  get; set; }
+        public DateTime FechaNacimiento { get; set; }
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (FechaNacimiento > DateTime.Today.AddYears(-18))
@@ -60,7 +60,7 @@ namespace TiendaOnline.Domain.Entities
         public string Email { get; set; }
 
         [Required(ErrorMessage = "La contraseña es obligatoria.")]
-        [Display(Name ="Contraseña")]
+        [Display(Name = "Contraseña")]
         [MaxLength(100, ErrorMessage = "La contraseña no puede tener más de 50 caracteres")]
         public string Contrasena { get; set; }
 
@@ -70,9 +70,6 @@ namespace TiendaOnline.Domain.Entities
         [Compare("Contrasena", ErrorMessage = "Las contraseñas no coinciden.")]
         public string ConfirmarContrasena { get; set; }
 
-        [MaxLength(100)]
-        public string? Direccion { get; set; }
-
         [Required]
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
@@ -81,6 +78,7 @@ namespace TiendaOnline.Domain.Entities
         public DateTime? UltimaFechaBaja { get; set; }
 
         public ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
+        public virtual ICollection<Direccion> Direcciones { get; set; } = new List<Direccion>();
     }
 
 }

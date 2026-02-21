@@ -1,12 +1,12 @@
-﻿using TiendaOnline.Data;
-using TiendaOnline.Domain.Entities;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using TiendaOnline.Data;
+using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
-using TiendaOnline.Services.IServices;
 using TiendaOnline.Services.Commons.Models;
 using TiendaOnline.Services.DTOs.Admin.Usuario;
 using TiendaOnline.Services.DTOs.Usuario;
+using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Services.Services
 {
@@ -21,14 +21,47 @@ namespace TiendaOnline.Services.Services
             _passwordHasher = passwordHasher;
         }
 
-        public async Task<Usuario?> ObtenerPorEmailAsync(string email)
+        public async Task<UsuarioPerfilDto> ObtenerPerfil(int usuarioId)
         {
-            return await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+            var usuario = await _context.Usuarios
+                .Include(u => u.Direcciones)
+                .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
+
+            if (usuario == null) throw new Exception("Usuario no encontrado.");
+
+            var direccionPrincipal = usuario.Direcciones.FirstOrDefault(d => d.EsPrincipal);
+            return new UsuarioPerfilDto
+            {
+                UsuarioId = usuario.UsuarioId,
+                Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
+                Email = usuario.Email,
+                Telefono = usuario.Telefono,
+                Direccion = direccionPrincipal != null ? $"{direccionPrincipal.Calle} {direccionPrincipal.Numero}, {direccionPrincipal.Localidad}" : "Sin dirección",
+                FechaNacimiento = usuario.FechaNacimiento,
+                FechaCreacion = usuario.FechaCreacion,
+                Activo = usuario.Activo,
+                UltimaFechaAlta = usuario.UltimaFechaAlta,
+                UltimaFechaBaja = usuario.UltimaFechaBaja
+            };
         }
 
-        public async Task<List<Usuario>> ObtenerUsuariosAsync()
+        public async Task<UsuarioUpdateDto> ObtenerUsuarioParaEdicionAsync(int usuarioId)
         {
-            return await _context.Usuarios.ToListAsync();
+            var usuario = await _context.Usuarios
+                .Include(u => u.Direcciones)
+                .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
+
+            if (usuario == null) throw new Exception("Usuario no encontrado.");
+
+            var direccionPrincipal = usuario.Direcciones.FirstOrDefault(d => d.EsPrincipal);
+            return new UsuarioUpdateDto
+            {
+                UsuarioId = usuario.UsuarioId,
+                Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
+                Telefono = usuario.Telefono
+            };
         }
 
         public async Task<Usuario?> ObtenerUsuarioAsync(int usuarioId)
@@ -83,7 +116,6 @@ namespace TiendaOnline.Services.Services
                 Apellido = usuarioDto.Apellido,
                 Email = usuarioDto.Email,
                 Telefono = usuarioDto.Telefono,
-                Direccion = usuarioDto.Direccion,
                 FechaNacimiento = usuarioDto.FechaNacimiento,
                 Rol = (Rol)usuarioDto.RolId,
                 FechaCreacion = DateTime.Now
@@ -133,24 +165,16 @@ namespace TiendaOnline.Services.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task EditarUsuarioAsync(int usuarioId, Usuario usuarioEditado)
+        public async Task EditarUsuarioAsync(UsuarioUpdateDto dto)
         {
-            var usuario = await _context.Usuarios.FindAsync(usuarioId);
-            if (usuario == null) throw new Exception("Usuario no encontrado.");
+            var usuario = await _context.Usuarios
+                        .FirstOrDefaultAsync(u => u.UsuarioId == dto.UsuarioId);
 
-            // Solo guardamos lo que realmente puede cambiar para no ensuciar el JSON de auditoría
-            var datosAnteriores = new
-            {
-                usuario.Nombre,
-                usuario.Apellido,
-                usuario.Telefono,
-                usuario.Direccion
-            };
+            if (usuario == null) throw new KeyNotFoundException($"No se encontró el usuario con ID {dto.UsuarioId}");
 
-            usuario.Nombre = usuarioEditado.Nombre;
-            usuario.Apellido = usuarioEditado.Apellido;
-            usuario.Telefono = usuarioEditado.Telefono;
-            usuario.Direccion = usuarioEditado.Direccion;
+            usuario.Nombre = dto.Nombre;
+            usuario.Apellido = dto.Apellido;
+            usuario.Telefono = dto.Telefono;
 
             await _context.SaveChangesAsync();
         }

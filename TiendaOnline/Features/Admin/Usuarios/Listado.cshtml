@@ -1,0 +1,380 @@
+﻿@using TiendaOnline.Features.Admin.Usuarios
+@model UsuarioListadoViewModel
+
+<div class="container-fluid py-4">
+    <!-- Sección de Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 fw-bold">
+                        <i class="bi bi-people-fill me-2 text-primary"></i>
+                        Gestión de Usuarios
+                    </h2>
+                    <p class="text-muted mb-0">Administra los usuarios del sistema</p>
+                </div>
+                <a asp-area="Admin" asp-controller="Usuarios" asp-action="CrearUsuario" class="btn btn-primary btn-lg shadow-sm rounded-2">
+                    <i class="bi bi-person-plus me-2"></i>
+                    Nuevo Usuario
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <form method="get" asp-action="Listado">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card rounded-3 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold text-muted small">Mostrar</label>
+                                <select name="tamanoPagina" class="form-select" onchange="this.form.submit()">
+                                    @{
+                                        int[] opciones = { 10, 25, 50, 75, 100 };
+                                        foreach (var cantidad in opciones)
+                                        {
+                                            <option value="@cantidad" selected="@(Model.UsuariosPaginados.RegistrosPorPagina == cantidad ? "selected" : null)">
+                                                @cantidad registros
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="busqueda" class="form-label fw-semibold">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </label>
+                                <input type="text" id="busqueda" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Buscar por nombre o email...">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filtroRol" class="form-label fw-semibold">
+                                    <i class="bi bi-funnel me-1"></i>Filtrar por Rol
+                                </label>
+                                <select id="filtroRol" name="rol" class="form-select">
+                                    <option value="">Todos los roles</option>
+                                    @foreach (var rol in Html.GetEnumSelectList<Rol>())
+                                    {
+                                        <option value="@rol.Text" selected="@(Model.RolSeleccionado == rol.Text ? "selected" : null)">
+                                            @rol.Text
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filtroEstado" class="form-label fw-semibold">
+                                    <i class="bi bi-toggle-on me-1"></i>Estado
+                                </label>
+                                <select id="filtroEstado" name="estado" class="form-select" onchange="this.form.submit()">
+                                    <option value="">Todos</option>
+                                    <option value="activo" selected='@(Model.EstadoSeleccionado == true ? "selected" : null)'>Activos</option>
+                                    <option value="inactivo" selected='@(Model.EstadoSeleccionado == false ? "selected" : null)'>Inactivos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary rounded-3 flex-fill">
+                                    <i class="bi bi-filter me-1"></i>Filtrar
+                                </button>
+                                <a asp-action="Listado" class="btn btn-outline-secondary rounded-3 flex-fill">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Tabla de Usuarios -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card rounded-3 shadow-sm border-0">
+                <div class="card-header border-bottom">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 px-1">
+                        <div class="text-muted small">
+                            @if (Model.UsuariosPaginados.TotalRegistros > 0)
+                            {
+                                <span>
+                                    Mostrando <strong>@Model.UsuariosPaginados.DesdeRegistro</strong> a
+                                    <strong>@Model.UsuariosPaginados.HastaRegistro</strong> de
+                                    <strong>@Model.UsuariosPaginados.TotalRegistros</strong> productos
+                                </span>
+                            }
+                            else
+                            {
+                                <span>
+                                    <i class="bi bi-exclamation-circle me-1 text-warning"></i>
+                                    No se encontraron resultados.
+                                </span>
+                            }
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            @if (!string.IsNullOrEmpty(Model.Busqueda))
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-search me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Búsqueda:</span> "<strong>@Model.Busqueda</strong>"
+                                </span>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.RolSeleccionado))
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-shield me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Rol:</span> <strong>@Model.RolSeleccionado</strong>
+                                </span>
+                            }
+                            @if (Model.EstadoSeleccionado != null)
+                            {
+                                <span class="text-muted small">
+                                    <i class="bi bi-toggle-on me-1 text-primary small"></i>
+                                    <span class="d-none d-sm-inline">Estado:</span> <strong>@(Model.EstadoSeleccionado == true ? "Activo" : Model.EstadoSeleccionado == false ? "Inactivo" : "")</strong>
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="border-bottom">
+                                <tr>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-hash me-2 text-primary"></i>ID Usuario
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-person me-2 text-primary"></i>Nombre y Apellido
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-envelope me-2 text-primary"></i>Correo Electrónico
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-shield me-2 text-primary"></i>Rol
+                                        </div>
+                                    </th>
+                                    <th class="ordenable border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-activity me-2 text-primary"></i>Estado
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3 text-center">
+                                        <i class="bi bi-gear me-1 text-primary"></i>Acciones
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var usuario in Model.UsuariosPaginados.Items)
+                                {
+                                    <tr>
+                                        <td class="py-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="fw-semibold px-3 py-2 text-uppercase"
+                                                     style="font-size: 0.9rem; letter-spacing: 0.5px;">
+                                                    #@usuario.UsuarioId.ToString("D6")
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            <span>@usuario.NombreCompleto</span>
+                                        </td>
+                                        <td class="py-3">
+                                            <div>@usuario.Email</div>
+                                        </td>
+                                        <td class="py-3">
+                                            @{
+                                                string claseInsignia = usuario.RolNombre switch
+                                                {
+                                                    "Administrador" => "bg-danger",
+                                                    "Usuario" => "bg-info",
+                                                    _ => "bg-secondary"
+                                                };
+                                            }
+                                            <span class="badge @claseInsignia px-3 py-2 rounded-pill small fw-medium">
+                                                @Html.DisplayFor(modelItem => usuario.RolNombre)
+                                            </span>
+                                        </td>
+                                        <td class="py-3">
+                                            @if (usuario.Activo)
+                                            {
+                                                <span class="badge bg-success px-3 py-2 rounded-pill small fw-medium">
+                                                    <i class="bi bi-check-circle me-1"></i>Activo
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary px-3 py-2 rounded-pill small fw-medium">
+                                                    <i class="bi bi-x-circle me-1"></i>Inactivo
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                @if (usuario.Activo)
+                                                {
+                                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-2"
+                                                            onclick="darBaja('@usuario.UsuarioId', '@usuario.NombreCompleto')"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de baja">
+                                                        <i class="bi bi-person-dash"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="btn btn-outline-success btn-sm rounded-2"
+                                                            onclick="darAlta('@usuario.UsuarioId', '@usuario.NombreCompleto')"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de alta">
+                                                        <i class="bi bi-person-plus"></i>
+                                                    </button>
+                                                }
+                                                <a asp-area="Usuario" asp-controller="Usuarios" asp-action="EditarUsuario" asp-route-id="@usuario.UsuarioId"
+                                                   class="btn btn-outline-primary btn-sm rounded-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar usuario">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a asp-area="Usuario" asp-controller="Usuarios" asp-action="PerfilUsuario" asp-route-id="@usuario.UsuarioId"
+                                                   class="btn btn-outline-info btn-sm rounded-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver perfil">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    <nav aria-label="Navegación de usuarios" class="mt-3">
+        <ul class="pagination justify-content-center justify-content-md-end mb-0">
+
+            @{
+                int paginaActual = Model.UsuariosPaginados.PaginaActual;
+                int totalPaginas = Model.UsuariosPaginados.TotalPaginas;
+                int radio = 2; // Cantidad de números a mostrar a la izquierda y derecha de la actual
+            }
+
+            @* Botón Anterior *@
+            <li class="page-item @(paginaActual == 1 ? "disabled" : "")">
+                <a class="page-link" asp-area="Admin" asp-controller="Usuarios" asp-action="Listado"
+                   asp-route-pagina="@(paginaActual - 1)"
+                   asp-route-tamanoPagina="@Model.UsuariosPaginados.RegistrosPorPagina"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-rol="@Model.RolSeleccionado"
+                   asp-route-estado='@(Model.EstadoSeleccionado == true ? "activo" : Model.EstadoSeleccionado == false ? "inactivo" : "")'>
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+
+            @* Lógica de Números con Truncado *@
+            @for (int i = 1; i <= totalPaginas; i++)
+            {
+                // Mostrar siempre la primera y la última
+                // Mostrar las páginas dentro del "radio" de la página actual
+                if (i == 1 || i == totalPaginas || (i >= paginaActual - radio && i <= paginaActual + radio))
+                {
+                    <li class="page-item @(i == paginaActual ? "active" : "")">
+                        <a class="page-link" asp-area="Admin" asp-controller="Usuarios" asp-action="Listado"
+                           asp-route-pagina="@i"
+                           asp-route-tamanoPagina="@Model.UsuariosPaginados.RegistrosPorPagina"
+                           asp-route-busqueda="@Model.Busqueda"
+                           asp-route-rol="@Model.RolSeleccionado"
+                           asp-route-estado='@(Model.EstadoSeleccionado == true ? "activo" : Model.EstadoSeleccionado == false ? "inactivo" : "")'>
+                            @i
+                        </a>
+                    </li>
+                }
+                // Mostrar puntos suspensivos si estamos justo fuera del radio
+                else if (i == paginaActual - radio - 1 || i == paginaActual + radio + 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                }
+            }
+
+            @* Botón Siguiente *@
+            <li class="page-item @(paginaActual == totalPaginas ? "disabled" : "")">
+                <a class="page-link" asp-area="Admin" asp-controller="Usuarios" asp-action="Listado"
+                   asp-route-pagina="@(paginaActual + 1)"
+                   asp-route-tamanoPagina="@Model.UsuariosPaginados.RegistrosPorPagina"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-rol="@Model.RolSeleccionado"
+                   asp-route-estado='@(Model.EstadoSeleccionado == true ? "activo" : Model.EstadoSeleccionado == false ? "inactivo" : "")'>
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<!-- Modal de Confirmación -->
+<partial name="_ModalCambiarEstado" />
+
+<!-- Formularios Ocultos -->
+<div style="display: none;">
+    @foreach (var usuario in Model.UsuariosPaginados.Items)
+    {
+        <form id="formularioBaja@(usuario.UsuarioId)" asp-area="Admin" asp-controller="Usuarios" asp-action="DarBaja" asp-route-id="@usuario.UsuarioId" method="post">
+            @Html.AntiForgeryToken()
+        </form>
+        <form id="formularioAlta@(usuario.UsuarioId)" asp-area="Admin" asp-controller="Usuarios" asp-action="DarAlta" asp-route-id="@usuario.UsuarioId" method="post">
+            @Html.AntiForgeryToken()
+        </form>
+    }
+</div>
+
+@section Scripts{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Inicializar tooltips
+            var listaTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltips = listaTooltips.map(function (elementoTooltip) {
+                return new bootstrap.Tooltip(elementoTooltip);
+            });
+        });
+
+        function darBaja(idUsuario, nombreUsuario) {
+            const modal = new bootstrap.Modal(document.getElementById('modalCambioEstado'));
+            const iconoEstado = document.getElementById('iconoEstado');
+            const mensajeCambioEstado = document.getElementById('mensajeCambioEstado');
+            const botonDerecho = document.getElementById('botonDerecho');
+
+            iconoEstado.className = 'bi bi-exclamation-triangle text-warning display-4';
+            mensajeCambioEstado.textContent = `¿Estás seguro de que quieres dar de baja a ${nombreUsuario}?`;
+            botonDerecho.className = 'btn btn-danger';
+            botonDerecho.textContent = 'Dar de Baja';
+            botonDerecho.onclick = () => {
+                document.getElementById(`formularioBaja${idUsuario}`).submit();
+            };
+
+            modal.show();
+        }
+
+        function darAlta(idUsuario, nombreUsuario) {
+            const modal = new bootstrap.Modal(document.getElementById('modalCambioEstado'));
+            const iconoEstado = document.getElementById('iconoEstado');
+            const mensajeCambioEstado = document.getElementById('mensajeCambioEstado');
+            const botonDerecho = document.getElementById('botonDerecho');
+
+            iconoEstado.className = 'bi bi-check-circle text-success display-4';
+            mensajeCambioEstado.textContent = `¿Estás seguro de que quieres dar de alta a ${nombreUsuario}?`;
+            botonDerecho.className = 'btn btn-success';
+            botonDerecho.textContent = 'Dar de Alta';
+            botonDerecho.onclick = () => {
+                document.getElementById(`formularioAlta${idUsuario}`).submit();
+            };
+
+            modal.show();
+        }
+    </script>
+}
