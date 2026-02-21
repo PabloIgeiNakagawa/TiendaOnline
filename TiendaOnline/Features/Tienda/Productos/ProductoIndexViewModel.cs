@@ -2,7 +2,7 @@
 using TiendaOnline.Services.Commons.Models;
 using TiendaOnline.Services.DTOs;
 
-namespace TiendaOnline.ViewModels.Producto
+namespace TiendaOnline.Features.Tienda.Productos
 {
     public class ProductoIndexViewModel
     {

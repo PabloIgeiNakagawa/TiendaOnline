@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TiendaOnline.Features.Tienda.Productos;
 using TiendaOnline.Services.IServices;
-using TiendaOnline.ViewModels.Producto;
 
-public class ProductoController : Controller
+public class ProductosController : Controller
 {
     private readonly IProductoService _productoService;
     private readonly ICategoriaService _categoriaService;
 
-    public ProductoController(IProductoService productoService, ICategoriaService categoriaService)
+    public ProductosController(IProductoService productoService, ICategoriaService categoriaService)
     {
         _productoService = productoService;
         _categoriaService = categoriaService;
@@ -40,6 +40,7 @@ public class ProductoController : Controller
     public async Task<IActionResult> Detalles(int id)
     {
         var producto = await _productoService.ObtenerProductoAsync(id);
+        ViewData["Title"] = producto?.Nombre;
         return View(producto);
     }
 }

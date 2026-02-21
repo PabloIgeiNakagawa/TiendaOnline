@@ -1,7 +1,4 @@
 ﻿@model TiendaOnline.Domain.Entities.Producto
-@{
-    ViewData["Title"] = Model.Nombre;
-}
 
 <!-- Breadcrumb -->
 <nav aria-label="breadcrumb" class="my-4">
@@ -10,12 +7,12 @@
             <a asp-controller="Home" asp-action="Index" class="text-decoration-none">Inicio</a>
         </li>
         <li class="breadcrumb-item">
-            <a asp-controller="Producto" asp-action="Index" class="text-decoration-none">Productos</a>
+            <a asp-controller="Productos" asp-action="Index" class="text-decoration-none">Productos</a>
         </li>
         @if (Model.Categoria != null)
         {
             <li class="breadcrumb-item">
-                <a asp-controller="Categoria" asp-action="Productos" asp-route-id="@Model.CategoriaId" class="text-decoration-none">@Model.Categoria.Nombre</a>
+                <a asp-controller="Categorias" asp-action="Productos" asp-route-id="@Model.CategoriaId" class="text-decoration-none">@Model.Categoria.Nombre</a>
             </li>
         }
         <li class="breadcrumb-item active" aria-current="page">@Model.Nombre</li>
@@ -92,7 +89,7 @@
                 <!-- Formulario para agregar al carrito -->
                 @if (Model.Stock > 0)
                 {
-                    <form asp-action="Agregar" asp-controller="Carrito" method="post" class="producto-acciones-detalle">
+                    <form asp-action="Agregar" asp-controller="Carritos" method="post" class="producto-acciones-detalle">
 
                         <input type="hidden" name="id" value="@Model.ProductoId" />
 
@@ -144,10 +141,10 @@
 
                 <!-- Botones de navegación -->
                 <div class="my-4">
-                    <a asp-controller="Producto" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver a productos</a>
+                    <a asp-controller="Productos" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver a productos</a>
                     @if(User.IsInRole("Administrador"))
                     {
-                        <a asp-controller="Producto" asp-action="EditarProducto" asp-route-id="@Model.ProductoId" class="btn btn-outline-primary ms-2">Editar producto</a>
+                        <a asp-controller="Productos" asp-action="EditarProducto" asp-route-id="@Model.ProductoId" class="btn btn-outline-primary ms-2">Editar producto</a>
                     }
                 </div>
             </div>
