@@ -1,7 +1,6 @@
 ﻿@using System.Security.Claims
 @model TiendaOnline.Domain.Entities.Pedido
 @{
-    ViewData["Title"] = $"Pedido #{Model.PedidoId.ToString("D6")}";
     var total = Model.DetallesPedido?.Sum(d => d.Cantidad * d.PrecioUnitario) ?? 0;
     var subtotal = total;
     var impuestos = total * 0.19m; // 19% IVA
@@ -83,13 +82,13 @@
                         @if (esAdmin)
                         {
                             <li class="breadcrumb-item">
-                                <a asp-area="Admin" asp-controller="Pedido" asp-action="Listado" class="text-decoration-none">Gestión de Pedidos</a>
+                                <a asp-area="Admin" asp-controller="Pedidos" asp-action="Listado" class="text-decoration-none">Gestión de Pedidos</a>
                             </li>
                         }
                         else
                         {
                             <li class="breadcrumb-item">
-                                <a asp-area="" asp-controller="Pedido" asp-action="MisPedidos" class="text-decoration-none">Mis Pedidos</a>
+                                <a asp-area="" asp-controller="Pedidos" asp-action="MisPedidos" class="text-decoration-none">Mis Pedidos</a>
                             </li>
                         }
                         <li class="breadcrumb-item active" aria-current="page">
@@ -97,20 +96,6 @@
                         </li>
                     </ol>
                 </nav>
-                <div class="d-flex gap-2 mt-4 mt-md-0">
-                    @if (esAdmin || esRepartidor)
-                    {
-                        <a asp-controller="Pedido" asp-action="Index" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left me-2"></i>Volver
-                        </a>
-                    }
-                    else
-                    {
-                        <a asp-controller="Pedido" asp-action="MisPedidos" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left me-2"></i>Mis Pedidos
-                        </a>
-                    }
-                </div>
             </div>
         </div>
     </div>
@@ -588,7 +573,7 @@
 
                         @if (Model.Estado == EstadoPedido.Entregado)
                         {
-                            <a asp-controller="Producto" asp-action="Index" class="btn btn-primary btn-lg w-100 mb-3">
+                            <a asp-controller="Productos" asp-action="Index" class="btn btn-primary btn-lg w-100 mb-3">
                                 <i class="bi bi-cart-plus me-2"></i>Comprar de Nuevo
                             </a>
                         }
@@ -617,17 +602,17 @@
 <div class="d-none">
     @if (esAdmin)
     {
-        <form id="enviarPedido@(Model.PedidoId)" asp-area="Admin" asp-controller="Pedido" asp-action="Enviar" method="post">
+        <form id="enviarPedido@(Model.PedidoId)" asp-area="Admin" asp-controller="Pedidos" asp-action="Enviar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
         </form>
 
-        <form id="entregarPedido@(Model.PedidoId)" asp-area="Admin" asp-controller="Pedido" asp-action="Entregar" method="post">
+        <form id="entregarPedido@(Model.PedidoId)" asp-area="Admin" asp-controller="Pedidos" asp-action="Entregar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
         </form>
 
-        <form id="cancelarPedido@(Model.PedidoId)" asp-controller="Pedido" asp-action="Cancelar" method="post">
+        <form id="cancelarPedido@(Model.PedidoId)" asp-controller="Pedidos" asp-action="Cancelar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
         </form>

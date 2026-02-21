@@ -4,19 +4,20 @@ using TiendaOnline.Helpers;
 using TiendaOnline.Services.DTOs;
 using TiendaOnline.Services.IServices;
 
-namespace TiendaOnline.Controllers
+namespace TiendaOnline.Features.Tienda.Pedidos
 {
-    public class PedidoController : Controller
+    public class PedidosController : Controller
     {
         private readonly IPedidoService _pedidoService;
 
-        public PedidoController(IPedidoService pedidoService)
+        public PedidosController(IPedidoService pedidoService)
         {
             _pedidoService = pedidoService;
         }
 
         public async Task<IActionResult> MisPedidos()
         {
+            ViewData["Title"] = "Mis Pedidos";
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (claim == null)
             {
@@ -36,6 +37,7 @@ namespace TiendaOnline.Controllers
             if (pedido == null)
                 return NotFound();
 
+            ViewData["Title"] = $"Pedido #{pedido.PedidoId.ToString("D6")}";
             return View(pedido);
         }
 
