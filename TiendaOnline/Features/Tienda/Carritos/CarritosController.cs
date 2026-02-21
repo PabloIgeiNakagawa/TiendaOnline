@@ -3,22 +3,23 @@ using TiendaOnline.Helpers;
 using TiendaOnline.Services.DTOs;
 using TiendaOnline.Services.IServices;
 
-namespace TiendaOnline.Controllers
+namespace TiendaOnline.Features.Tienda.Carritos
 {
-    public class CarritoController : Controller
+    public class CarritosController : Controller
     {
         private const string CarritoKey = "Carrito";
         private readonly IProductoService _productoService;
 
-        public CarritoController(IProductoService productoService)
+        public CarritosController(IProductoService productoService)
         {
             _productoService = productoService;
         }
 
         public IActionResult Index()
         {
+            ViewData["Title"] = "Carrito de Compras";
             var carrito = HttpContext.Session.GetObject<List<ItemCarrito>>(CarritoKey) ?? new List<ItemCarrito>();
-            return View("~/Views/Pedido/Carrito.cshtml", carrito);
+            return View(carrito);
         }
 
         [HttpPost]
@@ -46,7 +47,7 @@ namespace TiendaOnline.Controllers
             }
             HttpContext.Session.SetObject(CarritoKey, carrito);
             TempData["MensajeExito"] = "Producto agregado al carrito.";
-            return RedirectToAction("Index", "Carrito");
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -64,7 +65,7 @@ namespace TiendaOnline.Controllers
                 }
             }
             TempData["MensajeExito"] = "Producto eliminado del carrito.";
-            return RedirectToAction("Index", "Carrito");
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -81,7 +82,7 @@ namespace TiendaOnline.Controllers
 
             HttpContext.Session.SetObject(CarritoKey, carrito);
             TempData["MensajeExito"] = "Cantidad actualizada.";
-            return RedirectToAction("Index", "Carrito");
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -90,7 +91,7 @@ namespace TiendaOnline.Controllers
         {
             HttpContext.Session.Remove("Carrito");
             TempData["MensajeExito"] = "Se ha vacíado el carrito.";
-            return RedirectToAction("Index", "Carrito");
+            return RedirectToAction(nameof(Index));
         }
     }
 

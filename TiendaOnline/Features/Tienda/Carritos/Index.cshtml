@@ -1,7 +1,5 @@
 ﻿@model List<TiendaOnline.Services.DTOs.ItemCarrito>
-
 @{
-    ViewData["Title"] = "Carrito de Compras";
     bool usuarioEstaAutenticado = User.Identity.IsAuthenticated;
     decimal total = Model.Sum(i => i.Precio * i.Cantidad);
 }
@@ -38,7 +36,7 @@
             <i class="bi bi-cart-x fs-1 mb-4 opacity-50"></i>
             <h3 class="h4 fw-semibold mb-3">Tu carrito está vacío</h3>
             <p class="text-secondary mb-5">¡Parece que aún no has agregado productos a tu carrito de compras!</p>
-            <a asp-controller="Producto" asp-action="Index"
+            <a asp-controller="Productos" asp-action="Index"
                class="btn btn-primary fw-medium px-4 py-2 rounded-3 shadow-sm d-inline-flex align-items-center border-0">
                 <i class="bi bi-cart-plus-fill fs-5 me-2"></i>
                 <span>Comenzar compra</span>
@@ -59,7 +57,7 @@
                                  style="width: 140px; height: 140px;">
                                 @if (item.ImagenUrl != null)
                                 {
-                                    <a asp-controller="Producto" asp-action="Detalles" asp-route-id="@item.ProductoId">
+                                    <a asp-controller="Productos" asp-action="Detalles" asp-route-id="@item.ProductoId">
                                         <img src="@item.ImagenUrl" alt="@item.Nombre" class="w-100 h-100 object-fit-cover" />
                                     </a>
                                 }
@@ -71,7 +69,7 @@
 
                             <div class="flex-grow-1 d-flex flex-column">
                                 <div class="text-center text-md-start">
-                                    <a asp-controller="Producto" asp-action="Detalles" asp-route-id="@item.ProductoId" class="h5 fw-semibold mb-1 text-decoration-none">@item.Nombre</a>
+                                    <a asp-controller="Productos" asp-action="Detalles" asp-route-id="@item.ProductoId" class="h5 fw-semibold mb-1 text-decoration-none">@item.Nombre</a>
                                     <div class="fs-5 fw-bold mb-2">@item.Precio.ToString("C0")</div>
                                     <div class="small text-muted mb-3">
                                         Subtotal: <strong>@((item.Precio * item.Cantidad).ToString("C0"))</strong>
@@ -80,7 +78,7 @@
 
                                 <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start mt-auto gap-3">
 
-                                    <form asp-controller="Carrito" asp-action="ActualizarCantidad" method="post" class="d-flex align-items-center">
+                                    <form asp-controller="Carritos" asp-action="ActualizarCantidad" method="post" class="d-flex align-items-center">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="productoId" value="@item.ProductoId" />
 
@@ -110,7 +108,7 @@
                                         </button>
                                     </form>
 
-                                    <form asp-controller="Carrito" asp-action="EliminarItem" method="post"
+                                    <form asp-controller="Carritos" asp-action="EliminarItem" method="post"
                                           class="position-absolute top-0 end-0 p-3" style="z-index: 10;">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.ProductoId" />
@@ -129,14 +127,14 @@
 
                 <!-- Botón continuar comprando -->
                 <div class="text-center mb-4">
-                    <a asp-controller="Producto" asp-action="Index" class="btn btn-outline-info fw-semibold rounded-2 d-inline-flex align-items-center gap-2 mt-3">
+                    <a asp-controller="Productos" asp-action="Index" class="btn btn-outline-info fw-semibold rounded-2 d-inline-flex align-items-center gap-2 mt-3">
                         <i class="bi bi-arrow-left"></i>
                         Continuar comprando
                     </a>
                 </div>
                 <!-- Botón vaciar carrito -->
                 <div class="text-center mb-4">
-                    <form asp-controller="Carrito" asp-action="Vaciar" method="post">
+                    <form asp-controller="Carritos" asp-action="Vaciar" method="post">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-danger">
                             <i class="bi bi-cart-x-fill"></i>
@@ -179,7 +177,7 @@
 
                     @if (usuarioEstaAutenticado)
                     {
-                        <form asp-controller="Pedido" asp-action="FinalizarCompra" method="post">
+                        <form asp-controller="Pedidos" asp-action="FinalizarCompra" method="post">
                             <button type="submit" class="btn btn-success fw-bold w-100 mt-4 d-flex align-items-center justify-content-center gap-2 rounded-2">
                                 <i class="bi bi-credit-card"></i> Finalizar compra
                             </button>
@@ -192,7 +190,7 @@
                             Finalizar compra
                         </a>
                         <div class="mt-2">
-                            <a asp-controller="Usuario" asp-action="Register" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">
+                            <a asp-controller="Usuarios" asp-action="Register" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">
                                 Para finalizar la compra debes tener una cuenta
                             </a>
                         </div>
