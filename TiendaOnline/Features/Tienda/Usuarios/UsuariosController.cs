@@ -2,15 +2,14 @@
 using System.Security.Claims;
 using TiendaOnline.Services.DTOs.Usuario;
 using TiendaOnline.Services.IServices;
-using TiendaOnline.ViewModels.Usuario;
 
-namespace TiendaOnline.Controllers
+namespace TiendaOnline.Features.Tienda.Usuarios
 {
-    public class UsuarioController : Controller
+    public class UsuariosController : Controller
     {
         private readonly IUsuarioService _usuarioService;
 
-        public UsuarioController(IUsuarioService usuarioService)
+        public UsuariosController(IUsuarioService usuarioService)
         {
             _usuarioService = usuarioService;
         }
@@ -45,7 +44,15 @@ namespace TiendaOnline.Controllers
         {
             ViewData["Title"] = "Editar Usuario";
             var usuario = await _usuarioService.ObtenerUsuarioAsync(id);
-            return View(usuario);
+            if (usuario == null) return NotFound();
+            var model = new UsuarioUpdateViewModel
+            {
+                UsuarioId = usuario.UsuarioId,
+                Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
+                Telefono = usuario.Telefono
+            };
+            return View(model);
         }
 
         [HttpPost]
@@ -66,9 +73,8 @@ namespace TiendaOnline.Controllers
             };
 
             await _usuarioService.EditarUsuarioAsync(dto);
-            TempData["MensajeExito"] = "El usuario se actualizó correctamente.";
-            return RedirectToAction("PerfilUsuario", "Usuario", new { dto.UsuarioId });
+            TempData["MensajeExito"] = "Tu información se actualizó correctamente.";
+            return RedirectToAction("PerfilUsuario", "Usuarios", new { id = dto.UsuarioId });
         }
-
     }
 }

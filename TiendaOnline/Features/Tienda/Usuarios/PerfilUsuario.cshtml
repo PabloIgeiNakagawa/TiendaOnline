@@ -1,12 +1,13 @@
-﻿@model TiendaOnline.ViewModels.Usuario.UsuarioPerfilViewModel
+﻿@using TiendaOnline.Features.Tienda.Usuarios
+@model UsuarioPerfilViewModel
 
 <div class="container-fluid py-4">
     <!-- Migas de Pan -->
     <nav aria-label="breadcrumb" class="mb-4" style="--bs-breadcrumb-divider: '›'; --bs-breadcrumb-divider-color: #6c757d;">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-controller="Usuario" asp-action="Index" class="text-decoration-none">
-                    <i class="bi bi-people me-1"></i>Usuarios
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Inicio
                 </a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">
@@ -34,7 +35,7 @@
                     <div class="acciones-perfil">
                         @if (Model.esPropioPerfil || User.IsInRole("Administrador"))
                         {
-                            <a asp-controller="Usuario" asp-action="EditarUsuario" asp-route-id="@Model.UsuarioId"
+                            <a asp-controller="Usuarios" asp-action="EditarUsuario" asp-route-id="@Model.UsuarioId"
                                class="btn btn-primary">
                                 <i class="bi bi-pencil me-2"></i>Editar Perfil
                             </a>
@@ -242,10 +243,10 @@
 
 <!-- Formularios Ocultos -->
 <div style="display: none;">
-    <form id="formularioBaja@(Model.UsuarioId)" asp-area="Admin" asp-controller="Usuario" asp-action="DarBaja" asp-route-id="@Model.UsuarioId" method="post">
+    <form id="formularioBaja@(Model.UsuarioId)" asp-area="Admin" asp-controller="Usuarios" asp-action="DarBaja" asp-route-id="@Model.UsuarioId" method="post">
         @Html.AntiForgeryToken()
     </form>
-    <form id="formularioAlta@(Model.UsuarioId)" asp-area="Admin" asp-controller="Usuario" asp-action="DarAlta" asp-route-id="@Model.UsuarioId" method="post">
+    <form id="formularioAlta@(Model.UsuarioId)" asp-area="Admin" asp-controller="Usuarios" asp-action="DarAlta" asp-route-id="@Model.UsuarioId" method="post">
         @Html.AntiForgeryToken()
     </form>
 </div>
