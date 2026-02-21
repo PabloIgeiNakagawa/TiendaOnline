@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace TiendaOnline.Controllers
+namespace TiendaOnline.Features.Tienda.Soporte
 {
     public class SoporteController : Controller
     {
