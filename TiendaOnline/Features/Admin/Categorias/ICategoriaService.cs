@@ -1,5 +1,5 @@
 ﻿using TiendaOnline.Domain.Entities;
-using TiendaOnline.Services.Commons.Models;
+using TiendaOnline.Features.Shared.Models;
 
 namespace TiendaOnline.Features.Admin.Categorias
 {

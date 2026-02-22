@@ -4,7 +4,7 @@ using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Features.Admin.Usuarios;
-using TiendaOnline.Services.Commons.Models;
+using TiendaOnline.Features.Shared.Models;
 
 namespace TiendaOnline.Features.Tienda.Usuarios
 {
