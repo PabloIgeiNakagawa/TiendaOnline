@@ -17,7 +17,6 @@
     <ProjectReference Include="..\TiendaOnline.Data\TiendaOnline.Data.csproj" />
     <ProjectReference Include="..\TiendaOnline.Domain\TiendaOnline.Domain.csproj" />
     <ProjectReference Include="..\TiendaOnline.Infrastructure\TiendaOnline.Infrastructure.csproj" />
-    <ProjectReference Include="..\TiendaOnline.Services\TiendaOnline.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>

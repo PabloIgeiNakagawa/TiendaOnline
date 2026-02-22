@@ -9,11 +9,11 @@ namespace TiendaOnline.Features.Admin.Pedidos
     [Authorize(Roles = "Administrador")]
     public class PedidosController : Controller
     {
-        private readonly IPedidoService _pedidoService;
+        private readonly IPedidosAdminService _pedidosAdminService;
 
-        public PedidosController(IPedidoService pedidoService)
+        public PedidosController(IPedidosAdminService pedidosAdminService)
         {
-            _pedidoService = pedidoService;
+            _pedidosAdminService = pedidosAdminService;
         }
 
         [HttpGet("[action]")]
@@ -21,7 +21,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
         {
             ViewData["Title"] = "Gestión de Pedidos";
             // Llamamos al service con todos los filtros
-            var pagedResult = await _pedidoService.ObtenerPedidosPaginadosAsync(
+            var pagedResult = await _pedidosAdminService.ObtenerPedidosPaginadosAsync(
                 busqueda?.Trim(),
                 estado,
                 fechaDesde,
@@ -52,7 +52,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
             {
                 return NotFound();
             }
-            await _pedidoService.PedidoEnviadoAsync(pedidoId);
+            await _pedidosAdminService.PedidoEnviadoAsync(pedidoId);
             TempData["MensajeExito"] = "Estado del pedido actualizado a Enviado";
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
@@ -65,7 +65,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
             {
                 return NotFound();
             }
-            await _pedidoService.PedidoEntregadoAsync(pedidoId);
+            await _pedidosAdminService.PedidoEntregadoAsync(pedidoId);
             TempData["MensajeExito"] = "Estado del pedido actualizado a Entregado";
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
@@ -77,7 +77,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
             {
                 return NotFound();
             }
-            await _pedidoService.PedidoCanceladoAsync(pedidoId);
+            await _pedidosAdminService.PedidoCanceladoAsync(pedidoId);
             TempData["MensajeExito"] = "Estado del pedido actualizado a Cancelado";
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
