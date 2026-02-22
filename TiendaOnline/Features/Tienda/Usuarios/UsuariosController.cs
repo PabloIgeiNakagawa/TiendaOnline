@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using TiendaOnline.Services.DTOs.Usuario;
-using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Features.Tienda.Usuarios
 {

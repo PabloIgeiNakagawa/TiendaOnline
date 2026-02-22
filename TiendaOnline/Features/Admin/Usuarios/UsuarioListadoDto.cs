@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Services.DTOs.Admin.Usuario
+﻿namespace TiendaOnline.Features.Admin.Usuarios
 {
     public class UsuarioListadoDto
     {

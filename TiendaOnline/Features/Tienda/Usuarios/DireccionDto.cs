@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Services.DTOs.Usuario
+﻿namespace TiendaOnline.Features.Tienda.Usuarios
 {
     public class DireccionDto
     {

@@ -1,5 +1,4 @@
 ﻿using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs.Admin.Usuario;
 
 namespace TiendaOnline.Features.Admin.Usuarios
 {

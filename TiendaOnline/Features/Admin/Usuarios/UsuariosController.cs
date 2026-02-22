@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Domain.Exceptions;
-using TiendaOnline.Services.DTOs.Usuario;
-using TiendaOnline.Services.IServices;
+using TiendaOnline.Features.Tienda.Usuarios;
 
 namespace TiendaOnline.Features.Admin.Usuarios
 {

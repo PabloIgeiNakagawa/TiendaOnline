@@ -3,12 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
+using TiendaOnline.Features.Admin.Usuarios;
 using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs.Admin.Usuario;
-using TiendaOnline.Services.DTOs.Usuario;
-using TiendaOnline.Services.IServices;
 
-namespace TiendaOnline.Services.Services
+namespace TiendaOnline.Features.Tienda.Usuarios
 {
     public class UsuarioService : IUsuarioService
     {

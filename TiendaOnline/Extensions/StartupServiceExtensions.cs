@@ -9,9 +9,8 @@ using TiendaOnline.Features.Admin.Reportes;
 using TiendaOnline.Features.Tienda.Account;
 using TiendaOnline.Features.Tienda.Pedidos;
 using TiendaOnline.Features.Tienda.Productos;
+using TiendaOnline.Features.Tienda.Usuarios;
 using TiendaOnline.Infrastructure.ExternalServices;
-using TiendaOnline.Services.IServices;
-using TiendaOnline.Services.Services;
 
 namespace TiendaOnline.Extensions
 {

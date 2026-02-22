@@ -1,6 +1,4 @@
-﻿using TiendaOnline.Domain.Entities;
-
-namespace TiendaOnline.Services.DTOs.Usuario
+﻿namespace TiendaOnline.Features.Admin.Usuarios
 {
     public class UsuarioCreateDto
     {
