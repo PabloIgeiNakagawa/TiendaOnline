@@ -1,6 +1,5 @@
 ﻿using TiendaOnline.Features.Admin.Categorias;
 using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs.Admin.Producto;
 
 namespace TiendaOnline.Features.Admin.Productos
 {

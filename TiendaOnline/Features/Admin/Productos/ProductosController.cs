@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
-using TiendaOnline.Services.IServices;
 using TiendaOnline.Features.Admin.Categorias;
+using TiendaOnline.Features.Tienda.Productos;
 
 namespace TiendaOnline.Features.Admin.Productos
 {

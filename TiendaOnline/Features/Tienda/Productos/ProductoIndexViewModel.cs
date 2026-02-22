@@ -1,6 +1,5 @@
 ﻿using TiendaOnline.Domain.Entities;
 using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs;
 
 namespace TiendaOnline.Features.Tienda.Productos
 {

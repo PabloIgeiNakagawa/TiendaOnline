@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Services.DTOs.Admin.Producto
+﻿namespace TiendaOnline.Features.Admin.Productos
 {
     public class ProductoListaDto
     {

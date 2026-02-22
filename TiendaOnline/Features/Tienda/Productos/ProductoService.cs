@@ -1,13 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Data;
-using TiendaOnline.Services.IServices;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
+using TiendaOnline.Features.Admin.Productos;
 using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs.Admin.Producto;
-using TiendaOnline.Services.DTOs;
 
-namespace TiendaOnline.Services.Services
+namespace TiendaOnline.Features.Tienda.Productos
 {
     public class ProductoService : IProductoService
     {

@@ -8,6 +8,7 @@ using TiendaOnline.Features.Admin.MovimientosStock;
 using TiendaOnline.Features.Admin.Reportes;
 using TiendaOnline.Features.Tienda.Account;
 using TiendaOnline.Features.Tienda.Pedidos;
+using TiendaOnline.Features.Tienda.Productos;
 using TiendaOnline.Infrastructure.ExternalServices;
 using TiendaOnline.Services.IServices;
 using TiendaOnline.Services.Services;

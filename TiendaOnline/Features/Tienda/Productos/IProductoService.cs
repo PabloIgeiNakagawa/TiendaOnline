@@ -1,9 +1,8 @@
 ﻿using TiendaOnline.Domain.Entities;
+using TiendaOnline.Features.Admin.Productos;
 using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs;
-using TiendaOnline.Services.DTOs.Admin.Producto;
 
-namespace TiendaOnline.Services.IServices
+namespace TiendaOnline.Features.Tienda.Productos
 {
     public interface IProductoService
     {
