@@ -15,8 +15,4 @@
     <ProjectReference Include="..\TiendaOnline.Domain\TiendaOnline.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="DTOs\Admin\MovimientoStock\" />
-  </ItemGroup>
-
 </Project>

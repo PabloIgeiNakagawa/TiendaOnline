@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Services.DTOs.Admin.Reportes
+﻿namespace TiendaOnline.Features.Admin.Reportes
 {
     public class DashboardDTO
     {

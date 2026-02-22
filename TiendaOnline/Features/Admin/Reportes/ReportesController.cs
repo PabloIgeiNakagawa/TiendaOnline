@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TiendaOnline.Services.IServices.Admin;
 
 namespace TiendaOnline.Features.Admin.Reportes
 {

@@ -1,6 +1,4 @@
-﻿using TiendaOnline.Services.DTOs.Admin.Reportes;
-
-namespace TiendaOnline.Services.IServices.Admin
+﻿namespace TiendaOnline.Features.Admin.Reportes
 {
     public interface IReportesService
     {

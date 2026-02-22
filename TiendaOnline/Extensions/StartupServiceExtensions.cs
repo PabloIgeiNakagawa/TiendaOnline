@@ -4,13 +4,12 @@ using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Features.Admin.Auditorias;
 using TiendaOnline.Features.Admin.HomeAdmin;
 using TiendaOnline.Features.Admin.MovimientosStock;
+using TiendaOnline.Features.Admin.Reportes;
 using TiendaOnline.Features.Tienda.Account;
 using TiendaOnline.Features.Tienda.Pedidos;
 using TiendaOnline.Infrastructure.ExternalServices;
 using TiendaOnline.Services.IServices;
-using TiendaOnline.Services.IServices.Admin;
 using TiendaOnline.Services.Services;
-using TiendaOnline.Services.Services.Admin;
 
 namespace TiendaOnline.Extensions
 {

@@ -2,10 +2,8 @@
 using System.Globalization;
 using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Services.DTOs.Admin.Reportes;
-using TiendaOnline.Services.IServices.Admin;
 
-namespace TiendaOnline.Services.Services.Admin
+namespace TiendaOnline.Features.Admin.Reportes
 {
     public class ReportesService : IReportesService
     {
