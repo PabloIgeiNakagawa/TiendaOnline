@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
-using TiendaOnline.Services.DTOs.Account;
-using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Features.Tienda.Account
 {

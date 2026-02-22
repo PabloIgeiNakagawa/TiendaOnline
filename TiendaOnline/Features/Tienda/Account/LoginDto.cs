@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Services.DTOs.Account
+﻿namespace TiendaOnline.Features.Tienda.Account
 {
     public class LoginDto
     {

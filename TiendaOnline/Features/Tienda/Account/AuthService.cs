@@ -4,10 +4,8 @@ using System.Security.Claims;
 using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
-using TiendaOnline.Services.DTOs.Account;
-using TiendaOnline.Services.IServices;
 
-namespace TiendaOnline.Services.Services
+namespace TiendaOnline.Features.Tienda.Account
 {
     public class AuthService : IAuthService
     {

@@ -1,7 +1,6 @@
 ﻿using System.Security.Claims;
-using TiendaOnline.Services.DTOs.Account;
 
-namespace TiendaOnline.Services.IServices
+namespace TiendaOnline.Features.Tienda.Account
 {
     public interface IAuthService
     {

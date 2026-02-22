@@ -2,6 +2,7 @@
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Features.Admin.Auditorias;
+using TiendaOnline.Features.Tienda.Account;
 using TiendaOnline.Infrastructure.ExternalServices;
 using TiendaOnline.Services.IServices;
 using TiendaOnline.Services.IServices.Admin;
