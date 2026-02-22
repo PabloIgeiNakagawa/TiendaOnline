@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Services.DTOs.Admin.MovimientoStock
+﻿namespace TiendaOnline.Features.Admin.MovimientosStock
 {
     public class MovimientosDto
     {

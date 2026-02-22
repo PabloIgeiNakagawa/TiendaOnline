@@ -3,6 +3,7 @@ using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Features.Admin.Auditorias;
 using TiendaOnline.Features.Admin.HomeAdmin;
+using TiendaOnline.Features.Admin.MovimientosStock;
 using TiendaOnline.Features.Tienda.Account;
 using TiendaOnline.Features.Tienda.Pedidos;
 using TiendaOnline.Infrastructure.ExternalServices;

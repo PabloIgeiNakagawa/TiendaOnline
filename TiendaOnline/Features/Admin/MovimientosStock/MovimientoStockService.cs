@@ -2,10 +2,8 @@
 using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs.Admin.MovimientoStock;
-using TiendaOnline.Services.IServices.Admin;
 
-namespace TiendaOnline.Services.Services.Admin
+namespace TiendaOnline.Features.Admin.MovimientosStock
 {
     public class MovimientoStockService : IMovimientoStockService
     {
