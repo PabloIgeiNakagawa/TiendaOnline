@@ -2,6 +2,7 @@
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Features.Admin.Auditorias;
+using TiendaOnline.Features.Admin.HomeAdmin;
 using TiendaOnline.Features.Tienda.Account;
 using TiendaOnline.Infrastructure.ExternalServices;
 using TiendaOnline.Services.IServices;
@@ -22,7 +23,7 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IPedidoService, PedidoService>();
 
             // Administración
-            services.AddScoped<IHomeService, HomeService>();
+            services.AddScoped<IHomeAdminService, HomeAdminService>();
             services.AddScoped<IReportesService, ReportesService>();
             services.AddScoped<IAuditoriaService, AuditoriaService>();
             services.AddScoped<IMovimientoStockService, MovimientoStockService>();

@@ -27,7 +27,7 @@
         // Helper para mostrar "hace 5 minutos" en la vista si querés
         public string FechaRelativa => CalcularFechaRelativa(Fecha);
 
-        private string CalcularFechaRelativa(DateTime fecha)
+        private static string CalcularFechaRelativa(DateTime fecha)
         {
             var ts = new TimeSpan(DateTime.Now.Ticks - fecha.Ticks);
             double delta = Math.Abs(ts.TotalSeconds);

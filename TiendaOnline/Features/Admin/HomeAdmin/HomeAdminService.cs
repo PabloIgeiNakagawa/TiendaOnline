@@ -1,18 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using System.Reflection;
 using TiendaOnline.Data;
-using TiendaOnline.Services.DTOs.Admin.Home;
-using TiendaOnline.Services.IServices.Admin;
 
-namespace TiendaOnline.Services.Services.Admin
+namespace TiendaOnline.Features.Admin.HomeAdmin
 {
-    public class HomeService : IHomeService
+    public class HomeAdminService : IHomeAdminService
     {
         private readonly TiendaContext _context;
         private readonly IConfiguration _config;
 
-        public HomeService(TiendaContext context, IConfiguration config)
+        public HomeAdminService(TiendaContext context, IConfiguration config)
         {
             _context = context;
             _config = config;

@@ -1,8 +1,6 @@
-﻿using TiendaOnline.Services.DTOs.Admin.Home;
-
-namespace TiendaOnline.Services.IServices.Admin
+﻿namespace TiendaOnline.Features.Admin.HomeAdmin
 {
-    public interface IHomeService
+    public interface IHomeAdminService
     {
         Task<IndexDTO> ObtenerResumenHomeAsync();
         Task<bool> VerificarEstadoBaseDatosAsync();

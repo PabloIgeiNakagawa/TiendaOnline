@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Services.IServices.Admin;
 
 namespace TiendaOnline.Features.Admin.HomeAdmin
 {
@@ -10,13 +9,13 @@ namespace TiendaOnline.Features.Admin.HomeAdmin
     [Authorize(Roles = "Administrador")]
     public class HomeAdminController : Controller
     {
-        private readonly IHomeService _homeService;
+        private readonly IHomeAdminService _homeAdminService;
         private readonly ILogger<HomeAdminController> _logger;
 
-        public HomeAdminController(ILogger<HomeAdminController> logger, IHomeService homeService)
+        public HomeAdminController(ILogger<HomeAdminController> logger, IHomeAdminService homeAdminService)
         {
             _logger = logger;
-            _homeService = homeService;
+            _homeAdminService = homeAdminService;
         }
 
         [HttpGet]
@@ -24,7 +23,7 @@ namespace TiendaOnline.Features.Admin.HomeAdmin
         {
             ViewData["Title"] = "Inicio";
 
-            var datosHome = await _homeService.ObtenerResumenHomeAsync();
+            var datosHome = await _homeAdminService.ObtenerResumenHomeAsync();
 
             var viewModel = new HomeAdminViewModel
             {
