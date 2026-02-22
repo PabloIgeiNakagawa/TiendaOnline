@@ -6,7 +6,7 @@ using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Features.Admin.Usuarios
 {
-    [Area("Admin")]
+    [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
     public class UsuariosController : Controller
     {
@@ -17,7 +17,7 @@ namespace TiendaOnline.Features.Admin.Usuarios
             _usuarioService = usuarioService;
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> Listado(int pagina = 1, int tamanoPagina = 10, string? busqueda = null, string? rol = null, string? estado = null)
         {
             ViewData["Title"] = "Gestión de Usuarios";
@@ -42,14 +42,14 @@ namespace TiendaOnline.Features.Admin.Usuarios
             return View(viewModel);
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public IActionResult CrearUsuario()
         {
             ViewData["Title"] = "Crear Usuario";
             return View();
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CrearUsuario(UsuarioCreateDto model)
         {
@@ -79,7 +79,7 @@ namespace TiendaOnline.Features.Admin.Usuarios
             }
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarAlta(int id)
         {
@@ -88,7 +88,7 @@ namespace TiendaOnline.Features.Admin.Usuarios
             return RedirectToAction(nameof(Listado));
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarBaja(int id)
         {

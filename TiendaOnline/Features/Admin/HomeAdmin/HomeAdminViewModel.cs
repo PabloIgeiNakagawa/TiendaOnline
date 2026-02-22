@@ -1,6 +1,6 @@
-﻿namespace TiendaOnline.Features.Admin.Home
+﻿namespace TiendaOnline.Features.Admin.HomeAdmin
 {
-    public class HomeViewModel
+    public class HomeAdminViewModel
     {
         // --- SECCIÓN: STATUS DEL SISTEMA ---
         public bool EstaDbOnline { get; set; }

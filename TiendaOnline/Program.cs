@@ -30,12 +30,14 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseSession(); // Para el carrito
-app.UseHttpsRedirection();
-app.UseStaticFiles();
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseSession(); // Para el carrito
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 // 1. Ruta para Áreas (Primero)
 app.MapControllerRoute(

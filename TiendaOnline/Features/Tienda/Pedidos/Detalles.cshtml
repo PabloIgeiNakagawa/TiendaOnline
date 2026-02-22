@@ -82,13 +82,13 @@
                         @if (esAdmin)
                         {
                             <li class="breadcrumb-item">
-                                <a asp-area="Admin" asp-controller="Pedidos" asp-action="Listado" class="text-decoration-none">Gestión de Pedidos</a>
+                                <a asp-controller="Pedidos" asp-action="Listado" class="text-decoration-none">Gestión de Pedidos</a>
                             </li>
                         }
                         else
                         {
                             <li class="breadcrumb-item">
-                                <a asp-area="" asp-controller="Pedidos" asp-action="MisPedidos" class="text-decoration-none">Mis Pedidos</a>
+                                <a asp-action="MisPedidos" class="text-decoration-none">Mis Pedidos</a>
                             </li>
                         }
                         <li class="breadcrumb-item active" aria-current="page">
@@ -602,17 +602,17 @@
 <div class="d-none">
     @if (esAdmin)
     {
-        <form id="enviarPedido@(Model.PedidoId)" asp-area="Admin" asp-controller="Pedidos" asp-action="Enviar" method="post">
+        <form id="enviarPedido@(Model.PedidoId)" asp-action="Enviar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
         </form>
 
-        <form id="entregarPedido@(Model.PedidoId)" asp-area="Admin" asp-controller="Pedidos" asp-action="Entregar" method="post">
+        <form id="entregarPedido@(Model.PedidoId)" asp-action="Entregar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
         </form>
 
-        <form id="cancelarPedido@(Model.PedidoId)" asp-controller="Pedidos" asp-action="Cancelar" method="post">
+        <form id="cancelarPedido@(Model.PedidoId)" asp-action="Cancelar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@Model.PedidoId" />
         </form>

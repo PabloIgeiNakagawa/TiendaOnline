@@ -38,12 +38,12 @@
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+                <a asp-controller="HomeAdmin" asp-action="Index" class="text-decoration-none">
                     <i class="bi bi-house-door"></i> Inicio
                 </a>
             </li>
             <li class="breadcrumb-item">
-                <a asp-controller="Productos" asp-action="Catalogo" class="text-decoration-none">Productos</a>
+                <a asp-action="Catalogo" class="text-decoration-none">Productos</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">Agregar Producto</li>
         </ol>
@@ -224,7 +224,7 @@
                 <div class="row mt-5">
                     <div class="col-12">
                         <div class="d-flex gap-3 justify-content-end">
-                            <a asp-controller="Productos" asp-action="Catalogo" class="btn btn-outline-secondary">
+                            <a asp-action="Catalogo" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left me-2"></i>Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary" id="btnSubmit">

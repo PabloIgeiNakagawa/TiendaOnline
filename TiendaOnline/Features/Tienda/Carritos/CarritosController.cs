@@ -5,6 +5,7 @@ using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Features.Tienda.Carritos
 {
+    [Route("Carrito")]
     public class CarritosController : Controller
     {
         private const string CarritoKey = "Carrito";
@@ -15,6 +16,7 @@ namespace TiendaOnline.Features.Tienda.Carritos
             _productoService = productoService;
         }
 
+        [HttpGet("[action]")]
         public IActionResult Index()
         {
             ViewData["Title"] = "Carrito de Compras";
@@ -22,7 +24,7 @@ namespace TiendaOnline.Features.Tienda.Carritos
             return View(carrito);
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Agregar(int id)
         {
@@ -50,7 +52,7 @@ namespace TiendaOnline.Features.Tienda.Carritos
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public IActionResult EliminarItem(int id)
         {
@@ -68,7 +70,7 @@ namespace TiendaOnline.Features.Tienda.Carritos
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public IActionResult ActualizarCantidad(int productoId, int cantidad)
         {
@@ -85,7 +87,7 @@ namespace TiendaOnline.Features.Tienda.Carritos
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public IActionResult Vaciar()
         {

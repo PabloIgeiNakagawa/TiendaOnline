@@ -13,12 +13,14 @@ namespace TiendaOnline.Features.Tienda.Home
             _logger = logger;
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
             ViewData["Title"] = "Inicio";
             return View();
         }
 
+        [HttpGet("Privacidad")] 
         public IActionResult Privacy()
         {
             ViewData["Title"] = "Política de Privacidad";

@@ -217,7 +217,7 @@
                                         </td>
                                         <td class="py-3">
                                             <div class="d-flex justify-content-center gap-1">
-                                                <a asp-area="" asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@pedido.PedidoId"
+                                                <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@pedido.PedidoId"
                                                    class="btn btn-outline-info btn-sm rounded-2 shadow-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
@@ -267,7 +267,7 @@
             @* Botón Anterior *@
             <li class="page-item @(actual == 1 ? "disabled" : "")">
                 <a class="page-link"
-                   asp-area="Admin" asp-controller="Pedidos" asp-action="Listado"
+                   asp-action="Listado"
                    asp-route-pagina="@(actual - 1)"
                    asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
                    asp-route-busqueda="@Model.Busqueda"
@@ -287,7 +287,7 @@
                 {
                     <li class="page-item @(i == actual ? "active" : "")">
                         <a class="page-link"
-                           asp-area="Admin" asp-controller="Pedidos" asp-action="Listado"
+                           asp-action="Listado"
                            asp-route-pagina="@i"
                            asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
                            asp-route-busqueda="@Model.Busqueda"
@@ -309,7 +309,7 @@
             @* Botón Siguiente *@
             <li class="page-item @(actual == total ? "disabled" : "")">
                 <a class="page-link"
-                   asp-area="Admin" asp-controller="Pedidos" asp-action="Listado"
+                   asp-action="Listado"
                    asp-route-pagina="@(actual + 1)"
                    asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
                    asp-route-busqueda="@Model.Busqueda"
@@ -331,17 +331,17 @@
 <div style="display: none;">
     @foreach (var pedido in Model.PedidosPaginados.Items)
     {
-        <form id="enviarPedido@(pedido.PedidoId)" asp-area="Admin" asp-controller="Pedidos" asp-action="Enviar" method="post">
+        <form id="enviarPedido@(pedido.PedidoId)" asp-action="Enviar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
         </form>
 
-        <form id="entregarPedido@(pedido.PedidoId)" asp-area="Admin" asp-controller="Pedidos" asp-action="Entregar" method="post">
+        <form id="entregarPedido@(pedido.PedidoId)" asp-action="Entregar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
         </form>
 
-        <form id="cancelarPedido@(pedido.PedidoId)" asp-area="Admin" asp-controller="Pedidos" asp-action="Cancelar" method="post">
+        <form id="cancelarPedido@(pedido.PedidoId)" asp-action="Cancelar" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
         </form>

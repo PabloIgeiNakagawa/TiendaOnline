@@ -13,7 +13,7 @@
                     </h2>
                     <p class="text-muted mb-0">Administra los usuarios del sistema</p>
                 </div>
-                <a asp-area="Admin" asp-controller="Usuarios" asp-action="CrearUsuario" class="btn btn-primary btn-lg shadow-sm rounded-2">
+                <a asp-action="CrearUsuario" class="btn btn-primary btn-lg shadow-sm rounded-2">
                     <i class="bi bi-person-plus me-2"></i>
                     Nuevo Usuario
                 </a>
@@ -235,11 +235,11 @@
                                                         <i class="bi bi-person-plus"></i>
                                                     </button>
                                                 }
-                                                <a asp-area="Usuario" asp-controller="Usuarios" asp-action="EditarUsuario" asp-route-id="@usuario.UsuarioId"
+                                                <a asp-action="EditarUsuario" asp-route-id="@usuario.UsuarioId"
                                                    class="btn btn-outline-primary btn-sm rounded-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar usuario">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <a asp-area="Usuario" asp-controller="Usuarios" asp-action="PerfilUsuario" asp-route-id="@usuario.UsuarioId"
+                                                <a asp-controller="Usuarios" asp-action="PerfilUsuario" asp-route-id="@usuario.UsuarioId"
                                                    class="btn btn-outline-info btn-sm rounded-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver perfil">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
@@ -267,7 +267,7 @@
 
             @* Botón Anterior *@
             <li class="page-item @(paginaActual == 1 ? "disabled" : "")">
-                <a class="page-link" asp-area="Admin" asp-controller="Usuarios" asp-action="Listado"
+                <a class="page-link" asp-action="Listado"
                    asp-route-pagina="@(paginaActual - 1)"
                    asp-route-tamanoPagina="@Model.UsuariosPaginados.RegistrosPorPagina"
                    asp-route-busqueda="@Model.Busqueda"
@@ -285,7 +285,7 @@
                 if (i == 1 || i == totalPaginas || (i >= paginaActual - radio && i <= paginaActual + radio))
                 {
                     <li class="page-item @(i == paginaActual ? "active" : "")">
-                        <a class="page-link" asp-area="Admin" asp-controller="Usuarios" asp-action="Listado"
+                        <a class="page-link" asp-action="Listado"
                            asp-route-pagina="@i"
                            asp-route-tamanoPagina="@Model.UsuariosPaginados.RegistrosPorPagina"
                            asp-route-busqueda="@Model.Busqueda"
@@ -304,7 +304,7 @@
 
             @* Botón Siguiente *@
             <li class="page-item @(paginaActual == totalPaginas ? "disabled" : "")">
-                <a class="page-link" asp-area="Admin" asp-controller="Usuarios" asp-action="Listado"
+                <a class="page-link" asp-action="Listado"
                    asp-route-pagina="@(paginaActual + 1)"
                    asp-route-tamanoPagina="@Model.UsuariosPaginados.RegistrosPorPagina"
                    asp-route-busqueda="@Model.Busqueda"
@@ -324,10 +324,10 @@
 <div style="display: none;">
     @foreach (var usuario in Model.UsuariosPaginados.Items)
     {
-        <form id="formularioBaja@(usuario.UsuarioId)" asp-area="Admin" asp-controller="Usuarios" asp-action="DarBaja" asp-route-id="@usuario.UsuarioId" method="post">
+        <form id="formularioBaja@(usuario.UsuarioId)" asp-action="DarBaja" asp-route-id="@usuario.UsuarioId" method="post">
             @Html.AntiForgeryToken()
         </form>
-        <form id="formularioAlta@(usuario.UsuarioId)" asp-area="Admin" asp-controller="Usuarios" asp-action="DarAlta" asp-route-id="@usuario.UsuarioId" method="post">
+        <form id="formularioAlta@(usuario.UsuarioId)" asp-action="DarAlta" asp-route-id="@usuario.UsuarioId" method="post">
             @Html.AntiForgeryToken()
         </form>
     }

@@ -8,15 +8,15 @@
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+                <a asp-controller="HomeAdmin" asp-action="Index" class="text-decoration-none">
                     <i class="bi bi-house-door"></i> Inicio
                 </a>
             </li>
             <li class="breadcrumb-item">
-                <a asp-controller="Productos" asp-action="Catalogo"  class="text-decoration-none">Productos</a>
+                <a asp-action="Catalogo" class="text-decoration-none">Productos</a>
             </li>
             <li class="breadcrumb-item">
-                <a asp-controller="Productos" asp-action="Detalles" asp-route-id="@Model.ProductoId" class="text-decoration-none">@Model.Nombre</a>
+                <a asp-action="Detalles" asp-route-id="@Model.ProductoId" class="text-decoration-none">@Model.Nombre</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">Editar</li>
         </ol>
@@ -165,12 +165,12 @@
                     <div class="col-12">
                         <div class="d-flex flex-column flex-md-row gap-3 justify-content-md-end">
 
-                            <a asp-area="Admin" asp-controller="Productos" asp-action="Index"
+                            <a asp-action="Index"
                                class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center">
                                 <i class="bi bi-arrow-left me-2"></i>Cancelar
                             </a>
 
-                            <a asp-area="" asp-controller="Productos" asp-action="Detalles" asp-route-id="@Model.ProductoId"
+                            <a asp-action="Detalles" asp-route-id="@Model.ProductoId"
                                class="btn btn-outline-info d-inline-flex align-items-center justify-content-center">
                                 <i class="bi bi-eye me-2"></i>Ver Detalle
                             </a>

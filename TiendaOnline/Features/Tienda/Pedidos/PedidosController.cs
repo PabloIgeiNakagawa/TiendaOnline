@@ -6,6 +6,7 @@ using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Features.Tienda.Pedidos
 {
+    [Route("[controller]")]
     public class PedidosController : Controller
     {
         private readonly IPedidoService _pedidoService;
@@ -15,6 +16,7 @@ namespace TiendaOnline.Features.Tienda.Pedidos
             _pedidoService = pedidoService;
         }
 
+        [HttpGet("[action]")]
         public async Task<IActionResult> MisPedidos()
         {
             ViewData["Title"] = "Mis Pedidos";
@@ -31,6 +33,7 @@ namespace TiendaOnline.Features.Tienda.Pedidos
             return View(pedidos);
         }
 
+        [HttpGet("[action]")]
         public async Task<IActionResult> Detalles(int id)
         {
             var pedido = await _pedidoService.ObtenerPedidoConDetallesAsync(id);
@@ -41,7 +44,7 @@ namespace TiendaOnline.Features.Tienda.Pedidos
             return View(pedido);
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> FinalizarCompra()
         {

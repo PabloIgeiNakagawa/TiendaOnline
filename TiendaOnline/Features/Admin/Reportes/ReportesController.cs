@@ -4,7 +4,7 @@ using TiendaOnline.Services.IServices.Admin;
 
 namespace TiendaOnline.Features.Admin.Reportes
 {
-    [Area("Admin")]
+    [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
     public class ReportesController : Controller
     {
@@ -15,7 +15,7 @@ namespace TiendaOnline.Features.Admin.Reportes
             _reportesService = reportesService;
         }
 
-        // Vista principal del dashboard
+        [HttpGet("[action]")]
         public async Task<IActionResult> Dashboard()
         {
             ViewData["Title"] = "Dashboard";

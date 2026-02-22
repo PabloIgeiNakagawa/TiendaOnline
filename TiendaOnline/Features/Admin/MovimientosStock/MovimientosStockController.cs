@@ -5,7 +5,7 @@ using TiendaOnline.Services.IServices.Admin;
 
 namespace TiendaOnline.Features.Admin.MovimientosStock
 {
-    [Area("Admin")]
+    [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
     public class MovimientosStockController : Controller
     {
@@ -16,7 +16,7 @@ namespace TiendaOnline.Features.Admin.MovimientosStock
             _movimientoService = movimientoService;
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> Movimientos([FromQuery] MovimientoFiltrosDto filtros)
         {
             ViewData["Title"] = "Movimientos";
@@ -37,7 +37,7 @@ namespace TiendaOnline.Features.Admin.MovimientosStock
             return View(model);
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> Historial(int id)
         {
             ViewData["Title"] = "Historial";
@@ -45,7 +45,7 @@ namespace TiendaOnline.Features.Admin.MovimientosStock
             return View(historial);
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegistrarEntrada(RegistroStockDto dto)
         {
@@ -70,7 +70,7 @@ namespace TiendaOnline.Features.Admin.MovimientosStock
             return RedirectToAction(nameof(Movimientos));
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegistrarAjuste(AjusteManualDto dto)
         {

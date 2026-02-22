@@ -4,7 +4,7 @@ using TiendaOnline.Services.IServices.Admin;
 
 namespace TiendaOnline.Features.Admin.Auditorias
 {
-    [Area("Admin")]
+    [Route("Admin/[controller]")]
     [Authorize(Roles= "Administrador")]
     public class AuditoriasController : Controller
     {
@@ -15,6 +15,7 @@ namespace TiendaOnline.Features.Admin.Auditorias
             _auditoriaService = auditoriaService;
         }
 
+        [HttpGet("[action]")]
         public async Task<IActionResult> Logs(string busqueda, DateTime? fechaDesde, DateTime? fechaHasta, int pagina = 1, int tamanoPagina = 10)
         {
             ViewData["Title"] = "Auditoría del Sistema";
@@ -36,7 +37,7 @@ namespace TiendaOnline.Features.Admin.Auditorias
             return View(model);
         }
 
-        [HttpGet]
+        [HttpGet("[action]/{id}")]
         public async Task<IActionResult> ObtenerDetalle(int id)
         {
             var detalle = await _auditoriaService.ObtenerDetalleAuditoriaAsync(id);

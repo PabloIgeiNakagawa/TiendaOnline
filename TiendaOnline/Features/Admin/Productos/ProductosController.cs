@@ -8,7 +8,7 @@ using TiendaOnline.Services.DTOs.Admin.Categoria;
 
 namespace TiendaOnline.Features.Admin.Productos
 {
-    [Area("Admin")]
+    [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
     public class ProductosController : Controller
     {
@@ -23,7 +23,7 @@ namespace TiendaOnline.Features.Admin.Productos
             _imagenService = imagenService;
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> Catalogo(string? busqueda, int? categoriaId, string? estado, string? stock, int pagina = 1, int tamanoPagina = 10)
         {
             ViewData["Title"] = "Catálogo";
@@ -58,7 +58,7 @@ namespace TiendaOnline.Features.Admin.Productos
             return View(viewModel);
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> AgregarProducto()
         {
             ViewData["Title"] = "Agregar Producto";
@@ -66,7 +66,7 @@ namespace TiendaOnline.Features.Admin.Productos
             return View(new AgregarProductoViewModel());
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Agregar(AgregarProductoViewModel model)
         {
@@ -104,7 +104,7 @@ namespace TiendaOnline.Features.Admin.Productos
             return RedirectToAction(nameof(Catalogo));
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarAlta(int id)
         {
@@ -113,7 +113,7 @@ namespace TiendaOnline.Features.Admin.Productos
             return RedirectToAction(nameof(Catalogo));
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarBaja(int id)
         {
@@ -122,7 +122,7 @@ namespace TiendaOnline.Features.Admin.Productos
             return RedirectToAction(nameof(Catalogo));
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> EditarProducto(int id)
         {
             var producto = await _productoService.ObtenerProductoAsync(id);
@@ -132,7 +132,7 @@ namespace TiendaOnline.Features.Admin.Productos
             return View(producto);
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Editar(int id, Producto producto, IFormFile? ImagenArchivo)
         {

@@ -8,6 +8,7 @@ using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Features.Tienda.Account
 {
+    [Route("[controller]")]
     public class AccountController : Controller
     {
         private readonly IAuthService _authService;
@@ -17,14 +18,14 @@ namespace TiendaOnline.Features.Tienda.Account
             _authService = authService;
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public IActionResult Register()
         {
             ViewData["Title"] = "Registrarse";
             return View();
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
@@ -54,14 +55,14 @@ namespace TiendaOnline.Features.Tienda.Account
             }
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public IActionResult Login()
         {
             ViewData["Title"] = "Iniciar Sesión";
             return View();
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
@@ -83,10 +84,10 @@ namespace TiendaOnline.Features.Tienda.Account
 
             var role = principal.FindFirstValue(ClaimTypes.Role);
             return role == "Administrador"
-                ? RedirectToAction("Index", "Home", new { area = "Admin" })
+                ? RedirectToAction("Index", "HomeAdmin")
                 : RedirectToAction("Index", "Home");
         }
-        
+
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync("CookieAuth");

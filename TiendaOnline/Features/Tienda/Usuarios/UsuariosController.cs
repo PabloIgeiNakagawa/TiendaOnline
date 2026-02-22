@@ -5,6 +5,7 @@ using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Features.Tienda.Usuarios
 {
+    [Route("[controller]")]
     public class UsuariosController : Controller
     {
         private readonly IUsuarioService _usuarioService;
@@ -14,7 +15,7 @@ namespace TiendaOnline.Features.Tienda.Usuarios
             _usuarioService = usuarioService;
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> PerfilUsuario(int id)
         {
             var usuario = await _usuarioService.ObtenerPerfil(id);
@@ -39,7 +40,7 @@ namespace TiendaOnline.Features.Tienda.Usuarios
             return View(model);
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> EditarUsuario(int id)
         {
             ViewData["Title"] = "Editar Usuario";
@@ -55,7 +56,7 @@ namespace TiendaOnline.Features.Tienda.Usuarios
             return View(model);
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditarUsuario(UsuarioUpdateViewModel model)
         {

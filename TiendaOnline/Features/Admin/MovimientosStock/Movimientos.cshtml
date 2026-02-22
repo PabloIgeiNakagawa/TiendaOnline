@@ -12,7 +12,7 @@
                     </h2>
                     <p class="text-muted mb-0">Historial de entradas, salidas y ajustes de inventario</p>
                 </div>
-                <a asp-controller="MovimientosStock" asp-action="Nuevo" class="btn btn-primary btn-lg shadow-sm rounded-3 mt-3 mt-md-0">
+                <a asp-action="Nuevo" class="btn btn-primary btn-lg shadow-sm rounded-3 mt-3 mt-md-0">
                     <i class="bi bi-plus-circle me-2"></i>
                     Nuevo Movimiento
                 </a>
@@ -71,7 +71,7 @@
                                 <button type="submit" class="btn btn-primary rounded-3 flex-fill">
                                     <i class="bi bi-filter"></i>
                                 </button>
-                                <a asp-action="Index" class="btn btn-outline-secondary rounded-3 flex-fill" title="Limpiar filtros">
+                                <a asp-action="Movimientos" class="btn btn-outline-secondary rounded-3 flex-fill" title="Limpiar filtros">
                                     <i class="bi bi-arrow-clockwise"></i>
                                 </a>
                             </div>
@@ -202,7 +202,7 @@
                                         <td>
                                             @if(item.PedidoId.HasValue)
                                             {
-                                                <a asp-area="" asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@item.PedidoId"
+                                                <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@item.PedidoId"
                                                    class="d-flex justify-content-center align-items-center fw-semibold text-uppercase"
                                                    style="font-size: 0.9rem; letter-spacing: 0.5px;"
                                                    data-bs-toggle="tooltip"

@@ -5,7 +5,7 @@ using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Features.Admin.Pedidos
 {
-    [Area("Admin")]
+    [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
     public class PedidosController : Controller
     {
@@ -16,7 +16,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
             _pedidoService = pedidoService;
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> Listado(string? busqueda, EstadoPedido? estado, DateTime? fechaDesde, DateTime? fechaHasta, string? filtroMonto, int pagina = 1, int tamanoPagina = 10)
         {
             ViewData["Title"] = "Gestión de Pedidos";
@@ -45,7 +45,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
             return View(viewModel);
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         public async Task<IActionResult> Enviar(int pedidoId)
         {
             if (pedidoId <= 0)
@@ -57,7 +57,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [Authorize(Roles = "Administrador, Repartidor")]
         public async Task<IActionResult> Entregar(int pedidoId)
         {
@@ -70,7 +70,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         public async Task<IActionResult> Cancelar(int pedidoId)
         {
             if (pedidoId <= 0)

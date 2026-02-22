@@ -18,7 +18,7 @@
     </div>
 
     <!-- Filtros -->
-    <form method="get" asp-area="Admin" asp-controller="Auditorias" asp-action="Logs">
+    <form method="get" asp-action="Logs">
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card rounded-3 shadow-sm border-0">
@@ -63,8 +63,7 @@
                                     <i class="bi bi-filter me-1"></i>Filtrar
                                 </button>
 
-                                <a asp-area="Admin" asp-controller="Auditorias" asp-action="Logs"
-                                   class="btn btn-outline-secondary flex-fill">
+                                <a asp-action="Logs" class="btn btn-outline-secondary flex-fill">
                                     <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
                                 </a>
                             </div>
@@ -184,7 +183,7 @@
             @* Botón Anterior *@
             <li class="page-item @(actual == 1 ? "disabled" : "")">
                 <a class="page-link"
-                   asp-area="Admin" asp-controller="Auditorias" asp-action="Logs"
+                   asp-action="Logs"
                    asp-route-pagina="@(actual - 1)"
                    asp-route-tamanoPagina="@Model.Paginacion.RegistrosPorPagina"
                    asp-route-busqueda="@Model.Busqueda"
@@ -202,7 +201,7 @@
                 {
                     <li class="page-item @(i == actual ? "active" : "")">
                         <a class="page-link"
-                           asp-area="Admin" asp-controller="Auditorias" asp-action="Logs"
+                           asp-action="Logs"
                            asp-route-pagina="@i"
                            asp-route-tamanoPagina="@Model.Paginacion.RegistrosPorPagina"
                            asp-route-busqueda="@Model.Busqueda"
@@ -222,7 +221,7 @@
             @* Botón Siguiente *@
             <li class="page-item @(actual == total ? "disabled" : "")">
                 <a class="page-link"
-                   asp-area="Admin" asp-controller="Auditorias" asp-action="Logs"
+                   asp-action="Logs"
                    asp-route-pagina="@(actual + 1)"
                    asp-route-tamanoPagina="@Model.Paginacion.RegistrosPorPagina"
                    asp-route-busqueda="@Model.Busqueda"

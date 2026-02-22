@@ -78,7 +78,7 @@
 
                                 <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start mt-auto gap-3">
 
-                                    <form asp-controller="Carritos" asp-action="ActualizarCantidad" method="post" class="d-flex align-items-center">
+                                    <form asp-action="ActualizarCantidad" method="post" class="d-flex align-items-center">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="productoId" value="@item.ProductoId" />
 
@@ -108,7 +108,7 @@
                                         </button>
                                     </form>
 
-                                    <form asp-controller="Carritos" asp-action="EliminarItem" method="post"
+                                    <form asp-action="EliminarItem" method="post"
                                           class="position-absolute top-0 end-0 p-3" style="z-index: 10;">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.ProductoId" />
@@ -134,7 +134,7 @@
                 </div>
                 <!-- Botón vaciar carrito -->
                 <div class="text-center mb-4">
-                    <form asp-controller="Carritos" asp-action="Vaciar" method="post">
+                    <form asp-action="Vaciar" method="post">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-danger">
                             <i class="bi bi-cart-x-fill"></i>

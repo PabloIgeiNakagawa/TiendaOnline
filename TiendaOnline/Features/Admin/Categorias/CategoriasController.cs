@@ -6,7 +6,7 @@ using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Features.Admin.Categorias
 {
-    [Area("Admin")]
+    [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
     public class CategoriasController : Controller
     {
@@ -17,9 +17,11 @@ namespace TiendaOnline.Features.Admin.Categorias
             _categoriaService = categoriaService;
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> Listado(int pagina = 1, int tamanoPagina = 10, string? busqueda = null, string? nivel = null)
         {
+            ViewData["Title"] = "Gestión de Categorías";
+
             var pagedResult = await _categoriaService.ObtenerCategoriasPaginadasAsync(pagina, tamanoPagina, busqueda, nivel);
 
             var viewModel = new CategoriaListadoViewModel
@@ -32,14 +34,14 @@ namespace TiendaOnline.Features.Admin.Categorias
             return View(viewModel);
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> AgregarCategoria()
         {
             ViewBag.Categorias = new SelectList(await _categoriaService.ObtenerCategoriasAsync(), "CategoriaId", "Nombre");
             return View();
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Crear(Categoria categoria)
         {
@@ -60,7 +62,7 @@ namespace TiendaOnline.Features.Admin.Categorias
             return View(categoria);
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> Editar(int id)
         {
             var categoria = await _categoriaService.ObtenerCategoriaAsync(id);
@@ -73,7 +75,7 @@ namespace TiendaOnline.Features.Admin.Categorias
             return View(categoria);
         }
 
-        [HttpPost]
+        [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Editar(Categoria categoria)
         {
@@ -94,8 +96,7 @@ namespace TiendaOnline.Features.Admin.Categorias
             }
         }
 
-        // ELIMINAR
-        [HttpPost]
+        [HttpPost("[action]")]
         public async Task<IActionResult> Eliminar(int id)
         {
             bool eliminado = await _categoriaService.EliminarCategoriaAsync(id);

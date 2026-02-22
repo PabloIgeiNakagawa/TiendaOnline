@@ -80,7 +80,7 @@
 
                                         <div class="vr mx-2 d-none d-md-block text-secondary opacity-25"></div>
 
-                                        <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@pedido.PedidoId"
+                                        <a asp-action="Detalles" asp-route-id="@pedido.PedidoId"
                                            class="btn btn-outline-secondary border-1 rounded-circle d-flex align-items-center justify-content-center shadow-sm"
                                            style="width: 38px; height: 38px;"
                                            data-bs-toggle="tooltip"
@@ -171,7 +171,7 @@
                         </div>
                         <h5 class="text-muted">No tienes pedidos aún</h5>
                         <p class="text-muted">¡Explora nuestro catálogo y realiza tu primera compra!</p>
-                        <a asp-controller="Productos" asp-action="Index" class="btn btn-primary">
+                        <a asp-action="Index" class="btn btn-primary">
                             <i class="bi bi-shop me-2"></i>Ver Productos
                         </a>
                     </div>

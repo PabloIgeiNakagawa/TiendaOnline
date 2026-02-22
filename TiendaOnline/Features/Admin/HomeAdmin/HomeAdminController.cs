@@ -4,26 +4,29 @@ using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Services.IServices.Admin;
 
-namespace TiendaOnline.Features.Admin.Home
+namespace TiendaOnline.Features.Admin.HomeAdmin
 {
-    [Area("Admin")]
+    [Route("Admin")]
     [Authorize(Roles = "Administrador")]
-    public class HomeController : Controller
+    public class HomeAdminController : Controller
     {
         private readonly IHomeService _homeService;
-        private readonly ILogger<HomeController> _logger;
+        private readonly ILogger<HomeAdminController> _logger;
 
-        public HomeController(ILogger<HomeController> logger, IHomeService homeService)
+        public HomeAdminController(ILogger<HomeAdminController> logger, IHomeService homeService)
         {
             _logger = logger;
             _homeService = homeService;
         }
 
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
+            ViewData["Title"] = "Inicio";
+
             var datosHome = await _homeService.ObtenerResumenHomeAsync();
 
-            var viewModel = new HomeViewModel
+            var viewModel = new HomeAdminViewModel
             {
                 EstaDbOnline = datosHome.DbOnline,
                 VersionApp = datosHome.AppVersion,
