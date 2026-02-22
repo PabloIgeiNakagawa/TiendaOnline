@@ -1,4 +1,5 @@
-﻿@model List<TiendaOnline.Services.DTOs.ItemCarrito>
+﻿@using TiendaOnline.Features.Tienda.Carritos
+@model List<ItemCarrito>
 @{
     bool usuarioEstaAutenticado = User.Identity.IsAuthenticated;
     decimal total = Model.Sum(i => i.Precio * i.Cantidad);

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Services.IServices;
+using TiendaOnline.Features.Tienda.Pedidos;
 
 namespace TiendaOnline.Features.Admin.Pedidos
 {

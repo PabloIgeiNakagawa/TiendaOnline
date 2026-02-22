@@ -1,8 +1,9 @@
 ﻿using TiendaOnline.Domain.Entities;
+using TiendaOnline.Features.Tienda.Carritos;
 using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs;
 using TiendaOnline.Services.DTOs.Admin.Pedido;
-namespace TiendaOnline.Services.IServices
+
+namespace TiendaOnline.Features.Tienda.Pedidos
 {
     public interface IPedidoService
     {

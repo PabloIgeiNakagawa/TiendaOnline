@@ -1,13 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Features.Tienda.Carritos;
 using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs;
 using TiendaOnline.Services.DTOs.Admin.Pedido;
-using TiendaOnline.Services.IServices;
 using TiendaOnline.Services.IServices.Admin;
 
-namespace TiendaOnline.Services.Services
+namespace TiendaOnline.Features.Tienda.Pedidos
 {
     public class PedidoService : IPedidoService
     {
