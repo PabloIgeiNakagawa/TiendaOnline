@@ -1,7 +1,7 @@
 ﻿using TiendaOnline.Domain.Entities;
+using TiendaOnline.Features.Admin.Pedidos;
 using TiendaOnline.Features.Tienda.Carritos;
 using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs.Admin.Pedido;
 
 namespace TiendaOnline.Features.Tienda.Pedidos
 {
