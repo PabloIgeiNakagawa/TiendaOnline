@@ -5,7 +5,9 @@ using TiendaOnline.Features.Admin.Auditorias;
 using TiendaOnline.Features.Admin.Categorias;
 using TiendaOnline.Features.Admin.HomeAdmin;
 using TiendaOnline.Features.Admin.MovimientosStock;
+using TiendaOnline.Features.Admin.Pedidos;
 using TiendaOnline.Features.Admin.Reportes;
+using TiendaOnline.Features.Admin.Usuarios;
 using TiendaOnline.Features.Tienda.Account;
 using TiendaOnline.Features.Tienda.Pedidos;
 using TiendaOnline.Features.Tienda.Productos;
@@ -29,6 +31,9 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IReportesService, ReportesService>();
             services.AddScoped<IAuditoriaService, AuditoriaService>();
             services.AddScoped<IMovimientoStockService, MovimientoStockService>();
+
+            services.AddScoped<IUsuariosAdminService, UsuariosAdminService>();
+            services.AddScoped<IPedidosAdminService, PedidosAdminService>();
 
             // Autenticación y Sesión de Usuario
             services.AddScoped<IAuthService, AuthService>();

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Domain.Exceptions;
-using TiendaOnline.Features.Tienda.Usuarios;
 
 namespace TiendaOnline.Features.Admin.Usuarios
 {
@@ -9,11 +8,11 @@ namespace TiendaOnline.Features.Admin.Usuarios
     [Authorize(Roles = "Administrador")]
     public class UsuariosController : Controller
     {
-        private readonly IUsuarioService _usuarioService;
+        private readonly IUsuariosAdminService _usuariosAdminService;
 
-        public UsuariosController(IUsuarioService usuarioService)
+        public UsuariosController(IUsuariosAdminService usuariosAdminService)
         {
-            _usuarioService = usuarioService;
+            _usuariosAdminService = usuariosAdminService;
         }
 
         [HttpGet("[action]")]
@@ -28,7 +27,7 @@ namespace TiendaOnline.Features.Admin.Usuarios
                 _ => null
             };
 
-            var pagedResult = await _usuarioService.ObtenerUsuariosPaginadosAsync(pagina, tamanoPagina, busqueda, rol, estadoBool);
+            var pagedResult = await _usuariosAdminService.ObtenerUsuariosPaginadosAsync(pagina, tamanoPagina, busqueda, rol, estadoBool);
 
             var viewModel = new UsuarioListadoViewModel
             {
@@ -67,7 +66,7 @@ namespace TiendaOnline.Features.Admin.Usuarios
                     RolId = model.RolId
                 };
 
-                await _usuarioService.CrearUsuarioAsync(dto);
+                await _usuariosAdminService.CrearUsuarioAsync(dto);
                 TempData["MensajeExito"] = "Usuario creado correctamente.";
                 return RedirectToAction(nameof(Listado));
             }
@@ -82,7 +81,7 @@ namespace TiendaOnline.Features.Admin.Usuarios
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarAlta(int id)
         {
-            await _usuarioService.DarAltaUsuarioAsync(id);
+            await _usuariosAdminService.DarAltaUsuarioAsync(id);
             TempData["MensajeExito"] = "Usuario activado.";
             return RedirectToAction(nameof(Listado));
         }
@@ -91,7 +90,7 @@ namespace TiendaOnline.Features.Admin.Usuarios
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarBaja(int id)
         {
-            await _usuarioService.DarBajaUsuarioAsync(id);
+            await _usuariosAdminService.DarBajaUsuarioAsync(id);
             TempData["MensajeExito"] = "Usuario dado de baja.";
             return RedirectToAction(nameof(Listado));
         }
