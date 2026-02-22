@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Services.DTOs.Admin.Auditoria
+﻿namespace TiendaOnline.Features.Admin.Auditorias
 {
     // Para la tabla principal
     public class AuditoriaListaDto

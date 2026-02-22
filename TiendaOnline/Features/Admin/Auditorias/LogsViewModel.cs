@@ -1,5 +1,4 @@
 ﻿using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs.Admin.Auditoria;
 
 namespace TiendaOnline.Features.Admin.Auditorias
 {

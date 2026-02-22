@@ -1,7 +1,6 @@
 ﻿using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs.Admin.Auditoria;
 
-namespace TiendaOnline.Services.IServices.Admin
+namespace TiendaOnline.Features.Admin.Auditorias
 {
     public interface IAuditoriaService
     {

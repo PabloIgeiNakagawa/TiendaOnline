@@ -1,11 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Data;
-using TiendaOnline.Domain.Entities;
 using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs.Admin.Auditoria;
-using TiendaOnline.Services.IServices.Admin;
 
-namespace TiendaOnline.Services.Services.Admin
+namespace TiendaOnline.Features.Admin.Auditorias
 {
     public class AuditoriaService : IAuditoriaService
     {
