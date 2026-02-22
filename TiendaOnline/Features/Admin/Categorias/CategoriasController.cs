@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Services.IServices;
 
 namespace TiendaOnline.Features.Admin.Categorias
 {

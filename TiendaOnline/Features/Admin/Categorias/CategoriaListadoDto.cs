@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Services.DTOs.Admin.Categoria
+﻿namespace TiendaOnline.Features.Admin.Categorias
 {
     public class CategoriaListadoDto
     {

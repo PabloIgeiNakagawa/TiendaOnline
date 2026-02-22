@@ -2,10 +2,8 @@
 using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs.Admin.Categoria;
-using TiendaOnline.Services.IServices;
 
-namespace TiendaOnline.Services.Services
+namespace TiendaOnline.Features.Admin.Categorias
 {
     public class CategoriaService : ICategoriaService
     {

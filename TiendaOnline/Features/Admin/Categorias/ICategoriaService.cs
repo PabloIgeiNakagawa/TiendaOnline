@@ -1,8 +1,7 @@
 ﻿using TiendaOnline.Domain.Entities;
 using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs.Admin.Categoria;
 
-namespace TiendaOnline.Services.IServices
+namespace TiendaOnline.Features.Admin.Categorias
 {
     public interface ICategoriaService
     {

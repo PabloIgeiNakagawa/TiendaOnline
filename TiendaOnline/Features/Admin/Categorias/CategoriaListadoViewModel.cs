@@ -1,5 +1,4 @@
 ﻿using TiendaOnline.Services.Commons.Models;
-using TiendaOnline.Services.DTOs.Admin.Categoria;
 
 namespace TiendaOnline.Features.Admin.Categorias
 {

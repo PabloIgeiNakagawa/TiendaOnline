@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Services.IServices;
-using TiendaOnline.Services.DTOs.Admin.Categoria;
+using TiendaOnline.Features.Admin.Categorias;
 
 namespace TiendaOnline.Features.Admin.Productos
 {

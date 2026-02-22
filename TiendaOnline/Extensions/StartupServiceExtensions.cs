@@ -2,6 +2,7 @@
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Features.Admin.Auditorias;
+using TiendaOnline.Features.Admin.Categorias;
 using TiendaOnline.Features.Admin.HomeAdmin;
 using TiendaOnline.Features.Admin.MovimientosStock;
 using TiendaOnline.Features.Admin.Reportes;
