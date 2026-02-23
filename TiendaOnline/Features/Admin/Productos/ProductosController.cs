@@ -2,9 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Features.Admin.Categorias;
-using TiendaOnline.Features.Tienda.Productos;
 
 namespace TiendaOnline.Features.Admin.Productos
 {
@@ -12,15 +10,13 @@ namespace TiendaOnline.Features.Admin.Productos
     [Authorize(Roles = "Administrador")]
     public class ProductosController : Controller
     {
-        private readonly IProductoService _productoService;
+        private readonly IProductosAdminService _productosAdminService;
         private readonly ICategoriaService _categoriaService;
-        private readonly IImagenService _imagenService;
 
-        public ProductosController(IProductoService productoService, ICategoriaService categoriaService, IImagenService imagenService)
+        public ProductosController(IProductosAdminService productosAdminService, ICategoriaService categoriaService)
         {
-            _productoService = productoService;
+            _productosAdminService = productosAdminService;
             _categoriaService = categoriaService;
-            _imagenService = imagenService;
         }
 
         [HttpGet("[action]")]
@@ -32,7 +28,7 @@ namespace TiendaOnline.Features.Admin.Productos
             if (tamanoPagina < 1) tamanoPagina = 10;
 
             // Obtenemos los productos paginados y filtrados
-            var pagedResult = await _productoService.ObtenerProductosPaginadosAsync(
+            var pagedResult = await _productosAdminService.ObtenerProductosPaginadosAsync(
                 busqueda, categoriaId, estado, stock, pagina, tamanoPagina);
 
             // Obtenemos las categorías para el select (usando DTO)
@@ -62,7 +58,12 @@ namespace TiendaOnline.Features.Admin.Productos
         public async Task<IActionResult> AgregarProducto()
         {
             ViewData["Title"] = "Agregar Producto";
-            await CargarCategoriasEnViewBag();
+
+            var model = new AgregarProductoViewModel
+            {
+                Categorias = await ObtenerListaCategoriasAsync()
+            };
+
             return View(new AgregarProductoViewModel());
         }
 
@@ -77,29 +78,23 @@ namespace TiendaOnline.Features.Admin.Productos
 
             if (!ModelState.IsValid)
             {
-                await CargarCategoriasEnViewBag();
+                // RE-CARGAMOS las categorías antes de volver a la vista
+                model.Categorias = await ObtenerListaCategoriasAsync();
                 return View(model);
             }
 
-            string urlImagen = "/img/no-image.png";
-            if (model.ImagenArchivo != null)
-            {
-                using var stream = model.ImagenArchivo.OpenReadStream();
-                urlImagen = await _imagenService.SubirImagenAsync(stream, model.ImagenArchivo.FileName);
-            }
-
-            var nuevoProducto = new Producto
+            var dto = new AgregarProductoDto
             {
                 Nombre = model.Nombre,
                 Descripcion = model.Descripcion,
                 Precio = model.Precio,
                 Stock = model.Stock,
                 CategoriaId = model.CategoriaId,
-                ImagenUrl = urlImagen,
-                Activo = true
+                ImagenStream = model.ImagenArchivo?.OpenReadStream(),
+                NombreArchivo = model.ImagenArchivo?.FileName
             };
 
-            await _productoService.AgregarProductoAsync(nuevoProducto);
+            await _productosAdminService.AgregarProductoAsync(dto);
             TempData["MensajeExito"] = "Producto creado correctamente.";
             return RedirectToAction(nameof(Catalogo));
         }
@@ -108,7 +103,7 @@ namespace TiendaOnline.Features.Admin.Productos
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarAlta(int id)
         {
-            await _productoService.DarAltaProductoAsync(id);
+            await _productosAdminService.DarAltaProductoAsync(id);
             TempData["MensajeExito"] = "Producto activado.";
             return RedirectToAction(nameof(Catalogo));
         }
@@ -117,47 +112,68 @@ namespace TiendaOnline.Features.Admin.Productos
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarBaja(int id)
         {
-            await _productoService.DarBajaProductoAsync(id);
+            await _productosAdminService.DarBajaProductoAsync(id);
             TempData["MensajeExito"] = "Producto desactivado.";
             return RedirectToAction(nameof(Catalogo));
         }
 
-        [HttpGet("[action]")]
+        [HttpGet("[action]/{id}")]
         public async Task<IActionResult> EditarProducto(int id)
         {
-            var producto = await _productoService.ObtenerProductoAsync(id);
+            var producto = await _productosAdminService.ObtenerProductoAsync(id);
             if (producto == null) return NotFound();
 
-            await CargarCategoriasEnViewBag();
-            return View(producto);
+            var model = new EditarProductoViewModel
+            {
+                ProductoId = producto.ProductoId,
+                Nombre = producto.Nombre,
+                Descripcion = producto.Descripcion,
+                Precio = producto.Precio,
+                CategoriaId = producto.CategoriaId,
+                ImagenUrlActual = producto.ImagenUrl,
+                Categorias = await ObtenerListaCategoriasAsync()
+            };
+
+            return View(model);
         }
 
-        [HttpPost("[action]")]
+        [HttpPost("[action]/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Editar(int id, Producto producto, IFormFile? ImagenArchivo)
+        public async Task<IActionResult> EditarProducto(EditarProductoViewModel model)
         {
-            Stream? stream = null;
-            string? nombre = null;
-
-            if (ImagenArchivo != null)
+            if (!ModelState.IsValid)
             {
-                stream = ImagenArchivo.OpenReadStream();
-                nombre = ImagenArchivo.FileName;
+                // IMPORTANTE: Si volvemos a la vista, hay que rellenar la lista
+                model.Categorias = await ObtenerListaCategoriasAsync();
+                return View(model);
             }
 
-            await _productoService.EditarProductoAsync(id, producto, stream, nombre);
+            var dto = new EditarProductoDto
+            {
+                ProductoId = model.ProductoId,
+                Nombre = model.Nombre,
+                Descripcion = model.Descripcion,
+                Precio = model.Precio,
+                CategoriaId = model.CategoriaId,
+                ImagenStream = model.ImagenArchivo?.OpenReadStream(),
+                NombreArchivo = model.ImagenArchivo?.FileName
+            };
+
+            await _productosAdminService.EditarProductoAsync(dto);
+
             TempData["MensajeExito"] = "Producto actualizado correctamente.";
             return RedirectToAction(nameof(Catalogo));
         }
 
-        private async Task CargarCategoriasEnViewBag()
+        private async Task<IEnumerable<SelectListItem>> ObtenerListaCategoriasAsync()
         {
             var categoriasHoja = await _categoriaService.ObtenerCategoriasHojaAsync();
-            var listaFormateada = categoriasHoja.Select(c => new {
-                Id = c.CategoriaId,
-                NombreRuta = ObtenerRutaCompleta(c)
+
+            return categoriasHoja.Select(c => new SelectListItem
+            {
+                Value = c.CategoriaId.ToString(),
+                Text = ObtenerRutaCompleta(c) // Tu lógica de nombres jerárquicos
             });
-            ViewBag.Categorias = new SelectList(listaFormateada, "Id", "NombreRuta");
         }
 
         private string ObtenerRutaCompleta(Categoria cat)

@@ -6,6 +6,7 @@ using TiendaOnline.Features.Admin.Categorias;
 using TiendaOnline.Features.Admin.HomeAdmin;
 using TiendaOnline.Features.Admin.MovimientosStock;
 using TiendaOnline.Features.Admin.Pedidos;
+using TiendaOnline.Features.Admin.Productos;
 using TiendaOnline.Features.Admin.Reportes;
 using TiendaOnline.Features.Admin.Usuarios;
 using TiendaOnline.Features.Tienda.Account;
@@ -34,6 +35,7 @@ namespace TiendaOnline.Extensions
 
             services.AddScoped<IUsuariosAdminService, UsuariosAdminService>();
             services.AddScoped<IPedidosAdminService, PedidosAdminService>();
+            services.AddScoped<IProductosAdminService, ProductosAdminService>();
 
             // Autenticación y Sesión de Usuario
             services.AddScoped<IAuthService, AuthService>();

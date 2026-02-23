@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace TiendaOnline.Features.Admin.Productos
 {
@@ -25,5 +26,7 @@ namespace TiendaOnline.Features.Admin.Productos
 
         [Required(ErrorMessage = "La imagen es obligatoria")]
         public IFormFile ImagenArchivo { get; set; }
+
+        public IEnumerable<SelectListItem>? Categorias { get; set; }
     }
 }
