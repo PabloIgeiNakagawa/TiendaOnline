@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Features.Admin.Productos
+﻿namespace TiendaOnline.Application.Productos.Commands
 {
     public class EditarProductoDto
     {

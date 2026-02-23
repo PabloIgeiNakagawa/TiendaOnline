@@ -1,5 +1,6 @@
 ﻿using TiendaOnline.Features.Admin.Categorias;
 using TiendaOnline.Application.Common;
+using TiendaOnline.Application.Productos.Commands;
 
 namespace TiendaOnline.Features.Admin.Productos
 {

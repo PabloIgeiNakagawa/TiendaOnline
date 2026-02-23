@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
@@ -25,6 +26,7 @@ namespace TiendaOnline.Extensions
             // Servicios base
             services.AddScoped<IUsuarioService, UsuarioService>();
             services.AddScoped<IProductoQueryService, ProductoQueryService>();
+            services.AddScoped<IProductoCommandService, ProductoCommandService>();
             services.AddScoped<ICategoriaService, CategoriaService>();
             services.AddScoped<IPedidoService, PedidoService>();
 
@@ -36,7 +38,6 @@ namespace TiendaOnline.Extensions
 
             services.AddScoped<IUsuariosAdminService, UsuariosAdminService>();
             services.AddScoped<IPedidosAdminService, PedidosAdminService>();
-            services.AddScoped<IProductosAdminService, ProductosAdminService>();
 
             // Autenticación y Sesión de Usuario
             services.AddScoped<IAuthService, AuthService>();

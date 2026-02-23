@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using TiendaOnline.Application.Productos.Commands;
+using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Features.Admin.Categorias;
 
@@ -10,26 +12,24 @@ namespace TiendaOnline.Features.Admin.Productos
     [Authorize(Roles = "Administrador")]
     public class ProductosController : Controller
     {
-        private readonly IProductosAdminService _productosAdminService;
+        private readonly IProductoCommandService _productoCommandService;
+        private readonly IProductoQueryService _productoQueryService;
         private readonly ICategoriaService _categoriaService;
 
-        public ProductosController(IProductosAdminService productosAdminService, ICategoriaService categoriaService)
+        public ProductosController(IProductoCommandService productoCommandService, IProductoQueryService productoQueryService, ICategoriaService categoriaService)
         {
-            _productosAdminService = productosAdminService;
+            _productoCommandService = productoCommandService;
+            _productoQueryService = productoQueryService;
             _categoriaService = categoriaService;
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> Catalogo(string? busqueda, int? categoriaId, string? estado, string? stock, int pagina = 1, int tamanoPagina = 10)
+        public async Task<IActionResult> Catalogo([FromQuery] ObtenerProductosAdminQuery query)
         {
             ViewData["Title"] = "Catálogo";
 
-            if (pagina < 1) pagina = 1;
-            if (tamanoPagina < 1) tamanoPagina = 10;
-
             // Obtenemos los productos paginados y filtrados
-            var pagedResult = await _productosAdminService.ObtenerProductosPaginadosAsync(
-                busqueda, categoriaId, estado, stock, pagina, tamanoPagina);
+            var pagedResult = await _productoQueryService.ObtenerProductosAdminAsync(query);
 
             // Obtenemos las categorías para el select (usando DTO)
             var categoriasEntidad = await _categoriaService.ObtenerCategoriasHojaAsync();
@@ -43,10 +43,10 @@ namespace TiendaOnline.Features.Admin.Productos
             {
                 ProductosPaginados = pagedResult,
                 Categorias = categoriasDto,
-                Busqueda = busqueda,
-                CategoriaSeleccionada = categoriaId,
-                EstadoSeleccionado = estado,
-                StockSeleccionado = stock,
+                Busqueda = query.Busqueda,
+                CategoriaSeleccionada = query.CategoriaId,
+                EstadoSeleccionado = query.Estado,
+                StockSeleccionado = query.Stock,
                 TotalActivos = pagedResult.Items.Count(x => x.Activo),
                 TotalInactivos = pagedResult.Items.Count(x => !x.Activo)
             };
@@ -94,33 +94,15 @@ namespace TiendaOnline.Features.Admin.Productos
                 NombreArchivo = model.ImagenArchivo?.FileName
             };
 
-            await _productosAdminService.AgregarProductoAsync(dto);
+            await _productoCommandService.AgregarProductoAsync(dto);
             TempData["MensajeExito"] = "Producto creado correctamente.";
-            return RedirectToAction(nameof(Catalogo));
-        }
-
-        [HttpPost("[action]")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DarAlta(int id)
-        {
-            await _productosAdminService.DarAltaProductoAsync(id);
-            TempData["MensajeExito"] = "Producto activado.";
-            return RedirectToAction(nameof(Catalogo));
-        }
-
-        [HttpPost("[action]")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DarBaja(int id)
-        {
-            await _productosAdminService.DarBajaProductoAsync(id);
-            TempData["MensajeExito"] = "Producto desactivado.";
             return RedirectToAction(nameof(Catalogo));
         }
 
         [HttpGet("[action]/{id}")]
         public async Task<IActionResult> EditarProducto(int id)
         {
-            var producto = await _productosAdminService.ObtenerProductoAsync(id);
+            var producto = await _productoQueryService.ObtenerProductoAsync(id);
             if (producto == null) return NotFound();
 
             var model = new EditarProductoViewModel
@@ -159,12 +141,29 @@ namespace TiendaOnline.Features.Admin.Productos
                 NombreArchivo = model.ImagenArchivo?.FileName
             };
 
-            await _productosAdminService.EditarProductoAsync(dto);
+            await _productoCommandService.EditarProductoAsync(dto);
 
             TempData["MensajeExito"] = "Producto actualizado correctamente.";
             return RedirectToAction(nameof(Catalogo));
         }
 
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DarAlta(int id)
+        {
+            await _productoCommandService.DarAltaProductoAsync(id);
+            TempData["MensajeExito"] = "Producto activado.";
+            return RedirectToAction(nameof(Catalogo));
+        }
+
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DarBaja(int id)
+        {
+            await _productoCommandService.DarBajaProductoAsync(id);
+            TempData["MensajeExito"] = "Producto desactivado.";
+            return RedirectToAction(nameof(Catalogo));
+        }
         private async Task<IEnumerable<SelectListItem>> ObtenerListaCategoriasAsync()
         {
             var categoriasHoja = await _categoriaService.ObtenerCategoriasHojaAsync();
