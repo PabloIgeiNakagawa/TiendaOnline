@@ -4,7 +4,7 @@ using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Domain.Entities;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace TiendaOnline.Data
+namespace TiendaOnline.Infrastructure.Persistence
 {
     public class TiendaContext : DbContext
     {
@@ -46,7 +46,7 @@ namespace TiendaOnline.Data
                         _ => entry.State.ToString()
                     },
                     // Capturamos valores anteriores antes de que se pierdan
-                    DatosAnteriores = (entry.State == EntityState.Modified || entry.State == EntityState.Deleted)
+                    DatosAnteriores = entry.State == EntityState.Modified || entry.State == EntityState.Deleted
                         ? JsonConvert.SerializeObject(entry.OriginalValues.ToObject())
                         : "{}"
                 };

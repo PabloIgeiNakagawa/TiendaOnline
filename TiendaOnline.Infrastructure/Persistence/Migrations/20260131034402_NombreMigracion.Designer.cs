@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TiendaOnline.Data;
+using TiendaOnline.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace TiendaOnline.Data.Migrations
+namespace TiendaOnline.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TiendaContext))]
-    [Migration("20260127223015_CleanArchitectureInitial")]
-    partial class CleanArchitectureInitial
+    [Migration("20260131034402_NombreMigracion")]
+    partial class NombreMigracion
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -45,8 +45,16 @@ namespace TiendaOnline.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("EntidadId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("TablaAfectada")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("UsuarioId")
                         .HasColumnType("int");
@@ -275,7 +283,7 @@ namespace TiendaOnline.Data.Migrations
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.DetallePedido", b =>
                 {
-                    b.HasOne("TiendaOnline.Domain.Entities.Pedido", null)
+                    b.HasOne("TiendaOnline.Domain.Entities.Pedido", "Pedido")
                         .WithMany("DetallesPedido")
                         .HasForeignKey("PedidoId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -286,6 +294,8 @@ namespace TiendaOnline.Data.Migrations
                         .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Pedido");
 
                     b.Navigation("Producto");
                 });

@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TiendaOnline.Data;
+using TiendaOnline.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace TiendaOnline.Data.Migrations
+namespace TiendaOnline.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TiendaContext))]
-    [Migration("20260131034402_NombreMigracion")]
-    partial class NombreMigracion
+    [Migration("20260212020943_AgregoMovimientoStock")]
+    partial class AgregoMovimientoStock
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -120,6 +120,47 @@ namespace TiendaOnline.Data.Migrations
                     b.HasIndex("ProductoId");
 
                     b.ToTable("DetallesPedido");
+                });
+
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.MovimientoStock", b =>
+                {
+                    b.Property<int>("MovimientoStockId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MovimientoStockId"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Fecha")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Observaciones")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<int?>("PedidoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("MovimientoStockId");
+
+                    b.HasIndex("Fecha");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("MovimientosStock");
                 });
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Pedido", b =>
@@ -290,12 +331,23 @@ namespace TiendaOnline.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("TiendaOnline.Domain.Entities.Producto", "Producto")
-                        .WithMany("DetallesPedido")
+                        .WithMany()
                         .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Pedido");
+
+                    b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.MovimientoStock", b =>
+                {
+                    b.HasOne("TiendaOnline.Domain.Entities.Producto", "Producto")
+                        .WithMany("Movimientos")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Producto");
                 });
@@ -336,7 +388,7 @@ namespace TiendaOnline.Data.Migrations
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Producto", b =>
                 {
-                    b.Navigation("DetallesPedido");
+                    b.Navigation("Movimientos");
                 });
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Usuario", b =>

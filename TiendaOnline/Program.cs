@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using TiendaOnline.Data;
 using TiendaOnline.Extensions;
+using TiendaOnline.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +14,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<TiendaContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        b => b.MigrationsAssembly("TiendaOnline.Data")
+        b => b.MigrationsAssembly("TiendaOnline.Infrastructure")
     ));
 
 // Extensiones personalizadas para organizar la configuración

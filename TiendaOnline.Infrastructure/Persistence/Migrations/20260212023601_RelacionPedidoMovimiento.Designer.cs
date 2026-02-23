@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TiendaOnline.Data;
+using TiendaOnline.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace TiendaOnline.Data.Migrations
+namespace TiendaOnline.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TiendaContext))]
     [Migration("20260212023601_RelacionPedidoMovimiento")]

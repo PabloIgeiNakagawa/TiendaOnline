@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Features.Shared.Models;
+using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Features.Admin.Productos
 {

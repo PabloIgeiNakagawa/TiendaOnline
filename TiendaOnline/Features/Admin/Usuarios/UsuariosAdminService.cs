@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Features.Shared.Models;
 using TiendaOnline.Features.Tienda.Usuarios;
+using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Features.Admin.Usuarios
 {

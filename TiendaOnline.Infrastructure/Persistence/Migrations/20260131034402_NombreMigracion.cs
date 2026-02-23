@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace TiendaOnline.Data.Migrations
+namespace TiendaOnline.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class NombreMigracion : Migration

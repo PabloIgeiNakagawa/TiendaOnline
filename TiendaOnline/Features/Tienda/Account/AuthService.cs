@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
+using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Features.Tienda.Account
 {

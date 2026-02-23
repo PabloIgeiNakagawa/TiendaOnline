@@ -3,20 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TiendaOnline.Data;
+using TiendaOnline.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace TiendaOnline.Data.Migrations
+namespace TiendaOnline.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TiendaContext))]
-    [Migration("20260220170547_DireccionYOfertaProducto")]
-    partial class DireccionYOfertaProducto
+    partial class TiendaContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

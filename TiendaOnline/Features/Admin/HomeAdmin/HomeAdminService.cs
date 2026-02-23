@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Reflection;
-using TiendaOnline.Data;
+using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Features.Admin.HomeAdmin
 {

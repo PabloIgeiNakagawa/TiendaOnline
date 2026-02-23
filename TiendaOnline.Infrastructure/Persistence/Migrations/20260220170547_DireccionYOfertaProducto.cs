@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace TiendaOnline.Data.Migrations
+namespace TiendaOnline.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class DireccionYOfertaProducto : Migration

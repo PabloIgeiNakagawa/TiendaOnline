@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Globalization;
-using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Features.Admin.Reportes
 {

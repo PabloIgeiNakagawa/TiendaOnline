@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Features.Tienda.Usuarios
 {

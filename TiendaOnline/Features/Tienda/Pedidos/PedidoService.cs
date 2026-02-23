@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TiendaOnline.Data;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Features.Admin.MovimientosStock;
 using TiendaOnline.Features.Tienda.Carritos;
+using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Features.Tienda.Pedidos
 {
