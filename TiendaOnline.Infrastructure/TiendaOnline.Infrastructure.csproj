@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TiendaOnline.Application\TiendaOnline.Application.csproj" />
     <ProjectReference Include="..\TiendaOnline.Domain\TiendaOnline.Domain.csproj" />
   </ItemGroup>
 

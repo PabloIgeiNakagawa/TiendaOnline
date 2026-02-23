@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TiendaOnline.Application.Common;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Features.Shared.Models;
 using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Features.Admin.MovimientosStock

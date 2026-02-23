@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TiendaOnline.Features.Shared.Models;
+using TiendaOnline.Application.Common;
 using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Features.Admin.Auditorias

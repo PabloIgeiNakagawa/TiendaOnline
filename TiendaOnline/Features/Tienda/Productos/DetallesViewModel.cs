@@ -1,6 +1,6 @@
 ﻿namespace TiendaOnline.Features.Tienda.Productos
 {
-    public class ProductoDto
+    public class DetallesViewModel
     {
         public int ProductoId { get; set; }
         public string Nombre { get; set; }

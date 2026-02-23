@@ -1,4 +1,4 @@
-﻿using TiendaOnline.Features.Shared.Models;
+﻿using TiendaOnline.Application.Common;
 using TiendaOnline.Features.Tienda.Usuarios;
 
 namespace TiendaOnline.Features.Admin.Usuarios

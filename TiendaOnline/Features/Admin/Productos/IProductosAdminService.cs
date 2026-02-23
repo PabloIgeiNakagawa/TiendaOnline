@@ -1,5 +1,4 @@
-﻿using TiendaOnline.Domain.Entities;
-using TiendaOnline.Features.Shared.Models;
+﻿using TiendaOnline.Application.Common;
 
 namespace TiendaOnline.Features.Admin.Productos
 {

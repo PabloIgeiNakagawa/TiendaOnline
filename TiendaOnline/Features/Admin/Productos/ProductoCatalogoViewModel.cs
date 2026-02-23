@@ -1,5 +1,5 @@
 ﻿using TiendaOnline.Features.Admin.Categorias;
-using TiendaOnline.Features.Shared.Models;
+using TiendaOnline.Application.Common;
 
 namespace TiendaOnline.Features.Admin.Productos
 {

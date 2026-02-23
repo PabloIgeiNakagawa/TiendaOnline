@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TiendaOnline.Features.Tienda.Productos;
+using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Helpers;
 
 namespace TiendaOnline.Features.Tienda.Carritos
@@ -8,11 +8,11 @@ namespace TiendaOnline.Features.Tienda.Carritos
     public class CarritosController : Controller
     {
         private const string CarritoKey = "Carrito";
-        private readonly IProductoService _productoService;
+        private readonly IProductoQueryService _productoQueryService;
 
-        public CarritosController(IProductoService productoService)
+        public CarritosController(IProductoQueryService productoQueryService)
         {
-            _productoService = productoService;
+            _productoQueryService = productoQueryService;
         }
 
         [HttpGet("[action]")]
@@ -27,7 +27,7 @@ namespace TiendaOnline.Features.Tienda.Carritos
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Agregar(int id)
         {
-            var producto = await _productoService.ObtenerProductoAsync(id);
+            var producto = await _productoQueryService.ObtenerProductoAsync(id);
             var carrito = HttpContext.Session.GetObject<List<ItemCarrito>>(CarritoKey) ?? new List<ItemCarrito>();
 
             var itemExistente = carrito.FirstOrDefault(x => x.ProductoId == id);

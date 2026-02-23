@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Features.Admin.Categorias;
 
 namespace TiendaOnline.Features.Tienda.Productos
@@ -6,34 +7,33 @@ namespace TiendaOnline.Features.Tienda.Productos
     [Route("[controller]")]
     public class ProductosController : Controller
     {
-        private readonly IProductoService _productoService;
+        private readonly IProductoQueryService _productoQueryService;
         private readonly ICategoriaService _categoriaService;
 
-        public ProductosController(IProductoService productoService, ICategoriaService categoriaService)
+        public ProductosController(IProductoQueryService productoQueryService, ICategoriaService categoriaService)
         {
-            _productoService = productoService;
+            _productoQueryService = productoQueryService;
             _categoriaService = categoriaService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(string busqueda, int? categoriaId, decimal? min, decimal? max, string orden, int pagina = 1)
+        public async Task<IActionResult> Index([FromQuery] ObtenerProductosCatalogoQuery query)
         {
             ViewData["Title"] = "Catálogo de Productos";
 
-            int registrosPorPagina = 18;
+            var productosPaginados = await _productoQueryService.ObtenerProductosCatalogoAsync(query);
 
-            var productosPaginados = await _productoService.ObtenerProductosTiendaPaginadoAsync(
-                busqueda, categoriaId, min, max, orden, pagina, registrosPorPagina);
+            var categoriasRaiz = await _categoriaService.ObtenerCategoriasRaizAsync();
 
             var viewModel = new ProductoIndexViewModel
             {
                 Paginacion = productosPaginados,
-                Busqueda = busqueda,
-                CategoriaId = categoriaId,
-                PrecioMin = min,
-                PrecioMax = max,
-                Orden = orden,
-                CategoriasRaiz = (List<TiendaOnline.Domain.Entities.Categoria>)await _categoriaService.ObtenerCategoriasRaizAsync()
+                Busqueda = query.Busqueda,
+                CategoriaId = query.CategoriaId,
+                PrecioMin = query.PrecioMin,
+                PrecioMax = query.PrecioMax,
+                Orden = query.Orden,
+                CategoriasRaiz = categoriasRaiz.ToList()
             };
 
             return View(viewModel);
@@ -42,9 +42,28 @@ namespace TiendaOnline.Features.Tienda.Productos
         [HttpGet("[action]")]
         public async Task<IActionResult> Detalles(int id)
         {
-            var producto = await _productoService.ObtenerProductoAsync(id);
-            ViewData["Title"] = producto?.Nombre;
-            return View(producto);
+            if (id <= 0)
+                return BadRequest();
+
+            var producto = await _productoQueryService.ObtenerProductoAsync(id);
+
+            if (producto is null)
+                return NotFound();
+
+            ViewData["Title"] = producto.Nombre;
+
+            var vm = new DetallesViewModel
+            {
+                ProductoId = producto.ProductoId,
+                Nombre = producto.Nombre,
+                Descripcion = producto.Descripcion,
+                Precio = producto.Precio,
+                Stock = producto.Stock,
+                ImagenUrl = producto.ImagenUrl,
+                CategoriaNombre = producto.CategoriaNombre,
+                CategoriaId = producto.CategoriaId
+            };
+            return View(vm);
         }
     }
 }

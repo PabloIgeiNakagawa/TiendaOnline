@@ -1,4 +1,4 @@
-﻿@model TiendaOnline.Domain.Entities.Producto
+﻿@model TiendaOnline.Features.Tienda.Productos.DetallesViewModel
 
 <!-- Breadcrumb -->
 <nav aria-label="breadcrumb" class="my-4">
@@ -9,10 +9,10 @@
         <li class="breadcrumb-item">
             <a asp-action="Index" class="text-decoration-none">Productos</a>
         </li>
-        @if (Model.Categoria != null)
+        @if (Model.CategoriaNombre != null)
         {
             <li class="breadcrumb-item">
-                <a asp-controller="Categorias" asp-action="Productos" asp-route-id="@Model.CategoriaId" class="text-decoration-none">@Model.Categoria.Nombre</a>
+                <a asp-controller="Categorias" asp-action="Productos" asp-route-id="@Model.CategoriaId" class="text-decoration-none">@Model.CategoriaNombre</a>
             </li>
         }
         <li class="breadcrumb-item active" aria-current="page">@Model.Nombre</li>
@@ -33,11 +33,11 @@
         <div class="col-lg-6 col-md-6">
             <div>
                 <!-- Categoría -->
-                @if (Model.Categoria != null)
+                @if (Model.CategoriaNombre != null)
                 {
                     <div class="producto-categoria-detalle mb-3">
                         <span class="bg-body-secondary border fw-semibold px-2 py-1 rounded-pill small">
-                            <i class="bi bi-tag"></i> @Model.Categoria.Nombre
+                            <i class="bi bi-tag"></i> @Model.CategoriaNombre
                         </span>
                     </div>
                 }

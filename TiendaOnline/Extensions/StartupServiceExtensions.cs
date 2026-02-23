@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Features.Admin.Auditorias;
@@ -11,9 +12,9 @@ using TiendaOnline.Features.Admin.Reportes;
 using TiendaOnline.Features.Admin.Usuarios;
 using TiendaOnline.Features.Tienda.Account;
 using TiendaOnline.Features.Tienda.Pedidos;
-using TiendaOnline.Features.Tienda.Productos;
 using TiendaOnline.Features.Tienda.Usuarios;
 using TiendaOnline.Infrastructure.ExternalServices;
+using TiendaOnline.Infrastructure.Services;
 
 namespace TiendaOnline.Extensions
 {
@@ -23,7 +24,7 @@ namespace TiendaOnline.Extensions
         {
             // Servicios base
             services.AddScoped<IUsuarioService, UsuarioService>();
-            services.AddScoped<IProductoService, ProductoService>();
+            services.AddScoped<IProductoQueryService, ProductoQueryService>();
             services.AddScoped<ICategoriaService, CategoriaService>();
             services.AddScoped<IPedidoService, PedidoService>();
 

@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Features.Shared.Models
+﻿namespace TiendaOnline.Application.Common
 {
     public class PagedResult<T>
     {

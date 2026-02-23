@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
-using TiendaOnline.Features.Shared.Models;
+using TiendaOnline.Application.Common;
 using TiendaOnline.Features.Tienda.Usuarios;
 using TiendaOnline.Infrastructure.Persistence;
 
