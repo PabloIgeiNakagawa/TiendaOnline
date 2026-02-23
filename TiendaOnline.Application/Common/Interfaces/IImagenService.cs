@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Domain.Interfaces
+﻿namespace TiendaOnline.Application.Common.Interfaces
 {
     public interface IImagenService
     {

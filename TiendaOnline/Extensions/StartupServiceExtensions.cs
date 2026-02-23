@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Features.Admin.Auditorias;
 using TiendaOnline.Features.Admin.Categorias;
 using TiendaOnline.Features.Admin.HomeAdmin;

@@ -1,7 +1,7 @@
 ﻿using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
-using TiendaOnline.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
+using TiendaOnline.Application.Common.Interfaces;
 
 namespace TiendaOnline.Infrastructure.ExternalServices
 {

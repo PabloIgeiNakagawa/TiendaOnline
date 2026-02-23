@@ -1,6 +1,6 @@
-﻿using TiendaOnline.Application.Productos.Commands;
+﻿using TiendaOnline.Application.Common.Interfaces;
+using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Infrastructure.Services

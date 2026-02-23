@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using TiendaOnline.Domain.Interfaces;
 using TiendaOnline.Domain.Entities;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using TiendaOnline.Application.Common.Interfaces;
 
 namespace TiendaOnline.Infrastructure.Persistence
 {
