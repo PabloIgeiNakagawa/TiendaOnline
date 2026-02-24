@@ -1,9 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using TiendaOnline.Application.Reportes;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
 
-namespace TiendaOnline.Features.Admin.Reportes
+namespace TiendaOnline.Infrastructure.Services.Reportes
 {
     public class ReportesService : IReportesService
     {
@@ -39,16 +40,19 @@ namespace TiendaOnline.Features.Admin.Reportes
             var finMesAnterior = inicioMesActual.AddDays(-1);
 
             var ventasTotales = await _context.DetallesPedido
+                .AsNoTracking()
                 .Where(dp => dp.Pedido.Estado != EstadoPedido.Cancelado)
                 .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario);
 
             var ventasMesActual = await _context.DetallesPedido
+                .AsNoTracking()
                 .Where(dp => dp.Pedido.FechaPedido >= inicioMesActual
                           && dp.Pedido.FechaPedido <= finMesActual
                           && dp.Pedido.Estado != EstadoPedido.Cancelado)
                 .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario);
 
             var ventasMesAnterior = await _context.DetallesPedido
+                .AsNoTracking()
                 .Where(dp => dp.Pedido.FechaPedido >= inicioMesAnterior
                           && dp.Pedido.FechaPedido <= finMesAnterior
                           && dp.Pedido.Estado != EstadoPedido.Cancelado)
@@ -56,25 +60,30 @@ namespace TiendaOnline.Features.Admin.Reportes
 
             var totalPedidos = await _context.Pedidos.CountAsync();
             var pedidosMesActual = await _context.Pedidos
+                .AsNoTracking()
                 .Where(p => p.FechaPedido >= inicioMesActual && p.FechaPedido <= finMesActual)
                 .CountAsync();
             var pedidosMesAnterior = await _context.Pedidos
+                .AsNoTracking()
                 .Where(p => p.FechaPedido >= inicioMesAnterior && p.FechaPedido <= finMesAnterior)
                 .CountAsync();
 
             var totalClientes = await _context.Usuarios.Where(u => u.Rol == 0 && u.Activo).CountAsync();
             var clientesMesActual = await _context.Usuarios
+                .AsNoTracking()
                 .Where(u => u.Rol == 0 && u.Activo
                          && u.FechaCreacion >= inicioMesActual
                          && u.FechaCreacion <= finMesActual)
                 .CountAsync();
             var clientesMesAnterior = await _context.Usuarios
+                .AsNoTracking()
                 .Where(u => u.Rol == 0 && u.Activo
                          && u.FechaCreacion >= inicioMesAnterior
                          && u.FechaCreacion <= finMesAnterior)
                 .CountAsync();
 
             var productosBajoStock = await _context.Productos
+                .AsNoTracking()
                 .Where(p => p.Stock < 10 && p.Activo)
                 .CountAsync();
 
@@ -99,6 +108,7 @@ namespace TiendaOnline.Features.Admin.Reportes
         private async Task<List<ProductoMasVendidoDto>> ObtenerTopProductosAsync(int cantidad)
         {
             return await _context.DetallesPedido
+                .AsNoTracking()
                 .Where(dp => dp.Pedido.Estado != EstadoPedido.Cancelado)
                 .GroupBy(dp => new { dp.ProductoId, dp.Producto.Nombre, dp.Producto.ImagenUrl, Categoria = dp.Producto.Categoria.Nombre })
                 .Select(g => new ProductoMasVendidoDto
@@ -118,6 +128,7 @@ namespace TiendaOnline.Features.Admin.Reportes
         private async Task<List<ClienteTopDto>> ObtenerTopClientesAsync(int cantidad)
         {
             var clientes = await _context.Pedidos
+                .AsNoTracking()
                 .Where(p => p.Estado != EstadoPedido.Cancelado && p.Usuario.Rol == 0)
                 .GroupBy(p => new { p.UsuarioId, p.Usuario.Nombre, p.Usuario.Apellido, p.Usuario.Email })
                 .Select(g => new
@@ -147,6 +158,7 @@ namespace TiendaOnline.Features.Admin.Reportes
         private async Task<List<VentaPorCategoriaDto>> ObtenerVentasPorCategoriaAsync()
         {
             var ventas = await _context.DetallesPedido
+                .AsNoTracking()
                 .Where(dp => dp.Pedido.Estado != EstadoPedido.Cancelado)
                 .GroupBy(dp => dp.Producto.Categoria.Nombre)
                 .Select(g => new VentaPorCategoriaDto
@@ -172,6 +184,7 @@ namespace TiendaOnline.Features.Admin.Reportes
             var fechaInicio = DateTime.Now.AddMonths(-meses);
 
             var ventasPorMes = await _context.Pedidos
+                .AsNoTracking()
                 .Where(p => p.FechaPedido >= fechaInicio && p.Estado != EstadoPedido.Cancelado)
                 .GroupBy(p => new { p.FechaPedido.Year, p.FechaPedido.Month })
                 .Select(g => new
@@ -196,11 +209,18 @@ namespace TiendaOnline.Features.Admin.Reportes
 
         private async Task<EstadisticasPedidosDto> ObtenerEstadisticasPedidosAsync()
         {
-            var totalPedidos = await _context.Pedidos.CountAsync();
-            var pendientes = await _context.Pedidos.CountAsync(p => p.Estado == EstadoPedido.Pendiente);
-            var enviados = await _context.Pedidos.CountAsync(p => p.Estado == EstadoPedido.Enviado);
-            var entregados = await _context.Pedidos.CountAsync(p => p.Estado == EstadoPedido.Entregado);
-            var cancelados = await _context.Pedidos.CountAsync(p => p.Estado == EstadoPedido.Cancelado);
+            var estados = await _context.Pedidos
+                .AsNoTracking()
+                .GroupBy(p => p.Estado)
+                .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
+                .ToListAsync();
+
+            var totalPedidos = estados.Sum(e => e.Cantidad);
+
+            int pendientes = estados.FirstOrDefault(e => e.Estado == EstadoPedido.Pendiente)?.Cantidad ?? 0;
+            int enviados = estados.FirstOrDefault(e => e.Estado == EstadoPedido.Enviado)?.Cantidad ?? 0;
+            int entregados = estados.FirstOrDefault(e => e.Estado == EstadoPedido.Entregado)?.Cantidad ?? 0;
+            int cancelados = estados.FirstOrDefault(e => e.Estado == EstadoPedido.Cancelado)?.Cantidad ?? 0;
 
             return new EstadisticasPedidosDto
             {
@@ -219,7 +239,20 @@ namespace TiendaOnline.Features.Admin.Reportes
         {
             var fechaInicioMes = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
 
-            return await _context.Productos
+            var ventasUltimoMes = await _context.DetallesPedido
+                .AsNoTracking()
+                .Where(dp => dp.Pedido.FechaPedido >= fechaInicioMes
+                          && dp.Pedido.Estado != EstadoPedido.Cancelado)
+                .GroupBy(dp => dp.ProductoId)
+                .Select(g => new
+                {
+                    ProductoId = g.Key,
+                    Cantidad = g.Sum(dp => dp.Cantidad)
+                })
+                .ToDictionaryAsync(x => x.ProductoId, x => x.Cantidad);
+
+            var productos = await _context.Productos
+                .AsNoTracking()
                 .Where(p => p.Stock < 10 && p.Activo)
                 .Select(p => new ProductoBajoStockDto
                 {
@@ -227,21 +260,25 @@ namespace TiendaOnline.Features.Admin.Reportes
                     Nombre = p.Nombre,
                     Categoria = p.Categoria.Nombre,
                     Stock = p.Stock,
-                    ImagenUrl = p.ImagenUrl,
-                    CantidadVendidaUltimoMes = _context.DetallesPedido
-                        .Where(dp => dp.ProductoId == p.ProductoId
-                                  && dp.Pedido.FechaPedido >= fechaInicioMes
-                                  && dp.Pedido.Estado != EstadoPedido.Cancelado)
-                        .Sum(dp => (int?)dp.Cantidad) ?? 0
+                    ImagenUrl = p.ImagenUrl
                 })
-                .OrderBy(p => p.Stock)
-                .Take(cantidad)
                 .ToListAsync();
+
+            foreach (var producto in productos)
+            {
+                if (ventasUltimoMes.TryGetValue(producto.ProductoId, out var cantidadVendida))
+                {
+                    producto.CantidadVendidaUltimoMes = cantidadVendida;
+                }
+            }
+
+            return productos;
         }
 
         private async Task<List<PedidoRecienteDto>> ObtenerPedidosRecientesAsync(int cantidad)
         {
             return await _context.Pedidos
+                .AsNoTracking()
                 .OrderByDescending(p => p.FechaPedido)
                 .Take(cantidad)
                 .Select(p => new PedidoRecienteDto
@@ -250,10 +287,7 @@ namespace TiendaOnline.Features.Admin.Reportes
                     FechaPedido = p.FechaPedido,
                     Cliente = p.Usuario.Nombre + " " + p.Usuario.Apellido,
                     Total = p.DetallesPedido.Sum(dp => dp.Cantidad * dp.PrecioUnitario),
-                    Estado = p.Estado == EstadoPedido.Pendiente ? "Pendiente" :
-                             p.Estado == EstadoPedido.Enviado ? "Enviado" :
-                             p.Estado == EstadoPedido.Entregado ? "Entregado" :
-                             p.Estado == EstadoPedido.Cancelado ? "Cancelado" : "Desconocido",
+                    Estado = p.Estado.ToString(),
                     EstadoNumero = (int)p.Estado
                 })
                 .ToListAsync();
@@ -267,7 +301,7 @@ namespace TiendaOnline.Features.Admin.Reportes
 
         private string ObtenerNombreMes(int mes, int anio)
         {
-            var cultura = new CultureInfo("es-ES");
+            var cultura = new CultureInfo("es-AR");
             return cultura.DateTimeFormat.GetMonthName(mes) + " " + anio;
         }
     }
