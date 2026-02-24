@@ -1,23 +1,25 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System.Reflection;
+using TiendaOnline.Application.AdminOverview;
 using TiendaOnline.Infrastructure.Persistence;
 
-namespace TiendaOnline.Features.Admin.HomeAdmin
+namespace TiendaOnline.Infrastructure.Services.AdminOverview
 {
-    public class HomeAdminService : IHomeAdminService
+    public class AdminOverviewService : IAdminOverviewService
     {
         private readonly TiendaContext _context;
         private readonly IConfiguration _config;
 
-        public HomeAdminService(TiendaContext context, IConfiguration config)
+        public AdminOverviewService(TiendaContext context, IConfiguration config)
         {
             _context = context;
             _config = config;
         }
 
-        public async Task<IndexDTO> ObtenerResumenHomeAsync()
+        public async Task<AdminOverviewDto> ObtenerResumenHomeAsync()
         {
-            var dto = new IndexDTO
+            var dto = new AdminOverviewDto
             {
                 DbOnline = await VerificarEstadoBaseDatosAsync(),
                 AppVersion = ObtenerVersionApp(),
@@ -26,6 +28,7 @@ namespace TiendaOnline.Features.Admin.HomeAdmin
 
             // Timeline de Auditoría (Últimos 5 cambios de productos o precios)
             dto.UltimosCambios = await _context.Auditorias
+                .AsNoTracking()
                 .OrderByDescending(a => a.Fecha)
                 .Take(5)
                 .Select(a => new AuditoriaEntryDTO
@@ -38,6 +41,7 @@ namespace TiendaOnline.Features.Admin.HomeAdmin
             // Pedidos Estancados (Estado 0: Pendiente y más de 48hs)
             var limiteFecha = DateTime.Now.AddHours(-48);
             dto.PedidosEstancados = await _context.Pedidos
+                .AsNoTracking()
                 .Where(p => p.Estado == 0 && p.FechaPedido <= limiteFecha)
                 .Select(p => new PedidoEstancadoDTO
                 {
@@ -50,7 +54,7 @@ namespace TiendaOnline.Features.Admin.HomeAdmin
             return dto;
         }
 
-        public async Task<bool> VerificarEstadoBaseDatosAsync()
+        private async Task<bool> VerificarEstadoBaseDatosAsync()
         {
             try
             {
@@ -62,7 +66,7 @@ namespace TiendaOnline.Features.Admin.HomeAdmin
             }
         }
 
-        public string ObtenerVersionApp()
+        private string ObtenerVersionApp()
         {
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             return version != null ? $"{version.Major}.{version.Minor}.{version.Build}" : "1.0.0";

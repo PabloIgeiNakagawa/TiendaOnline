@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using TiendaOnline.Application.AdminOverview;
 using TiendaOnline.Application.Auditoria;
 using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Application.Productos.Commands;
@@ -6,7 +7,6 @@ using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Application.Reportes;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Features.Admin.Categorias;
-using TiendaOnline.Features.Admin.HomeAdmin;
 using TiendaOnline.Features.Admin.MovimientosStock;
 using TiendaOnline.Features.Admin.Pedidos;
 using TiendaOnline.Features.Admin.Productos;
@@ -15,6 +15,7 @@ using TiendaOnline.Features.Tienda.Account;
 using TiendaOnline.Features.Tienda.Pedidos;
 using TiendaOnline.Features.Tienda.Usuarios;
 using TiendaOnline.Infrastructure.ExternalServices;
+using TiendaOnline.Infrastructure.Services.AdminOverview;
 using TiendaOnline.Infrastructure.Services.Auditoria;
 using TiendaOnline.Infrastructure.Services.Productos;
 using TiendaOnline.Infrastructure.Services.Reportes;
@@ -33,7 +34,7 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IPedidoService, PedidoService>();
 
             // Administración
-            services.AddScoped<IHomeAdminService, HomeAdminService>();
+            services.AddScoped<IAdminOverviewService, AdminOverviewService>();
             services.AddScoped<IReportesService, ReportesService>();
             services.AddScoped<IAuditoriaService, AuditoriaService>();
             services.AddScoped<IMovimientoStockService, MovimientoStockService>();

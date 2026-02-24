@@ -1,6 +1,6 @@
-﻿namespace TiendaOnline.Features.Admin.HomeAdmin
+﻿namespace TiendaOnline.Application.AdminOverview
 {
-    public class IndexDTO
+    public class AdminOverviewDto
     {
         // Status del Sistema
         public bool DbOnline { get; set; }
