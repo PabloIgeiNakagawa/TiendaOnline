@@ -1,8 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TiendaOnline.Application.Auditoria;
 using TiendaOnline.Application.Common;
 using TiendaOnline.Infrastructure.Persistence;
 
-namespace TiendaOnline.Features.Admin.Auditorias
+namespace TiendaOnline.Infrastructure.Services.Auditoria
 {
     public class AuditoriaService : IAuditoriaService
     {
@@ -13,7 +14,7 @@ namespace TiendaOnline.Features.Admin.Auditorias
             _context = context;
         }
 
-        public async Task<PagedResult<AuditoriaListaDto>> ObtenerAuditoriasPaginadasAsync(int pagina, int cantidad, string? busqueda = null, DateTime? fechaDesde = null, DateTime? fechaHasta = null)
+        public async Task<PagedResult<AuditoriaListaDto>> ObtenerAuditoriasPaginadasAsync(ObtenerLogsRequest request)
         {
             var query = _context.Auditorias
                 .AsNoTracking()
@@ -21,9 +22,9 @@ namespace TiendaOnline.Features.Admin.Auditorias
                 .AsQueryable();
 
             // Filtros de búsqueda
-            if (!string.IsNullOrWhiteSpace(busqueda))
+            if (!string.IsNullOrWhiteSpace(request.Busqueda))
             {
-                busqueda = busqueda.Trim().ToLower();
+                var busqueda = request.Busqueda.Trim().ToLower();
                 query = query.Where(a =>
                     a.Usuario.Nombre.ToLower().Contains(busqueda) ||
                     a.Usuario.Apellido.ToLower().Contains(busqueda) ||
@@ -32,12 +33,12 @@ namespace TiendaOnline.Features.Admin.Auditorias
             }
 
             // Filtro por rango de fechas
-            if (fechaDesde.HasValue)
-                query = query.Where(a => a.Fecha >= fechaDesde.Value);
+            if (request.FechaDesde.HasValue)
+                query = query.Where(a => a.Fecha >= request.FechaDesde.Value);
 
-            if (fechaHasta.HasValue)
+            if (request.FechaHasta.HasValue)
             {
-                var hastaFinal = fechaHasta.Value.Date.AddDays(1).AddTicks(-1);
+                var hastaFinal = request.FechaHasta.Value.Date.AddDays(1).AddTicks(-1);
                 query = query.Where(a => a.Fecha <= hastaFinal);
             }
 
@@ -47,8 +48,8 @@ namespace TiendaOnline.Features.Admin.Auditorias
             // Proyección al DTO
             var items = await query
                 .OrderByDescending(a => a.Fecha)
-                .Skip((pagina - 1) * cantidad)
-                .Take(cantidad)
+                .Skip((request.Pagina - 1) * request.TamanoPagina)
+                .Take(request.TamanoPagina)
                 .Select(a => new AuditoriaListaDto
                 {
                     AuditoriaId = a.AuditoriaId,
@@ -60,7 +61,7 @@ namespace TiendaOnline.Features.Admin.Auditorias
                 })
                 .ToListAsync();
 
-            return new PagedResult<AuditoriaListaDto>(items, totalRegistros, pagina, cantidad);
+            return new PagedResult<AuditoriaListaDto>(items, totalRegistros, request.Pagina, request.TamanoPagina);
         }
 
         public async Task<AuditoriaDetalleDto?> ObtenerDetalleAuditoriaAsync(int id)

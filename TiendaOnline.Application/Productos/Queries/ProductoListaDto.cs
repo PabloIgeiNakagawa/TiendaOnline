@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Application.Productos.Commands
+﻿namespace TiendaOnline.Application.Productos.Queries
 {
     public class ProductoListaDto
     {

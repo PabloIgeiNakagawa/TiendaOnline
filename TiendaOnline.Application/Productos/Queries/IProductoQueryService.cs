@@ -1,5 +1,4 @@
 ﻿using TiendaOnline.Application.Common;
-using TiendaOnline.Application.Productos.Commands;
 
 namespace TiendaOnline.Application.Productos.Queries
 {

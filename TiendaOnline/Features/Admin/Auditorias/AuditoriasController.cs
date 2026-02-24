@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TiendaOnline.Application.Auditoria;
 
 namespace TiendaOnline.Features.Admin.Auditorias
 {
@@ -15,22 +16,29 @@ namespace TiendaOnline.Features.Admin.Auditorias
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> Logs(string busqueda, DateTime? fechaDesde, DateTime? fechaHasta, int pagina = 1, int tamanoPagina = 10)
+        public async Task<IActionResult> Logs(LogsFiltroViewModel filtro)
         {
             ViewData["Title"] = "Auditoría del Sistema";
 
-            if (pagina < 1) pagina = 1;
-            if (tamanoPagina < 1) tamanoPagina = 10;
+            var request = new ObtenerLogsRequest
+            {
+                Busqueda = filtro.Busqueda,
+                FechaDesde = filtro.FechaDesde,
+                FechaHasta = filtro.FechaHasta,
+                Pagina = filtro.Pagina,
+                TamanoPagina = filtro.TamanoPagina
+            };
 
-            var resultado = await _auditoriaService.ObtenerAuditoriasPaginadasAsync(pagina, tamanoPagina, busqueda, fechaDesde, fechaHasta);
+            var resultado = await _auditoriaService.ObtenerAuditoriasPaginadasAsync(request);
 
             var model = new LogsViewModel
             {
                 Paginacion = resultado,
-                Busqueda = busqueda,
-                TamanoPagina = tamanoPagina,
-                FechaDesde = fechaDesde,
-                FechaHasta = fechaHasta
+                Busqueda = request.Busqueda,
+                TamanoPagina = request.TamanoPagina,
+                Pagina = request.Pagina,
+                FechaDesde = request.FechaDesde,
+                FechaHasta = request.FechaHasta
             };
 
             return View(model);
