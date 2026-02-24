@@ -24,12 +24,12 @@ namespace TiendaOnline.Features.Admin.Productos
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> Catalogo([FromQuery] ObtenerProductosAdminQuery query)
+        public async Task<IActionResult> Catalogo([FromQuery] ObtenerProductosAdminRequest request)
         {
             ViewData["Title"] = "Catálogo";
 
             // Obtenemos los productos paginados y filtrados
-            var pagedResult = await _productoQueryService.ObtenerProductosAdminAsync(query);
+            var pagedResult = await _productoQueryService.ObtenerProductosAdminAsync(request);
 
             // Obtenemos las categorías para el select (usando DTO)
             var categoriasEntidad = await _categoriaService.ObtenerCategoriasHojaAsync();
@@ -43,10 +43,10 @@ namespace TiendaOnline.Features.Admin.Productos
             {
                 ProductosPaginados = pagedResult,
                 Categorias = categoriasDto,
-                Busqueda = query.Busqueda,
-                CategoriaSeleccionada = query.CategoriaId,
-                EstadoSeleccionado = query.Estado,
-                StockSeleccionado = query.Stock,
+                Busqueda = request.Busqueda,
+                CategoriaSeleccionada = request.CategoriaId,
+                EstadoSeleccionado = request.Estado,
+                StockSeleccionado = request.Stock,
                 TotalActivos = pagedResult.Items.Count(x => x.Activo),
                 TotalInactivos = pagedResult.Items.Count(x => !x.Activo)
             };

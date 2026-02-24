@@ -15,7 +15,7 @@ using TiendaOnline.Features.Tienda.Account;
 using TiendaOnline.Features.Tienda.Pedidos;
 using TiendaOnline.Features.Tienda.Usuarios;
 using TiendaOnline.Infrastructure.ExternalServices;
-using TiendaOnline.Infrastructure.Services;
+using TiendaOnline.Infrastructure.Services.Productos;
 
 namespace TiendaOnline.Extensions
 {

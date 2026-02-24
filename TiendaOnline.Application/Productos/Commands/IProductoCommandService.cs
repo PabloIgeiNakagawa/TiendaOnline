@@ -1,5 +1,4 @@
-﻿using TiendaOnline.Application.Common;
-namespace TiendaOnline.Application.Productos.Commands
+﻿namespace TiendaOnline.Application.Productos.Commands
 {
     public interface IProductoCommandService
     {

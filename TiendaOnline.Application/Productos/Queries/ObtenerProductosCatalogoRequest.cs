@@ -1,6 +1,6 @@
 ﻿namespace TiendaOnline.Application.Productos.Queries
 {
-    public class ObtenerProductosCatalogoQuery
+    public class ObtenerProductosCatalogoRequest
     {
         public string? Busqueda { get; init; }
         public int? CategoriaId { get; init; }

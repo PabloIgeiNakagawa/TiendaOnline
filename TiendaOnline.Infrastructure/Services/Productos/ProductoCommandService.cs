@@ -3,7 +3,7 @@ using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
 
-namespace TiendaOnline.Infrastructure.Services
+namespace TiendaOnline.Infrastructure.Services.Productos
 {
     public class ProductoCommandService : IProductoCommandService
     {

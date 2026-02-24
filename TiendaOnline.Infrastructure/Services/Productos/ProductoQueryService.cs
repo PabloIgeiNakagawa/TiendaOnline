@@ -4,7 +4,7 @@ using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Infrastructure.Persistence;
 
-namespace TiendaOnline.Infrastructure.Services
+namespace TiendaOnline.Infrastructure.Services.Productos
 {
     public class ProductoQueryService : IProductoQueryService
     {
@@ -42,12 +42,12 @@ namespace TiendaOnline.Infrastructure.Services
             };
         }
         
-        public async Task<PagedResult<ProductoListaDto>> ObtenerProductosAdminAsync(ObtenerProductosAdminQuery request)
+        public async Task<PagedResult<ProductoListaDto>> ObtenerProductosAdminAsync(ObtenerProductosAdminRequest request)
         {
             if (request.Pagina <= 0)
                 throw new ArgumentException("La página debe ser mayor a 0.");
 
-            if (request.RegistrosPorPagina <= 0)
+            if (request.TamanoPagina <= 0)
                 throw new ArgumentException("La cantidad por página debe ser mayor a 0.");
 
             var query = _context.Productos
@@ -90,8 +90,8 @@ namespace TiendaOnline.Infrastructure.Services
 
             var items = await query
                 .OrderByDescending(p => p.ProductoId)
-                .Skip((request.Pagina - 1) * request.RegistrosPorPagina)
-                .Take(request.RegistrosPorPagina)
+                .Skip((request.Pagina - 1) * request.TamanoPagina)
+                .Take(request.TamanoPagina)
                 .Select(p => new ProductoListaDto
                 {
                     ProductoId = p.ProductoId,
@@ -111,10 +111,10 @@ namespace TiendaOnline.Infrastructure.Services
                 items,
                 totalElementos,
                 request.Pagina,
-                request.RegistrosPorPagina);
+                request.TamanoPagina);
         }
 
-        public async Task<PagedResult<ProductoDto>> ObtenerProductosCatalogoAsync(ObtenerProductosCatalogoQuery request)
+        public async Task<PagedResult<ProductoDto>> ObtenerProductosCatalogoAsync(ObtenerProductosCatalogoRequest request)
         {
             var query = _context.Productos
                 .AsNoTracking()

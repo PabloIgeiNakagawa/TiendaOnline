@@ -17,22 +17,22 @@ namespace TiendaOnline.Features.Tienda.Productos
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index([FromQuery] ObtenerProductosCatalogoQuery query)
+        public async Task<IActionResult> Index([FromQuery] ObtenerProductosCatalogoRequest request)
         {
             ViewData["Title"] = "Catálogo de Productos";
 
-            var productosPaginados = await _productoQueryService.ObtenerProductosCatalogoAsync(query);
+            var productosPaginados = await _productoQueryService.ObtenerProductosCatalogoAsync(request);
 
             var categoriasRaiz = await _categoriaService.ObtenerCategoriasRaizAsync();
 
             var viewModel = new ProductoIndexViewModel
             {
                 Paginacion = productosPaginados,
-                Busqueda = query.Busqueda,
-                CategoriaId = query.CategoriaId,
-                PrecioMin = query.PrecioMin,
-                PrecioMax = query.PrecioMax,
-                Orden = query.Orden,
+                Busqueda = request.Busqueda,
+                CategoriaId = request.CategoriaId,
+                PrecioMin = request.PrecioMin,
+                PrecioMax = request.PrecioMax,
+                Orden = request.Orden,
                 CategoriasRaiz = categoriasRaiz.ToList()
             };
 
