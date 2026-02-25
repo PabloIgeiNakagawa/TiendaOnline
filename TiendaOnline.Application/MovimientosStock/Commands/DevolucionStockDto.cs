@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TiendaOnline.Features.Admin.MovimientosStock
+namespace TiendaOnline.Application.MovimientosStock.Commands
 {
     public class DevolucionStockDto
     {

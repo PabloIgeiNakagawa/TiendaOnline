@@ -1,20 +1,20 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Features.Admin.MovimientosStock;
 using TiendaOnline.Application.Common;
 using TiendaOnline.Infrastructure.Persistence;
+using TiendaOnline.Application.MovimientosStock.Commands;
 
 namespace TiendaOnline.Features.Admin.Pedidos
 {
     public class PedidosAdminService : IPedidosAdminService
     {
         private readonly TiendaContext _context;
-        private readonly IMovimientoStockService _movimientoStockService;
+        private readonly IMovimientoStockCommandService _movimientoStockCommandService;
 
-        public PedidosAdminService(TiendaContext context, IMovimientoStockService movimientoStockService)
+        public PedidosAdminService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService)
         {
             _context = context;
-            _movimientoStockService = movimientoStockService;
+            _movimientoStockCommandService = movimientoStockCommandService;
         }
 
         public async Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(string? busqueda, EstadoPedido? estado, DateTime? desde, DateTime? hasta, string? monto, int pagina, int cantidad)
@@ -125,7 +125,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
 
                     // Registramos el movimiento de entrada por cancelación
                     // Cantidad positiva porque entra de nuevo
-                    _movimientoStockService.GenerarMovimiento(
+                    _movimientoStockCommandService.GenerarMovimiento(
                         detalle.Producto,
                         detalle.Cantidad,
                         TipoMovimiento.CancelacionPedido,

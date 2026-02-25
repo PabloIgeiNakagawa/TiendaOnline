@@ -4,19 +4,11 @@
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-md-flex justify-content-md-between align-items-md-center">
-                <div>
-                    <h2 class="mb-1 fw-bold">
-                        <i class="bi bi-arrow-left-right me-2 text-primary"></i>
-                        Movimientos de Stock
-                    </h2>
-                    <p class="text-muted mb-0">Historial de entradas, salidas y ajustes de inventario</p>
-                </div>
-                <a asp-action="Nuevo" class="btn btn-primary btn-lg shadow-sm rounded-3 mt-3 mt-md-0">
-                    <i class="bi bi-plus-circle me-2"></i>
-                    Nuevo Movimiento
-                </a>
-            </div>
+            <h2 class="mb-1 fw-bold">
+                <i class="bi bi-arrow-left-right me-2 text-primary"></i>
+                Movimientos de Stock
+            </h2>
+            <p class="text-muted mb-0 mt-2">Historial de entradas, salidas y ajustes de inventario</p>
         </div>
     </div>
 
@@ -33,7 +25,7 @@
                                         int[] opciones = { 20, 50, 100 };
                                         foreach (var cantidad in opciones)
                                         {
-                                            <option value="@cantidad" selected="@(Model.Filtros.RegistrosPorPagina == cantidad ? "selected" : null)">
+                                            <option value="@cantidad" selected="@(Model.RegistrosPorPagina == cantidad ? "selected" : null)">
                                                 @cantidad
                                             </option>
                                         }
@@ -43,7 +35,7 @@
 
                             <div class="col-md-3">
                                 <label class="form-label fw-semibold"><i class="bi bi-search me-1"></i>Producto</label>
-                                <input type="text" name="Busqueda" value="@Model.Filtros.Busqueda" class="form-control" placeholder="Nombre del producto...">
+                                <input type="text" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="Nombre del producto...">
                             </div>
 
                             <div class="col-md-2">
@@ -52,19 +44,19 @@
                                     <option value="">Todos</option>
                                     @foreach (var tipo in Model.TiposMovimiento)
                                     {
-                                        <option value="@tipo.Id" selected="@(Model.Filtros.TipoMovimientoId == tipo.Id)">@tipo.Nombre</option>
+                                        <option value="@tipo.Id" selected="@(Model.TipoMovimientoId == tipo.Id)">@tipo.Nombre</option>
                                     }
                                 </select>
                             </div>
 
                             <div class="col-md-2">
                                 <label class="form-label fw-semibold"><i class="bi bi-calendar-event me-1"></i>Desde</label>
-                                <input type="date" name="Desde" value="@(Model.Filtros.Desde?.ToString("yyyy-MM-dd"))" class="form-control">
+                                <input type="date" name="Desde" value="@(Model.Desde?.ToString("yyyy-MM-dd"))" class="form-control">
                             </div>
 
                             <div class="col-md-2">
                                 <label class="form-label fw-semibold"><i class="bi bi-calendar-event me-1"></i>Hasta</label>
-                                <input type="date" name="Hasta" value="@(Model.Filtros.Hasta?.ToString("yyyy-MM-dd"))" class="form-control">
+                                <input type="date" name="Hasta" value="@(Model.Hasta?.ToString("yyyy-MM-dd"))" class="form-control">
                             </div>
 
                             <div class="col-md-2 d-flex align-items-end gap-2">
@@ -106,18 +98,18 @@
                         </div>
 
                         <div class="d-flex flex-wrap gap-2">
-                            @if (!string.IsNullOrEmpty(Model.Filtros.Busqueda))
+                            @if (!string.IsNullOrEmpty(Model.Busqueda))
                             {
                                 <span class="text-muted small">
                                     <i class="bi bi-search me-1 text-primary small"></i>
-                                    <span class="d-none d-sm-inline">Búsqueda:</span> "<strong>@Model.Filtros.Busqueda</strong>"
+                                    <span class="d-none d-sm-inline">Búsqueda:</span> "<strong>@Model.Busqueda</strong>"
                                 </span>
                             }
 
-                            @if (Model.Filtros.TipoMovimientoId.HasValue)
+                            @if (Model.TipoMovimientoId.HasValue)
                             {
                                 var tipoSeleccionado = Model.TiposMovimiento
-                                .FirstOrDefault(t => t.Id == Model.Filtros.TipoMovimientoId)?.Nombre;
+                                .FirstOrDefault(t => t.Id == Model.TipoMovimientoId)?.Nombre;
 
                                 <span class="text-muted small">
                                     <i class="bi bi-tag me-1 text-primary small"></i>
@@ -126,18 +118,18 @@
                                 </span>
                             }
 
-                            @if (Model.Filtros.Desde.HasValue)
+                            @if (Model.Desde.HasValue)
                             {
                                 <span class="text-muted small">
                                     <i class="bi bi-calendar-event me-1 text-primary small"></i>
-                                    <span class="d-none d-sm-inline">Desde:</span> <strong>@Model.Filtros.Desde?.ToString("yyyy-MM-dd")</strong>
+                                    <span class="d-none d-sm-inline">Desde:</span> <strong>@Model.Desde?.ToString("yyyy-MM-dd")</strong>
                                 </span>
                             }
-                            @if (Model.Filtros.Hasta.HasValue)
+                            @if (Model.Hasta.HasValue)
                             {
                                 <span class="text-muted small">
                                     <i class="bi bi-calendar-event me-1 text-primary small"></i>
-                                    <span class="d-none d-sm-inline">Hasta:</span> <strong>@Model.Filtros.Hasta?.ToString("yyyy-MM-dd")</strong>
+                                    <span class="d-none d-sm-inline">Hasta:</span> <strong>@Model.Hasta?.ToString("yyyy-MM-dd")</strong>
                                 </span>
                             }
                         </div>
@@ -264,7 +256,7 @@
             <ul class="pagination justify-content-center">
                 @{
                     var pag = Model.MovimientosPaginados;
-                    var filtros = Model.Filtros;
+                    var filtros = Model;
                 }
 
                 <li class="page-item @(pag.PaginaActual == 1 ? "disabled" : "")">

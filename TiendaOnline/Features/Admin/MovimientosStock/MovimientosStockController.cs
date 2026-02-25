@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TiendaOnline.Application.MovimientosStock.Commands;
+using TiendaOnline.Application.MovimientosStock.Queries;
 
 namespace TiendaOnline.Features.Admin.MovimientosStock
 {
@@ -7,28 +9,43 @@ namespace TiendaOnline.Features.Admin.MovimientosStock
     [Authorize(Roles = "Administrador")]
     public class MovimientosStockController : Controller
     {
-        private readonly IMovimientoStockService _movimientoService;
+        private readonly IMovimientoStockQueryService _movimientoStockQueryService;
+        private readonly IMovimientoStockCommandService _movimientoStockCommandService;
 
-        public MovimientosStockController(IMovimientoStockService movimientoService)
+        public MovimientosStockController(IMovimientoStockQueryService movimientoStockQueryService, IMovimientoStockCommandService movimientoStockCommandService)
         {
-            _movimientoService = movimientoService;
+            _movimientoStockQueryService = movimientoStockQueryService;
+            _movimientoStockCommandService = movimientoStockCommandService;
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> Movimientos([FromQuery] MovimientoFiltrosDto filtros)
+        public async Task<IActionResult> Movimientos([FromQuery] MovimientosFiltroViewModel filtros)
         {
             ViewData["Title"] = "Movimientos";
 
-            // Obtenemos los datos paginados
-            var resultadoPaginado = await _movimientoService.ObtenerMovimientosPaginadosAsync(filtros);
+            var dto = new MovimientoFiltrosDto
+            {
+                Busqueda = filtros.Busqueda,
+                TipoMovimientoId = filtros.TipoMovimientoId,
+                Desde = filtros.Desde,
+                Hasta = filtros.Hasta,
+                Pagina = filtros.Pagina,
+                RegistrosPorPagina = filtros.RegistrosPorPagina
+            };
 
-            // Cargamos las opciones para los dropdowns (esto debería venir de tu servicio)
-            var tipos = await _movimientoService.ObtenerTiposMovimientoAsync();
+            var resultadoPaginado = await _movimientoStockQueryService.ObtenerMovimientosPaginadosAsync(dto);
+
+            var tipos = await _movimientoStockQueryService.ObtenerTiposMovimientoAsync();
 
             var model = new MovimientosViewModel
             {
                 MovimientosPaginados = resultadoPaginado,
-                Filtros = filtros,
+                Busqueda = filtros.Busqueda,
+                TipoMovimientoId = filtros.TipoMovimientoId,
+                Desde = filtros.Desde,
+                Hasta = filtros.Hasta,
+                Pagina = filtros.Pagina,
+                RegistrosPorPagina = filtros.RegistrosPorPagina,
                 TiposMovimiento = tipos
             };
 
@@ -39,7 +56,7 @@ namespace TiendaOnline.Features.Admin.MovimientosStock
         public async Task<IActionResult> Historial(int id)
         {
             ViewData["Title"] = "Historial";
-            var historial = await _movimientoService.ObtenerHistorialPorProductoAsync(id);
+            var historial = await _movimientoStockQueryService.ObtenerHistorialPorProductoAsync(id);
             return View(historial);
         }
 
@@ -56,7 +73,7 @@ namespace TiendaOnline.Features.Admin.MovimientosStock
 
             try
             {
-                await _movimientoService.RegistrarEntradaAsync(dto);
+                await _movimientoStockCommandService.RegistrarEntradaAsync(dto);
                 TempData["MensajeExito"] = "¡Entrada de mercadería registrada!";
             }
             catch (Exception ex)
@@ -81,7 +98,7 @@ namespace TiendaOnline.Features.Admin.MovimientosStock
 
             try
             {
-                await _movimientoService.RegistrarAjusteManualAsync(dto);
+                await _movimientoStockCommandService.RegistrarAjusteManualAsync(dto);
                 TempData["MensajeExito"] = "Ajuste de inventario aplicado correctamente.";
             }
             catch (Exception ex)

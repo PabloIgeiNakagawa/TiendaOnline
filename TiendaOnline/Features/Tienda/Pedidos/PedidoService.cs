@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Features.Admin.MovimientosStock;
 using TiendaOnline.Features.Tienda.Carritos;
@@ -9,12 +10,12 @@ namespace TiendaOnline.Features.Tienda.Pedidos
     public class PedidoService : IPedidoService
     {
         private readonly TiendaContext _context;
-        private readonly IMovimientoStockService _movimientoStockService;
+        private readonly IMovimientoStockCommandService _movimientoStockCommandService;
 
-        public PedidoService(TiendaContext context, IMovimientoStockService movimientoStockService)
+        public PedidoService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService)
         {
             _context = context;
-            _movimientoStockService = movimientoStockService;
+            _movimientoStockCommandService = movimientoStockCommandService;
         }
 
         public async Task<Pedido?> ObtenerPedidoAsync(int id)
@@ -84,7 +85,7 @@ namespace TiendaOnline.Features.Tienda.Pedidos
 
                     // Registramos el movimiento de stock (SALIDA)
                     // Pasamos cantidad negativa porque es una salida
-                    _movimientoStockService.GenerarMovimiento(
+                    _movimientoStockCommandService.GenerarMovimiento(
                         producto,
                         -item.Cantidad,
                         TipoMovimiento.SalidaVenta,

@@ -2,6 +2,8 @@
 using TiendaOnline.Application.AdminOverview;
 using TiendaOnline.Application.Auditoria;
 using TiendaOnline.Application.Common.Interfaces;
+using TiendaOnline.Application.MovimientosStock.Commands;
+using TiendaOnline.Application.MovimientosStock.Queries;
 using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Application.Reportes;
@@ -17,6 +19,7 @@ using TiendaOnline.Features.Tienda.Usuarios;
 using TiendaOnline.Infrastructure.ExternalServices;
 using TiendaOnline.Infrastructure.Services.AdminOverview;
 using TiendaOnline.Infrastructure.Services.Auditoria;
+using TiendaOnline.Infrastructure.Services.MovimientosStock;
 using TiendaOnline.Infrastructure.Services.Productos;
 using TiendaOnline.Infrastructure.Services.Reportes;
 
@@ -37,7 +40,8 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IAdminOverviewService, AdminOverviewService>();
             services.AddScoped<IReportesService, ReportesService>();
             services.AddScoped<IAuditoriaService, AuditoriaService>();
-            services.AddScoped<IMovimientoStockService, MovimientoStockService>();
+            services.AddScoped<IMovimientoStockCommandService, MovimientoStockCommandService>();
+            services.AddScoped<IMovimientoStockQueryService, MovimientoStockQueryService>();
 
             services.AddScoped<IUsuariosAdminService, UsuariosAdminService>();
             services.AddScoped<IPedidosAdminService, PedidosAdminService>();
