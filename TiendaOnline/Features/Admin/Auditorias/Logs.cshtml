@@ -152,7 +152,7 @@
                                         </td>
                                         <td class="py-3">
                                             <div class="d-flex justify-content-center gap-1">
-                                                <button class="btn btn-sm btn-primary" onclick="verDetalle('@item.AuditoriaId')">
+                                                <button class="btn btn-sm btn-primary btn-ver-detalle" data-id="@item.AuditoriaId">
                                                     <i class="bi bi-eye me-1"></i> Ver Cambios
                                                 </button>
                                             </div>
@@ -271,40 +271,6 @@
     </div>
 </div> 
 
-@section Scripts{
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Inicializar tooltips
-            var listaTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltips = listaTooltips.map(function (elementoTooltip) {
-                return new bootstrap.Tooltip(elementoTooltip);
-            });
-        });
-
-        function verDetalle(id) {
-            const modal = new bootstrap.Modal(document.getElementById('modalCambios'));
-            modal.show();
-
-            document.getElementById('datosAnteriores').textContent = "Cargando...";
-            document.getElementById('datosNuevos').textContent = "Cargando...";
-
-            $.get("/Admin/Auditorias/ObtenerDetalle/" + id, function (data) {
-
-                const formatearJSON = (jsonString) => {
-                    if (!jsonString) return "Sin datos";
-                    try {
-                        const obj = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
-                        return JSON.stringify(obj, null, 2);
-                    } catch (e) {
-                        return jsonString;
-                    }
-                };
-
-                document.getElementById('datosAnteriores').textContent = formatearJSON(data.datosAnteriores);
-                document.getElementById('datosNuevos').textContent = formatearJSON(data.datosNuevos);
-            }).fail(function () {
-                alert("Error al cargar los detalles.");
-            });
-        }
-    </script>
+@section Scripts {
+    <script src="~/js/Features/Auditorias/Logs.js" asp-append-version="true"></script>
 }

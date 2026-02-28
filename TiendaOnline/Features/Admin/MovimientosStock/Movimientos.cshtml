@@ -155,10 +155,12 @@
                                     <tr>
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
-                                                <img src="@item.ImagenUrl" alt="@item.ProductoNombre"
-                                                     class="rounded border me-3"
-                                                     style="width: 40px; height: 40px; object-fit: cover; cursor: zoom-in;"
-                                                     onclick="mostrarImagenModal('@item.ImagenUrl', '@item.ProductoNombre')">
+                                                <img src="@item.ImagenUrl"
+                                                     alt="@item.ProductoNombre"
+                                                     class="rounded border me-3 img-producto-modal"
+                                                     data-url="@item.ImagenUrl"
+                                                     data-titulo="@item.ProductoNombre"
+                                                     style="width: 40px; height: 40px; object-fit: cover; cursor: zoom-in;">
                                                 <span class="fw-semibold">@item.ProductoNombre</span>
                                             </div>
                                         </td>
@@ -322,14 +324,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-
-        function mostrarImagenModal(url, titulo) {
-            document.getElementById('imgModalSrc').src = url;
-            document.getElementById('imgModalTitle').textContent = titulo;
-            new bootstrap.Modal(document.getElementById('modalImagenProducto')).show();
-        }
-    </script>
+    <script src="~/js/Features/MovimientosStock/Movimientos.js" asp-append-version="true"></script>
 }

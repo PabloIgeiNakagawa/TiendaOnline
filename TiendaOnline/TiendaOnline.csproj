@@ -197,4 +197,8 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\js\Features\Account\Register.js" />
+  </ItemGroup>
+
 </Project>

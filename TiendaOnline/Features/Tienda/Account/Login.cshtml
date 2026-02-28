@@ -80,8 +80,10 @@
                            required />
                     <label class="ps-5 text-body-secondary" for="password">Contraseña</label>
                     <i class="bi bi-lock input-icon position-absolute top-50 text-body"></i>
-                    <button type="button" class="password-toggle position-absolute top-50 bg-transparent border-0 text-body-tertiary cursor-pointer border-1" onclick="togglePassword()">
-                        <i class="bi bi-eye" id="passwordIcon"></i>
+                    <button type="button"
+                            class="password-toggle position-absolute top-50 bg-transparent border-0 text-body-tertiary cursor-pointer border-1"
+                            data-target="password">
+                        <i class="bi bi-eye"></i>
                     </button>
                     <span asp-validation-for="Contrasena" class="d-block small mt-2 text-danger"></span>
                 </div>
@@ -122,19 +124,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        // Solo función para mostrar/ocultar contraseña
-        function togglePassword() {
-            var passwordInput = document.getElementById('password');
-            var passwordIcon = document.getElementById('passwordIcon');
-
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                passwordIcon.className = 'bi bi-eye-slash';
-            } else {
-                passwordInput.type = 'password';
-                passwordIcon.className = 'bi bi-eye';
-            }
-        }
-    </script>
+    <script src="~/js/Features/Account/Login.js" asp-append-version="true"></script>
 }

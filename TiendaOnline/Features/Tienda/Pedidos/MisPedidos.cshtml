@@ -192,12 +192,3 @@
         </div>
     </div>
 </div>
-@section Scripts{
-    <script>
-        // Inicializar tooltips
-            var listaTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltips = listaTooltips.map(function (elementoTooltip) {
-                return new bootstrap.Tooltip(elementoTooltip);
-            });
-    </script>
-}

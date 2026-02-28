@@ -36,3 +36,17 @@ function toggleTheme() {
     applyTheme(newTheme);
     updateThemeUI(newTheme);
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const theme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+    updateThemeUI(theme);
+
+    const btn = document.getElementById('btn-theme');
+    if (btn) {
+        btn.addEventListener('click', toggleTheme);
+    }
+
+    // Inicializar Tooltips
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(t => new bootstrap.Tooltip(t));
+});

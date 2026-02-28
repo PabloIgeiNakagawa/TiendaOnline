@@ -223,22 +223,35 @@
                                                 </a>
                                                 @if (pedido.Estado == EstadoPedido.Pendiente && esAdmin)
                                                 {
-                                                    <button type="button" class="btn btn-outline-success btn-sm rounded-2 shadow-sm"
-                                                            onclick="enviarPedido(@pedido.PedidoId)"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Marcar como enviado">
+                                                    <button type="button"
+                                                            class="btn btn-outline-success btn-sm rounded-2 shadow-sm btn-cambio-estado"
+                                                            data-id="@pedido.PedidoId"
+                                                            data-accion="enviar"
+                                                            data-bs-toggle="tooltip"
+                                                            data-bs-placement="top"
+                                                            title="Marcar como enviado">
                                                         <i class="bi bi-truck"></i>
                                                     </button>
-                                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-2 shadow-sm"
-                                                            onclick="cancelarPedido(@pedido.PedidoId)"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Cancelar pedido">
+
+                                                    <button type="button"
+                                                            class="btn btn-outline-danger btn-sm rounded-2 shadow-sm btn-cambio-estado"
+                                                            data-id="@pedido.PedidoId"
+                                                            data-accion="cancelar"
+                                                            data-bs-toggle="tooltip"
+                                                            data-bs-placement="top"
+                                                            title="Cancelar pedido">
                                                         <i class="bi bi-x-circle"></i>
                                                     </button>
                                                 }
                                                 else if (pedido.Estado == EstadoPedido.Enviado)
                                                 {
-                                                    <button type="button" class="btn btn-outline-success btn-sm rounded-2 shadow-sm"
-                                                            onclick="entregarPedido(@pedido.PedidoId)"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Marcar como entregado">
+                                                    <button type="button"
+                                                            class="btn btn-outline-success btn-sm rounded-2 shadow-sm btn-cambio-estado"
+                                                            data-id="@pedido.PedidoId"
+                                                            data-accion="entregar"
+                                                            data-bs-toggle="tooltip"
+                                                            data-bs-placement="top"
+                                                            title="Marcar como entregado">
                                                         <i class="bi bi-check-circle"></i>
                                                     </button>
                                                 }
@@ -348,75 +361,6 @@
     }
 </div>
 
-@section Scripts{
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // Inicializar tooltips
-            var listaTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            var tooltips = listaTooltips.map((elementoTooltip) => new bootstrap.Tooltip(elementoTooltip))
-        })
-
-        function enviarPedido(pedidoId) {
-            const modal = new bootstrap.Modal(document.getElementById("modalCambioEstado"));
-            const mensajeCambioEstado = document.getElementById("mensajeCambioEstado");
-            const botonDerecho = document.getElementById("botonDerecho");
-            const iconoEstado = document.getElementById("iconoEstado");
-            mensajeCambioEstado.textContent = `¿Confirmas que el pedido #${pedidoId.toString().padStart(6, "0")} ha sido enviado?`;
-            iconoEstado.className = "bi bi-truck text-info display-4";
-            botonDerecho.className = "btn btn-info";
-            botonDerecho.textContent = "Marcar como Enviado";
-            botonDerecho.onclick = () => {
-                // Mostrar loading
-                botonDerecho.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Procesando...'
-                botonDerecho.disabled = true
-
-                // Enviar formulario
-                document.getElementById(`enviarPedido${pedidoId}`).submit()
-            }
-
-            modal.show()
-        }
-
-        function entregarPedido(pedidoId) {
-            const modal = new bootstrap.Modal(document.getElementById("modalCambioEstado"));
-            const mensajeCambioEstado = document.getElementById("mensajeCambioEstado");
-            const botonDerecho = document.getElementById("botonDerecho");
-            const iconoEstado = document.getElementById("iconoEstado");
-            mensajeCambioEstado.textContent = `¿Confirmas que el pedido #${pedidoId.toString().padStart(6, "0")} ha sido entregado?`;
-            iconoEstado.className = "bi bi-check-circle text-success display-4";
-            botonDerecho.className = "btn btn-success";
-            botonDerecho.textContent = "Marcar como Entregado";
-            botonDerecho.onclick = () => {
-                // Mostrar loading
-                botonDerecho.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Procesando...'
-                botonDerecho.disabled = true
-
-                // Enviar formulario
-                document.getElementById(`entregarPedido${pedidoId}`).submit()
-            }
-
-            modal.show()
-        }
-
-        function cancelarPedido(pedidoId) {
-            const modal = new bootstrap.Modal(document.getElementById("modalCambioEstado"));
-            const mensajeCambioEstado = document.getElementById("mensajeCambioEstado");
-            const botonDerecho = document.getElementById("botonDerecho");
-            const iconoEstado = document.getElementById("iconoEstado");
-            mensajeCambioEstado.textContent = `¿Estás seguro de cancelar el pedido #${pedidoId.toString().padStart(6, "0")}?`;
-            iconoEstado.className = "bi bi-x-circle text-danger display-4";
-            botonDerecho.className = "btn btn-danger";
-            botonDerecho.textContent = "Cancelar Pedido";
-            botonDerecho.onclick = () => {
-                // Mostrar loading
-                botonDerecho.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Procesando...'
-                botonDerecho.disabled = true
-
-                // Enviar formulario
-                document.getElementById(`cancelarPedido${pedidoId}`).submit()
-            }
-
-            modal.show()
-        }
-    </script>
+@section Scripts {
+    <script src="~/js/Features/Pedidos/Admin/Listado.js" asp-append-version="true"></script>
 }

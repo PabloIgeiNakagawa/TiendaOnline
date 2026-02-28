@@ -192,9 +192,10 @@
                                                 <div class="producto-imagen-mini me-3">
                                                     <img src="@producto.ImagenUrl"
                                                          alt="@producto.Nombre"
-                                                         class="img-thumbnail @(producto.Activo ? "" : "opacity-50")"
+                                                         class="btn-imagen-producto img-thumbnail @(producto.Activo ? "" : "opacity-50")"
                                                          style="width: 50px; height: 50px; object-fit: cover; cursor: pointer;"
-                                                         onclick="mostrarImagenModal('@producto.ImagenUrl', '@producto.Nombre')"
+                                                         data-url="@producto.ImagenUrl"
+                                                         data-nombre="@producto.Nombre"
                                                          role="button"
                                                          data-bs-toggle="tooltip"
                                                          data-bs-placement="top"
@@ -262,16 +263,18 @@
                                             <div class="d-flex justify-content-center gap-1">
                                                 @if (producto.Activo)
                                                 {
-                                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-3"
-                                                            onclick="darBaja('@producto.ProductoId', '@producto.Nombre')"
+                                                    <button type="button" class="btn btn-dar-baja btn-outline-danger btn-sm rounded-3"
+                                                            data-id="@producto.ProductoId"
+                                                            data-nombre="@producto.Nombre"
                                                             data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de baja">
                                                         <i class="bi bi-toggle-off"></i>
                                                     </button>
                                                 }
                                                 else
                                                 {
-                                                    <button type="button" class="btn btn-outline-success btn-sm rounded-3"
-                                                            onclick="darAlta('@producto.ProductoId', '@producto.Nombre')"
+                                                    <button type="button" class="btn btn-dar-alta btn-outline-success btn-sm rounded-3"
+                                                            data-id="@producto.ProductoId"
+                                                            data-nombre="@producto.Nombre"
                                                             data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de alta">
                                                         <i class="bi bi-toggle-on"></i>
                                                     </button>
@@ -284,8 +287,10 @@
                                                    class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-outline-warning btn-sm rounded-3"
-                                                        onclick="abrirModalMovimiento('@producto.ProductoId', '@producto.Nombre', '@producto.Stock')"
+                                                <button type="button" class="btn btn-movimiento-stock btn-outline-warning btn-sm rounded-3"
+                                                        data-id="@producto.ProductoId"
+                                                        data-nombre="@producto.Nombre"
+                                                        data-stock="@producto.Stock"
                                                         data-bs-toggle="tooltip" title="Movimiento de Stock">
                                                     <i class="bi bi-arrow-left-right"></i>
                                                 </button>
@@ -307,9 +312,10 @@
                                         <div class="producto-imagen-mini me-3">
                                             <img src="@producto.ImagenUrl"
                                                  alt="@producto.Nombre"
-                                                 class="img-thumbnail @(producto.Activo ? "" : "opacity-50")"
+                                                 class="btn-imagen-producto img-thumbnail @(producto.Activo ? "" : "opacity-50")"
                                                  style="width: 70px; height: 70px; object-fit: cover; cursor: pointer;"
-                                                 onclick="mostrarImagenModal('@producto.ImagenUrl', '@producto.Nombre')"
+                                                 data-url="@producto.ImagenUrl"
+                                                 data-nombre="@producto.Nombre"
                                                  role="button" />
                                         </div>
                                         <div class="flex-grow-1">
@@ -380,16 +386,18 @@
                                         <div class="d-flex gap-1">
                                             @if (producto.Activo)
                                             {
-                                                <button type="button" class="btn btn-outline-danger btn-sm rounded-3"
-                                                        onclick="darBaja('@producto.ProductoId', '@producto.Nombre')"
+                                                <button type="button" class="btn btn-dar-baja btn-outline-danger btn-sm rounded-3"
+                                                        data-id="@producto.ProductoId"
+                                                        data-nombre="@producto.Nombre"
                                                         data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de baja">
                                                     <i class="bi bi-toggle-off"></i>
                                                 </button>
                                             }
                                             else
                                             {
-                                                <button type="button" class="btn btn-outline-success btn-sm rounded-3"
-                                                        onclick="darAlta('@producto.ProductoId', '@producto.Nombre')"
+                                                <button type="button" class="btn btn-dar-alta btn-outline-success btn-sm rounded-3"
+                                                        data-id="@producto.ProductoId"
+                                                        data-nombre="@producto.Nombre"
                                                         data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de alta">
                                                     <i class="bi bi-toggle-on"></i>
                                                 </button>
@@ -402,8 +410,10 @@
                                                class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <button type="button" class="btn btn-outline-warning btn-sm rounded-3"
-                                                    onclick="abrirModalMovimiento('@producto.ProductoId', '@producto.Nombre', '@producto.Stock')"
+                                            <button type="button" class="btn btn-movimiento-stock btn-outline-warning btn-sm rounded-3"
+                                                    data-id="@producto.ProductoId"
+                                                    data-nombre="@producto.Nombre"
+                                                    data-stock="@producto.Stock"
                                                     data-bs-toggle="tooltip" title="Stock">
                                                 <i class="bi bi-arrow-left-right"></i>
                                             </button>
@@ -602,115 +612,6 @@
 </div>
 
 @section Scripts{
-    <script>
-        // Inicializar Tooltips
-        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-
-        // Función para mostrar imagen en modal
-        function mostrarImagenModal(urlImagen, nombreProducto) {
-            const modal = new bootstrap.Modal(document.getElementById('modalImagenProducto'));
-            const imagenModal = document.getElementById('imagenProductoModal');
-            const nombreModal = document.getElementById('nombreProductoModal');
-
-            // Establecer imagen y nombre
-            imagenModal.src = urlImagen;
-            imagenModal.alt = nombreProducto;
-            nombreModal.textContent = nombreProducto;
-
-            // Mostrar modal
-            modal.show();
-        }
-
-        // Modal de confirmación
-        function darBaja(idProducto, nombreProducto) {
-            const modal = new bootstrap.Modal(document.getElementById('modalCambioEstado'));
-            const titulo = document.getElementById('modalTitulo');
-            const iconoEstado = document.getElementById('iconoEstado');
-            const mensajeCambioEstado = document.getElementById('mensajeCambioEstado');
-            const botonDerecho = document.getElementById('botonDerecho');
-
-            iconoEstado.className = 'bi bi-exclamation-triangle text-warning display-4';
-            mensajeCambioEstado.textContent = `¿Estás seguro de que quieres dar de baja el producto ${nombreProducto}? El producto no estará disponible para la venta.`;
-            botonDerecho.className = 'btn btn-danger';
-            botonDerecho.textContent = 'Dar de Baja';
-            botonDerecho.onclick = () => {
-                document.getElementById(`formularioBaja${idProducto}`).submit();
-            };
-
-            modal.show();
-        }
-
-        function darAlta(idProducto, nombreProducto) {
-            const modal = new bootstrap.Modal(document.getElementById('modalCambioEstado'));
-            const titulo = document.getElementById('modalTitulo');
-            const iconoEstado = document.getElementById('iconoEstado');
-            const mensajeCambioEstado = document.getElementById('mensajeCambioEstado');
-            const botonDerecho = document.getElementById('botonDerecho');
-
-            iconoEstado.className = 'bi bi-check-circle text-success display-4';
-            mensajeCambioEstado.textContent = `¿Estás seguro de que quieres dar de alta el producto ${nombreProducto}? El producto estará disponible para la venta.`;
-            botonDerecho.className = 'btn btn-success';
-            botonDerecho.textContent = 'Dar de Alta';
-            botonDerecho.onclick = () => {
-                document.getElementById(`formularioAlta${idProducto}`).submit();
-            };
-
-            modal.show();
-        }
-
-        function abrirModalMovimiento(id, nombre, stock) {
-            document.getElementById('mov_ProductoId').value = id;
-            document.getElementById('mov_NombreProducto').innerText = nombre;
-            document.getElementById('mov_StockActual').innerText = stock + " unidades";
-
-            var myModal = new bootstrap.Modal(document.getElementById('modalMovimientoStock'));
-            myModal.show();
-        }
-
-        // Formulario de stock
-        document.addEventListener('DOMContentLoaded', function () {
-            const form = document.getElementById('formStock');
-            const select = document.getElementById('selectTipo');
-            const inputCantidad = document.getElementById('inputCantidad');
-            const inputObs = document.getElementById('inputObs');
-            const helpCantidad = document.getElementById('helpCantidad');
-            const helpObs = document.getElementById('helpObs');
-
-            // Función que reconfigura el form según lo que se elija
-            const configurarFormulario = () => {
-                const opcion = select.options[select.selectedIndex];
-                const tipo = select.value;
-
-                // 1. Cambiar el Action del Formulario
-                form.action = opcion.getAttribute('data-url');
-
-                // 2. Ajustar validaciones HTML5 según el tipo
-                if (tipo === 'Entrada') {
-                    // Entrada: Solo positivos, Obs opcional
-                    inputCantidad.setAttribute('min', '1');
-                    inputObs.removeAttribute('required');
-                    inputObs.removeAttribute('minlength');
-
-                    helpCantidad.innerText = "Ingresá la cantidad a sumar al stock.";
-                    helpObs.innerText = "Opcional.";
-                } else {
-                    // Ajuste: Permite negativos, Obs obligatoria (mínimo 10 chars según tu DTO)
-                    inputCantidad.removeAttribute('min');
-                    inputObs.setAttribute('required', 'required');
-                    inputObs.setAttribute('minlength', '10');
-
-                    helpCantidad.innerText = "Ingresá la cantidad a sumar o restar al stock.";
-                    helpObs.innerText = "Requerido. Explicá el motivo (mín. 10 letras).";
-                }
-            };
-
-            // Escuchar cambios
-            select.addEventListener('change', configurarFormulario);
-
-            // Ejecutar al inicio por si el navegador guardó la selección
-            configurarFormulario();
-        });
-    </script>
+    <script src="~/js/Features/Productos/Admin/Catalogo.js" asp-append-version="true"></script>
 }
 

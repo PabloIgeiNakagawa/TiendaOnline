@@ -64,7 +64,7 @@ namespace TiendaOnline.Features.Admin.Productos
                 Categorias = await ObtenerListaCategoriasAsync()
             };
 
-            return View(new AgregarProductoViewModel());
+            return View(model);
         }
 
         [HttpPost("[action]")]

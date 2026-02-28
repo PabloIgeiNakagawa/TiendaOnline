@@ -160,9 +160,12 @@
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
 
-                                                <button type="button" class="btn btn-outline-danger btn-sm"
-                                                        onclick="eliminarCategoria('@item.CategoriaId', '@item.Nombre')"
-                                                        title="Eliminar" @(item.CantidadProductos == 0 || item.CantidadSubcategorias == 0 ? "disabled" : "")>
+                                                <button type="button"
+                                                        class="btn btn-outline-danger btn-sm btn-eliminar-categoria"
+                                                        data-id="@item.CategoriaId"
+                                                        data-nombre="@item.Nombre"
+                                                        title="Eliminar"
+                                                        @(item.CantidadProductos == 0 || item.CantidadSubcategorias == 0 ? "disabled" : "")>
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
@@ -241,37 +244,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        function eliminarCategoria(categoriaId, nombre) {
-            const modal = new bootstrap.Modal(document.getElementById("modalCambioEstado"));
-            const titulo =  document.getElementById("modalTitulo");
-            const mensajeCambioEstado = document.getElementById("mensajeCambioEstado");
-            const botonDerecho = document.getElementById("botonDerecho");
-            const iconoEstado = document.getElementById("iconoEstado");
-            titulo.textContent = "Eliminar Categoría";
-            mensajeCambioEstado.textContent = `¿Estás seguro de que deseas eliminar la categoría "${nombre}"? Esta acción no se puede deshacer.`;
-            iconoEstado.className = "bi bi-exclamation-triangle text-warning display-4 mb-3";
-            botonDerecho.className = "btn btn-danger";
-            botonDerecho.textContent = "Eliminar Definitivamente";
-            botonDerecho.onclick = () => {
-                // Mostrar loading
-                botonDerecho.innerHTML = '<i class="bi bi-arrow-repeat spin me-2"></i>Procesando...'
-                botonDerecho.disabled = true
-
-                // Enviar formulario
-                document.getElementById(`eliminarCategoria${categoriaId}`).submit()
-            }
-
-            modal.show()
-        }
-
-        // Filtro básico en tiempo real
-        document.getElementById('campoBusqueda').addEventListener('keyup', function() {
-            let valor = this.value.toLowerCase();
-            document.querySelectorAll('.fila-categoria').forEach(fila => {
-                let nombre = fila.getAttribute('data-nombre').toLowerCase();
-                fila.style.display = nombre.includes(valor) ? '' : 'none';
-            });
-        });
-    </script>
+    <script src="~/js/Features/Categorias/Admin/Listado.js" asp-append-version="true"></script>
 }

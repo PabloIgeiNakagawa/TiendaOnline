@@ -147,7 +147,7 @@
                             <a asp-area="Admin" asp-controller="Usuarios" asp-action="Listado" class="btn btn-outline-danger fw-medium rounded-3 d-block my-2 my-lg-0">
                                 <i class="bi bi-x-circle me-1"></i>Cancelar
                             </a>
-                            <a class="btn btn-outline-secondary fw-medium rounded-3 my-2 my-lg-0 d-block" onclick="limpiarFormulario()">
+                            <a class="btn btn-outline-secondary fw-medium rounded-3 my-2 my-lg-0 d-block" id="btnLimpiarFormulario">
                                 <i class="bi bi-arrow-clockwise me-2"></i>Limpiar
                             </a>
                             <button type="submit" class="btn btn-primary fw-medium rounded-3 my-2 my-lg-0" id="botonEnviar">
@@ -164,60 +164,6 @@
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const formulario = document.getElementById('formularioRegistro');
-            const botonEnviar = document.getElementById('botonEnviar');
-
-            // Validación en tiempo real
-            const entradas = formulario.querySelectorAll('input, select');
-            entradas.forEach(entrada => {
-                entrada.addEventListener('blur', function () {
-                    validarCampo(this);
-                });
-
-                entrada.addEventListener('input', function () {
-                    if (this.classList.contains('is-invalid')) {
-                        validarCampo(this);
-                    }
-                });
-            });
-
-            function validarCampo(campo) {
-                const esValido = campo.checkValidity();
-                campo.classList.remove('is-valid', 'is-invalid');
-
-                if (campo.value.trim() !== '') {
-                    campo.classList.add(esValido ? 'is-valid' : 'is-invalid');
-                }
-            }
-
-            // Capitalización automática
-            const camposNombre = ['campoNombre', 'campoApellido'];
-            camposNombre.forEach(id => {
-                const entrada = document.getElementById(id);
-                if (entrada) {
-                    entrada.addEventListener('input', function (e) {
-                        const palabras = e.target.value.split(' ');
-                        const palabrasCapitalizadas = palabras.map(palabra =>
-                            palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
-                        );
-                        e.target.value = palabrasCapitalizadas.join(' ');
-                    });
-                }
-            });
-
-            // Función para limpiar formulario
-            window.limpiarFormulario = function () {
-                formulario.reset();
-                entradas.forEach(entrada => {
-                    entrada.classList.remove('is-valid', 'is-invalid');
-                });
-            };
-        });
-    </script>
+    <script src="~/js/Features/Usuarios/Admin/CrearUsuario.js" asp-append-version="true"></script>
 }
 
