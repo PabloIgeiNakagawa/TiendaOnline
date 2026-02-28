@@ -1,4 +1,4 @@
-namespace TiendaOnline.Domain.Entities
+namespace TiendaOnline.Features.Shared
 {
     public class ErrorViewModel
     {
