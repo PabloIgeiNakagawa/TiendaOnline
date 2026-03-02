@@ -1,22 +1,26 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using TiendaOnline.Application.Usuarios.Commands;
+using TiendaOnline.Application.Usuarios.Queries;
 
 namespace TiendaOnline.Features.Tienda.Usuarios
 {
     [Route("[controller]")]
     public class UsuariosController : Controller
     {
-        private readonly IUsuarioService _usuarioService;
+        private readonly IUsuarioQueryService _usuarioQueryService;
+        private readonly IUsuarioCommandService _usuarioCommandService;
 
-        public UsuariosController(IUsuarioService usuarioService)
+        public UsuariosController(IUsuarioQueryService usuarioQueryService, IUsuarioCommandService usuarioCommandService)
         {
-            _usuarioService = usuarioService;
+            _usuarioQueryService = usuarioQueryService;
+            _usuarioCommandService = usuarioCommandService;
         }
 
         [HttpGet("[action]")]
         public async Task<IActionResult> PerfilUsuario(int id)
         {
-            var usuario = await _usuarioService.ObtenerPerfil(id);
+            var usuario = await _usuarioQueryService.ObtenerPerfil(id);
             if (usuario == null) return NotFound();
             var esPropioPerfil = User.FindFirstValue(ClaimTypes.NameIdentifier) == id.ToString();
             ViewData["Title"] = esPropioPerfil ? "Mi Perfil" : "Perfil de Usuario";
@@ -42,7 +46,7 @@ namespace TiendaOnline.Features.Tienda.Usuarios
         public async Task<IActionResult> EditarUsuario(int id)
         {
             ViewData["Title"] = "Editar Usuario";
-            var usuario = await _usuarioService.ObtenerUsuarioAsync(id);
+            var usuario = await _usuarioQueryService.ObtenerUsuarioAsync(id);
             if (usuario == null) return NotFound();
             var model = new UsuarioUpdateViewModel
             {
@@ -71,7 +75,7 @@ namespace TiendaOnline.Features.Tienda.Usuarios
                 Telefono = model.Telefono
             };
 
-            await _usuarioService.EditarUsuarioAsync(dto);
+            await _usuarioCommandService.EditarUsuarioAsync(dto);
             TempData["MensajeExito"] = "Tu información se actualizó correctamente.";
             return RedirectToAction("PerfilUsuario", "Usuarios", new { id = dto.UsuarioId });
         }

@@ -1,56 +1,21 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
-using TiendaOnline.Application.Common;
-using TiendaOnline.Features.Tienda.Usuarios;
 using TiendaOnline.Infrastructure.Persistence;
 
-namespace TiendaOnline.Features.Admin.Usuarios
+namespace TiendaOnline.Infrastructure.Services.Usuarios
 {
-    public class UsuariosAdminService : IUsuariosAdminService
+    public class UsuarioCommandService : IUsuarioCommandService
     {
         private readonly TiendaContext _context;
         private readonly IPasswordHasher<Usuario> _passwordHasher;
 
-        public UsuariosAdminService(TiendaContext context, IPasswordHasher<Usuario> passwordHasher)
+        public UsuarioCommandService(TiendaContext context, IPasswordHasher<Usuario> passwordHasher)
         {
             _context = context;
             _passwordHasher = passwordHasher;
-        }
-
-        public async Task<PagedResult<UsuarioListadoDto>> ObtenerUsuariosPaginadosAsync(int pagina, int cantidad, string? buscar, string? rol, bool? activo)
-        {
-            var query = _context.Usuarios.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(buscar))
-                query = query.Where(u => u.Nombre.Contains(buscar) || u.Apellido.Contains(buscar) || u.Email.Contains(buscar));
-
-            if (!string.IsNullOrEmpty(rol) && Enum.TryParse<Rol>(rol, out var rolEnum))
-            {
-                query = query.Where(u => u.Rol == rolEnum);
-            }
-
-            if (activo.HasValue)
-                query = query.Where(u => u.Activo == activo.Value);
-
-            var total = await query.CountAsync();
-
-            var items = await query
-                .OrderBy(u => u.Apellido)
-                .Skip((pagina - 1) * cantidad)
-                .Take(cantidad)
-                .Select(u => new UsuarioListadoDto
-                {
-                    UsuarioId = u.UsuarioId,
-                    NombreCompleto = $"{u.Nombre} {u.Apellido}",
-                    Email = u.Email,
-                    RolNombre = u.Rol.ToString(),
-                    Activo = u.Activo
-                })
-                .ToListAsync();
-
-            return new PagedResult<UsuarioListadoDto>(items, total, pagina, cantidad);
         }
 
         public async Task CrearUsuarioAsync(UsuarioCreateDto usuarioDto)

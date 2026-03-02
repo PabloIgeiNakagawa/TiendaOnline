@@ -9,12 +9,12 @@ using TiendaOnline.Application.MovimientosStock.Queries;
 using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Application.Reportes;
+using TiendaOnline.Application.Usuarios.Commands;
+using TiendaOnline.Application.Usuarios.Queries;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Features.Admin.Pedidos;
-using TiendaOnline.Features.Admin.Usuarios;
 using TiendaOnline.Features.Tienda.Account;
 using TiendaOnline.Features.Tienda.Pedidos;
-using TiendaOnline.Features.Tienda.Usuarios;
 using TiendaOnline.Infrastructure.ExternalServices;
 using TiendaOnline.Infrastructure.Services.AdminOverview;
 using TiendaOnline.Infrastructure.Services.Auditoria;
@@ -22,6 +22,7 @@ using TiendaOnline.Infrastructure.Services.Categorias;
 using TiendaOnline.Infrastructure.Services.MovimientosStock;
 using TiendaOnline.Infrastructure.Services.Productos;
 using TiendaOnline.Infrastructure.Services.Reportes;
+using TiendaOnline.Infrastructure.Services.Usuarios;
 
 namespace TiendaOnline.Extensions
 {
@@ -30,7 +31,8 @@ namespace TiendaOnline.Extensions
         public static IServiceCollection AddBusinessServices(this IServiceCollection services)
         {
             // Servicios base
-            services.AddScoped<IUsuarioService, UsuarioService>();
+            services.AddScoped<IUsuarioQueryService, UsuarioQueryService>();
+            services.AddScoped<IUsuarioCommandService, UsuarioCommandService>();
             services.AddScoped<IProductoQueryService, ProductoQueryService>();
             services.AddScoped<IProductoCommandService, ProductoCommandService>();
             services.AddScoped<ICategoriaQueryService, CategoriaQueryService>();
@@ -44,7 +46,6 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IMovimientoStockCommandService, MovimientoStockCommandService>();
             services.AddScoped<IMovimientoStockQueryService, MovimientoStockQueryService>();
 
-            services.AddScoped<IUsuariosAdminService, UsuariosAdminService>();
             services.AddScoped<IPedidosAdminService, PedidosAdminService>();
 
             // Autenticación y Sesión de Usuario

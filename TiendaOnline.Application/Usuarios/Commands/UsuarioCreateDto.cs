@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Features.Admin.Usuarios
+﻿namespace TiendaOnline.Application.Usuarios.Commands
 {
     public class UsuarioCreateDto
     {

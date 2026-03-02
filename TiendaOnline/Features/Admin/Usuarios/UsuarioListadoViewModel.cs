@@ -1,4 +1,5 @@
 ﻿using TiendaOnline.Application.Common;
+using TiendaOnline.Application.Usuarios.Queries;
 
 namespace TiendaOnline.Features.Admin.Usuarios
 {

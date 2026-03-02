@@ -1,19 +1,19 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using TiendaOnline.Application.Common;
+using TiendaOnline.Application.Usuarios.Commands;
+using TiendaOnline.Application.Usuarios.Queries;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
 
-namespace TiendaOnline.Features.Tienda.Usuarios
+namespace TiendaOnline.Infrastructure.Services.Usuarios
 {
-    public class UsuarioService : IUsuarioService
+    public class UsuarioQueryService : IUsuarioQueryService
     {
         private readonly TiendaContext _context;
-        private readonly IPasswordHasher<Usuario> _passwordHasher;
 
-        public UsuarioService(TiendaContext context, IPasswordHasher<Usuario> passwordHasher)
+        public UsuarioQueryService(TiendaContext context)
         {
             _context = context;
-            _passwordHasher = passwordHasher;
         }
 
         public async Task<UsuarioPerfilDto> ObtenerPerfil(int usuarioId)
@@ -75,6 +75,40 @@ namespace TiendaOnline.Features.Tienda.Usuarios
             usuario.Telefono = dto.Telefono;
 
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<PagedResult<UsuarioListadoDto>> ObtenerUsuariosPaginadosAsync(int pagina, int cantidad, string? buscar, string? rol, bool? activo)
+        {
+            var query = _context.Usuarios.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(buscar))
+                query = query.Where(u => u.Nombre.Contains(buscar) || u.Apellido.Contains(buscar) || u.Email.Contains(buscar));
+
+            if (!string.IsNullOrEmpty(rol) && Enum.TryParse<Rol>(rol, out var rolEnum))
+            {
+                query = query.Where(u => u.Rol == rolEnum);
+            }
+
+            if (activo.HasValue)
+                query = query.Where(u => u.Activo == activo.Value);
+
+            var total = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(u => u.Apellido)
+                .Skip((pagina - 1) * cantidad)
+                .Take(cantidad)
+                .Select(u => new UsuarioListadoDto
+                {
+                    UsuarioId = u.UsuarioId,
+                    NombreCompleto = $"{u.Nombre} {u.Apellido}",
+                    Email = u.Email,
+                    RolNombre = u.Rol.ToString(),
+                    Activo = u.Activo
+                })
+                .ToListAsync();
+
+            return new PagedResult<UsuarioListadoDto>(items, total, pagina, cantidad);
         }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TiendaOnline.Application.Usuarios.Commands;
+using TiendaOnline.Application.Usuarios.Queries;
 using TiendaOnline.Domain.Exceptions;
 
 namespace TiendaOnline.Features.Admin.Usuarios
@@ -8,11 +10,13 @@ namespace TiendaOnline.Features.Admin.Usuarios
     [Authorize(Roles = "Administrador")]
     public class UsuariosController : Controller
     {
-        private readonly IUsuariosAdminService _usuariosAdminService;
+        private readonly IUsuarioQueryService _usuarioQueryService;
+        private readonly IUsuarioCommandService _usuarioCommandService;
 
-        public UsuariosController(IUsuariosAdminService usuariosAdminService)
+        public UsuariosController(IUsuarioQueryService usuarioQueryService, IUsuarioCommandService usuarioCommandService)
         {
-            _usuariosAdminService = usuariosAdminService;
+            _usuarioQueryService = usuarioQueryService;
+            _usuarioCommandService = usuarioCommandService;
         }
 
         [HttpGet("[action]")]
@@ -27,7 +31,7 @@ namespace TiendaOnline.Features.Admin.Usuarios
                 _ => null
             };
 
-            var pagedResult = await _usuariosAdminService.ObtenerUsuariosPaginadosAsync(pagina, tamanoPagina, busqueda, rol, estadoBool);
+            var pagedResult = await _usuarioQueryService.ObtenerUsuariosPaginadosAsync(pagina, tamanoPagina, busqueda, rol, estadoBool);
 
             var viewModel = new UsuarioListadoViewModel
             {
@@ -66,7 +70,7 @@ namespace TiendaOnline.Features.Admin.Usuarios
                     RolId = model.RolId
                 };
 
-                await _usuariosAdminService.CrearUsuarioAsync(dto);
+                await _usuarioCommandService.CrearUsuarioAsync(dto);
                 TempData["MensajeExito"] = "Usuario creado correctamente.";
                 return RedirectToAction(nameof(Listado));
             }
@@ -81,7 +85,7 @@ namespace TiendaOnline.Features.Admin.Usuarios
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarAlta(int id)
         {
-            await _usuariosAdminService.DarAltaUsuarioAsync(id);
+            await _usuarioCommandService.DarAltaUsuarioAsync(id);
             TempData["MensajeExito"] = "Usuario activado.";
             return RedirectToAction(nameof(Listado));
         }
@@ -90,7 +94,7 @@ namespace TiendaOnline.Features.Admin.Usuarios
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarBaja(int id)
         {
-            await _usuariosAdminService.DarBajaUsuarioAsync(id);
+            await _usuarioCommandService.DarBajaUsuarioAsync(id);
             TempData["MensajeExito"] = "Usuario dado de baja.";
             return RedirectToAction(nameof(Listado));
         }
