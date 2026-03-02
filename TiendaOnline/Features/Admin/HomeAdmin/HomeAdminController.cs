@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Application.AdminOverview;
-using TiendaOnline.Domain.Entities;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Admin.HomeAdmin
 {

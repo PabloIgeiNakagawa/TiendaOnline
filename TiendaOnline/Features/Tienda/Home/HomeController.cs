@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using TiendaOnline.Domain.Entities;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Tienda.Home
 {

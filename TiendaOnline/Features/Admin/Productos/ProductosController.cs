@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using TiendaOnline.Application.Categorias.Commands;
+using TiendaOnline.Application.Categorias.Queries;
 using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Features.Admin.Categorias;
 
 namespace TiendaOnline.Features.Admin.Productos
 {
@@ -14,13 +15,13 @@ namespace TiendaOnline.Features.Admin.Productos
     {
         private readonly IProductoCommandService _productoCommandService;
         private readonly IProductoQueryService _productoQueryService;
-        private readonly ICategoriaService _categoriaService;
+        private readonly ICategoriaQueryService _categoriaQueryService;
 
-        public ProductosController(IProductoCommandService productoCommandService, IProductoQueryService productoQueryService, ICategoriaService categoriaService)
+        public ProductosController(IProductoCommandService productoCommandService, IProductoQueryService productoQueryService, ICategoriaQueryService categoriaQueryService)
         {
             _productoCommandService = productoCommandService;
             _productoQueryService = productoQueryService;
-            _categoriaService = categoriaService;
+            _categoriaQueryService = categoriaQueryService;
         }
 
         [HttpGet("[action]")]
@@ -32,7 +33,7 @@ namespace TiendaOnline.Features.Admin.Productos
             var pagedResult = await _productoQueryService.ObtenerProductosAdminAsync(request);
 
             // Obtenemos las categorías para el select (usando DTO)
-            var categoriasEntidad = await _categoriaService.ObtenerCategoriasHojaAsync();
+            var categoriasEntidad = await _categoriaQueryService.ObtenerCategoriasHojaAsync();
             var categoriasDto = categoriasEntidad.Select(c => new CategoriaDto
             {
                 CategoriaId = c.CategoriaId,
@@ -71,7 +72,7 @@ namespace TiendaOnline.Features.Admin.Productos
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Agregar(AgregarProductoViewModel model)
         {
-            if (!await _categoriaService.EsCategoriaHojaAsync(model.CategoriaId))
+            if (!await _categoriaQueryService.EsCategoriaHojaAsync(model.CategoriaId))
             {
                 ModelState.AddModelError("CategoriaId", "Debe seleccionar una subcategoría final.");
             }
@@ -166,7 +167,7 @@ namespace TiendaOnline.Features.Admin.Productos
         }
         private async Task<IEnumerable<SelectListItem>> ObtenerListaCategoriasAsync()
         {
-            var categoriasHoja = await _categoriaService.ObtenerCategoriasHojaAsync();
+            var categoriasHoja = await _categoriaQueryService.ObtenerCategoriasHojaAsync();
 
             return categoriasHoja.Select(c => new SelectListItem
             {
@@ -175,7 +176,7 @@ namespace TiendaOnline.Features.Admin.Productos
             });
         }
 
-        private string ObtenerRutaCompleta(Categoria cat)
+        private static string ObtenerRutaCompleta(Categoria cat)
         {
             if (cat.CategoriaPadre == null) return cat.Nombre;
             return $"{ObtenerRutaCompleta(cat.CategoriaPadre)} > {cat.Nombre}";

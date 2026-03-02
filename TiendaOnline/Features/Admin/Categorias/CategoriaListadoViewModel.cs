@@ -1,4 +1,5 @@
-﻿using TiendaOnline.Application.Common;
+﻿using TiendaOnline.Application.Categorias.Queries;
+using TiendaOnline.Application.Common;
 
 namespace TiendaOnline.Features.Admin.Categorias
 {

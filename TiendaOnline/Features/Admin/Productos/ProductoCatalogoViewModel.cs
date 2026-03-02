@@ -1,6 +1,6 @@
-﻿using TiendaOnline.Features.Admin.Categorias;
-using TiendaOnline.Application.Common;
+﻿using TiendaOnline.Application.Common;
 using TiendaOnline.Application.Productos.Queries;
+using TiendaOnline.Application.Categorias.Commands;
 
 namespace TiendaOnline.Features.Admin.Productos
 {

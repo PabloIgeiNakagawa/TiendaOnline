@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TiendaOnline.Application.Categorias.Queries;
 using TiendaOnline.Application.Productos.Queries;
-using TiendaOnline.Features.Admin.Categorias;
 
 namespace TiendaOnline.Features.Tienda.Productos
 {
@@ -8,12 +8,12 @@ namespace TiendaOnline.Features.Tienda.Productos
     public class ProductosController : Controller
     {
         private readonly IProductoQueryService _productoQueryService;
-        private readonly ICategoriaService _categoriaService;
+        private readonly ICategoriaQueryService _categoriaQueryService;
 
-        public ProductosController(IProductoQueryService productoQueryService, ICategoriaService categoriaService)
+        public ProductosController(IProductoQueryService productoQueryService, ICategoriaQueryService categoriaQueryService)
         {
             _productoQueryService = productoQueryService;
-            _categoriaService = categoriaService;
+            _categoriaQueryService = categoriaQueryService;
         }
 
         [HttpGet]
@@ -23,7 +23,7 @@ namespace TiendaOnline.Features.Tienda.Productos
 
             var productosPaginados = await _productoQueryService.ObtenerProductosCatalogoAsync(request);
 
-            var categoriasRaiz = await _categoriaService.ObtenerCategoriasRaizAsync();
+            var categoriasRaiz = await _categoriaQueryService.ObtenerCategoriasRaizAsync();
 
             var viewModel = new ProductoIndexViewModel
             {
