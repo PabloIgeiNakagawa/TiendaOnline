@@ -1,6 +1,6 @@
 ﻿using TiendaOnline.Domain.Entities;
 
-namespace TiendaOnline.Features.Admin.Pedidos
+namespace TiendaOnline.Application.Pedidos.Query
 {
     public class PedidoListadoDto
     {

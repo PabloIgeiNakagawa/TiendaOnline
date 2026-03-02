@@ -1,11 +1,11 @@
-﻿@using TiendaOnline.Extensions
+﻿@using TiendaOnline.Application.Carritos
+@using TiendaOnline.Extensions
 @using TiendaOnline.Features.Tienda.Carritos
 @model List<ItemCarrito>
 @{
     bool usuarioEstaAutenticado = User.Identity != null && User.Identity.IsAuthenticated;
     decimal total = Model.Sum(i => i.Precio * i.Cantidad);
-    var carritoSession = Context.Session.GetObject<List<ItemCarrito>>("Carrito");
-    var productosTotal = carritoSession != null ? carritoSession.Sum(i => i.Cantidad) : 0;
+    var productosTotal = Model.Sum(i => i.Cantidad);
 }
 @section Styles{
     <style>

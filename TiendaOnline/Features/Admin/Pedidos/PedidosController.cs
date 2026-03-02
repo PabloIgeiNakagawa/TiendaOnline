@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TiendaOnline.Application.Pedidos.Command;
+using TiendaOnline.Application.Pedidos.Query;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Features.Tienda.Pedidos;
 
 namespace TiendaOnline.Features.Admin.Pedidos
 {
@@ -9,11 +10,13 @@ namespace TiendaOnline.Features.Admin.Pedidos
     [Authorize(Roles = "Administrador")]
     public class PedidosController : Controller
     {
-        private readonly IPedidosAdminService _pedidosAdminService;
+        private readonly IPedidoQueryService _pedidoQueryService;
+        private readonly IPedidoCommandService _pedidoCommandService;
 
-        public PedidosController(IPedidosAdminService pedidosAdminService)
+        public PedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService)
         {
-            _pedidosAdminService = pedidosAdminService;
+            _pedidoQueryService = pedidoQueryService;
+            _pedidoCommandService = pedidoCommandService;
         }
 
         [HttpGet("[action]")]
@@ -21,7 +24,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
         {
             ViewData["Title"] = "Gestión de Pedidos";
             // Llamamos al service con todos los filtros
-            var pagedResult = await _pedidosAdminService.ObtenerPedidosPaginadosAsync(
+            var pagedResult = await _pedidoQueryService.ObtenerPedidosPaginadosAsync(
                 busqueda?.Trim(),
                 estado,
                 fechaDesde,
@@ -52,7 +55,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
             {
                 return NotFound();
             }
-            await _pedidosAdminService.PedidoEnviadoAsync(pedidoId);
+            await _pedidoCommandService.PedidoEnviadoAsync(pedidoId);
             TempData["MensajeExito"] = "Estado del pedido actualizado a Enviado";
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
@@ -65,7 +68,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
             {
                 return NotFound();
             }
-            await _pedidosAdminService.PedidoEntregadoAsync(pedidoId);
+            await _pedidoCommandService.PedidoEntregadoAsync(pedidoId);
             TempData["MensajeExito"] = "Estado del pedido actualizado a Entregado";
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
@@ -77,7 +80,7 @@ namespace TiendaOnline.Features.Admin.Pedidos
             {
                 return NotFound();
             }
-            await _pedidosAdminService.PedidoCanceladoAsync(pedidoId);
+            await _pedidoCommandService.PedidoCanceladoAsync(pedidoId);
             TempData["MensajeExito"] = "Estado del pedido actualizado a Cancelado";
             return RedirectToAction("Detalles", new { id = pedidoId });
         }

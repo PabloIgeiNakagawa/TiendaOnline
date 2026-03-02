@@ -1,13 +1,13 @@
 ﻿@using System.Security.Claims
+@using TiendaOnline.Application.Carritos
+@using TiendaOnline.Application.Common
 @using TiendaOnline.Extensions
 @using TiendaOnline.Features.Tienda.Carritos
 @{
     var idUsuario = User?.FindFirstValue(ClaimTypes.NameIdentifier);
     bool usuarioEstaAutenticado = User.Identity.IsAuthenticated;
-    var carritoLayout = Context.Session.GetObject<List<ItemCarrito>>("Carrito") ?? new List<ItemCarrito>();
-
-    var conteoProductos = carritoLayout.Sum(i => i.Cantidad);
 }
+
 <!DOCTYPE html>
 <html lang="es" class="h-100">
 <head>
@@ -71,12 +71,7 @@
 
                     <a class="nav-link text-body position-relative px-2" asp-controller="Carritos" asp-action="Index">
                         <i class="bi bi-cart3 fs-4"></i>
-                        @if (conteoProductos > 0)
-                        {
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
-                                @conteoProductos
-                            </span>
-                        }
+                        @await Component.InvokeAsync("CarritoHeader")
                     </a>
 
                     <button id="btn-theme" class="btn nav-link text-body px-2" title="Cambiar tema">

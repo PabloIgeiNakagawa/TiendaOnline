@@ -1,25 +1,28 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using TiendaOnline.Application.AdminOverview;
 using TiendaOnline.Application.Auditoria;
+using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.Categorias.Commands;
 using TiendaOnline.Application.Categorias.Queries;
 using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Application.MovimientosStock.Queries;
+using TiendaOnline.Application.Pedidos.Command;
+using TiendaOnline.Application.Pedidos.Query;
 using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Application.Reportes;
 using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Application.Usuarios.Queries;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Features.Admin.Pedidos;
 using TiendaOnline.Features.Tienda.Account;
-using TiendaOnline.Features.Tienda.Pedidos;
 using TiendaOnline.Infrastructure.ExternalServices;
 using TiendaOnline.Infrastructure.Services.AdminOverview;
 using TiendaOnline.Infrastructure.Services.Auditoria;
+using TiendaOnline.Infrastructure.Services.Carritos;
 using TiendaOnline.Infrastructure.Services.Categorias;
 using TiendaOnline.Infrastructure.Services.MovimientosStock;
+using TiendaOnline.Infrastructure.Services.Pedidos;
 using TiendaOnline.Infrastructure.Services.Productos;
 using TiendaOnline.Infrastructure.Services.Reportes;
 using TiendaOnline.Infrastructure.Services.Usuarios;
@@ -37,7 +40,10 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IProductoCommandService, ProductoCommandService>();
             services.AddScoped<ICategoriaQueryService, CategoriaQueryService>();
             services.AddScoped<ICategoriaCommandService, CategoriaCommandService>();
-            services.AddScoped<IPedidoService, PedidoService>();
+            services.AddScoped<ICarritoStorage, SessionCarritoStorage>();
+            services.AddScoped<ICarritoService, CarritoService>();
+            services.AddScoped<IPedidoQueryService, PedidoQueryService>();
+            services.AddScoped<IPedidoCommandService, PedidoCommandService>();
 
             // Administración
             services.AddScoped<IAdminOverviewService, AdminOverviewService>();
@@ -45,8 +51,6 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IAuditoriaService, AuditoriaService>();
             services.AddScoped<IMovimientoStockCommandService, MovimientoStockCommandService>();
             services.AddScoped<IMovimientoStockQueryService, MovimientoStockQueryService>();
-
-            services.AddScoped<IPedidosAdminService, PedidosAdminService>();
 
             // Autenticación y Sesión de Usuario
             services.AddScoped<IAuthService, AuthService>();

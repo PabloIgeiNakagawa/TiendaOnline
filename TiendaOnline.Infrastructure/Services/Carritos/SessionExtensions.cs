@@ -1,6 +1,7 @@
-﻿using System.Text.Json;
+﻿using Microsoft.AspNetCore.Http;
+using System.Text.Json;
 
-namespace TiendaOnline.Extensions
+namespace TiendaOnline.Infrastructure.Services.Carritos
 {
     public static class SessionExtensions
     {

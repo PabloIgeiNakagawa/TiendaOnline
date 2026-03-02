@@ -1,25 +1,23 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TiendaOnline.Application.Productos.Queries;
-using TiendaOnline.Extensions;
+using TiendaOnline.Application.Carritos;
 
 namespace TiendaOnline.Features.Tienda.Carritos
 {
     [Route("Carrito")]
     public class CarritosController : Controller
     {
-        private const string CarritoKey = "Carrito";
-        private readonly IProductoQueryService _productoQueryService;
+        private readonly ICarritoService _carritoService;
 
-        public CarritosController(IProductoQueryService productoQueryService)
+        public CarritosController(ICarritoService carritoService)
         {
-            _productoQueryService = productoQueryService;
+            _carritoService = carritoService;
         }
 
         [HttpGet("[action]")]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Carrito de Compras";
-            var carrito = HttpContext.Session.GetObject<List<ItemCarrito>>(CarritoKey) ?? new List<ItemCarrito>();
+            var carrito = await _carritoService.ObtenerAsync();
             return View(carrito);
         }
 
@@ -27,71 +25,45 @@ namespace TiendaOnline.Features.Tienda.Carritos
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Agregar(int id)
         {
-            var producto = await _productoQueryService.ObtenerProductoAsync(id);
-            var carrito = HttpContext.Session.GetObject<List<ItemCarrito>>(CarritoKey) ?? new List<ItemCarrito>();
+            if (id <= 0)
+                return BadRequest();
 
-            var itemExistente = carrito.FirstOrDefault(x => x.ProductoId == id);
-            if (itemExistente != null)
-            {
-                itemExistente.Cantidad++;
-            }
-            else
-            {
-                carrito.Add(new ItemCarrito
-                {
-                    ProductoId = producto.ProductoId,
-                    Nombre = producto.Nombre,
-                    Precio = producto.Precio,
-                    Cantidad = 1,
-                    ImagenUrl = producto.ImagenUrl
-                });
-            }
-            HttpContext.Session.SetObject(CarritoKey, carrito);
+            await _carritoService.AgregarAsync(id);
             TempData["MensajeExito"] = "Producto agregado al carrito.";
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
-        public IActionResult EliminarItem(int id)
+        public async Task<IActionResult> EliminarItem(int id)
         {
-            var carrito = HttpContext.Session.GetObject<List<ItemCarrito>>(CarritoKey);
-            if (carrito != null)
-            {
-                var item = carrito.FirstOrDefault(p => p.ProductoId == id);
-                if (item != null)
-                {
-                    carrito.Remove(item);
-                    HttpContext.Session.SetObject(CarritoKey, carrito);
-                }
-            }
+            await _carritoService.EliminarAsync(id);
             TempData["MensajeExito"] = "Producto eliminado del carrito.";
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
-        public IActionResult ActualizarCantidad(int productoId, int cantidad)
+        public async Task<IActionResult> ActualizarCantidad(int productoId, int cantidad)
         {
-            var carrito = HttpContext.Session.GetObject<List<ItemCarrito>>("Carrito") ?? new List<ItemCarrito>();
-
-            var item = carrito.FirstOrDefault(p => p.ProductoId == productoId);
-            if (item != null)
+            if (cantidad <= 0)
             {
-                item.Cantidad = cantidad;
+                await _carritoService.EliminarAsync(productoId);
+                TempData["MensajeExito"] = "Producto eliminado del carrito.";
+                return RedirectToAction(nameof(Index));
             }
 
-            HttpContext.Session.SetObject(CarritoKey, carrito);
+            await _carritoService.ActualizarCantidadAsync(productoId, cantidad);
             TempData["MensajeExito"] = "Cantidad actualizada.";
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
-        public IActionResult Vaciar()
+        public async Task<IActionResult> Vaciar()
         {
-            HttpContext.Session.Remove("Carrito");
-            TempData["MensajeExito"] = "Se ha vacíado el carrito.";
+            await _carritoService.VaciarAsync();
+            TempData["MensajeExito"] = "Se ha vaciado el carrito.";
             return RedirectToAction(nameof(Index));
         }
     }

@@ -1,18 +1,20 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using TiendaOnline.Extensions;
-using TiendaOnline.Features.Tienda.Carritos;
+using TiendaOnline.Application.Pedidos.Command;
+using TiendaOnline.Application.Pedidos.Query;
 
 namespace TiendaOnline.Features.Tienda.Pedidos
 {
     [Route("[controller]")]
     public class PedidosController : Controller
     {
-        private readonly IPedidoService _pedidoService;
+        private readonly IPedidoQueryService _pedidoQueryService;
+        private readonly IPedidoCommandService _pedidoCommandService;
 
-        public PedidosController(IPedidoService pedidoService)
+        public PedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService)
         {
-            _pedidoService = pedidoService;
+            _pedidoQueryService = pedidoQueryService;
+            _pedidoCommandService = pedidoCommandService;
         }
 
         [HttpGet("[action]")]
@@ -27,7 +29,7 @@ namespace TiendaOnline.Features.Tienda.Pedidos
 
             int usuarioId = int.Parse(claim.Value);
 
-            var pedidos = await _pedidoService.ObtenerPedidosDeUsuarioAsync(usuarioId);
+            var pedidos = await _pedidoQueryService.ObtenerPedidosDeUsuarioAsync(usuarioId);
 
             return View(pedidos);
         }
@@ -35,7 +37,7 @@ namespace TiendaOnline.Features.Tienda.Pedidos
         [HttpGet("[action]")]
         public async Task<IActionResult> Detalles(int id)
         {
-            var pedido = await _pedidoService.ObtenerPedidoConDetallesAsync(id);
+            var pedido = await _pedidoQueryService.ObtenerPedidoConDetallesAsync(id);
             if (pedido == null)
                 return NotFound();
 
@@ -47,26 +49,23 @@ namespace TiendaOnline.Features.Tienda.Pedidos
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> FinalizarCompra()
         {
-            var carrito = HttpContext.Session.GetObject<List<ItemCarrito>>("Carrito");
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
 
-            if (carrito == null || carrito.Count == 0)
+            if (claim == null)
+                return Unauthorized();
+
+            int usuarioId = int.Parse(claim.Value);
+
+            var resultado = await _pedidoCommandService.CrearPedidoAsync(usuarioId);
+
+            if (resultado < 0)
             {
-                TempData["MensajeError"] = "El carrito está vacío.";
+                TempData["MensajeError"] = "No se ha podido crear el pedido.";
                 return RedirectToAction("Index", "Carrito");
             }
 
-            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (claim == null)
-            {
-                return Unauthorized();
-            }
-            int usuarioId = int.Parse(claim.Value);
-
-            int pedidoId = await _pedidoService.CrearPedidoAsync(carrito, usuarioId);
-
-            HttpContext.Session.Remove("Carrito");
             TempData["MensajeExito"] = "¡Pedido realizado con éxito!";
-            return RedirectToAction("Detalles", new { id = pedidoId });
+            return RedirectToAction("Detalles", new { id = resultado });
         }
     }
 }

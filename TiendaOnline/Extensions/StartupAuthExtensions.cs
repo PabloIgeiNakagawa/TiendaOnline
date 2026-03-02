@@ -20,8 +20,6 @@
                     #if DEBUG
                         config.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                     #else
-                        /* En producción, hay que usar Always para asegurar que las cookies solo se envíen a través de HTTPS. 
-                            Pero por el somee lo dejamos en SameAsRequest para evitar problemas. */ 
                         config.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
                     #endif
                     config.Cookie.SameSite = SameSiteMode.Strict;

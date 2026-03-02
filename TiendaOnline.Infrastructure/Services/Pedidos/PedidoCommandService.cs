@@ -1,68 +1,93 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TiendaOnline.Domain.Entities;
-using TiendaOnline.Application.Common;
-using TiendaOnline.Infrastructure.Persistence;
+using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.MovimientosStock.Commands;
+using TiendaOnline.Application.Pedidos.Command;
+using TiendaOnline.Domain.Entities;
+using TiendaOnline.Infrastructure.Persistence;
 
-namespace TiendaOnline.Features.Admin.Pedidos
+namespace TiendaOnline.Infrastructure.Services.Pedidos
 {
-    public class PedidosAdminService : IPedidosAdminService
+    public class PedidoCommandService : IPedidoCommandService
     {
         private readonly TiendaContext _context;
+        private readonly ICarritoService _carritoService;
         private readonly IMovimientoStockCommandService _movimientoStockCommandService;
 
-        public PedidosAdminService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService)
+        public PedidoCommandService(TiendaContext context, ICarritoService carritoService, IMovimientoStockCommandService movimientoStockCommandService)
         {
             _context = context;
+            _carritoService = carritoService;
             _movimientoStockCommandService = movimientoStockCommandService;
         }
 
-        public async Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(string? busqueda, EstadoPedido? estado, DateTime? desde, DateTime? hasta, string? monto, int pagina, int cantidad)
+        public async Task<int> CrearPedidoAsync(int usuarioId)
         {
-            var query = _context.Pedidos.AsQueryable();
+            var carrito = await _carritoService.ObtenerAsync();
+            // Iniciamos una transacción. Si algo falla, NO se resta stock ni se crea pedido.
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            // Filtros
-            if (!string.IsNullOrEmpty(busqueda))
+            try
             {
-                query = query.Where(p => p.PedidoId.ToString().Contains(busqueda) ||
-                                         p.Usuario.Nombre.Contains(busqueda) ||
-                                         p.Usuario.Apellido.Contains(busqueda));
-            }
+                // Traemos todos los productos necesarios en UNA sola consulta (Mejora de rendimiento)
+                var productoIds = carrito.Select(c => c.ProductoId).ToList();
+                var productosDb = await _context.Productos
+                    .Where(p => productoIds.Contains(p.ProductoId))
+                    .ToListAsync();
 
-            if (estado.HasValue) query = query.Where(p => p.Estado == estado.Value);
-            if (desde.HasValue) query = query.Where(p => p.FechaPedido >= desde.Value);
-            if (hasta.HasValue) query = query.Where(p => p.FechaPedido <= hasta.Value);
-
-            // Filtro de Monto
-            if (!string.IsNullOrEmpty(monto))
-            {
-                var qMonto = query.Select(p => new { p, Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) });
-                if (monto == "bajo") query = qMonto.Where(x => x.Total < 250000).Select(x => x.p);
-                if (monto == "medio") query = qMonto.Where(x => x.Total >= 250000 && x.Total <= 1000000).Select(x => x.p);
-                if (monto == "alto") query = qMonto.Where(x => x.Total > 1000000).Select(x => x.p);
-            }
-
-            // Conteo Total
-            var total = await query.CountAsync();
-
-            // Paginación y Mapeo a DTO
-            var items = await query
-                .OrderByDescending(p => p.FechaPedido)
-                .Skip((pagina - 1) * cantidad)
-                .Take(cantidad)
-                .Select(p => new PedidoListadoDto
+                var pedido = new Pedido
                 {
-                    PedidoId = p.PedidoId,
-                    NombreCliente = p.Usuario.Nombre + " " + p.Usuario.Apellido,
-                    EmailCliente = p.Usuario.Email,
-                    FechaPedido = p.FechaPedido,
-                    FechaEntrega = p.FechaEntrega,
-                    Estado = p.Estado,
-                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad)
-                })
-            .ToListAsync();
+                    UsuarioId = usuarioId,
+                    FechaPedido = DateTime.Now,
+                    Estado = EstadoPedido.Pendiente,
+                    DetallesPedido = new List<DetallePedido>()
+                };
 
-            return new PagedResult<PedidoListadoDto>(items, total, pagina, cantidad);
+                foreach (var item in carrito)
+                {
+                    var producto = productosDb.FirstOrDefault(p => p.ProductoId == item.ProductoId);
+                    if (producto == null) throw new Exception("Producto no encontrado");
+
+                    if (producto.Stock < item.Cantidad)
+                        throw new Exception($"Sin stock para {producto.Nombre}");
+
+                    // Restamos Stock en la tabla Producto
+                    producto.Stock -= item.Cantidad;
+
+                    // Registramos el movimiento de stock (SALIDA)
+                    // Pasamos cantidad negativa porque es una salida
+                    _movimientoStockCommandService.GenerarMovimiento(
+                        producto,
+                        -item.Cantidad,
+                        TipoMovimiento.SalidaVenta,
+                        null, // Se vincula solo al agregar el pedido al contexto
+                        "Venta Pedido Online"
+                    );
+
+                    // Agregamos el detalle al pedido
+                    pedido.DetallesPedido.Add(new DetallePedido
+                    {
+                        ProductoId = producto.ProductoId,
+                        Cantidad = item.Cantidad,
+                        PrecioUnitario = producto.Precio
+                    });
+                }
+
+                _context.Pedidos.Add(pedido);
+
+                // Guardamos todo junto
+                await _context.SaveChangesAsync();
+
+                // Si llegamos acá, confirmamos los cambios en la DB
+                await transaction.CommitAsync();
+
+                return pedido.PedidoId;
+            }
+            catch (Exception)
+            {
+                // Si hubo error, deshacemos todo (el stock vuelve a su valor original)
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task PedidoEnviadoAsync(int pedidoId)
