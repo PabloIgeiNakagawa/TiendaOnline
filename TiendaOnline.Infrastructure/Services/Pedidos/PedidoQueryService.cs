@@ -15,28 +15,9 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             _context = context;
         }
 
-        public async Task<Pedido?> ObtenerPedidoAsync(int id)
-        {
-            return await _context.Pedidos.FindAsync(id);
-        }
-
         public async Task<List<Pedido>> ObtenerPedidosDeUsuarioAsync(int id)
         {
             return await _context.Pedidos.Where(p => p.UsuarioId == id).ToListAsync();
-        }
-
-        public async Task<List<Pedido>> ObtenerPedidosAsync()
-        {
-            return await _context.Pedidos.ToListAsync();
-        }
-
-        public async Task<List<Pedido>> ObtenerPedidosConDetallesAsync()
-        {
-            return await _context.Pedidos
-                .Include(p => p.Usuario)
-                .Include(p => p.DetallesPedido)
-            .ThenInclude(d => d.Producto)
-                .ToListAsync();
         }
 
         public async Task<Pedido?> ObtenerPedidoConDetallesAsync(int id)
