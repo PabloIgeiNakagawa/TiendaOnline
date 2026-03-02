@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using TiendaOnline.Extensions;
 using TiendaOnline.Features.Tienda.Carritos;
-using TiendaOnline.Helpers;
 
 namespace TiendaOnline.Features.Tienda.Pedidos
 {

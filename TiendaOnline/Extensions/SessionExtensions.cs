@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace TiendaOnline.Helpers
+namespace TiendaOnline.Extensions
 {
     public static class SessionExtensions
     {

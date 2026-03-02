@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Application.Productos.Queries;
-using TiendaOnline.Helpers;
+using TiendaOnline.Extensions;
 
 namespace TiendaOnline.Features.Tienda.Carritos
 {
