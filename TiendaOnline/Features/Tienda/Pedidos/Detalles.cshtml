@@ -1,13 +1,6 @@
-﻿@using System.Security.Claims
-@model TiendaOnline.Domain.Entities.Pedido
+﻿@model TiendaOnline.Features.Tienda.Pedidos.PedidoDetalleViewModel
 @{
-    var total = Model.DetallesPedido?.Sum(d => d.Cantidad * d.PrecioUnitario) ?? 0;
-    var subtotal = total;
-    var impuestos = total * 0.19m; // 19% IVA
-    var totalConImpuestos = total + impuestos;
-    var esAdmin = User.IsInRole("Administrador");
-    var esRepartidor = User.IsInRole("Repartidor");
-    var esPropioPedido = User.Identity.IsAuthenticated && Model.UsuarioId.ToString() == User.FindFirstValue(ClaimTypes.NameIdentifier);
+    ViewData["Title"] = $"Pedido #{Model.PedidoId.ToString("D6")}";
 }
 
 @section Styles{
@@ -79,7 +72,7 @@
                                 <i class="bi bi-house-door"></i> Inicio
                             </a>
                         </li>
-                        @if (esAdmin)
+                        @if (Model.EsAdmin)
                         {
                             <li class="breadcrumb-item">
                                 <a asp-controller="Pedidos" asp-action="Listado" class="text-decoration-none">Gestión de Pedidos</a>
@@ -104,11 +97,11 @@
         <!-- Información del Pedido -->
         <div class="col-lg-8">
             <!-- Cabecera del Pedido -->
-            <div class="card rounded-3 shadow border-0 mb-4 overflow-hidden">
+            <div class="card rounded-3 border mb-4 overflow-hidden">
                 <div class="card-header bg-transparent border-0 p-4 pb-0">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 fw-bold">
-                            @if (esAdmin)
+                            @if (Model.EsAdmin)
                             {
                                 <text>Información del Pedido</text>
                             }
@@ -120,22 +113,22 @@
                         <div class="pedido-badge">
                             @switch (Model.Estado)
                             {
-                                case EstadoPedido.Pendiente:
+                                case "Pendiente":
                                     <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1 ms-md-0">
                                         <i class="bi bi-clock me-1"></i>Pendiente
                                     </span>
                                     break;
-                                case EstadoPedido.Enviado:
+                                case "Enviado":
                                     <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-info-subtle text-info-emphasis border border-info-subtle ms-1 ms-md-0">
                                         <i class="bi bi-truck me-1"></i>Enviado
                                     </span>
                                     break;
-                                case EstadoPedido.Entregado:
+                                case "Entregado":
                                     <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-success-subtle text-success-emphasis border border-success-subtle ms-1 ms-md-0">
                                         <i class="bi bi-check-circle me-1"></i>Entregado
                                     </span>
                                     break;
-                                case EstadoPedido.Cancelado:
+                                case "Cancelado":
                                     <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-danger-subtle text-danger-emphasis border border-danger-subtle ms-1 ms-md-0">
                                         <i class="bi bi-x-circle me-1"></i>Cancelado
                                     </span>
@@ -157,11 +150,11 @@
                             </div>
                             <div class="mb-3">
                                 <div class="small text-secondary mb-1">
-                                    @if (Model.Estado == EstadoPedido.Entregado)
+                                    @if (Model.Estado == "Entregado")
                                     {
                                         <text>Fecha de Entrega</text>
                                     }
-                                    else if (Model.Estado == EstadoPedido.Enviado)
+                                    else if (Model.Estado == "Enviado")
                                     {
                                         <text>Fecha Estimada de Entrega</text>
                                     }
@@ -175,7 +168,7 @@
                                     {
                                         @Model.FechaEntrega.Value.ToString("dd/MM/yyyy HH:mm")
                                     }
-                                    else if (Model.Estado == EstadoPedido.Enviado)
+                                    else if (Model.Estado == "Enviado")
                                     {
                                         <span class="text-info">@Model.FechaPedido.AddDays(3).ToString("dd/MM/yyyy")</span>
                                     }
@@ -187,19 +180,19 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            @if (esAdmin)
+                            @if (Model.EsAdmin)
                             {
                                 <div class="mb-3">
                                     <div class="small text-secondary mb-1">Cliente</div>
-                                    <div class="fw-medium">@(Model.Usuario?.Nombre ?? "Cliente no disponible")</div>
+                                    <div class="fw-medium">@(Model.UsuarioNombre ?? "Cliente no disponible")</div>
                                 </div>
                                 <div class="mb-3">
                                     <div class="small text-secondary mb-1">Email</div>
-                                    <div class="fw-medium">@(Model.Usuario?.Email ?? "Email no disponible")</div>
+                                    <div class="fw-medium">@(Model.UsuarioEmail ?? "Email no disponible")</div>
                                 </div>
                                 <div class="mb-3">
                                     <div class="small text-secondary mb-1">Teléfono</div>
-                                    <div class="fw-medium">@(Model.Usuario?.Telefono ?? "Teléfono no disponible")</div>
+                                    <div class="fw-medium">@(Model.UsuarioTelefono ?? "Teléfono no disponible")</div>
                                 </div>
                             }
                             else
@@ -209,25 +202,25 @@
                                     <div class="fw-medium">
                                         @switch (Model.Estado)
                                         {
-                                            case EstadoPedido.Pendiente:
+                                            case "Pendiente":
                                                 <span class="text-warning">
                                                     <i class="bi bi-clock me-1"></i>
                                                     Estamos preparando tu pedido
                                                 </span>
                                                 break;
-                                            case EstadoPedido.Enviado:
+                                            case "Enviado":
                                                 <span class="text-info">
                                                     <i class="bi bi-truck me-1"></i>
                                                     Tu pedido está en camino
                                                 </span>
                                                 break;
-                                            case EstadoPedido.Entregado:
+                                            case "Entregado":
                                                 <span class="text-success">
                                                     <i class="bi bi-check-circle me-1"></i>
                                                     Pedido entregado exitosamente
                                                 </span>
                                                 break;
-                                            case EstadoPedido.Cancelado:
+                                            case "Cancelado":
                                                 <span class="text-danger">
                                                     <i class="bi bi-x-circle me-1"></i>
                                                     Pedido cancelado
@@ -236,7 +229,7 @@
                                         }
                                     </div>
                                 </div>
-                                @if (Model.Estado == EstadoPedido.Enviado)
+                                @if (Model.Estado == "Enviado")
                                 {
                                     <div class="mb-3">
                                         <div class="small text-secondary mb-1">Número de Seguimiento</div>
@@ -263,10 +256,10 @@
             </div>
 
             <!-- Productos del Pedido -->
-            <div class="card rounded-3 shadow border-0 mb-4 overflow-hidden">
-                <div class="card-header bg-transparent border-0 p-4 pb-0">
+            <div class="card rounded-3 border p-4 mb-4 overflow-hidden">
+                <div class="card-header bg-transparent border-0 pb-0">
                     <h5 class="mb-3 fw-bold">
-                        @if (esAdmin)
+                        @if (Model.EsAdmin)
                         {
                             <text>Productos del Pedido</text>
                         }
@@ -289,48 +282,48 @@
                                 </tr>
                             </thead>
                             <tbody class="border-top-0">
-                                @foreach (var detalle in Model.DetallesPedido)
+                                @foreach (var productos in Model.Items)
                                 {
                                     <tr>
                                         <td class="py-3">
                                             <div class="d-flex align-items-center">
-                                                <img src="@detalle.Producto.ImagenUrl" class="rounded border shadow-sm me-3"
+                                                <img src="@productos.ProductoImagenUrl" class="rounded border shadow-sm me-3"
                                                      style="width: 50px; height: 50px; object-fit: cover;">
-                                                <span class="fw-semibold text-body">@detalle.Producto.Nombre</span>
+                                                <span class="fw-semibold text-body">@productos.ProductoNombre</span>
                                             </div>
                                         </td>
-                                        <td class="p-3 text-center text-body-secondary">$@detalle.PrecioUnitario</td>
+                                        <td class="p-3 text-center text-body-secondary">$@productos.PrecioUnitario</td>
                                         <td class="p-3 text-center">
-                                            <span class="badge bg-body-secondary text-body border">@detalle.Cantidad</span>
+                                            <span class="badge bg-body-secondary text-body border">@productos.Cantidad</span>
                                         </td>
-                                        <td class="p-3 text-end fw-bold text-body">$@(detalle.Cantidad * detalle.PrecioUnitario)</td>
+                                        <td class="p-3 text-end fw-bold text-body">$@productos.Subtotal</td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                         <!-- Cards en menor tamaño que MD -->
                         <div class="d-md-none">
-                            @foreach (var detalle in Model.DetallesPedido)
+                            @foreach (var productos in Model.Items)
                             {
                                 <div class="card mb-3 shadow-sm border-secondary-subtle bg-body">
                                     <div class="card-body p-3">
                                         <div class="d-flex align-items-center mb-3">
-                                            <img src="@detalle.Producto.ImagenUrl" class="rounded border me-3"
+                                            <img src="@productos.ProductoImagenUrl" class="rounded border me-3"
                                                  style="width: 65px; height: 65px; object-fit: cover;">
                                             <div class="overflow-hidden">
-                                                <h6 class="mb-1 fw-bold text-body text-truncate">@detalle.Producto.Nombre</h6>
-                                                <small class="text-body-secondary">Unitario: $@detalle.PrecioUnitario</small>
+                                                <h6 class="mb-1 fw-bold text-body text-truncate">@productos.ProductoNombre</h6>
+                                                <small class="text-body-secondary">Unitario: $@productos.PrecioUnitario</small>
                                             </div>
                                         </div>
 
                                         <div class="row g-0 border-top pt-2 mt-2">
                                             <div class="col-6">
                                                 <span class="d-block text-body-secondary small text-uppercase fw-semibold">Cantidad</span>
-                                                <span class="text-body fw-bold">@detalle.Cantidad</span>
+                                                <span class="text-body fw-bold">@productos.Cantidad</span>
                                             </div>
                                             <div class="col-6 text-end">
                                                 <span class="d-block text-body-secondary small text-uppercase fw-semibold">Subtotal</span>
-                                                <span class="fw-bold fs-5">$@(detalle.Cantidad * detalle.PrecioUnitario)</span>
+                                                <span class="fw-bold fs-5">$@productos.Subtotal</span>
                                             </div>
                                         </div>
                                     </div>
@@ -342,10 +335,10 @@
             </div>
 
             <!-- Historial de Cambios -->
-            <div class="card rounded-3 shadow border-0 mb-4 overflow-hidden">
+            <div class="card rounded-3 mb-4 overflow-hidden">
                 <div class="card-header bg-transparent border-0 p-4 pb-0">
                     <h5 class="mb-0 fw-bold">
-                        @if (esAdmin)
+                        @if (Model.EsAdmin)
                         {
                             <text>Historial de Cambios</text>
                         }
@@ -364,7 +357,7 @@
                             </div>
                             <div class="ps-2">
                                 <h6 class="fw-semibold mb-1">
-                                    @if (esAdmin)
+                                    @if (Model.EsAdmin)
                                     {
                                         <text>Pedido creado</text>
                                     }
@@ -375,7 +368,7 @@
                                 </h6>
                                 <p class="mb-0 text-muted">@Model.FechaPedido.ToString("dd/MM/yyyy HH:mm")</p>
                                 <small class="text-muted">
-                                    @if (esAdmin)
+                                    @if (Model.EsAdmin)
                                     {
                                         <text>Estado inicial: Pendiente</text>
                                     }
@@ -387,7 +380,7 @@
                             </div>
                         </div>
 
-                        @if (Model.Estado == EstadoPedido.Enviado || Model.Estado == EstadoPedido.Entregado)
+                        @if (Model.Estado == "Enviado" || Model.Estado == "Entregado")
                         {
                             <div class="position-relative pb-4">
                                 <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-info z-1"
@@ -396,7 +389,7 @@
                                 </div>
                                 <div class="ps-2">
                                     <h6 class="fw-semibold mb-1">
-                                        @if (esAdmin)
+                                        @if (Model.EsAdmin)
                                         {
                                             <text>Pedido enviado</text>
                                         }
@@ -405,9 +398,9 @@
                                             <text>Pedido en camino</text>
                                         }
                                     </h6>
-                                    <p class="mb-0 text-muted">@(Model.Estado == EstadoPedido.Enviado ? Model.FechaEnvio?.ToString("dd/MM/yyyy HH:mm") : Model.FechaEntrega?.ToString("dd/MM/yyyy HH:mm"))</p>
+                                    <p class="mb-0 text-muted">@(Model.Estado == "Enviado" ? Model.FechaEnvio?.ToString("dd/MM/yyyy HH:mm") : Model.FechaEntrega?.ToString("dd/MM/yyyy HH:mm"))</p>
                                     <small class="text-muted">
-                                        @if (esAdmin)
+                                        @if (Model.EsAdmin)
                                         {
                                             <text>Cambio de estado: Pendiente → Enviado</text>
                                         }
@@ -420,7 +413,7 @@
                             </div>
                         }
 
-                        @if (Model.Estado == EstadoPedido.Entregado)
+                        @if (Model.Estado == "Entregado")
                         {
                             <div class="position-relative pb-4">
                                 <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-success z-1"
@@ -429,7 +422,7 @@
                                 </div>
                                 <div class="ps-2">
                                     <h6 class="fw-semibold mb-1">
-                                        @if (esAdmin)
+                                        @if (Model.EsAdmin)
                                         {
                                             <text>Pedido entregado</text>
                                         }
@@ -440,7 +433,7 @@
                                     </h6>
                                     <p class="mb-0 text-muted">@Model.FechaEntrega?.ToString("dd/MM/yyyy HH:mm")</p>
                                     <small class="text-muted">
-                                        @if (esAdmin)
+                                        @if (Model.EsAdmin)
                                         {
                                             <text>Cambio de estado: Enviado → Entregado</text>
                                         }
@@ -453,7 +446,7 @@
                             </div>
                         }
 
-                        @if (Model.Estado == EstadoPedido.Cancelado)
+                        @if (Model.Estado == "Cancelado")
                         {
                             <div class="position-relative pb-4">
                                 <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-danger z-1"
@@ -464,7 +457,7 @@
                                     <h6 class="fw-semibold mb-1">Pedido cancelado</h6>
                                     <p class="mb-0 text-muted">@Model.FechaCancelado?.ToString("dd/MM/yyyy HH:mm")</p>
                                     <small class="text-muted">
-                                        @if (esAdmin)
+                                        @if (Model.EsAdmin)
                                         {
                                             <text>Cambio de estado: Pendiente → Cancelado</text>
                                         }
@@ -484,18 +477,18 @@
         <!-- Resumen y Acciones -->
         <div class="col-lg-4">
             <!-- Resumen del Pedido -->
-            <div class="card rounded-3 shadow border-0 mb-4 overflow-hidden">
+            <div class="card rounded-3 mb-4 overflow-hidden">
                 <div class="card-header bg-transparent border-0 p-4 pb-0">
                     <h5 class="mb-0 fw-bold">Resumen del Pedido</h5>
                 </div>
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
                         <span>Subtotal</span>
-                        <div class="fw-medium">@subtotal.ToString("C0")</div>
+                        <div class="fw-medium">@Model.Subtotal.ToString("C0")</div>
                     </div>
                     <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
                         <span>IVA (19%)</span>
-                        <div class="fw-medium">@impuestos.ToString("C0")</div>
+                        <div class="fw-medium">@Model.IVA.ToString("C0")</div>
                     </div>
                     <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
                         <span>Envío</span>
@@ -503,31 +496,31 @@
                     </div>
                     <div class="d-flex justify-content-between mt-4 pt-3">
                         <span>Total</span>
-                        <div class="fw-medium fs-4">@totalConImpuestos.ToString("C0")</div>
+                        <div class="fw-medium fs-4">@Model.Total.ToString("C0")</div>
                     </div>
                 </div>
             </div>
 
             <!-- Datos de entrega -->
-            <div class="card rounded-3 shadow border-0 mb-4 overflow-hidden">
+            <div class="card rounded-3 mb-4 overflow-hidden">
                 <div class="card-header bg-transparent border-0 p-4 pb-0">
                     <h5 class="mb-0 fw-bold">Datos de entrega</h5>
                 </div>
                 <div class="card-body p-4">
                     <address class="mb-0">
-                        <i class="bi bi-person"></i> @(Model.Usuario?.Nombre ?? "Cliente")<br>
+                        <i class="bi bi-person"></i> @(Model.UsuarioNombre ?? "Cliente")<br>
                         @* <i class="bi bi-geo-alt"></i>  @(Model.Usuario?.Direccion ?? "Dirección no especificada")<br> *@
-                        <i class="bi bi-telephone me-1"></i> @(Model.Usuario?.Telefono ?? "No disponible")<br>
-                        <i class="bi bi-envelope me-1"></i> @(Model.Usuario?.Email ?? "No disponible")
+                        <i class="bi bi-telephone me-1"></i> @(Model.UsuarioTelefono ?? "No disponible")<br>
+                        <i class="bi bi-envelope me-1"></i> @(Model.UsuarioEmail ?? "No disponible")
                     </address>
                 </div>
             </div>
 
             <!-- Acciones del Pedido -->
-            <div class="card rounded-3 shadow border-0 mb-4 overflow-hidden">
+            <div class="card rounded-3 mb-4 overflow-hidden">
                 <div class="card-header bg-transparent border-0 p-4 pb-0">
                     <h5 class="mb-0 fw-bold">
-                        @if (esAdmin)
+                        @if (Model.EsAdmin)
                         {
                             <text>Acciones Administrativas</text>
                         }
@@ -538,9 +531,9 @@
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    @if (esAdmin)
+                    @if (Model.EsAdmin)
                     {
-                        @if (Model.Estado == EstadoPedido.Pendiente)
+                        @if (Model.Estado == "Pendiente")
                         {
                             <button class="btn btn-info btn-lg w-100 mb-3 btn-enviar"
                                     data-pedido-id="@Model.PedidoId">
@@ -552,7 +545,7 @@
                                 <i class="bi bi-x-circle me-2"></i>Cancelar Pedido
                             </button>
                         }
-                        else if (Model.Estado == EstadoPedido.Enviado && (esAdmin || esRepartidor))
+                        else if (Model.Estado == "Enviado" && (Model.EsAdmin || Model.EsRepartidor))
                         {
                             <button class="btn btn-success btn-lg w-100 btn-entregar"
                                     data-pedido-id="@Model.PedidoId">
@@ -567,9 +560,9 @@
                             </div>
                         }
                     }
-                    else if (esPropioPedido)
+                    else if (Model.EsPropioPedido)
                     {
-                        @if (Model.Estado == EstadoPedido.Pendiente)
+                        @if (Model.Estado == "Pendiente")
                         {
                             <button class="btn btn-outline-danger btn-lg w-100 mb-3 btn-cancelar"
                                     data-pedido-id="@Model.PedidoId">
@@ -577,7 +570,7 @@
                             </button>
                         }
 
-                        @if (Model.Estado == EstadoPedido.Entregado)
+                        @if (Model.Estado == "Entregado")
                         {
                             <a asp-controller="Productos" asp-action="Index" class="btn btn-primary btn-lg w-100 mb-3">
                                 <i class="bi bi-cart-plus me-2"></i>Comprar de Nuevo
@@ -606,7 +599,7 @@
 
 <!-- Formularios Ocultos -->
 <div class="d-none">
-    @if (esAdmin)
+    @if (Model.EsAdmin)
     {
         <form id="enviarPedido@(Model.PedidoId)" asp-action="Enviar" method="post">
             @Html.AntiForgeryToken()

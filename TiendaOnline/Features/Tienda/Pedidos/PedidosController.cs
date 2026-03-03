@@ -59,8 +59,53 @@ namespace TiendaOnline.Features.Tienda.Pedidos
             if (pedido == null)
                 return NotFound();
 
-            ViewData["Title"] = $"Pedido #{pedido.PedidoId.ToString("D6")}";
-            return View(pedido);
+            var subtotal = pedido.Items.Sum(d => d.Cantidad * d.PrecioUnitario);
+            var iva = subtotal * 0.19m;
+
+            var viewModel = new PedidoDetalleViewModel
+            {
+                PedidoId = pedido.PedidoId,
+                FechaPedido = pedido.FechaPedido,
+                FechaEnvio = pedido.FechaEnvio,
+                FechaEntrega = pedido.FechaEntrega,
+                FechaCancelado = pedido.FechaCancelado,
+                Estado = pedido.Estado.ToString(),
+
+                UsuarioNombre = pedido.UsuarioNombre,
+                UsuarioEmail = pedido.UsuarioEmail,
+                UsuarioTelefono = pedido.UsuarioTelefono,
+
+                Items = pedido.Items.Select(d => new PedidoItemViewModel
+                {
+                    ProductoNombre = d.ProductoNombre,
+                    ProductoImagenUrl = d.ProductoImagenUrl,
+                    Cantidad = d.Cantidad,
+                    PrecioUnitario = d.PrecioUnitario
+                }).ToList(),
+
+                Subtotal = subtotal,
+                IVA = iva,
+                Total = subtotal + iva,
+
+                NumeroSeguimiento = pedido.Estado == EstadoPedido.Enviado
+                    ? $"TRK{pedido.PedidoId:D6}CO"
+                    : null,
+
+                FechaEstimadaEntrega = pedido.Estado == EstadoPedido.Enviado
+                    ? pedido.FechaPedido.AddDays(3)
+                    : null,
+
+                EsAdmin = User.IsInRole("Administrador"),
+                EsRepartidor = User.IsInRole("Repartidor"),
+                EsPropioPedido = pedido.UsuarioId.ToString() ==
+                                 User.FindFirstValue(ClaimTypes.NameIdentifier),
+
+                PuedeCancelar = pedido.Estado == EstadoPedido.Pendiente,
+                PuedeEnviar = pedido.Estado == EstadoPedido.Pendiente,
+                PuedeEntregar = pedido.Estado == EstadoPedido.Enviado
+            };
+
+            return View(viewModel);
         }
 
         [HttpPost("[action]")]

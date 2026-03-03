@@ -18,6 +18,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
         public async Task<List<PedidoListadoUsuarioDto>> ObtenerPedidosDeUsuarioAsync(int id)
         {
             return await _context.Pedidos
+                .AsNoTracking()
                 .Where(p => p.UsuarioId == id)
                 .Select(p => new PedidoListadoUsuarioDto
                 {
@@ -35,18 +36,41 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 .ToListAsync();
         }
 
-        public async Task<Pedido?> ObtenerPedidoConDetallesAsync(int id)
+        public async Task<PedidoDetallesDto?> ObtenerPedidoConDetallesAsync(int id)
         {
             return await _context.Pedidos
-                .Include(p => p.Usuario)
-                .Include(p => p.DetallesPedido)
-                .ThenInclude(d => d.Producto)
-                .FirstOrDefaultAsync(p => p.PedidoId == id);
+                .AsNoTracking()
+                .Where(p => p.PedidoId == id)
+                .Select(p => new PedidoDetallesDto
+                {
+                    PedidoId = p.PedidoId,
+                    FechaPedido = p.FechaPedido,
+                    FechaEnvio = p.FechaEnvio,
+                    FechaEntrega = p.FechaEntrega,
+                    FechaCancelado = p.FechaCancelado,
+                    Estado = p.Estado,
+
+                    UsuarioId = p.Usuario.UsuarioId,
+                    UsuarioNombre = p.Usuario.Nombre,
+                    UsuarioEmail = p.Usuario.Email,
+                    UsuarioTelefono = p.Usuario.Telefono,
+
+                    Items = p.DetallesPedido.Select(d => new PedidoItemDto
+                    {
+                        ProductoNombre = d.Producto.Nombre,
+                        ProductoImagenUrl = d.Producto.ImagenUrl,
+                        Cantidad = d.Cantidad,
+                        PrecioUnitario = d.PrecioUnitario
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(string? busqueda, EstadoPedido? estado, DateTime? desde, DateTime? hasta, string? monto, int pagina, int cantidad)
         {
-            var query = _context.Pedidos.AsQueryable();
+            var query = _context.Pedidos
+                .AsNoTracking()
+                .AsQueryable();
 
             // Filtros
             if (!string.IsNullOrEmpty(busqueda))
