@@ -1,0 +1,17 @@
+﻿@{
+    // Usamos la ruta del controlador para decidir el layout
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+
+    if(controller != null && controller.StartsWith("Admin", StringComparison.OrdinalIgnoreCase))
+    {
+        Layout = "~/Features/Shared/_AdminLayout.cshtml";
+    } 
+    else if (controller != null && controller.StartsWith("Repartidor", StringComparison.OrdinalIgnoreCase))
+    {
+        Layout = "~/Features/Shared/_RepartidorLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Features/Shared/_TiendaLayout.cshtml";
+    }
+}

@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Features.Admin.Auditorias
+﻿namespace TiendaOnline.Features.Auditorias
 {
     public class LogsFiltroViewModel
     {

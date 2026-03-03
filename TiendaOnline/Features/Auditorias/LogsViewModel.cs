@@ -1,7 +1,7 @@
 ﻿using TiendaOnline.Application.Auditoria;
 using TiendaOnline.Application.Common;
 
-namespace TiendaOnline.Features.Admin.Auditorias
+namespace TiendaOnline.Features.Auditorias
 {
     public class LogsViewModel
     {

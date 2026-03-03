@@ -31,6 +31,8 @@ namespace TiendaOnline.Extensions
                         // Este es el "Rol" o "Contexto" (Admin, Tienda, etc.)
                         string contextFolder = parts[featureIndex + 1];
 
+                        locations.Add($"/Features/{contextFolder}/{{0}}.cshtml");
+
                         // Ruta dinámica: /Features/Admin/Productos/Catalogo.cshtml
                         locations.Add($"/Features/{contextFolder}/{{1}}/{{0}}.cshtml");
                     }

@@ -2,15 +2,15 @@
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Application.Auditoria;
 
-namespace TiendaOnline.Features.Admin.Auditorias
+namespace TiendaOnline.Features.Auditorias
 {
     [Route("Admin/[controller]")]
-    [Authorize(Roles= "Administrador")]
-    public class AuditoriasController : Controller
+    [Authorize(Roles="Administrador")]
+    public class AdminAuditoriasController : Controller
     {
         private readonly IAuditoriaService _auditoriaService;
 
-        public AuditoriasController(IAuditoriaService auditoriaService)
+        public AdminAuditoriasController(IAuditoriaService auditoriaService)
         {
             _auditoriaService = auditoriaService;
         }
@@ -18,8 +18,6 @@ namespace TiendaOnline.Features.Admin.Auditorias
         [HttpGet("[action]")]
         public async Task<IActionResult> Logs(LogsFiltroViewModel filtro)
         {
-            ViewData["Title"] = "Auditoría del Sistema";
-
             var request = new ObtenerLogsRequest
             {
                 Busqueda = filtro.Busqueda,
