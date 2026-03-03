@@ -4,14 +4,14 @@ using System.Security.Claims;
 using TiendaOnline.Application.Auth;
 using TiendaOnline.Domain.Exceptions;
 
-namespace TiendaOnline.Features.Tienda.Account
+namespace TiendaOnline.Features.Accounts
 {
     [Route("[controller]")]
-    public class AccountController : Controller
+    public class AccountsController : Controller
     {
         private readonly IAuthService _authService;
 
-        public AccountController(IAuthService authService)
+        public AccountsController(IAuthService authService)
         {
             _authService = authService;
         }
