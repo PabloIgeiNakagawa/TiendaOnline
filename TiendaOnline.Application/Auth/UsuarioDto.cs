@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Features.Tienda.Account
+﻿namespace TiendaOnline.Application.Auth
 {
     public class UsuarioDto
     {

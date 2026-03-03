@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using TiendaOnline.Domain.Entities;
+using TiendaOnline.Application.Auth;
 using TiendaOnline.Domain.Exceptions;
 
 namespace TiendaOnline.Features.Tienda.Account
@@ -19,7 +19,6 @@ namespace TiendaOnline.Features.Tienda.Account
         [HttpGet("[action]")]
         public IActionResult Register()
         {
-            ViewData["Title"] = "Registrarse";
             return View();
         }
 
@@ -39,10 +38,10 @@ namespace TiendaOnline.Features.Tienda.Account
                     Telefono = model.Telefono,
                     FechaNacimiento = model.FechaNacimiento,
                     Contrasena = model.Contrasena,
-                    RolId = (int)Rol.Usuario
+                    RolId = model.RolId
                 };
 
-                await _authService.Register(dto);
+                await _authService.RegisterAsync(dto);
                 TempData["MensajeExito"] = "¡Te has registrado!";
                 return RedirectToAction("Login");
             }
@@ -56,7 +55,6 @@ namespace TiendaOnline.Features.Tienda.Account
         [HttpGet("[action]")]
         public IActionResult Login()
         {
-            ViewData["Title"] = "Iniciar Sesión";
             return View();
         }
 
@@ -66,13 +64,24 @@ namespace TiendaOnline.Features.Tienda.Account
         {
             if (!ModelState.IsValid) return View(model);
 
-            var principal = await _authService.GenerarPrincipalAsync(model.Email, model.Contrasena);
+            var usuarioDto = await _authService.ValidarCredencialesAsync(model.Email, model.Contrasena);
 
-            if (principal == null)
+            if (usuarioDto == null)
             {
-                ModelState.AddModelError("", "Email o contraseña incorrectos.");
+                ModelState.AddModelError("", "Email o contraseña incorrectas.");
                 return View(model);
             }
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, usuarioDto.UsuarioId.ToString()),
+                new Claim(ClaimTypes.Name, usuarioDto.Nombre),
+                new Claim(ClaimTypes.Email, usuarioDto.Email),
+                new Claim(ClaimTypes.Role, usuarioDto.Rol)
+            };
+
+            var identity = new ClaimsIdentity(claims, "CookieAuth");
+            var principal = new ClaimsPrincipal(identity);
 
             await HttpContext.SignInAsync("CookieAuth", principal, new AuthenticationProperties
             {

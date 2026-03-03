@@ -1,0 +1,63 @@
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using TiendaOnline.Application.Auth;
+using TiendaOnline.Domain.Entities;
+using TiendaOnline.Domain.Exceptions;
+using TiendaOnline.Infrastructure.Persistence;
+
+namespace TiendaOnline.Infrastructure.Services.Auth
+{
+    public class AuthService : IAuthService
+    {
+        private readonly TiendaContext _context;
+        private readonly IPasswordHasher<Usuario> _passwordHasher;
+
+        public AuthService(TiendaContext context, IPasswordHasher<Usuario> passwordHasher)
+        {
+            _context = context;
+            _passwordHasher = passwordHasher;
+        }
+
+        public async Task<UsuarioDto?> ValidarCredencialesAsync(string email, string password)
+        {
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+            if (usuario == null) return null;
+
+            var resultado = _passwordHasher.VerifyHashedPassword(usuario, usuario.Contrasena, password);
+            if (resultado == PasswordVerificationResult.Failed) return null;
+
+            return new UsuarioDto
+            {
+                UsuarioId = usuario.UsuarioId,
+                Nombre = usuario.Nombre,
+                Email = usuario.Email,
+                Rol = usuario.Rol.ToString()
+            };
+        }
+
+        public async Task RegisterAsync(RegisterDto model)
+        {
+            model.Email = model.Email.Trim().ToLower();
+
+            if (await _context.Usuarios.AnyAsync(u => u.Email == model.Email))
+                throw new EmailDuplicadoException(model.Email);
+
+            var nuevoUsuario = new Usuario
+            {
+                Nombre = model.Nombre,
+                Apellido = model.Apellido,
+                Email = model.Email,
+                Telefono = model.Telefono,
+                FechaNacimiento = model.FechaNacimiento,
+                Rol = (Rol)model.RolId,
+                FechaCreacion = DateTime.Now
+            };
+
+            nuevoUsuario.Contrasena = _passwordHasher.HashPassword(nuevoUsuario, model.Contrasena);
+
+            _context.Usuarios.Add(nuevoUsuario);
+            await _context.SaveChangesAsync();
+        }
+
+    }
+}

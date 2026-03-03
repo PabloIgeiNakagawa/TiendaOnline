@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TiendaOnline.Features.Tienda.Account
+namespace TiendaOnline.Application.Auth
 {
     public class RegisterDto
     {
