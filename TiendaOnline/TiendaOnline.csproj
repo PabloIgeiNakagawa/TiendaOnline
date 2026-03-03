@@ -203,6 +203,7 @@
 
   <ItemGroup>
     <Folder Include="Features\Admin\Auditorias\" />
+    <Folder Include="Features\Admin\Reportes\" />
   </ItemGroup>
 
 </Project>

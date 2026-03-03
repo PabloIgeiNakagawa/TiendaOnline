@@ -1,5 +1,8 @@
-﻿@using TiendaOnline.Features.Admin.Reportes
+﻿@using TiendaOnline.Features.Reportes
 @model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
 @section Styles{
     <style>
         @@media print {
@@ -246,7 +249,7 @@
                     <div class="list-group list-group-flush">
                         @foreach (var producto in Model.TopProductos.Take(5))
                         {
-                            <div class="list-group-item border-0 px-0">
+                            <div class="list-group-item border-0">
                                 <div class="d-flex align-items-center">
                                     <img src="@producto.ImagenUrl" alt="@producto.Nombre"
                                          class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
@@ -339,7 +342,7 @@
                     <div class="list-group list-group-flush">
                         @foreach (var producto in Model.ProductosBajoStock.Take(5))
                         {
-                            <div class="list-group-item border-0 px-0">
+                            <div class="list-group-item border-0">
                                 <div class="d-flex align-items-center">
                                     <img src="@producto.ImagenUrl" alt="@producto.Nombre"
                                          class="rounded me-3" style="width: 45px; height: 45px; object-fit: cover;">

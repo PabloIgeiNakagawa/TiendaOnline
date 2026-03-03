@@ -2,15 +2,15 @@
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Application.Reportes;
 
-namespace TiendaOnline.Features.Admin.Reportes
+namespace TiendaOnline.Features.Reportes
 {
     [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
-    public class ReportesController : Controller
+    public class AdminReportesController : Controller
     {
         private readonly IReportesService _reportesService;
 
-        public ReportesController(IReportesService reportesService)
+        public AdminReportesController(IReportesService reportesService)
         {
             _reportesService = reportesService;
         }
@@ -18,8 +18,6 @@ namespace TiendaOnline.Features.Admin.Reportes
         [HttpGet("[action]")]
         public async Task<IActionResult> Dashboard()
         {
-            ViewData["Title"] = "Dashboard";
-
             var datosDto = await _reportesService.ObtenerDatosAsync();
 
             var viewModel = new DashboardViewModel

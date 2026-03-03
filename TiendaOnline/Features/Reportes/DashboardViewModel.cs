@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Features.Admin.Reportes
+﻿namespace TiendaOnline.Features.Reportes
 {
     // ViewModel principal del Dashboard
     public class DashboardViewModel
