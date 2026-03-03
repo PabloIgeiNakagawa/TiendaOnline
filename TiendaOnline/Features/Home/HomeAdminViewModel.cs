@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Features.Admin.HomeAdmin
+﻿namespace TiendaOnline.Features.Home
 {
     public class HomeAdminViewModel
     {
