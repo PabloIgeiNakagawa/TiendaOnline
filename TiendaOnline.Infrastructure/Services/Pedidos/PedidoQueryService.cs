@@ -15,9 +15,24 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             _context = context;
         }
 
-        public async Task<List<Pedido>> ObtenerPedidosDeUsuarioAsync(int id)
+        public async Task<List<PedidoListadoUsuarioDto>> ObtenerPedidosDeUsuarioAsync(int id)
         {
-            return await _context.Pedidos.Where(p => p.UsuarioId == id).ToListAsync();
+            return await _context.Pedidos
+                .Where(p => p.UsuarioId == id)
+                .Select(p => new PedidoListadoUsuarioDto
+                {
+                    PedidoId = p.PedidoId,
+                    FechaPedido = p.FechaPedido,
+                    FechaEnvio = p.FechaEnvio,
+                    FechaEntrega = p.FechaEntrega,
+                    FechaCancelado = p.FechaCancelado,
+                    Estado = p.Estado,
+
+                    Productos = p.DetallesPedido
+                                .Select(d => d.Producto.Nombre)
+                                .ToList()
+                })
+                .ToListAsync();
         }
 
         public async Task<Pedido?> ObtenerPedidoConDetallesAsync(int id)

@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Application.Pedidos.Query;
+using TiendaOnline.Domain.Entities;
 
 namespace TiendaOnline.Features.Tienda.Pedidos
 {
@@ -20,7 +21,6 @@ namespace TiendaOnline.Features.Tienda.Pedidos
         [HttpGet("[action]")]
         public async Task<IActionResult> MisPedidos()
         {
-            ViewData["Title"] = "Mis Pedidos";
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (claim == null)
             {
@@ -31,7 +31,25 @@ namespace TiendaOnline.Features.Tienda.Pedidos
 
             var pedidos = await _pedidoQueryService.ObtenerPedidosDeUsuarioAsync(usuarioId);
 
-            return View(pedidos);
+            var viewmodel = new MisPedidosViewModel
+            {
+                Pedidos = pedidos
+                    .OrderByDescending(p => p.FechaPedido)
+                    .Select(p => new PedidoListaViewModel
+                    {
+                        PedidoId = p.PedidoId,
+                        FechaPedido = p.FechaPedido,
+                        FechaEnvio = p.FechaEnvio,
+                        FechaEntrega = p.FechaEntrega,
+                        FechaCancelado = p.FechaCancelado,
+                        Productos = p.Productos,
+                        Estado = p.Estado.ToString(),
+                        EstadoCss = ObtenerClaseEstado(p.Estado)
+                    })
+                    .ToList()
+            };
+
+            return View(viewmodel);
         }
 
         [HttpGet("[action]")]
@@ -66,6 +84,18 @@ namespace TiendaOnline.Features.Tienda.Pedidos
 
             TempData["MensajeExito"] = "¡Pedido realizado con éxito!";
             return RedirectToAction("Detalles", new { id = resultado });
+        }
+
+        private string ObtenerClaseEstado(EstadoPedido estado)
+        {
+            return estado switch
+            {
+                EstadoPedido.Pendiente => "text-bg-warning",
+                EstadoPedido.Enviado => "text-bg-primary",
+                EstadoPedido.Entregado => "text-bg-success",
+                EstadoPedido.Cancelado => "text-bg-danger",
+                _ => "text-bg-secondary"
+            };
         }
     }
 }
