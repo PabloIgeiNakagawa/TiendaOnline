@@ -1,6 +1,4 @@
 ﻿@using TiendaOnline.Application.Carritos
-@using TiendaOnline.Extensions
-@using TiendaOnline.Features.Tienda.Carritos
 @model List<ItemCarrito>
 @{
     bool usuarioEstaAutenticado = User.Identity != null && User.Identity.IsAuthenticated;
@@ -13,10 +11,10 @@
             transition: all 0.3s ease;
         }
 
-            .carrito-item:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            }
+        .carrito-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
     </style>
 }
 
@@ -192,10 +190,18 @@
                             <i class="bi bi-credit-card"></i>
                             Finalizar compra
                         </a>
-                        <div class="mt-2">
-                            <a asp-controller="Usuarios" asp-action="Register" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">
-                                Para finalizar la compra debes tener una cuenta
-                            </a>
+
+                        <div class="mt-3 text-center">
+                            <p class="mb-1 small text-muted">Para finalizar la compra debes iniciar sesión</p>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a asp-controller="Accounts" asp-action="Login" class="fw-bold text-decoration-none">
+                                    Ingresar
+                                </a>
+                                <span class="text-muted">|</span>
+                                <a asp-controller="Accounts" asp-action="Register" class="fw-bold text-decoration-none">
+                                    Crear cuenta
+                                </a>
+                            </div>
                         </div>
                     }
                 </div>

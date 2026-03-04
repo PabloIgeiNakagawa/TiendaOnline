@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Application.Carritos;
 
-namespace TiendaOnline.Features.Tienda.Carritos
+namespace TiendaOnline.Features.Carritos
 {
     [Route("Carrito")]
     public class CarritosController : Controller
