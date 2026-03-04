@@ -23,12 +23,10 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
         public async Task<int> CrearPedidoAsync(int usuarioId)
         {
             var carrito = await _carritoService.ObtenerAsync();
-            // Iniciamos una transacción. Si algo falla, NO se resta stock ni se crea pedido.
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                // Traemos todos los productos necesarios en UNA sola consulta (Mejora de rendimiento)
                 var productoIds = carrito.Select(c => c.ProductoId).ToList();
                 var productosDb = await _context.Productos
                     .Where(p => productoIds.Contains(p.ProductoId))
@@ -50,20 +48,8 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     if (producto.Stock < item.Cantidad)
                         throw new Exception($"Sin stock para {producto.Nombre}");
 
-                    // Restamos Stock en la tabla Producto
                     producto.Stock -= item.Cantidad;
 
-                    // Registramos el movimiento de stock (SALIDA)
-                    // Pasamos cantidad negativa porque es una salida
-                    _movimientoStockCommandService.GenerarMovimiento(
-                        producto,
-                        -item.Cantidad,
-                        TipoMovimiento.SalidaVenta,
-                        null, // Se vincula solo al agregar el pedido al contexto
-                        "Venta Pedido Online"
-                    );
-
-                    // Agregamos el detalle al pedido
                     pedido.DetallesPedido.Add(new DetallePedido
                     {
                         ProductoId = producto.ProductoId,
@@ -74,11 +60,26 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 _context.Pedidos.Add(pedido);
 
-                // Guardamos todo junto
                 await _context.SaveChangesAsync();
 
-                // Si llegamos acá, confirmamos los cambios en la DB
+                foreach (var item in carrito)
+                {
+                    var producto = productosDb.First(p => p.ProductoId == item.ProductoId);
+                    producto.Stock -= item.Cantidad;
+
+                    _movimientoStockCommandService.GenerarMovimiento(
+                        producto,
+                        -item.Cantidad,
+                        TipoMovimiento.SalidaVenta,
+                        pedido.PedidoId,
+                        $"Venta Pedido Online #{pedido.PedidoId}"
+                    );
+                }
+
+                await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                await _carritoService.VaciarAsync();
 
                 return pedido.PedidoId;
             }
