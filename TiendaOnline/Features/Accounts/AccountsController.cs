@@ -91,7 +91,7 @@ namespace TiendaOnline.Features.Accounts
 
             var role = principal.FindFirstValue(ClaimTypes.Role);
             return role == "Administrador"
-                ? RedirectToAction("Index", "HomeAdmin")
+                ? RedirectToAction("IndexAdmin", "Home")
                 : RedirectToAction("Index", "Home");
         }
 
