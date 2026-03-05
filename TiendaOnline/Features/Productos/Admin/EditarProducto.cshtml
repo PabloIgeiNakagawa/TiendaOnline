@@ -1,6 +1,8 @@
-﻿@using TiendaOnline.Features.Admin.Productos
+﻿@using TiendaOnline.Features.Productos.Admin
 @model EditarProductoViewModel
-
+@{
+    ViewData["Title"] = "Editar Producto - " + Model.Nombre;
+}
 <div class="container py-4">
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">

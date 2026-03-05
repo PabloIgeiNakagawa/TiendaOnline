@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
-namespace TiendaOnline.Features.Admin.Productos
+namespace TiendaOnline.Features.Productos.Admin
 {
     public class AgregarProductoViewModel
     {

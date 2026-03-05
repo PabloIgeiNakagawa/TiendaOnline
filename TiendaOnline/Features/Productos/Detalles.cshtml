@@ -1,5 +1,8 @@
-﻿@model TiendaOnline.Features.Tienda.Productos.DetallesViewModel
-
+﻿@using TiendaOnline.Features.Productos
+@model DetallesViewModel
+@{
+    ViewData["Title"] = $"Detalles - {Model.Nombre}";
+}
 <!-- Breadcrumb -->
 <nav aria-label="breadcrumb" class="my-4">
     <ol class="breadcrumb">

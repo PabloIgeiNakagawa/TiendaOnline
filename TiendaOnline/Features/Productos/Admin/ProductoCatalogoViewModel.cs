@@ -2,7 +2,7 @@
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Application.Categorias.Commands;
 
-namespace TiendaOnline.Features.Admin.Productos
+namespace TiendaOnline.Features.Productos.Admin
 {
     public class ProductoCatalogoViewModel
     {

@@ -2,7 +2,7 @@
 using TiendaOnline.Application.Categorias.Queries;
 using TiendaOnline.Application.Productos.Queries;
 
-namespace TiendaOnline.Features.Tienda.Productos
+namespace TiendaOnline.Features.Productos
 {
     [Route("[controller]")]
     public class ProductosController : Controller
@@ -19,8 +19,6 @@ namespace TiendaOnline.Features.Tienda.Productos
         [HttpGet]
         public async Task<IActionResult> Index([FromQuery] ObtenerProductosCatalogoRequest request)
         {
-            ViewData["Title"] = "Catálogo de Productos";
-
             var productosPaginados = await _productoQueryService.ObtenerProductosCatalogoAsync(request);
 
             var categoriasRaiz = await _categoriaQueryService.ObtenerCategoriasRaizAsync();
@@ -49,8 +47,6 @@ namespace TiendaOnline.Features.Tienda.Productos
 
             if (producto is null)
                 return NotFound();
-
-            ViewData["Title"] = producto.Nombre;
 
             var vm = new DetallesViewModel
             {

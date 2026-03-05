@@ -7,17 +7,17 @@ using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Domain.Entities;
 
-namespace TiendaOnline.Features.Admin.Productos
+namespace TiendaOnline.Features.Productos.Admin
 {
     [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
-    public class ProductosController : Controller
+    public class AdminProductosController : Controller
     {
         private readonly IProductoCommandService _productoCommandService;
         private readonly IProductoQueryService _productoQueryService;
         private readonly ICategoriaQueryService _categoriaQueryService;
 
-        public ProductosController(IProductoCommandService productoCommandService, IProductoQueryService productoQueryService, ICategoriaQueryService categoriaQueryService)
+        public AdminProductosController(IProductoCommandService productoCommandService, IProductoQueryService productoQueryService, ICategoriaQueryService categoriaQueryService)
         {
             _productoCommandService = productoCommandService;
             _productoQueryService = productoQueryService;
@@ -27,8 +27,6 @@ namespace TiendaOnline.Features.Admin.Productos
         [HttpGet("[action]")]
         public async Task<IActionResult> Catalogo([FromQuery] ObtenerProductosAdminRequest request)
         {
-            ViewData["Title"] = "Catálogo";
-
             // Obtenemos los productos paginados y filtrados
             var pagedResult = await _productoQueryService.ObtenerProductosAdminAsync(request);
 
@@ -58,8 +56,6 @@ namespace TiendaOnline.Features.Admin.Productos
         [HttpGet("[action]")]
         public async Task<IActionResult> AgregarProducto()
         {
-            ViewData["Title"] = "Agregar Producto";
-
             var model = new AgregarProductoViewModel
             {
                 Categorias = await ObtenerListaCategoriasAsync()

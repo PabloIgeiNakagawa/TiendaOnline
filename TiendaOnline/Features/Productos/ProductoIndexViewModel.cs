@@ -2,7 +2,7 @@
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Domain.Entities;
 
-namespace TiendaOnline.Features.Tienda.Productos
+namespace TiendaOnline.Features.Productos
 {
     public class ProductoIndexViewModel
     {
