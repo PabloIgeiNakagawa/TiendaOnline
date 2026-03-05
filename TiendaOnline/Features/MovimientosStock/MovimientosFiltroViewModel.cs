@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Features.Admin.MovimientosStock
+﻿namespace TiendaOnline.Features.MovimientosStock
 {
     public class MovimientosFiltroViewModel
     {

@@ -1,7 +1,8 @@
 ﻿using TiendaOnline.Application.Common;
 using TiendaOnline.Application.MovimientosStock.Queries;
+using TiendaOnline.Features.Shared.ViewModels;
 
-namespace TiendaOnline.Features.Admin.MovimientosStock
+namespace TiendaOnline.Features.MovimientosStock
 {
     public class MovimientosViewModel
     {
@@ -16,5 +17,8 @@ namespace TiendaOnline.Features.Admin.MovimientosStock
 
         // Listas para los Dropdowns de los filtros
         public IEnumerable<TipoMovimientoDto> TiposMovimiento { get; set; } = new List<TipoMovimientoDto>();
+
+        // Filtros
+        public ResumenResultadosViewModel ResumenFiltros { get; set; } = new();
     }
 }

@@ -1,4 +1,5 @@
 ﻿@using TiendaOnline.Features.Categorias
+@using TiendaOnline.Features.Shared.ViewModels
 @model CategoriaListadoViewModel
 
 <div class="container-fluid py-4">
@@ -195,52 +196,11 @@
     </div>
 
     <!-- Paginación -->
-    <nav aria-label="Navegación de categorías" class="mt-3">
-        <ul class="pagination justify-content-center justify-content-md-end mb-0">
-            @{
-                int paginaActual = Model.Paginacion.PaginaActual;
-                int totalPaginas = Model.Paginacion.TotalPaginas;
-                int radio = 2;
-            }
-
-            @* Anterior *@
-            <li class="page-item @(paginaActual == 1 ? "disabled" : "")">
-                <a class="page-link" asp-action="Listado"
-                   asp-route-pagina="@(paginaActual - 1)"
-                   asp-route-busqueda="@Model.Busqueda"
-                   asp-route-nivel="@Model.NivelSeleccionado">
-                    <i class="bi bi-chevron-left"></i>
-                </a>
-            </li>
-
-            @for (int i = 1; i <= totalPaginas; i++)
-            {
-                if (i == 1 || i == totalPaginas || (i >= paginaActual - radio && i <= paginaActual + radio))
-                {
-                    <li class="page-item @(i == paginaActual ? "active" : "")">
-                        <a class="page-link" asp-action="Listado"
-                           asp-route-pagina="@i"
-                           asp-route-busqueda="@Model.Busqueda"
-                           asp-route-nivel="@Model.NivelSeleccionado">@i</a>
-                    </li>
-                }
-                else if (i == paginaActual - radio - 1 || i == paginaActual + radio + 1)
-                {
-                    <li class="page-item disabled"><span class="page-link">...</span></li>
-                }
-            }
-
-            @* Siguiente *@
-            <li class="page-item @(paginaActual == totalPaginas ? "disabled" : "")">
-                <a class="page-link" asp-action="Listado"
-                   asp-route-pagina="@(paginaActual + 1)"
-                   asp-route-busqueda="@Model.Busqueda"
-                   asp-route-nivel="@Model.NivelSeleccionado">
-                    <i class="bi bi-chevron-right"></i>
-                </a>
-            </li>
-        </ul>
-    </nav>
+    <partial name="_Paginacion" model="@(new PaginacionViewModel { 
+        PaginaActual = Model.Paginacion.PaginaActual, 
+        TotalPaginas = Model.Paginacion.TotalPaginas,
+        Accion = "Listado"
+    })" />
 </div>
 
 <!-- Modal eliminar categoria -->
