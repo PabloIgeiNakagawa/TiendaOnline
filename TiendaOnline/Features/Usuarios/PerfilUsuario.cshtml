@@ -1,6 +1,8 @@
-﻿@using TiendaOnline.Features.Tienda.Usuarios
+﻿@using TiendaOnline.Features.Usuarios
 @model UsuarioPerfilViewModel
-
+@{
+    ViewData["Title"] = Model.esPropioPerfil ? "Mi Perfil" : "Perfil de Usuario";
+}
 <div class="container-fluid py-4">
     <!-- Migas de Pan -->
     <nav aria-label="breadcrumb" class="mb-4" style="--bs-breadcrumb-divider: '›'; --bs-breadcrumb-divider-color: #6c757d;">

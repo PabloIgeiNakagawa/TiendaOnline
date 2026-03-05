@@ -1,4 +1,8 @@
-﻿@model TiendaOnline.Domain.Entities.Usuario
+﻿@using TiendaOnline.Features.Usuarios.Admin
+@model CrearUsuarioViewModel
+@{
+    ViewData["Title"] = "Crear Usuario";
+}
 
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -15,7 +19,7 @@
             <!-- Formulario -->
             <div class="shadow border-0 rounded-4 overflow-hidden">
                 <div class="p-5">
-                    <form asp-area="Admin" asp-controller="Usuarios" asp-action="CrearUsuario" method="post" id="formularioRegistro" novalidate>
+                    <form asp-action="CrearUsuario" method="post" id="formularioRegistro" novalidate>
                         @Html.AntiForgeryToken()
 
                         <!-- Información Personal -->
@@ -117,13 +121,13 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="form-floating">
-                                        <select asp-for="Rol" class="form-select" id="campoRol" asp-items="Html.GetEnumSelectList<Rol>()" required>
+                                        <select asp-for="RolId" class="form-select" id="campoRol" asp-items="Model.RolesDisponibles" required>
                                             <option value="" disabled selected>Seleccione un rol</option>
                                         </select>
                                         <label for="campoRol">
                                             <i class="bi bi-shield me-1"></i>Rol del Usuario
                                         </label>
-                                        <span asp-validation-for="Rol" class="text-danger small"></span>
+                                        <span asp-validation-for="RolId" class="text-danger small"></span>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -144,7 +148,7 @@
 
                         <!-- Botones -->
                         <div class="d-lg-flex justify-content-between gap-2 align-items-center pt-3 border-top">
-                            <a asp-area="Admin" asp-controller="Usuarios" asp-action="Listado" class="btn btn-outline-danger fw-medium rounded-3 d-block my-2 my-lg-0">
+                            <a asp-action="Listado" class="btn btn-outline-danger fw-medium rounded-3 d-block my-2 my-lg-0">
                                 <i class="bi bi-x-circle me-1"></i>Cancelar
                             </a>
                             <a class="btn btn-outline-secondary fw-medium rounded-3 my-2 my-lg-0 d-block" id="btnLimpiarFormulario">

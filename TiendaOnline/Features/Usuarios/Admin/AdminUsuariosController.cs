@@ -1,29 +1,29 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Application.Usuarios.Queries;
-using TiendaOnline.Domain.Exceptions;
 
-namespace TiendaOnline.Features.Admin.Usuarios
+namespace TiendaOnline.Features.Usuarios.Admin
 {
     [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
-    public class UsuariosController : Controller
+    public class AdminUsuariosController : Controller
     {
         private readonly IUsuarioQueryService _usuarioQueryService;
         private readonly IUsuarioCommandService _usuarioCommandService;
+        private readonly IRolQueryService _rolService;
 
-        public UsuariosController(IUsuarioQueryService usuarioQueryService, IUsuarioCommandService usuarioCommandService)
+        public AdminUsuariosController(IUsuarioQueryService usuarioQueryService, IUsuarioCommandService usuarioCommandService, IRolQueryService rolService)
         {
             _usuarioQueryService = usuarioQueryService;
             _usuarioCommandService = usuarioCommandService;
+            _rolService = rolService;
         }
 
         [HttpGet("[action]")]
         public async Task<IActionResult> Listado(int pagina = 1, int tamanoPagina = 10, string? busqueda = null, string? rol = null, string? estado = null)
         {
-            ViewData["Title"] = "Gestión de Usuarios";
-
             bool? estadoBool = estado switch
             {
                 "activo" => true,
@@ -45,40 +45,50 @@ namespace TiendaOnline.Features.Admin.Usuarios
         }
 
         [HttpGet("[action]")]
-        public IActionResult CrearUsuario()
+        public async Task<IActionResult> CrearUsuarioAsync()
         {
-            ViewData["Title"] = "Crear Usuario";
-            return View();
+            var roles = await _rolService.ObtenerTodosAsync();
+            var model = new CrearUsuarioViewModel();
+
+            model.RolesDisponibles = roles.Select(r => new SelectListItem
+            {
+                Value = r.Id.ToString(),
+                Text = r.Nombre
+            }).ToList();
+
+            return View(model);
         }
 
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CrearUsuario(UsuarioCreateDto model)
+        public async Task<IActionResult> CrearUsuario(CrearUsuarioViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
-
-            try
+            if (!ModelState.IsValid)
             {
-                var dto = new UsuarioCreateDto
+                // Recargar roles si el modelo no es válido
+                var roles = await _rolService.ObtenerTodosAsync();
+                model.RolesDisponibles = roles.Select(r => new SelectListItem
                 {
-                    Nombre = model.Nombre,
-                    Apellido = model.Apellido,
-                    Email = model.Email,
-                    Telefono = model.Telefono,
-                    FechaNacimiento = model.FechaNacimiento,
-                    Contrasena = model.Contrasena,
-                    RolId = model.RolId
-                };
-
-                await _usuarioCommandService.CrearUsuarioAsync(dto);
-                TempData["MensajeExito"] = "Usuario creado correctamente.";
-                return RedirectToAction(nameof(Listado));
-            }
-            catch (EmailDuplicadoException ex)
-            {
-                ModelState.AddModelError("Email", ex.Message);
+                    Value = r.Id.ToString(),
+                    Text = r.Nombre
+                }).ToList();
                 return View(model);
             }
+
+            var dto = new UsuarioCreateDto
+            {
+                Nombre = model.Nombre,
+                Apellido = model.Apellido,
+                Email = model.Email,
+                Telefono = model.Telefono,
+                FechaNacimiento = model.FechaNacimiento,
+                Contrasena = model.Contrasena,
+                RolId = model.RolId
+            };
+
+            await _usuarioCommandService.CrearUsuarioAsync(dto);
+            TempData["MensajeExito"] = "Usuario creado correctamente.";
+            return RedirectToAction(nameof(Listado));
         }
 
         [HttpPost("[action]")]

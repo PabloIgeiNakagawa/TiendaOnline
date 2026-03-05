@@ -3,7 +3,7 @@ using System.Security.Claims;
 using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Application.Usuarios.Queries;
 
-namespace TiendaOnline.Features.Tienda.Usuarios
+namespace TiendaOnline.Features.Usuarios
 {
     [Route("[controller]")]
     public class UsuariosController : Controller
@@ -23,7 +23,7 @@ namespace TiendaOnline.Features.Tienda.Usuarios
             var usuario = await _usuarioQueryService.ObtenerPerfil(id);
             if (usuario == null) return NotFound();
             var esPropioPerfil = User.FindFirstValue(ClaimTypes.NameIdentifier) == id.ToString();
-            ViewData["Title"] = esPropioPerfil ? "Mi Perfil" : "Perfil de Usuario";
+            
             var model = new UsuarioPerfilViewModel
             {
                 UsuarioId = usuario.UsuarioId,
@@ -45,7 +45,6 @@ namespace TiendaOnline.Features.Tienda.Usuarios
         [HttpGet("[action]")]
         public async Task<IActionResult> EditarUsuario(int id)
         {
-            ViewData["Title"] = "Editar Usuario";
             var usuario = await _usuarioQueryService.ObtenerUsuarioAsync(id);
             if (usuario == null) return NotFound();
             var model = new UsuarioUpdateViewModel

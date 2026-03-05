@@ -1,7 +1,7 @@
 ﻿using TiendaOnline.Application.Common;
 using TiendaOnline.Application.Usuarios.Queries;
 
-namespace TiendaOnline.Features.Admin.Usuarios
+namespace TiendaOnline.Features.Usuarios.Admin
 {
     public class UsuarioListadoViewModel
     {

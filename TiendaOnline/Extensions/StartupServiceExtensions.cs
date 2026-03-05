@@ -37,6 +37,7 @@ namespace TiendaOnline.Extensions
             // Servicios base
             services.AddScoped<IUsuarioQueryService, UsuarioQueryService>();
             services.AddScoped<IUsuarioCommandService, UsuarioCommandService>();
+            services.AddScoped<IRolQueryService, RolQueryService>();
             services.AddScoped<IProductoQueryService, ProductoQueryService>();
             services.AddScoped<IProductoCommandService, ProductoCommandService>();
             services.AddScoped<ICategoriaQueryService, CategoriaQueryService>();

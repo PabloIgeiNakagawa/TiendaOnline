@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Features.Tienda.Usuarios
+﻿namespace TiendaOnline.Features.Usuarios
 {
     public class UsuarioPerfilViewModel
     {

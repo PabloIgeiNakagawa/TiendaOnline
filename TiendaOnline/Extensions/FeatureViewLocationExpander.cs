@@ -9,40 +9,37 @@ namespace TiendaOnline.Extensions
 
         public IEnumerable<string> ExpandViewLocations(ViewLocationExpanderContext context, IEnumerable<string> viewLocations)
         {
-            // {0} = Acción, {1} = Controlador
-
             var locations = new List<string>();
 
-            // Intentamos obtener el namespace del controlador actual
             if (context.ActionContext.ActionDescriptor is ControllerActionDescriptor descriptor)
             {
-                // Ejemplo: TiendaOnline.Features.Admin.Productos
                 string? ns = descriptor.ControllerTypeInfo.Namespace;
 
                 if (!string.IsNullOrEmpty(ns))
                 {
-                    // Sacamos las partes del namespace para encontrar la carpeta después de ".Features."
-                    // Esto nos permite detectar automáticamente "Admin", "Tienda", "Repartidor", etc.
                     var parts = ns.Split('.');
                     int featureIndex = Array.IndexOf(parts, "Features");
 
                     if (featureIndex != -1 && parts.Length > featureIndex + 1)
                     {
-                        // Este es el "Rol" o "Contexto" (Admin, Tienda, etc.)
-                        string contextFolder = parts[featureIndex + 1];
+                        // En lugar de tomar solo la siguiente, tomamos TODO lo que sigue
+                        // Ejemplo: [TiendaOnline, Features, Usuarios, Admin] 
+                        // Resultado: "Usuarios/Admin"
+                        var featurePath = string.Join("/", parts.Skip(featureIndex + 1));
 
-                        locations.Add($"/Features/{contextFolder}/{{0}}.cshtml");
+                        // 1. Ruta basada estrictamente en el Namespace (La más segura para vos)
+                        // Esto buscará en: /Features/Usuarios/Admin/CrearUsuario.cshtml
+                        locations.Add($"/Features/{featurePath}/{{0}}.cshtml");
 
-                        // Ruta dinámica: /Features/Admin/Productos/Catalogo.cshtml
-                        locations.Add($"/Features/{contextFolder}/{{1}}/{{0}}.cshtml");
+                        // 2. Ruta basada en Namespace + Nombre del Controlador
+                        // Esto buscará en: /Features/Usuarios/Admin/AdminUsuarios/CrearUsuario.cshtml
+                        locations.Add($"/Features/{featurePath}/{{1}}/{{0}}.cshtml");
                     }
                 }
             }
 
-            // Fallback: Si no detecta nada o para rutas comunes
+            // Fallbacks
             locations.Add("/Features/{1}/{0}.cshtml");
-
-            // Compartidos
             locations.Add("/Features/Shared/{0}.cshtml");
             locations.Add("/Views/Shared/{0}.cshtml");
 
