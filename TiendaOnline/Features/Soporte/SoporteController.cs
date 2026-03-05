@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace TiendaOnline.Features.Tienda.Soporte
+namespace TiendaOnline.Features.Soporte
 {
     [Route("[controller]")]
     public class SoporteController : Controller
