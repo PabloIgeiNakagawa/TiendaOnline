@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Features.Admin.Categorias
+﻿namespace TiendaOnline.Features.Categorias
 {
     public class AgregarCategoriaViewModel
     {

@@ -1,7 +1,7 @@
 ﻿using TiendaOnline.Application.Categorias.Queries;
 using TiendaOnline.Application.Common;
 
-namespace TiendaOnline.Features.Admin.Categorias
+namespace TiendaOnline.Features.Categorias
 {
     public class CategoriaListadoViewModel
     {

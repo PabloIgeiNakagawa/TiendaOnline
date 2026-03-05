@@ -1,0 +1,262 @@
+﻿@using TiendaOnline.Features.Categorias
+@model CategoriaListadoViewModel
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-md-flex justify-content-md-between align-items-md-center">
+                <div>
+                    <h2 class="mb-1 fw-bold">
+                        <i class="bi bi-tags me-2 text-primary"></i>
+                        Gestión de Categorías
+                    </h2>
+                    <p class="text-muted mb-0">Organiza la estructura de hardware y componentes</p>
+                </div>
+                <a asp-controller="Categorias" asp-action="AgregarCategoria" class="btn btn-primary btn-lg shadow-sm mt-2 mt-md-0">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Nueva Categoría
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <form method="get" asp-action="Listado">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-2">
+                                <label for="busqueda" class="form-label fw-semibold">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </label>
+                                <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Buscar por nombre de categoría...">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="nivel" class="form-label fw-semibold">
+                                    <i class="bi bi-funnel me-1"></i>Nivel
+                                </label>
+                                <select name="nivel" class="form-select" onchange="this.form.submit()">
+                                    <option value="">Todos los niveles</option>
+                                    <option value="Principal" selected='@(Model.NivelSeleccionado == "Principal")'>Categorías Principales</option>
+                                    <option value="Subcategoría" selected='@(Model.NivelSeleccionado == "Subcategoría")'>Subcategorías</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary rounded-3 flex-fill">
+                                    <i class="bi bi-filter me-1"></i>
+                                </button>
+                                <a asp-action="Listado" class="btn btn-outline-secondary rounded-3 flex-fill">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Filtros aplicados -->
+    <div class="d-flex flex-wrap align-items-center gap-2 @(Model.Paginacion.TotalRegistros > 0 ? "mb-2" : "mb-4")">
+        @if (!string.IsNullOrEmpty(Model.Busqueda) || !string.IsNullOrEmpty(Model.NivelSeleccionado))
+        {
+            <span class="small text-muted me-1">Filtros:</span>
+
+            @if (!string.IsNullOrEmpty(Model.Busqueda))
+            {
+                <div class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle d-flex align-items-center px-3 py-2">
+                    <i class="bi bi-search me-2 small opacity-75"></i>
+                    <span class="fw-normal">"@Model.Busqueda"</span>
+                    @* Agregamos pagina=1 para evitar errores de paginación *@
+                    <a asp-action="Listado"
+                       asp-route-nivel="@Model.NivelSeleccionado"
+                       asp-route-pagina="1"
+                       class="ms-2 text-secondary-emphasis d-inline-flex align-items-center text-decoration-none">
+                        <i class="bi bi-x-circle-fill opacity-50 hover-opacity-100"></i>
+                    </a>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.NivelSeleccionado))
+            {
+                <div class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle d-flex align-items-center px-3 py-2">
+                    <i class="bi bi-funnel me-2 small opacity-75"></i>
+                    <span class="fw-normal">@Model.NivelSeleccionado</span>
+                    <a asp-action="Listado"
+                       asp-route-busqueda="@Model.Busqueda"
+                       asp-route-pagina="1"
+                       class="ms-2 text-secondary-emphasis d-inline-flex align-items-center text-decoration-none">
+                        <i class="bi bi-x-circle-fill opacity-50 hover-opacity-100"></i>
+                    </a>
+                </div>
+            }
+
+            <a asp-action="Listado" asp-route-pagina="1" class="btn btn-link btn-sm text-danger text-decoration-none fw-bold ms-1">
+                Limpiar
+            </a>
+        }
+    </div>
+
+    <!-- Cantidad de resultados -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center gap-3 py-3 border-bottom mb-4">
+        <div class="text-secondary">
+            @if (Model.Paginacion.TotalRegistros > 0)
+            {
+                <p class="mb-0 small">
+                    Mostrando <span class="fw-semibold">@Model.Paginacion.DesdeRegistro - @Model.Paginacion.HastaRegistro</span>
+                    de <span class="fw-semibold">@Model.Paginacion.TotalRegistros</span> productos
+                </p>
+            }
+            else
+            {
+                <div class="d-flex align-items-center text-warning bg-warning-subtle px-3 py-2 rounded-2 border border-warning-subtle">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <span class="small fw-semibold">No se encontraron productos que coincidan con tu búsqueda.</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="tablaCategorias">
+            <thead>
+                <tr>
+                    <th class="py-3" style="width: 40%">
+                        <i class="bi bi-folder2-open me-2 text-primary"></i>Jerarquía / Nombre
+                    </th>
+                    <th class="py-3">
+                        <i class="bi bi-diagram-3 me-2 text-primary"></i>Dependencias
+                    </th>
+                    <th class="py-3">
+                        <i class="bi bi-activity me-2 text-primary"></i>Estado
+                    </th>
+                    <th class="py-3 text-center">
+                        <i class="bi bi-gear me-1 text-primary"></i>Acciones
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Paginacion.Items)
+                {
+                    bool esPrincipal = item.CategoriaPadreId == null;
+                    <tr class="fila-categoria" data-nombre="@item.Nombre" data-tipo="@(esPrincipal ? "Principal" : "Subcategoría")">
+                        <td class="py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="bi @(esPrincipal ? "bi-folder-fill text-primary" : "bi-folder text-secondary")"></i>
+                                </div>
+                                <div>
+                                    @if (!esPrincipal)
+                                    {
+                                        <small class="text-muted d-block mb-1">
+                                            @item.CategoriaPadreNombre <i class="bi bi-chevron-right mx-1 small"></i>
+                                        </small>
+                                    }
+                                    <div class="fw-semibold">@item.Nombre</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3">
+                            <span class="text-muted small">
+                                <i class="bi bi-box me-1"></i>@item.CantidadProductos Productos<br />
+                                <i class="bi bi-node-plus me-1"></i>@item.CantidadSubcategorias Subcategorías
+                            </span>
+                        </td>
+                        <td class="py-3">
+                            @* Asumiendo que agregaste el bool Activa *@
+                            <span class="badge @(true ? "bg-success" : "bg-secondary") px-3 py-2 rounded-pill">
+                                Activa
+                            </span>
+                        </td>
+                        <td class="py-3">
+                            <div class="d-flex justify-content-center gap-1">
+                                <a asp-action="Editar" asp-route-id="@item.CategoriaId"
+                                   class="btn btn-outline-primary btn-sm" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                <button type="button"
+                                        class="btn btn-outline-danger btn-sm btn-eliminar-categoria"
+                                        data-id="@item.CategoriaId"
+                                        data-nombre="@item.Nombre"
+                                        title="Eliminar"
+                                        @(item.CantidadProductos == 0 || item.CantidadSubcategorias == 0 ? "disabled" : "")>
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <nav aria-label="Navegación de categorías" class="mt-3">
+        <ul class="pagination justify-content-center justify-content-md-end mb-0">
+            @{
+                int paginaActual = Model.Paginacion.PaginaActual;
+                int totalPaginas = Model.Paginacion.TotalPaginas;
+                int radio = 2;
+            }
+
+            @* Anterior *@
+            <li class="page-item @(paginaActual == 1 ? "disabled" : "")">
+                <a class="page-link" asp-action="Listado"
+                   asp-route-pagina="@(paginaActual - 1)"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-nivel="@Model.NivelSeleccionado">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+
+            @for (int i = 1; i <= totalPaginas; i++)
+            {
+                if (i == 1 || i == totalPaginas || (i >= paginaActual - radio && i <= paginaActual + radio))
+                {
+                    <li class="page-item @(i == paginaActual ? "active" : "")">
+                        <a class="page-link" asp-action="Listado"
+                           asp-route-pagina="@i"
+                           asp-route-busqueda="@Model.Busqueda"
+                           asp-route-nivel="@Model.NivelSeleccionado">@i</a>
+                    </li>
+                }
+                else if (i == paginaActual - radio - 1 || i == paginaActual + radio + 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                }
+            }
+
+            @* Siguiente *@
+            <li class="page-item @(paginaActual == totalPaginas ? "disabled" : "")">
+                <a class="page-link" asp-action="Listado"
+                   asp-route-pagina="@(paginaActual + 1)"
+                   asp-route-busqueda="@Model.Busqueda"
+                   asp-route-nivel="@Model.NivelSeleccionado">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<!-- Modal eliminar categoria -->
+<partial name="_ModalCambiarEstado" />
+
+<!-- Formularios Ocultos -->
+<div style="display: none;">
+    @foreach (var categoria in Model.Paginacion.Items)
+    {
+        <form id="eliminarCategoria@(categoria.CategoriaId)" asp-area="Admin" asp-controller="Categorias" asp-action="Eliminar" method="post">
+            <input type="hidden" name="id" value="@categoria.CategoriaId" />
+            @Html.AntiForgeryToken()
+        </form>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/Features/Categorias/Admin/Listado.js" asp-append-version="true"></script>
+}

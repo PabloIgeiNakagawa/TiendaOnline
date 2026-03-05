@@ -3,9 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TiendaOnline.Application.Categorias.Commands;
 using TiendaOnline.Application.Categorias.Queries;
-using TiendaOnline.Domain.Entities;
 
-namespace TiendaOnline.Features.Admin.Categorias
+namespace TiendaOnline.Features.Categorias
 {
     [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
@@ -70,7 +69,7 @@ namespace TiendaOnline.Features.Admin.Categorias
             return View(categoria);
         }
 
-        [HttpGet("[action]")]
+        /*[HttpGet("[action]")]
         public async Task<IActionResult> Editar(int id)
         {
             var categoria = await _categoriaQueryService.ObtenerCategoriaAsync(id);
@@ -85,7 +84,7 @@ namespace TiendaOnline.Features.Admin.Categorias
 
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Editar(Categoria categoria)
+        public async Task<IActionResult> Editar(EditarCategoriaViewModel categoria)
         {
             try
             {
@@ -102,7 +101,7 @@ namespace TiendaOnline.Features.Admin.Categorias
                 ViewBag.Categorias = new SelectList(todas.Where(c => c.CategoriaId != categoria.CategoriaId), "CategoriaId", "Nombre");
                 return View(categoria);
             }
-        }
+        }*/
 
         [HttpPost("[action]")]
         public async Task<IActionResult> Eliminar(int id)

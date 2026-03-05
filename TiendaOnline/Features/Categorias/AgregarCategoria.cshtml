@@ -1,7 +1,8 @@
-﻿@model TiendaOnline.Domain.Entities.Categoria
+﻿@model TiendaOnline.Features.Categorias.AgregarCategoriaViewModel
 @{
     ViewData["Title"] = "Nueva Categoría";
 }
+
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-8 col-xl-6">
@@ -14,7 +15,7 @@
                 <p class="text-muted">Defina el nombre y la posición jerárquica en el catálogo</p>
             </div>
 
-            <div class="card shadow-lg border-0">
+            <div class="card">
                 <div class="card-body p-5">
                     <form asp-action="Crear" method="post" id="formularioCategoria">
                         @Html.AntiForgeryToken()
@@ -60,11 +61,11 @@
 
                         <div class="d-flex justify-content-end align-items-center pt-3 border-top">
                             <div class="d-flex gap-2">
-                                <a asp-area="Admin" asp-controller="Categorias" asp-action="Listado" class="btn btn-outline-secondary btn-lg px-4">
+                                <a asp-controller="Categorias" asp-action="Listado" class="btn btn-outline-secondary btn-lg px-4">
                                     <i class="bi bi-arrow-left me-2"></i>Volver
                                 </a>
                                 <button type="submit" class="btn btn-primary btn-lg px-4">
-                                    <i class="bi bi-save me-2"></i>Guardar Categoría
+                                    <i class="bi bi-check-circle me-2"></i>Guardar Categoría
                                 </button>
                             </div>
                         </div>
