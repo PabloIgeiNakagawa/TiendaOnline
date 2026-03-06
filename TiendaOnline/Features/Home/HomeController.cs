@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using TiendaOnline.Application.AdminOverview;
-using TiendaOnline.Features.Shared;
+using TiendaOnline.Features.Shared.ViewModels;
 
 namespace TiendaOnline.Features.Home
 {

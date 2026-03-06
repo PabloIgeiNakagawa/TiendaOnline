@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Features.Tienda.Pedidos
+﻿namespace TiendaOnline.Features.Pedidos
 {
     public class PedidoDetalleViewModel
     {

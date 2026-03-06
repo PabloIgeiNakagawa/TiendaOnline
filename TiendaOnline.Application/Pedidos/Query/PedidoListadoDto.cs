@@ -10,6 +10,7 @@ namespace TiendaOnline.Application.Pedidos.Query
         public DateTime FechaPedido { get; set; }
         public DateTime? FechaEntrega { get; set; }
         public decimal Total { get; set; }
-        public EstadoPedido Estado { get; set; }
+        public int EstadoId { get; set; }
+        public string EstadoNombre { get; set; } = string.Empty;
     }
 }

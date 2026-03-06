@@ -2,9 +2,8 @@
 using System.Security.Claims;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Application.Pedidos.Query;
-using TiendaOnline.Domain.Entities;
 
-namespace TiendaOnline.Features.Tienda.Pedidos
+namespace TiendaOnline.Features.Pedidos
 {
     [Route("[controller]")]
     public class PedidosController : Controller
@@ -43,8 +42,8 @@ namespace TiendaOnline.Features.Tienda.Pedidos
                         FechaEntrega = p.FechaEntrega,
                         FechaCancelado = p.FechaCancelado,
                         Productos = p.Productos,
-                        Estado = p.Estado.ToString(),
-                        EstadoCss = ObtenerClaseEstado(p.Estado)
+                        Estado = p.EstadoNombre,
+                        EstadoCss = ObtenerClaseEstado(p.EstadoId)
                     })
                     .ToList()
             };
@@ -69,7 +68,7 @@ namespace TiendaOnline.Features.Tienda.Pedidos
                 FechaEnvio = pedido.FechaEnvio,
                 FechaEntrega = pedido.FechaEntrega,
                 FechaCancelado = pedido.FechaCancelado,
-                Estado = pedido.Estado.ToString(),
+                Estado = pedido.EstadoNombre,
 
                 UsuarioNombre = pedido.UsuarioNombre,
                 UsuarioEmail = pedido.UsuarioEmail,
@@ -87,12 +86,12 @@ namespace TiendaOnline.Features.Tienda.Pedidos
                 IVA = iva,
                 Total = subtotal + iva,
 
-                NumeroSeguimiento = pedido.Estado == EstadoPedido.Enviado
+                NumeroSeguimiento = pedido.EstadoNombre == "Enviado"
                     ? $"TRK{pedido.PedidoId:D6}CO"
                     : null,
 
-                FechaEstimadaEntrega = pedido.Estado == EstadoPedido.Enviado
-                    ? pedido.FechaPedido.AddDays(3)
+                FechaEstimadaEntrega = pedido.EstadoNombre == "Enviado"
+                    ? pedido.FechaPedido.AddDays(7)
                     : null,
 
                 EsAdmin = User.IsInRole("Administrador"),
@@ -100,9 +99,9 @@ namespace TiendaOnline.Features.Tienda.Pedidos
                 EsPropioPedido = pedido.UsuarioId.ToString() ==
                                  User.FindFirstValue(ClaimTypes.NameIdentifier),
 
-                PuedeCancelar = pedido.Estado == EstadoPedido.Pendiente,
-                PuedeEnviar = pedido.Estado == EstadoPedido.Pendiente,
-                PuedeEntregar = pedido.Estado == EstadoPedido.Enviado
+                PuedeCancelar = pedido.EstadoNombre == "Pendiente",
+                PuedeEnviar = pedido.EstadoNombre == "Pendiente",
+                PuedeEntregar = pedido.EstadoNombre == "Enviado"
             };
 
             return View(viewModel);
@@ -131,14 +130,14 @@ namespace TiendaOnline.Features.Tienda.Pedidos
             return RedirectToAction("Detalles", new { id = resultado });
         }
 
-        private string ObtenerClaseEstado(EstadoPedido estado)
+        private string ObtenerClaseEstado(int estadoId)
         {
-            return estado switch
+            return estadoId switch
             {
-                EstadoPedido.Pendiente => "text-bg-warning",
-                EstadoPedido.Enviado => "text-bg-primary",
-                EstadoPedido.Entregado => "text-bg-success",
-                EstadoPedido.Cancelado => "text-bg-danger",
+                0 => "text-bg-warning",  // Pendiente
+                1 => "text-bg-primary",  // Enviado
+                2 => "text-bg-success",  // Entregado
+                3 => "text-bg-danger",   // Cancelado
                 _ => "text-bg-secondary"
             };
         }

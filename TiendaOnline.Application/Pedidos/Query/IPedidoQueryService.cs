@@ -7,6 +7,6 @@ namespace TiendaOnline.Application.Pedidos.Query
     {
         Task<List<PedidoListadoUsuarioDto>> ObtenerPedidosDeUsuarioAsync(int id);
         Task<PedidoDetallesDto?> ObtenerPedidoConDetallesAsync(int id);
-        Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(string? busqueda, EstadoPedido? estado, DateTime? desde, DateTime? hasta, string? monto, int pagina, int cantidad);
+        Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(PedidosFiltroDto filtros);
     }
 }

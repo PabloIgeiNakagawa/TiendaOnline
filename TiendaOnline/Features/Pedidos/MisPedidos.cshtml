@@ -1,4 +1,6 @@
-﻿@model TiendaOnline.Features.Tienda.Pedidos.MisPedidosViewModel
+﻿@using TiendaOnline.Features.Pedidos
+@using TiendaOnline.Features.Pedidos.Admin
+@model MisPedidosViewModel
 @{
     ViewData["Title"] = "Mis Pedidos";
 }
@@ -74,12 +76,12 @@
                                     <!-- PASO 1 -->
                                     <div class="text-center flex-fill mb-3 mb-md-0">
                                         <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center
-                            @(pasoActual > 1 ? "bg-success text-white" :
-                                                                       pasoActual == 1 ? "bg-primary text-white" :
-                                                                       "bg-body-secondary text-secondary")"
-                                                                                                          style="width:3rem;height:3rem;">
-                                                                                                         <i class="bi bi-cart-check"></i>
-                                                                                                     </div>
+                                                @(pasoActual > 1 ? "bg-success text-white" :
+                                                pasoActual == 1 ? "bg-primary text-white" :
+                                                "bg-body-secondary text-secondary")"
+                                            style="width:3rem;height:3rem;">
+                                            <i class="bi bi-cart-check"></i>
+                                        </div>
 
                                         <h6 class="m-0 small fw-semibold">Pedido realizado</h6>
                                         <small class="text-muted d-block">
@@ -94,9 +96,9 @@
                                     <!-- PASO 2 -->
                                     <div class="text-center flex-fill mb-3 mb-md-0">
                                         <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center
-                            @(pasoActual > 2 ? "bg-success text-white" :
-                                                                       pasoActual == 2 ? "bg-primary text-white" :
-                                                                       "bg-body-secondary text-secondary")"
+                                                    @(pasoActual > 2 ? "bg-success text-white" :
+                                                    pasoActual == 2 ? "bg-primary text-white" :
+                                                    "bg-body-secondary text-secondary")"
                                          style="width:3rem;height:3rem;">
                                         <i class="bi bi-truck"></i>
                                     </div>
@@ -116,15 +118,15 @@
 
                                     <!-- Línea 2 -->
                                     <div class="flex-grow-1 border-top mx-3 d-none d-md-block
-                        @(pasoActual == 3 ? (pedido.EstaCancelado ? "border-danger" : "border-success") : "border-secondary")">
+                                                @(pasoActual == 3 ? (pedido.EstaCancelado ? "border-danger" : "border-success") : "border-secondary")">
                                     </div>
 
                                     <!-- PASO 3 -->
                                     <div class="text-center flex-fill">
                                         <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center
-                            @(pedido.EstaCancelado ? "bg-danger text-white" :
-                                                                       pasoActual == 3 ? "bg-success text-white" :
-                                                                       "bg-body-secondary text-secondary")"
+                                                    @(pedido.EstaCancelado ? "bg-danger text-white" :
+                                                    pasoActual == 3 ? "bg-success text-white" :
+                                                    "bg-body-secondary text-secondary")"
                                          style="width:3rem;height:3rem;">
 
                                         @if (pedido.EstaCancelado)

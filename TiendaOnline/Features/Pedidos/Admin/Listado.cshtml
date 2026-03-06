@@ -1,6 +1,7 @@
-﻿@using TiendaOnline.Features.Admin.Pedidos
+﻿@using TiendaOnline.Features.Pedidos.Admin
 @model PedidoListadoViewModel
 @{
+    ViewData["Title"] = "Gestión de Pedidos";
     var esAdmin = User.IsInRole("Administrador");
 }
 
@@ -51,12 +52,12 @@
                                 <label for="filtroEstado" class="form-label fw-semibold">
                                     <i class="bi bi-funnel me-1"></i>Estado
                                 </label>
-                                <select name="estado" class="form-select">
+                                <select name="estadoId" class="form-select">
                                     <option value="">Todos</option>
-                                    <option value="0" selected="@(Model.Estado == EstadoPedido.Pendiente ? "selected" : null)">Pendiente</option>
-                                    <option value="1" selected="@(Model.Estado == EstadoPedido.Enviado ? "selected" : null)">Enviado</option>
-                                    <option value="2" selected="@(Model.Estado == EstadoPedido.Entregado ? "selected" : null)">Entregado</option>
-                                    <option value="3" selected="@(Model.Estado == EstadoPedido.Cancelado ? "selected" : null)">Cancelado</option>
+                                    <option value="0" selected="@(Model.EstadoNombre == "Pendiente" ? "selected" : null)">Pendiente</option>
+                                    <option value="1" selected="@(Model.EstadoNombre == "Enviado" ? "selected" : null)">Enviado</option>
+                                    <option value="2" selected="@(Model.EstadoNombre == "Entregado" ? "selected" : null)">Entregado</option>
+                                    <option value="3" selected="@(Model.EstadoNombre == "Cancelado" ? "selected" : null)">Cancelado</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
@@ -78,10 +79,10 @@
                             </div>
                             <div class="col-md-3 d-flex align-items-end gap-2">
                                 <button type="submit" class="btn btn-primary rounded-3 flex-fill">
-                                    <i class="bi bi-filter me-1"></i>Filtrar
+                                    <i class="bi bi-filter me-1"></i>
                                 </button>
                                 <a asp-action="Listado" class="btn btn-outline-secondary rounded-3 flex-fill">
-                                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
+                                    <i class="bi bi-arrow-clockwise me-1"></i>
                                 </a>
                             </div>
                         </form>
@@ -187,27 +188,27 @@
                                             <div class="fw-bold text-success">@pedido.Total.ToString("C0")</div>
                                         </td>
                                         <td class="py-3">
-                                            @switch (pedido.Estado)
+                                            @switch (pedido.EstadoNombre)
                                             {
-                                                case EstadoPedido.Pendiente:
+                                                case "Pendiente":
                                                     <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"
                                                           style="font-size: 0.8rem; letter-spacing: 0.5px;">
                                                         <i class="bi bi-clock me-1"></i>Pendiente
                                                     </span>
                                                     break;
-                                                case EstadoPedido.Enviado:
+                                                case "Enviado":
                                                     <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-info bg-opacity-10 text-info border border-info border-opacity-25"
                                                           style="font-size: 0.8rem; letter-spacing: 0.5px;">
                                                         <i class="bi bi-truck me-1"></i>Enviado
                                                     </span>
                                                     break;
-                                                case EstadoPedido.Entregado:
+                                                case "Entregado":
                                                     <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-success bg-opacity-10 text-success border border-success border-opacity-25"
                                                           style="font-size: 0.8rem; letter-spacing: 0.5px;">
                                                         <i class="bi bi-check-circle me-1"></i>Entregado
                                                     </span>
                                                     break;
-                                                case EstadoPedido.Cancelado:
+                                                case "Cancelado":
                                                     <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25"
                                                           style="font-size: 0.8rem; letter-spacing: 0.5px;">
                                                         <i class="bi bi-x-circle me-1"></i>Cancelado
@@ -221,7 +222,7 @@
                                                    class="btn btn-outline-info btn-sm rounded-2 shadow-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                @if (pedido.Estado == EstadoPedido.Pendiente && esAdmin)
+                                                @if (pedido.EstadoNombre == "Pendiente" && esAdmin)
                                                 {
                                                     <button type="button"
                                                             class="btn btn-outline-success btn-sm rounded-2 shadow-sm btn-cambio-estado"
@@ -243,7 +244,7 @@
                                                         <i class="bi bi-x-circle"></i>
                                                     </button>
                                                 }
-                                                else if (pedido.Estado == EstadoPedido.Enviado)
+                                                else if (pedido.EstadoNombre == "Enviado")
                                                 {
                                                     <button type="button"
                                                             class="btn btn-outline-success btn-sm rounded-2 shadow-sm btn-cambio-estado"
@@ -284,7 +285,7 @@
                    asp-route-pagina="@(actual - 1)"
                    asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
                    asp-route-busqueda="@Model.Busqueda"
-                   asp-route-estado="@Model.Estado"
+                   asp-route-estado="@Model.EstadoId"
                    asp-route-filtroMonto="@Model.FiltroMonto"
                    asp-route-fechaDesde="@Model.FechaDesde?.ToString("yyyy-MM-dd")"
                    asp-route-fechaHasta="@Model.FechaHasta?.ToString("yyyy-MM-dd")">
@@ -304,7 +305,7 @@
                            asp-route-pagina="@i"
                            asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
                            asp-route-busqueda="@Model.Busqueda"
-                           asp-route-estado="@Model.Estado"
+                           asp-route-estado="@Model.EstadoId"
                            asp-route-filtroMonto="@Model.FiltroMonto"
                            asp-route-fechaDesde="@Model.FechaDesde?.ToString("yyyy-MM-dd")"
                            asp-route-fechaHasta="@Model.FechaHasta?.ToString("yyyy-MM-dd")">
@@ -326,7 +327,7 @@
                    asp-route-pagina="@(actual + 1)"
                    asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
                    asp-route-busqueda="@Model.Busqueda"
-                   asp-route-estado="@Model.Estado"
+                   asp-route-estado="@Model.EstadoId"
                    asp-route-filtroMonto="@Model.FiltroMonto"
                    asp-route-fechaDesde="@Model.FechaDesde?.ToString("yyyy-MM-dd")"
                    asp-route-fechaHasta="@Model.FechaHasta?.ToString("yyyy-MM-dd")">

@@ -2,47 +2,48 @@
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Application.Pedidos.Query;
-using TiendaOnline.Domain.Entities;
 
-namespace TiendaOnline.Features.Admin.Pedidos
+namespace TiendaOnline.Features.Pedidos.Admin
 {
     [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
-    public class PedidosController : Controller
+    public class AdminPedidosController : Controller
     {
         private readonly IPedidoQueryService _pedidoQueryService;
         private readonly IPedidoCommandService _pedidoCommandService;
 
-        public PedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService)
+        public AdminPedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService)
         {
             _pedidoQueryService = pedidoQueryService;
             _pedidoCommandService = pedidoCommandService;
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> Listado(string? busqueda, EstadoPedido? estado, DateTime? fechaDesde, DateTime? fechaHasta, string? filtroMonto, int pagina = 1, int tamanoPagina = 10)
+        public async Task<IActionResult> Listado(ListadoFiltrosViewModel model)
         {
-            ViewData["Title"] = "Gestión de Pedidos";
+            var filtros = new PedidosFiltroDto 
+            {
+                Busqueda = model.Busqueda,
+                EstadoId = model.EstadoId,
+                Desde = model.FechaDesde,
+                Hasta = model.FechaHasta,
+                Monto = model.FiltroMonto,
+                Pagina = model.Pagina,
+                Cantidad = model.TamanoPagina
+            };
+
             // Llamamos al service con todos los filtros
-            var pagedResult = await _pedidoQueryService.ObtenerPedidosPaginadosAsync(
-                busqueda?.Trim(),
-                estado,
-                fechaDesde,
-                fechaHasta,
-                filtroMonto,
-                pagina,
-                tamanoPagina
-            );
+            var pagedResult = await _pedidoQueryService.ObtenerPedidosPaginadosAsync(filtros);
 
             // Llenamos el ViewModel para que la vista sepa qué filtros están activos
             var viewModel = new PedidoListadoViewModel
             {
                 PedidosPaginados = pagedResult,
-                Busqueda = busqueda,
-                Estado = estado,
-                FechaDesde = fechaDesde,
-                FechaHasta = fechaHasta,
-                FiltroMonto = filtroMonto
+                Busqueda = model.Busqueda,
+                EstadoId = model.EstadoId,
+                FechaDesde = model.FechaDesde,
+                FechaHasta = model.FechaHasta,
+                FiltroMonto = model.FiltroMonto
             };
 
             return View(viewModel);

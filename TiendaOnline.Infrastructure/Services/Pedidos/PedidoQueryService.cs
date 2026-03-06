@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Common;
 using TiendaOnline.Application.Pedidos.Query;
-using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Infrastructure.Services.Pedidos
@@ -27,7 +26,8 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     FechaEnvio = p.FechaEnvio,
                     FechaEntrega = p.FechaEntrega,
                     FechaCancelado = p.FechaCancelado,
-                    Estado = p.Estado,
+                    EstadoId = (int)p.Estado,
+                    EstadoNombre = p.Estado.ToString(),
 
                     Productos = p.DetallesPedido
                                 .Select(d => d.Producto.Nombre)
@@ -48,7 +48,8 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     FechaEnvio = p.FechaEnvio,
                     FechaEntrega = p.FechaEntrega,
                     FechaCancelado = p.FechaCancelado,
-                    Estado = p.Estado,
+                    EstadoId = (int)p.Estado,
+                    EstadoNombre = p.Estado.ToString(),
 
                     UsuarioId = p.Usuario.UsuarioId,
                     UsuarioNombre = p.Usuario.Nombre,
@@ -66,31 +67,31 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(string? busqueda, EstadoPedido? estado, DateTime? desde, DateTime? hasta, string? monto, int pagina, int cantidad)
+        public async Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(PedidosFiltroDto filtros)
         {
             var query = _context.Pedidos
                 .AsNoTracking()
                 .AsQueryable();
 
             // Filtros
-            if (!string.IsNullOrEmpty(busqueda))
+            if (!string.IsNullOrEmpty(filtros.Busqueda))
             {
-                query = query.Where(p => p.PedidoId.ToString().Contains(busqueda) ||
-                                         p.Usuario.Nombre.Contains(busqueda) ||
-                                         p.Usuario.Apellido.Contains(busqueda));
+                query = query.Where(p => p.PedidoId.ToString().Contains(filtros.Busqueda) ||
+                                         p.Usuario.Nombre.Contains(filtros.Busqueda) ||
+                                         p.Usuario.Apellido.Contains(filtros.Busqueda));
             }
 
-            if (estado.HasValue) query = query.Where(p => p.Estado == estado.Value);
-            if (desde.HasValue) query = query.Where(p => p.FechaPedido >= desde.Value);
-            if (hasta.HasValue) query = query.Where(p => p.FechaPedido <= hasta.Value);
+            if (filtros.EstadoId.HasValue) query = query.Where(p => ((int)p.Estado) == filtros.EstadoId);
+            if (filtros.Desde.HasValue) query = query.Where(p => p.FechaPedido >= filtros.Desde.Value);
+            if (filtros.Hasta.HasValue) query = query.Where(p => p.FechaPedido <= filtros.Hasta.Value);
 
             // Filtro de Monto
-            if (!string.IsNullOrEmpty(monto))
+            if (!string.IsNullOrEmpty(filtros.Monto))
             {
                 var qMonto = query.Select(p => new { p, Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) });
-                if (monto == "bajo") query = qMonto.Where(x => x.Total < 250000).Select(x => x.p);
-                if (monto == "medio") query = qMonto.Where(x => x.Total >= 250000 && x.Total <= 1000000).Select(x => x.p);
-                if (monto == "alto") query = qMonto.Where(x => x.Total > 1000000).Select(x => x.p);
+                if (filtros.Monto == "bajo") query = qMonto.Where(x => x.Total < 250000).Select(x => x.p);
+                if (filtros.Monto == "medio") query = qMonto.Where(x => x.Total >= 250000 && x.Total <= 1000000).Select(x => x.p);
+                if (filtros.Monto == "alto") query = qMonto.Where(x => x.Total > 1000000).Select(x => x.p);
             }
 
             // Conteo Total
@@ -99,8 +100,8 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             // Paginación y Mapeo a DTO
             var items = await query
                 .OrderByDescending(p => p.FechaPedido)
-                .Skip((pagina - 1) * cantidad)
-                .Take(cantidad)
+                .Skip((filtros.Pagina - 1) * filtros.Cantidad)
+                .Take(filtros.Cantidad)
                 .Select(p => new PedidoListadoDto
                 {
                     PedidoId = p.PedidoId,
@@ -108,12 +109,13 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     EmailCliente = p.Usuario.Email,
                     FechaPedido = p.FechaPedido,
                     FechaEntrega = p.FechaEntrega,
-                    Estado = p.Estado,
+                    EstadoId = (int)p.Estado,
+                    EstadoNombre = p.Estado.ToString(),
                     Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad)
                 })
             .ToListAsync();
 
-            return new PagedResult<PedidoListadoDto>(items, total, pagina, cantidad);
+            return new PagedResult<PedidoListadoDto>(items, total, filtros.Pagina, filtros.Cantidad);
         }
     }
 }
