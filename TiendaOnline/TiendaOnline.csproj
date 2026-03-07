@@ -7,13 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Features\Tienda\Soporte\**" />
-    <Content Remove="Features\Tienda\Soporte\**" />
-    <EmbeddedResource Remove="Features\Tienda\Soporte\**" />
-    <None Remove="Features\Tienda\Soporte\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.23">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

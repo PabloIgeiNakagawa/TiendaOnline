@@ -1,0 +1,169 @@
+﻿@model TiendaOnline.Features.Pedidos.CheckOutViewModel
+
+<div class="container mt-5">
+
+    <partial name="_ProgresoCompra" model="2" />
+
+    <form asp-action="ProcesarCheckout" method="post">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header p-3 bg-primary text-white">
+                        <h5 class="mb-0">Método de Entrega</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" asp-for="MetodoEntrega" value="RetiroLocal" id="radioLocal">
+                            <label class="form-check-label fw-bold" for="radioLocal">
+                                Retiro en Local (Gratis)
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" asp-for="MetodoEntrega" value="EnvioDomicilio" id="radioEnvio">
+                            <label class="form-check-label fw-bold" for="radioEnvio">
+                                Envío a Domicilio
+                            </label>
+                        </div>
+
+                        <div id="seccionDireccion" class="d-none mt-4 border-top pt-3">
+                            <h6>Datos de Envío</h6>
+
+                            @if (Model.DireccionesGuardadas.Any())
+                            {
+                                <div class="mb-3 p-3 bg-light rounded border">
+                                    <label class="form-label fw-bold text-primary">Elegir dirección guardada</label>
+                                    <select asp-for="DireccionSeleccionadaId" class="form-select border-primary">
+                                        <option value="">-- Cargar una nueva dirección --</option>
+                                        @foreach (var dir in Model.DireccionesGuardadas)
+                                        {
+                                            <option value="@dir.DireccionId">@dir.Etiqueta (@dir.Calle @dir.Numero)</option>
+                                        }
+                                    </select>
+                                </div>
+                            }
+
+                            <div id="bloqueNuevaDireccion">
+                                <div class="mb-3">
+                                    <label asp-for="NuevaDireccion.Etiqueta" class="form-label"></label>
+                                    <input asp-for="NuevaDireccion.Etiqueta" class="form-control" placeholder="Ej: Mi Casa, Oficina..." />
+                                    <span asp-validation-for="NuevaDireccion.Etiqueta" class="text-danger small"></span>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-5 mb-3">
+                                        <label asp-for="NuevaDireccion.Provincia" class="form-label">Provincia</label>
+                                        <select id="selectProvincia" asp-for="NuevaDireccion.Provincia" class="form-select">
+                                            <option value="">Seleccione una provincia...</option>
+                                        </select>
+                                        <span asp-validation-for="NuevaDireccion.Provincia" class="text-danger small"></span>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="NuevaDireccion.Localidad" class="form-label">Localidad</label>
+                                        <select id="selectLocalidad" asp-for="NuevaDireccion.Localidad" class="form-select" disabled>
+                                            <option value="">Primero elija una provincia...</option>
+                                        </select>
+                                        <span asp-validation-for="NuevaDireccion.Localidad" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label asp-for="NuevaDireccion.CodigoPostal" class="form-label"></label>
+                                        <input asp-for="NuevaDireccion.CodigoPostal" class="form-control" />
+                                        <span asp-validation-for="NuevaDireccion.CodigoPostal" class="text-danger small"></span>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label asp-for="NuevaDireccion.Calle" class="form-label"></label>
+                                        <input asp-for="NuevaDireccion.Calle" class="form-control" />
+                                        <span asp-validation-for="NuevaDireccion.Calle" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="NuevaDireccion.Numero" class="form-label"></label>
+                                        <input asp-for="NuevaDireccion.Numero" class="form-control" />
+                                        <span asp-validation-for="NuevaDireccion.Numero" class="text-danger small"></span>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="NuevaDireccion.Piso" class="form-label"></label>
+                                        <input asp-for="NuevaDireccion.Piso" class="form-control" />
+                                        <span asp-validation-for="NuevaDireccion.Piso" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="NuevaDireccion.Departamento" class="form-label"></label>
+                                        <input asp-for="NuevaDireccion.Departamento" class="form-control" />
+                                        <span asp-validation-for="NuevaDireccion.Departamento" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="NuevaDireccion.Observaciones" class="form-label"></label>
+                                <textarea asp-for="NuevaDireccion.Observaciones" class="form-control" rows="2"
+                                          placeholder="Ej: Portón blanco, el timbre no funciona, entregar a portería..."></textarea>
+                                <span asp-validation-for="NuevaDireccion.Observaciones" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="bg-body-tertiary rounded-3 shadow-sm p-4 border">
+                    <h3 class="h5 fw-semibold pb-3 border-bottom">Resumen del pedido</h3>
+                    <div class="card-body">
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="d-flex align-items-center mb-3 py-3 border-bottom">
+                                <div class="flex-shrink-0">
+                                    <img src="@item.ImagenUrl" alt="@item.Nombre"
+                                         class="rounded border shadow-sm"
+                                         style="width: 50px; height: 50px; object-fit: cover;">
+                                </div>
+
+                                <div class="flex-grow-1 ms-3 overflow-hidden">
+                                    <h6 class="mb-0 text-truncate fw-bold" style="font-size: 0.9rem;">
+                                        @item.Nombre
+                                    </h6>
+                                    <small class="text-muted">
+                                        x <span class="fw-semibold">@item.Cantidad</span>
+                                    </small>
+                                </div>
+
+                                <div class="text-end ms-2 flex-shrink-0">
+                                    <span class="fw-bold text-nowrap" style="font-size: 1rem; display: block;">
+                                        @((item.Precio * item.Cantidad).ToString("C0"))
+                                    </span>
+                                    <small class="text-muted text-nowrap" style="font-size: 0.75rem; display: block;">
+                                        @item.Precio.ToString("C0") c/u
+                                    </small>
+                                </div>
+                            </div>
+                        }
+                        <div class="d-flex justify-content-between">
+                            <span>Subtotal</span>
+                            <strong>$@Model.SubTotal</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span>Envío</span>
+                            <strong id="textoEnvio">A calcular</strong>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between fs-5 text-primary">
+                            <span>Total</span>
+                            <strong>$@Model.Total</strong>
+                        </div>
+                        <button id="btnConfirmarPedido" type="submit" class="btn btn-success w-100 mt-4" disabled>Ir a confirmar pedido</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/js/Features/Pedidos/CheckOut.js" asp-append-version="true"></script>
+}

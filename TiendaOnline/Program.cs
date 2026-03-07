@@ -9,6 +9,8 @@ builder.Services.AddControllersWithViews().AddFeatureFolders();
 
 // HttpContext  
 builder.Services.AddHttpContextAccessor();
+// REGISTRO PARA LA API DE PROVINCIAS
+builder.Services.AddHttpClient();
 
 // Base de datos
 builder.Services.AddDbContext<TiendaContext>(options =>
@@ -43,7 +45,8 @@ app.Use(async (context, next) =>
         "img-src 'self' https: data:; " +
         "script-src 'self' https:; " +
         "style-src 'self' https: 'unsafe-inline'; " +
-        "font-src 'self' https: data:;";
+        "font-src 'self' https: data:;" +
+        "connect-src 'self' https://apis.datos.gob.ar;"; ;
 
     await next();
 });

@@ -6,6 +6,8 @@ using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.Categorias.Commands;
 using TiendaOnline.Application.Categorias.Queries;
 using TiendaOnline.Application.Common.Interfaces;
+using TiendaOnline.Application.Direcciones;
+using TiendaOnline.Application.Geo;
 using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Application.MovimientosStock.Queries;
 using TiendaOnline.Application.Pedidos.Command;
@@ -22,6 +24,8 @@ using TiendaOnline.Infrastructure.Services.Auditoria;
 using TiendaOnline.Infrastructure.Services.Auth;
 using TiendaOnline.Infrastructure.Services.Carritos;
 using TiendaOnline.Infrastructure.Services.Categorias;
+using TiendaOnline.Infrastructure.Services.Direcciones;
+using TiendaOnline.Infrastructure.Services.Geo;
 using TiendaOnline.Infrastructure.Services.MovimientosStock;
 using TiendaOnline.Infrastructure.Services.Pedidos;
 using TiendaOnline.Infrastructure.Services.Productos;
@@ -46,6 +50,8 @@ namespace TiendaOnline.Extensions
             services.AddScoped<ICarritoService, CarritoService>();
             services.AddScoped<IPedidoQueryService, PedidoQueryService>();
             services.AddScoped<IPedidoCommandService, PedidoCommandService>();
+            services.AddScoped<IGeoService, GeoService>();
+            services.AddScoped<IDireccionService, DireccionService>();
 
             // Administración
             services.AddScoped<IAdminOverviewService, AdminOverviewService>();

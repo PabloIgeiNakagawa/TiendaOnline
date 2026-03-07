@@ -16,7 +16,6 @@ namespace TiendaOnline.Features.Carritos
         [HttpGet("[action]")]
         public async Task<IActionResult> Index()
         {
-            ViewData["Title"] = "Carrito de Compras";
             var carrito = await _carritoService.ObtenerAsync();
             return View(carrito);
         }
