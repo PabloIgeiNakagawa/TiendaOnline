@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.MovimientosStock.Commands;
+using TiendaOnline.Application.Payment;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
@@ -20,9 +21,11 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             _movimientoStockCommandService = movimientoStockCommandService;
         }
 
-        public async Task<int> CrearPedidoAsync(int usuarioId)
+        public async Task<PedidoPagoDto> CrearPedidoYPrepararPagoAsync(int usuarioId, int metodoDePagoId)
         {
             var carrito = await _carritoService.ObtenerAsync();
+            if (!carrito.Any()) throw new Exception("El carrito está vacío");
+
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
@@ -35,8 +38,10 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 var pedido = new Pedido
                 {
                     UsuarioId = usuarioId,
+                    MetodoDePagoId = metodoDePagoId,
                     FechaPedido = DateTime.Now,
-                    Estado = EstadoPedido.Pendiente,
+                    Estado = EstadoPedido.Nuevo,
+                    EstadoPago = EstadoPago.Pendiente,
                     DetallesPedido = new List<DetallePedido>()
                 };
 
@@ -46,49 +51,128 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     if (producto == null) throw new Exception("Producto no encontrado");
 
                     if (producto.Stock < item.Cantidad)
-                        throw new Exception($"Sin stock para {producto.Nombre}");
+                        throw new Exception($"Sin stock suficiente para {producto.Nombre}");
 
+                    // 1. Descontamos stock en la entidad
                     producto.Stock -= item.Cantidad;
 
                     pedido.DetallesPedido.Add(new DetallePedido
                     {
                         ProductoId = producto.ProductoId,
                         Cantidad = item.Cantidad,
-                        PrecioUnitario = producto.Precio
+                        PrecioUnitario = producto.Precio,
+                        Producto = producto // Importante para que el PaymentService tenga el nombre
                     });
                 }
 
                 _context.Pedidos.Add(pedido);
-
                 await _context.SaveChangesAsync();
 
-                foreach (var item in carrito)
+                // 2. Generamos movimientos de stock (solo lógica de auditoría)
+                foreach (var detalle in pedido.DetallesPedido)
                 {
-                    var producto = productosDb.First(p => p.ProductoId == item.ProductoId);
-                    producto.Stock -= item.Cantidad;
-
                     _movimientoStockCommandService.GenerarMovimiento(
-                        producto,
-                        -item.Cantidad,
+                        detalle.Producto,
+                        -detalle.Cantidad,
                         TipoMovimiento.SalidaVenta,
                         pedido.PedidoId,
-                        $"Venta Pedido Online #{pedido.PedidoId}"
+                        $"Reserva por Pedido #{pedido.PedidoId}"
                     );
                 }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
-
                 await _carritoService.VaciarAsync();
 
-                return pedido.PedidoId;
+                // RECARGAMOS EL PEDIDO CON SUS INCLUDES
+                var pedidoCompleto = await _context.Pedidos
+                    .Include(p => p.Usuario) // Traemos los datos del usuario (Email)
+                    .Include(p => p.DetallesPedido)
+                        .ThenInclude(d => d.Producto) // Traemos los datos del producto (Nombre)
+                    .FirstOrDefaultAsync(p => p.PedidoId == pedido.PedidoId);
+
+                if (pedidoCompleto == null) throw new Exception("Error al recuperar el pedido creado.");
+
+                return new PedidoPagoDto
+                {
+                    PedidoId = pedidoCompleto.PedidoId,
+                    EmailUsuario = pedidoCompleto.Usuario.Email,
+                    Items = pedidoCompleto.DetallesPedido.Select(d => new ItemPagoDto
+                    {
+                        Nombre = d.Producto.Nombre,
+                        Cantidad = d.Cantidad,
+                        PrecioUnitario = d.PrecioUnitario
+                    }).ToList()
+                };
             }
             catch (Exception)
             {
-                // Si hubo error, deshacemos todo (el stock vuelve a su valor original)
+                //_logger.LogError(ex, "Error al crear el pedido para el usuario {UsuarioId}", usuarioId);
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        public async Task<bool> ConfirmarPagoAsync(InfoPagoDto infoPago)
+        {
+            var pedido = await _context.Pedidos
+                .Include(p => p.DetallesPedido)
+                .FirstOrDefaultAsync(p => p.PedidoId == infoPago.PedidoId);
+
+            // Idempotencia y existencia: Si no existe o ya está pagado, cortamos acá
+            if (pedido == null || pedido.EstadoPago == EstadoPago.Aprobado)
+                return false;
+
+            // Calculamos el total en el momento
+            decimal totalCalculado = pedido.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario);
+
+            // Seguridad: Comparamos el monto pagado en MP vs el total en nuestra DB
+            // Usamos una diferencia menor a 0.01 por temas de decimales en C#
+            if (Math.Abs((double)infoPago.MontoPagado - (double)totalCalculado) > 0.01)
+            {
+                // Fraude o error de montos
+                return false;
+            }
+
+            // Confirmamos el pago
+            if (infoPago.Estado == "approved")
+            {
+                pedido.EstadoPago = EstadoPago.Aprobado;
+                pedido.Estado = EstadoPedido.EnPreparacion;
+                pedido.TransaccionPagoId = infoPago.TransaccionId;
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+
+            return false;
+        }
+
+        public async Task<PedidoPagoDto?> ObtenerDatosParaPagoAsync(int pedidoId)
+        {
+            var pedido = await _context.Pedidos
+                .Include(p => p.Usuario)
+                .Include(p => p.DetallesPedido)
+                    .ThenInclude(d => d.Producto)
+                .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
+
+            if (pedido == null) return null;
+
+            // Solo permitimos reintentar si el pedido sigue pendiente
+            if (pedido.EstadoPago == EstadoPago.Aprobado)
+                throw new Exception("Este pedido ya ha sido pagado.");
+
+            return new PedidoPagoDto
+            {
+                PedidoId = pedido.PedidoId,
+                EmailUsuario = pedido.Usuario.Email,
+                Items = pedido.DetallesPedido.Select(d => new ItemPagoDto
+                {
+                    Nombre = d.Producto.Nombre,
+                    Cantidad = d.Cantidad,
+                    PrecioUnitario = d.PrecioUnitario
+                }).ToList()
+            };
         }
 
         public async Task PedidoEnviadoAsync(int pedidoId)
@@ -96,7 +180,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             var pedido = await _context.Pedidos.FindAsync(pedidoId);
             if (pedido == null) throw new Exception("Pedido no encontrado.");
 
-            if (pedido.Estado != EstadoPedido.Pendiente)
+            if (pedido.Estado != EstadoPedido.EnPreparacion)
                 throw new Exception("El pedido no se puede enviar porque no está en estado Pendiente (Estado actual: " + pedido.Estado + ")");
 
             pedido.Estado = EstadoPedido.Enviado;
@@ -128,7 +212,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 // Traemos el pedido con sus detalles (Importante usar .Include)
                 var pedido = await _context.Pedidos
                     .Include(p => p.DetallesPedido)
-                    .ThenInclude(dp => dp.Producto) // Traemos el producto para devolverle el stock
+                        .ThenInclude(dp => dp.Producto) // Traemos el producto para devolverle el stock
                     .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
 
                 if (pedido == null) throw new Exception("Pedido no encontrado.");
@@ -160,8 +244,8 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     );
                 }
 
-                // Cambiamos el estado
                 pedido.Estado = EstadoPedido.Cancelado;
+                pedido.EstadoPago = EstadoPago.Rechazado;
                 pedido.FechaCancelado = DateTime.Now;
 
                 await _context.SaveChangesAsync();

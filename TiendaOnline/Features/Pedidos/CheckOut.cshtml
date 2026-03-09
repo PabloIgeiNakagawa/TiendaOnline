@@ -26,13 +26,13 @@
                         </div>
 
                         <div id="seccionDireccion" class="d-none mt-4 border-top pt-3">
-                            <h6>Datos de Envío</h6>
+                            <h5>Datos de Envío</h5>
 
                             @if (Model.DireccionesGuardadas.Any())
                             {
-                                <div class="mb-3 p-3 bg-light rounded border">
-                                    <label class="form-label fw-bold text-primary">Elegir dirección guardada</label>
-                                    <select asp-for="DireccionSeleccionadaId" class="form-select border-primary">
+                                <div class="mb-3 p-3">
+                                    <label class="form-label fw-bold">Elegir dirección guardada</label>
+                                    <select asp-for="DireccionSeleccionadaId" class="form-select">
                                         <option value="">-- Cargar una nueva dirección --</option>
                                         @foreach (var dir in Model.DireccionesGuardadas)
                                         {
@@ -43,6 +43,11 @@
                             }
 
                             <div id="bloqueNuevaDireccion">
+                                <div class="d-flex align-items-center my-4">
+                                    <hr class="flex-grow-1 text-muted opacity-25">
+                                    <span class="mx-3 small text-muted text-uppercase">O</span>
+                                    <hr class="flex-grow-1 text-muted opacity-25">
+                                </div>
                                 <div class="mb-3">
                                     <label asp-for="NuevaDireccion.Etiqueta" class="form-label"></label>
                                     <input asp-for="NuevaDireccion.Etiqueta" class="form-control" placeholder="Ej: Mi Casa, Oficina..." />

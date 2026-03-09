@@ -1,0 +1,53 @@
+﻿@{
+    ViewData["Title"] = "Pago no procesado";
+    var pedidoId = ViewBag.PedidoId;
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="display-1 text-danger mb-4">
+                <i class="bi bi-exced-circle"></i>
+            </div>
+
+            <h1 class="fw-bold text-dark">Ups... algo salió mal</h1>
+            <p class="lead text-muted">
+                No pudimos procesar tu pago para el pedido <strong>#@pedidoId</strong>.
+                Puede ser por falta de fondos, tarjeta vencida o un error en la plataforma.
+            </p>
+
+            <div class="alert alert-warning border-0 shadow-sm my-4 text-start">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="bi bi-info-circle-fill fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">¿Qué pasó?</h6>
+                        <ul class="mb-0 small">
+                            <li>Tu banco podría haber rechazado la transacción por seguridad.</li>
+                            <li>Los datos de la tarjeta podrían ser incorrectos.</li>
+                            <li>El límite de compra diaria fue excedido.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+                <form asp-action="ReintentarPago" method="post">
+                    <input type="hidden" name="pedidoId" value="@pedidoId" />
+                    <button type="submit" class="btn btn-primary btn-lg px-4 me-sm-2">
+                        <i class="bi bi-arrow-clockwise"></i> Intentar pagar de nuevo
+                    </button>
+                </form>
+
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg px-4">
+                    Volver a la tienda
+                </a>
+            </div>
+
+            <p class="mt-4 text-muted small">
+                Si el problema persiste, podés probar con otro medio de pago o contactar a tu banco.
+            </p>
+        </div>
+    </div>
+</div>

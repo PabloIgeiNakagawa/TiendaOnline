@@ -19,6 +19,11 @@ namespace TiendaOnline.Application.Pedidos.Query
         public string? UsuarioEmail { get; set; }
         public string? UsuarioTelefono { get; set; }
 
+        // Dirección de envío (si aplica)
+        public string? DireccionCompleta { get; set; }
+        public string? Localidad { get; set; }
+        public string? Provincia { get; set; }
+
         // Items
         public List<PedidoItemDto> Items { get; set; } = new();
     }

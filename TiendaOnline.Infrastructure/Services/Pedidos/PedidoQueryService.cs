@@ -56,6 +56,12 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     UsuarioEmail = p.Usuario.Email,
                     UsuarioTelefono = p.Usuario.Telefono,
 
+                    DireccionCompleta = $"{p.EnvioCalle} {p.EnvioNumero}" +
+                                (string.IsNullOrEmpty(p.EnvioPiso) ? "" : $", Piso: {p.EnvioPiso}") +
+                                (string.IsNullOrEmpty(p.EnvioDepartamento) ? "" : $" Depto: {p.EnvioDepartamento}"),
+                    Localidad = p.EnvioLocalidad,
+                    Provincia = p.EnvioProvincia,
+
                     Items = p.DetallesPedido.Select(d => new PedidoItemDto
                     {
                         ProductoNombre = d.Producto.Nombre,

@@ -217,7 +217,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
 
             var totalPedidos = estados.Sum(e => e.Cantidad);
 
-            int pendientes = estados.FirstOrDefault(e => e.Estado == EstadoPedido.Pendiente)?.Cantidad ?? 0;
+            int pendientes = estados.FirstOrDefault(e => e.Estado == EstadoPedido.EnPreparacion)?.Cantidad ?? 0;
             int enviados = estados.FirstOrDefault(e => e.Estado == EstadoPedido.Enviado)?.Cantidad ?? 0;
             int entregados = estados.FirstOrDefault(e => e.Estado == EstadoPedido.Entregado)?.Cantidad ?? 0;
             int cancelados = estados.FirstOrDefault(e => e.Estado == EstadoPedido.Cancelado)?.Cantidad ?? 0;

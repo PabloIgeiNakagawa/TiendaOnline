@@ -17,12 +17,16 @@
         public string? UsuarioEmail { get; set; }
         public string? UsuarioTelefono { get; set; }
 
+        // Dirección de envío (si aplica)
+        public string? DireccionCompleta { get; set; }
+        public string? Localidad { get; set; }
+        public string? Provincia { get; set; }
+
         // Productos
         public List<PedidoItemViewModel> Items { get; set; } = new();
 
         // Totales ya calculados
         public decimal Subtotal { get; set; }
-        public decimal IVA { get; set; }
         public decimal Total { get; set; }
 
         // Tracking

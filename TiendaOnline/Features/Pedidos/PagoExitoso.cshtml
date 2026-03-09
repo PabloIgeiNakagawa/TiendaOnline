@@ -1,0 +1,53 @@
+﻿@{
+    ViewData["Title"] = "¡Pago Exitoso!";
+    var pedidoId = ViewBag.PedidoId;
+    var pagoId = ViewBag.PagoId;
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="display-1 text-success mb-4">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+
+            <h1 class="fw-bold">¡Gracias por tu compra!</h1>
+            <p class="lead text-muted">
+                Tu pago ha sido procesado correctamente y ya estamos preparando tu pedido.
+            </p>
+
+            <div class="card my-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3">Resumen de la Transacción</h5>
+                    <ul class="list-group list-group-flush bg-transparent">
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                            Número de Pedido:
+                            <span class="badge bg-primary rounded-pill">#@pedidoId</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                            ID de Pago MP:
+                            <span class="text-muted small">@pagoId</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                            Estado:
+                            <span class="text-success fw-bold">Aprobado</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+                <a asp-action="MisPedidos" class="btn btn-primary btn-lg px-4 gap-3">
+                    <i class="bi bi-box-seam"></i> Ver mis pedidos
+                </a>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg px-4">
+                    Seguir comprando
+                </a>
+            </div>
+
+            <p class="mt-5 text-muted small">
+                Te enviamos un correo con el detalle de tu factura. Si tienes dudas, contáctanos con tu número de pedido.
+            </p>
+        </div>
+    </div>
+</div>

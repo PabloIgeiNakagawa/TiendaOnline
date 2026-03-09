@@ -1,5 +1,4 @@
 ﻿@using TiendaOnline.Features.Pedidos
-@using TiendaOnline.Features.Pedidos.Admin
 @model MisPedidosViewModel
 @{
     ViewData["Title"] = "Mis Pedidos";
@@ -13,9 +12,9 @@
                 <div>
                     <h2 class="mb-1 fw-bold">
                         <i class="bi bi-bag-check-fill me-2 text-primary"></i>
-                        Mis Pedidos
+                        Mis pedidos
                     </h2>
-                    <p class="text-muted mb-0">Historial completo de tus compras y pedidos</p>
+                    <p class="text-muted mb-0">Historial completo de tus pedidos</p>
                 </div>
             </div>
         </div>
@@ -32,11 +31,11 @@
                         <div class="card mb-4 overflow-hidden">
 
                             <!-- HEADER -->
-                            <div class="card-header border-bottom py-3">
+                            <div class="card-header bg-transparent border-0 py-3">
                                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
 
                                     <div>
-                                        <h6 class="fw-bold mb-1">Pedido #@pedido.PedidoId</h6>
+                                        <h5 class="fw-bold mb-1">Pedido #@pedido.PedidoId</h5>
                                         <div class="text-muted small d-flex align-items-center">
                                             <i class="bi bi-calendar3 me-1"></i>
                                             @pedido.FechaPedido.ToString("dd MMM yyyy · HH:mm")
@@ -56,7 +55,7 @@
                                 <!-- TIMELINE -->
                                 <div class="mb-4">
 
-                                    <h6 class="mb-3 small fw-semibold text-muted">
+                                    <h6 class="mb-3 small fw-semibold">
                                         Estado del pedido
                                     </h6>
 
@@ -165,7 +164,7 @@
 
                                 <!-- Productos -->
                                 <div>
-                                    <small class="text-muted fw-semibold d-block mb-2">
+                                    <small class="fw-semibold d-block mb-2">
                                         Productos
                                     </small>
 
@@ -182,16 +181,15 @@
                             </div>
 
                             <!-- Footer -->
-                            <div class="card-footer bg-transparent d-flex justify-content-end">
+                            <div class="card-footer bg-transparent border-0 d-flex justify-content-end pb-3">
 
                                 <a asp-action="Detalles"
                                    asp-route-id="@pedido.PedidoId"
-                                   class="btn btn-sm btn-outline-primary">
-                                    Ver detalles
+                                   class="btn border-0 fw-bold">
+                                    Ver detalles <i class="bi bi-arrow-right"></i>
                                 </a>
 
                             </div>
-
                         </div>
                     }
                 }
@@ -199,7 +197,7 @@
                 {
                     <div class="text-center py-5">
                         <div class="mb-3">
-                            <i class="bi bi-bag-x text-muted" style="font-size: 4rem;"></i>
+                            <i class="bi bi-bag-x" style="font-size: 4rem;"></i>
                         </div>
                         <h5 class="text-muted">No tienes pedidos aún</h5>
                         <p class="text-muted">¡Explora nuestro catálogo y realiza tu primera compra!</p>

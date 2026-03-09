@@ -34,8 +34,10 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
 
         public async Task<DireccionDto> ObtenerPorIdAsync(int? id)
         {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+
             var direccion = await _context.Direcciones
-                .Where(d => d.UsuarioId == id)
+                .Where(d => d.DireccionId == id)
                 .Select(d => new DireccionDto
                 {
                     DireccionId = d.DireccionId,
@@ -51,7 +53,7 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
                 })
                 .FirstOrDefaultAsync();
 
-            return direccion ?? throw new InvalidOperationException("No se encontró la dirección para el usuario especificado.");
+            return direccion ?? throw new InvalidOperationException($"No se encontró la dirección con ID {id}.");
         }
     }
 }

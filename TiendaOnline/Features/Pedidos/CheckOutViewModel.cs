@@ -4,23 +4,23 @@ namespace TiendaOnline.Features.Pedidos
 {
     public class CheckOutViewModel
     {
-        // 1. Resumen del Carrito
+        // Resumen del Carrito
         public List<CheckOutItemViewModel> Items { get; set; } = new();
         public decimal SubTotal { get; set; }
         public decimal CostoEnvio { get; set; }
         public decimal Total => SubTotal + CostoEnvio;
 
-        // 2. Datos del Usuario
+        // Datos del Usuario
         public string Nombre { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Telefono { get; set; } = string.Empty;
 
-        // 3. Lógica de Entrega
+        // Lógica de Entrega
         [Required(ErrorMessage = "Seleccioná un método de entrega")]
         public string MetodoEntrega { get; set; } = "RetiroLocal"; // "RetiroLocal" o "EnvioDomicilio"
 
-        // 4. Direcciones
-        // Opcional: Para mostrar un Dropdown con las direcciones que el usuario ya guardó antes
+        // Direcciones
+        // Para mostrar un Dropdown con las direcciones que el usuario ya guardó antes
         public List<DireccionGuardadaViewModel> DireccionesGuardadas { get; set; } = new();
         public int? DireccionSeleccionadaId { get; set; } // Si elige una existente
 

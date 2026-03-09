@@ -30,6 +30,8 @@ namespace TiendaOnline.Infrastructure.Services.Auth
             {
                 UsuarioId = usuario.UsuarioId,
                 Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
+                Telefono = usuario.Telefono,
                 Email = usuario.Email,
                 Rol = usuario.Rol.ToString()
             };

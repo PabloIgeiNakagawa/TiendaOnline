@@ -15,7 +15,6 @@
     const $calle = document.querySelector('input[name="NuevaDireccion.Calle"]');
 
     // --- 1. LÓGICA DE VALIDACIÓN (BOTÓN) ---
-    // --- 1. LÓGICA DE VALIDACIÓN (BOTÓN) ---
     function validarEstadoBoton() {
         const btn = document.getElementById('btnConfirmarPedido');
         if (!btn) return;

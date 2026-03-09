@@ -10,6 +10,7 @@ using TiendaOnline.Application.Direcciones;
 using TiendaOnline.Application.Geo;
 using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Application.MovimientosStock.Queries;
+using TiendaOnline.Application.Payment;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Application.Pedidos.Query;
 using TiendaOnline.Application.Productos.Commands;
@@ -52,6 +53,7 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IPedidoCommandService, PedidoCommandService>();
             services.AddScoped<IGeoService, GeoService>();
             services.AddScoped<IDireccionService, DireccionService>();
+            services.AddScoped<IPaymentService, MercadoPagoService>();
 
             // Administración
             services.AddScoped<IAdminOverviewService, AdminOverviewService>();

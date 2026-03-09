@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System.Security.Claims;
 using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.Direcciones;
+using TiendaOnline.Application.Payment;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Application.Pedidos.Query;
 
@@ -15,13 +16,15 @@ namespace TiendaOnline.Features.Pedidos
         private readonly IPedidoCommandService _pedidoCommandService;
         private readonly ICarritoService _carritoService;
         private readonly IDireccionService _direccionService;
+        private readonly IPaymentService _paymentService;
 
-        public PedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService, ICarritoService carritoService, IDireccionService direccionService)
+        public PedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService, ICarritoService carritoService, IDireccionService direccionService, IPaymentService paymentService)
         {
             _pedidoQueryService = pedidoQueryService;
             _pedidoCommandService = pedidoCommandService;
             _carritoService = carritoService;
             _direccionService = direccionService;
+            _paymentService = paymentService;
         }
 
         [HttpGet("[action]")]
@@ -66,7 +69,6 @@ namespace TiendaOnline.Features.Pedidos
                 return NotFound();
 
             var subtotal = pedido.Items.Sum(d => d.Cantidad * d.PrecioUnitario);
-            var iva = subtotal * 0.19m;
 
             var viewModel = new PedidoDetalleViewModel
             {
@@ -81,6 +83,10 @@ namespace TiendaOnline.Features.Pedidos
                 UsuarioEmail = pedido.UsuarioEmail,
                 UsuarioTelefono = pedido.UsuarioTelefono,
 
+                DireccionCompleta = pedido.DireccionCompleta,
+                Localidad = pedido.Localidad,
+                Provincia = pedido.Provincia,
+
                 Items = pedido.Items.Select(d => new PedidoItemViewModel
                 {
                     ProductoNombre = d.ProductoNombre,
@@ -90,8 +96,6 @@ namespace TiendaOnline.Features.Pedidos
                 }).ToList(),
 
                 Subtotal = subtotal,
-                IVA = iva,
-                Total = subtotal + iva,
 
                 NumeroSeguimiento = pedido.EstadoNombre == "Enviado"
                     ? $"TRK{pedido.PedidoId:D6}CO"
@@ -128,8 +132,7 @@ namespace TiendaOnline.Features.Pedidos
 
             var subtotal = items.Sum(i => i.Precio * i.Cantidad);
 
-            // 2. Simular obtener direcciones guardadas del usuario (esto iría en un Service)
-            var direcciones = new List<DireccionGuardadaViewModel>(); // await _usuarioService.ObtenerDireccionesAsync(userId);
+            var direcciones = await _direccionService.ObtenerDireccionesAsync(ObtenerUserId());
 
             var nombre = User.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
             var email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
@@ -137,6 +140,13 @@ namespace TiendaOnline.Features.Pedidos
 
             var viewModel = new CheckOutViewModel
             {
+                DireccionesGuardadas = direcciones.Select(d => new DireccionGuardadaViewModel
+                {
+                    DireccionId = d.DireccionId,
+                    Etiqueta = d.Etiqueta,
+                    Calle = d.Calle,
+                    Numero = d.Numero
+                }).ToList(),
                 Items = items.Select(i => new CheckOutItemViewModel
                 {
                     ProductoId = i.ProductoId,
@@ -158,7 +168,7 @@ namespace TiendaOnline.Features.Pedidos
         [HttpPost]
         public async Task<IActionResult> ProcesarCheckout(CheckOutViewModel model)
         {
-            // 1. RECARGAR DATOS DEL CARRITO (Vital para que no se pierdan los Items)
+            // RECARGAR DATOS DEL CARRITO (Vital para que no se pierdan los Items)
             var carritoItems = await _carritoService.ObtenerAsync();
 
             // Mapeamos los items del servicio al ViewModel porque el POST los trajo nulos
@@ -175,10 +185,33 @@ namespace TiendaOnline.Features.Pedidos
             // Asigná el costo de envío según tu lógica de negocio
             model.CostoEnvio = model.MetodoEntrega == "EnvioDomicilio" ? 500 : 0;
 
-            // 2. Lógica de validación
+            // Si es retiro en local, ignoramos la validación de la dirección
+            if (model.MetodoEntrega == "RetiroLocal")
+            {
+                // Eliminamos todos los errores que empiecen con "NuevaDireccion"
+                foreach (var key in ModelState.Keys.Where(k => k.StartsWith("NuevaDireccion")).ToList())
+                {
+                    ModelState.Remove(key);
+                }
+
+                // También si tienes validación para la dirección guardada
+                ModelState.Remove(nameof(model.DireccionSeleccionadaId));
+            }
+
+            // Lógica de validación
             if (model.MetodoEntrega == "EnvioDomicilio")
             {
-                if (model.DireccionSeleccionadaId == null && string.IsNullOrEmpty(model.NuevaDireccion?.Calle))
+                // SI ELIGIÓ UNA GUARDADA: Ignoramos los errores de validación de la "NuevaDireccion"
+                if (model.DireccionSeleccionadaId != null)
+                {
+                    // Buscamos todas las llaves que empiecen con "NuevaDireccion" y las removemos del ModelState
+                    var keysToRemove = ModelState.Keys.Where(k => k.StartsWith("NuevaDireccion")).ToList();
+                    foreach (var key in keysToRemove)
+                    {
+                        ModelState.Remove(key);
+                    }
+                }
+                else if (string.IsNullOrEmpty(model.NuevaDireccion?.Calle))
                 {
                     ModelState.AddModelError("", "Debes seleccionar o ingresar una dirección.");
                 }
@@ -199,13 +232,13 @@ namespace TiendaOnline.Features.Pedidos
                 return View("CheckOut", model);
             }
 
-            // 3. Guardamos en TempData (Ahora con Items cargados)
+            // Guardamos en TempData (Ahora con Items cargados)
             TempData["DatosPedido"] = JsonConvert.SerializeObject(model);
 
             return RedirectToAction("Confirmacion");
         }
 
-        [HttpGet]
+        [HttpGet("[action]")]
         public async Task<IActionResult> Confirmacion()
         {
             // Recuperamos de TempData
@@ -231,7 +264,7 @@ namespace TiendaOnline.Features.Pedidos
                 EmailUsuario = checkoutData.Email
             };
 
-            // 3. Lógica para la dirección a mostrar
+            // Lógica para la dirección a mostrar
             if (checkoutData.MetodoEntrega == "EnvioDomicilio")
             {
                 if (checkoutData.DireccionSeleccionadaId.HasValue)
@@ -269,25 +302,65 @@ namespace TiendaOnline.Features.Pedidos
 
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> FinalizarCompra()
+        public async Task<IActionResult> FinalizarCompra(int metodoDePagoId)
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-
-            if (claim == null)
-                return Unauthorized();
+            if (claim == null) return Unauthorized();
 
             int usuarioId = int.Parse(claim.Value);
 
-            var resultado = await _pedidoCommandService.CrearPedidoAsync(usuarioId);
-
-            if (resultado < 0)
+            try
             {
-                TempData["MensajeError"] = "No se ha podido crear el pedido.";
-                return RedirectToAction("Index", "Carrito");
-            }
+                // Crear el pedido en BD
+                var pedido = await _pedidoCommandService.CrearPedidoYPrepararPagoAsync(usuarioId, metodoDePagoId);
 
-            TempData["MensajeExito"] = "¡Pedido realizado con éxito!";
-            return RedirectToAction("Detalles", new { id = resultado });
+                // Si el método es Mercado Pago (ID 1 por ejemplo), generamos link
+                if (metodoDePagoId == 1)
+                {
+                    var urlPago = await _paymentService.GenerarPreferenciaPagoAsync(pedido);
+                    return Redirect(urlPago);
+                }
+
+                // Si es otro método (ej. Efectivo), vamos directo a detalles
+                TempData["MensajeExito"] = "¡Pedido realizado con éxito!";
+                return RedirectToAction("Detalles", new { id = pedido.PedidoId });
+            }
+            catch (Exception ex)
+            {
+                TempData["MensajeError"] = ex.Message;
+                return RedirectToAction("Index", "Carritos");
+            }
+        }
+
+        [HttpGet("[action]")]
+        public IActionResult PagoExitoso([FromQuery] string external_reference, [FromQuery] string payment_id)
+        {
+            ViewBag.PedidoId = external_reference;
+            ViewBag.PagoId = payment_id;
+
+            return View();
+        }
+
+        [HttpGet("[action]")]
+        public IActionResult PagoFallido([FromQuery] string external_reference)
+        {
+            ViewBag.PedidoId = external_reference;
+            return View();
+        }
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> ReintentarPago(int pedidoId)
+        {
+            // Buscamos el pedido existente con sus datos
+            var pedidoDto = await _pedidoCommandService.ObtenerDatosParaPagoAsync(pedidoId);
+
+            if (pedidoDto == null) return NotFound();
+
+            // Generamos un nuevo link de Mercado Pago
+            var urlPago = await _paymentService.GenerarPreferenciaPagoAsync(pedidoDto);
+
+            // Mandamos al usuario a pagar otra vez
+            return Redirect(urlPago);
         }
 
         private string ObtenerClaseEstado(int estadoId)

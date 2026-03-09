@@ -201,33 +201,7 @@
                                 <div class="mb-3">
                                     <div class="small text-secondary mb-1">Estado del Pedido</div>
                                     <div class="fw-medium">
-                                        @switch (Model.Estado)
-                                        {
-                                            case "Pendiente":
-                                                <span class="text-warning">
-                                                    <i class="bi bi-clock me-1"></i>
-                                                    Estamos preparando tu pedido
-                                                </span>
-                                                break;
-                                            case "Enviado":
-                                                <span class="text-info">
-                                                    <i class="bi bi-truck me-1"></i>
-                                                    Tu pedido está en camino
-                                                </span>
-                                                break;
-                                            case "Entregado":
-                                                <span class="text-success">
-                                                    <i class="bi bi-check-circle me-1"></i>
-                                                    Pedido entregado exitosamente
-                                                </span>
-                                                break;
-                                            case "Cancelado":
-                                                <span class="text-danger">
-                                                    <i class="bi bi-x-circle me-1"></i>
-                                                    Pedido cancelado
-                                                </span>
-                                                break;
-                                        }
+                                        @Model.Estado
                                     </div>
                                 </div>
                                 @if (Model.Estado == "Enviado")
@@ -488,16 +462,12 @@
                         <div class="fw-medium">@Model.Subtotal.ToString("C0")</div>
                     </div>
                     <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
-                        <span>IVA (19%)</span>
-                        <div class="fw-medium">@Model.IVA.ToString("C0")</div>
-                    </div>
-                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
                         <span>Envío</span>
                         <div class="fw-medium">Gratis</div>
                     </div>
-                    <div class="d-flex justify-content-between mt-4 pt-3">
+                    <div class="d-flex justify-content-between mt-4 pt-3 fw-medium fs-4">
                         <span>Total</span>
-                        <div class="fw-medium fs-4">@Model.Total.ToString("C0")</div>
+                        <div>@Model.Subtotal.ToString("C0")</div>
                     </div>
                 </div>
             </div>
@@ -510,7 +480,7 @@
                 <div class="card-body p-4">
                     <address class="mb-0">
                         <i class="bi bi-person"></i> @(Model.UsuarioNombre ?? "Cliente")<br>
-                        @* <i class="bi bi-geo-alt"></i>  @(Model.Usuario?.Direccion ?? "Dirección no especificada")<br> *@
+                        <i class="bi bi-geo-alt"></i> @(Model.DireccionCompleta ?? "Retiro en el local")<br> 
                         <i class="bi bi-telephone me-1"></i> @(Model.UsuarioTelefono ?? "No disponible")<br>
                         <i class="bi bi-envelope me-1"></i> @(Model.UsuarioEmail ?? "No disponible")
                     </address>

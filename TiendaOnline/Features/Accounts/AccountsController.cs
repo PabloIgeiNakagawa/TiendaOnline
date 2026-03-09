@@ -76,6 +76,8 @@ namespace TiendaOnline.Features.Accounts
             {
                 new Claim(ClaimTypes.NameIdentifier, usuarioDto.UsuarioId.ToString()),
                 new Claim(ClaimTypes.Name, usuarioDto.Nombre),
+                new Claim(ClaimTypes.Surname, usuarioDto.Apellido),
+                new Claim(ClaimTypes.MobilePhone, usuarioDto.Telefono),
                 new Claim(ClaimTypes.Email, usuarioDto.Email),
                 new Claim(ClaimTypes.Role, usuarioDto.Rol)
             };
