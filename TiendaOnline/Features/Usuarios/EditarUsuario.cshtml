@@ -39,7 +39,7 @@
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <form asp-action="EditarUsuario" method="post" id="formularioEditarUsuario" novalidate>
+                    <form asp-action="EditarUsuario" asp-route-id="@Model.UsuarioId" method="post" id="formularioEditarUsuario" novalidate>
                         @Html.AntiForgeryToken()
                         <input type="hidden" asp-for="UsuarioId" />
 

@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Application.Usuarios.Queries;
 
 namespace TiendaOnline.Features.Usuarios
 {
+    [Authorize(Policy = "EsDuenioDelPerfil")]
     [Route("[controller]")]
     public class UsuariosController : Controller
     {
@@ -17,7 +19,7 @@ namespace TiendaOnline.Features.Usuarios
             _usuarioCommandService = usuarioCommandService;
         }
 
-        [HttpGet("[action]")]
+        [HttpGet("Perfil/{id}")]
         public async Task<IActionResult> PerfilUsuario(int id)
         {
             var usuario = await _usuarioQueryService.ObtenerPerfil(id);
@@ -42,7 +44,7 @@ namespace TiendaOnline.Features.Usuarios
             return View(model);
         }
 
-        [HttpGet("[action]")]
+        [HttpGet("Editar/{id}")]
         public async Task<IActionResult> EditarUsuario(int id)
         {
             var usuario = await _usuarioQueryService.ObtenerUsuarioAsync(id);
@@ -57,9 +59,9 @@ namespace TiendaOnline.Features.Usuarios
             return View(model);
         }
 
-        [HttpPost("[action]")]
+        [HttpPost("Editar/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditarUsuario(UsuarioUpdateViewModel model)
+        public async Task<IActionResult> EditarUsuario(int id, UsuarioUpdateViewModel model)
         {
             if (!ModelState.IsValid)
             {

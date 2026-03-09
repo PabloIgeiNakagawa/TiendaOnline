@@ -17,12 +17,14 @@ namespace TiendaOnline.Features.Home
             _adminOverviewService = adminOverviewService;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult Index()
         {
             return View();
         }
 
+        [AllowAnonymous]
         [HttpGet("Privacidad")] 
         public IActionResult Privacy()
         {
@@ -61,6 +63,12 @@ namespace TiendaOnline.Features.Home
             };
 
             return View(viewModel);
+        }
+
+        [AllowAnonymous]
+        public IActionResult AccesoDenegado()
+        {
+            return View();
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

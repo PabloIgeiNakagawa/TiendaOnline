@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Security.Claims;
 using TiendaOnline.Application.Carritos;
@@ -61,7 +62,8 @@ namespace TiendaOnline.Features.Pedidos
             return View(viewmodel);
         }
 
-        [HttpGet("[action]")]
+        [Authorize(Policy = "EsDuenioDelPedido")]
+        [HttpGet("Detalles/{id}")]
         public async Task<IActionResult> Detalles(int id)
         {
             var pedido = await _pedidoQueryService.ObtenerPedidoConDetallesAsync(id);
@@ -332,6 +334,7 @@ namespace TiendaOnline.Features.Pedidos
             }
         }
 
+        [Authorize(Policy = "EsDuenioDelPedido")]
         [HttpGet("[action]")]
         public IActionResult PagoExitoso([FromQuery] string external_reference, [FromQuery] string payment_id)
         {
@@ -341,6 +344,7 @@ namespace TiendaOnline.Features.Pedidos
             return View();
         }
 
+        [Authorize(Policy = "EsDuenioDelPedido")]
         [HttpGet("[action]")]
         public IActionResult PagoFallido([FromQuery] string external_reference)
         {
@@ -348,6 +352,7 @@ namespace TiendaOnline.Features.Pedidos
             return View();
         }
 
+        [Authorize(Policy = "EsDuenioDelPedido")]
         [HttpPost("[action]")]
         public async Task<IActionResult> ReintentarPago(int pedidoId)
         {
