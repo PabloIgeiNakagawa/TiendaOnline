@@ -8,13 +8,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-md-flex justify-content-md-between align-items-md-center">
-                <div>
-                    <h2 class="mb-1 fw-bold">
-                        <i class="bi bi-box-seam me-2 text-primary"></i>
-                        Catálogo
-                    </h2>
-                    <p class="text-muted mb-0">Administra los productos del sistema</p>
-                </div>
+                <partial name="_TituloSeccion" model='("Catálogo", "Administra los productos del sistema")' />
                 <a asp-action="AgregarProducto" class="btn btn-primary btn-lg shadow-sm rounded-3 mt-3 mt-md-0">
                         <i class="bi bi-plus-circle me-2"></i>
                         Nuevo Producto
@@ -27,12 +21,12 @@
     <form method="get" asp-action="Catalogo">
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card rounded-3 shadow-sm border-0">
+                <div class="card rounded-3 border border-1">
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-1">
                                 <label class="form-label fw-bold text-muted small">Ver</label>
-                                <select name="tamanoPagina" class="form-select" onchange="this.form.submit()">
+                                <select name="tamanoPagina" class="form-select">
                                     @{
                                         int[] opciones = { 10, 25, 50, 75, 100 };
                                         foreach (var cantidad in opciones)
@@ -156,27 +150,27 @@
                             <thead>
                                 <tr>
                                     <th class="border-0 py-3">
-                                        <div role="button" class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center">
                                             <i class="bi bi-box me-2 text-primary"></i>Producto
                                         </div>
                                     </th>
                                     <th class="border-0 py-3">
-                                        <div role="button" class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center">
                                             <i class="bi bi-tag me-2 text-primary"></i>Categoría
                                         </div>
                                     </th>
                                     <th class="border-0 py-3">
-                                        <div role="button" class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center">
                                             <i class="bi bi-currency-dollar me-2 text-primary"></i>Precio
                                         </div>
                                     </th>
                                     <th class="border-0 py-3">
-                                        <div role="button" class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center">
                                             <i class="bi bi-boxes me-2 text-primary"></i>Stock
                                         </div>
                                     </th>
                                     <th class="border-0 py-3">
-                                        <div role="button" class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center">
                                             <i class="bi bi-toggle-on me-2 text-primary"></i>Estado
                                         </div>
                                     </th>
@@ -512,11 +506,6 @@
                 <div class="text-center p-4">
                     <img id="imagenProductoModal" class="img-fluid rounded" style="max-height: 70vh; object-fit: contain;">
                 </div>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle me-1"></i>Cerrar
-                </button>
             </div>
         </div>
     </div>

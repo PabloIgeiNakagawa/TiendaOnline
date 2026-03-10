@@ -5,19 +5,11 @@
 }
 
 <div class="container py-5">
+    <partial name="_TituloSeccion" model='("Registrarse", "Complete sus datos para crear su cuenta en TechStore")' />
     <div class="row justify-content-center">
         <div class="col-lg-8 col-xl-6">
-            <!-- Encabezado -->
-            <div class="text-center">
-                <div class="d-flex align-items-center justify-content-center mx-auto mb-3 text-white fs-2 rounded-4 bg-primary " style="width: 80px; height: 80px;">
-                    <i class="bi bi-person-plus-fill"></i>
-                </div>
-                <h2 class="fw-bold mb-2">Registrarse</h2>
-                <p class="text-muted">Complete sus datos para crear su cuenta en TechStore</p>
-            </div>
-
             <!-- Formulario -->
-            <div class="shadow border-0 rounded-4 overflow-hidden">
+            <div class="border rounded-3 overflow-hidden">
                 <div class="p-5">
                     <form asp-action="Register" method="post" id="formularioRegistro" novalidate>
                         @Html.AntiForgeryToken()

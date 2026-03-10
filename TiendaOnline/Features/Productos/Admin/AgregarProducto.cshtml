@@ -51,16 +51,9 @@
         </ol>
     </nav>
 
-    <div class="mx-auto rounded-3 shadow overflow-hidden" style="max-width: 800px;">
-        <!-- Header -->
-        <div class="bg-primary py-5 px-4 text-center text-white">
-            <h2 class="mb-2">
-                <i class="bi bi-plus-circle me-2"></i>
-                Agregar Nuevo Producto
-            </h2>
-            <p class="mb-0 opacity-75">Complete la información del producto</p>
-        </div>
+    <partial name="_TituloSeccion" model='("Agregar producto", "Completá el formulario para registrar un nuevo artículo en el sistema.")' />
 
+    <div class="mx-auto rounded-3 border border-1 overflow-hidden" style="max-width: 800px;">
         <!-- Formulario -->
         <div class="p-4">
             <form asp-action="AgregarProducto" method="post" enctype="multipart/form-data" id="formProducto" novalidate>

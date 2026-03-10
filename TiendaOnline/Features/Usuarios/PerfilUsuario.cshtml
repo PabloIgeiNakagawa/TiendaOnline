@@ -17,14 +17,17 @@
             </li>
         </ol>
     </nav>
+
+    <partial name="_TituloSeccion" model='("Mi perfil", $"{Model.Nombre} {Model.Apellido}")' />
+
     <!-- Contenido Principal -->
     <div class="row g-4">
         <!-- Encabezado del Perfil -->
-        <div class="rounded-4 shadow-sm border-0">
+        <div class="rounded-3 border border-1">
             <div class="p-4">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
-                        <div class="info-basica ms-md-4">
+                        <div class="info-basica">
                             <h1 class="fs-2 fw-bold mb-2">@Model.Nombre @Model.Apellido</h1>
                             <div class="d-flex align-items-center gap-3 text-secondary">
                                 <span class="small">
@@ -65,9 +68,10 @@
                 </div>
             </div>
         </div>
+
         <!-- Información personal -->
-        <div class="card p-0 rounded-4 shadow-sm border-0">
-            <div class="card-header bg-body-tertiary border-bottom border-light-subtle rounded-top-4 px-4 py-3">
+        <div class="card p-0 rounded-3 border-1">
+            <div class="card-header bg-transparent  border-bottom rounded-top-3 px-4 py-3">
                 <h5 class="mb-0 fw-semibold">
                     <i class="bi bi-person-circle me-2 text-primary"></i>
                     Información Personal
@@ -75,7 +79,7 @@
             </div>
             <div class="card-body p-4">
                 <div class="row g-4">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="mb-4">
                             <label class="form-label small fw-semibold text-secondary mb-2">
                                 <i class="bi bi-person me-2"></i>Nombre Completo
@@ -83,7 +87,7 @@
                             <div class="d-flex align-items-center fw-medium">@Model.Nombre @Model.Apellido</div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="mb-4">
                             <label class="form-label small fw-semibold text-secondary mb-2">
                                 <i class="bi bi-envelope me-2"></i>Correo Electrónico
@@ -91,7 +95,7 @@
                             <div class="d-flex align-items-center fw-medium">@Model.Email</div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="mb-4">
                             <label class="form-label small fw-semibold text-secondary mb-2">
                                 <i class="bi bi-calendar me-2"></i>Fecha de Nacimiento
@@ -101,7 +105,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="mb-4">
                             <label class="form-label small fw-semibold text-secondary mb-2">
                                 <i class="bi bi-telephone me-2"></i>Teléfono
@@ -110,10 +114,6 @@
                                 @if (!string.IsNullOrEmpty(Model.Telefono))
                                 {
                                     <span>@Model.Telefono</span>
-                                    <button class="btn btn-sm btn-outline-primary ms-2 btn-copiar"
-                                            data-texto="@Model.Telefono">
-                                        <i class="bi bi-copy"></i>
-                                    </button>
                                 }
                                 else
                                 {
@@ -122,7 +122,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-12">
+                    <div class="col-md-4">
                         <div class="mb-4">
                             <label class="form-label small fw-semibold text-secondary mb-2">
                                 <i class="bi bi-geo-alt me-2"></i>Dirección
@@ -131,9 +131,6 @@
                                 @if (!string.IsNullOrEmpty(Model.Direccion))
                                 {
                                     <span>@Model.Direccion</span>
-                                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarAlPortapapeles('@Model.Direccion')">
-                                        <i class="bi bi-copy"></i>
-                                    </button>
                                 }
                                 else
                                 {
@@ -165,7 +162,7 @@
                                 </label>
                                 <div class="d-flex align-items-center fw-medium">
                                     <code class="bg-body-secondary text-secondary px-2 py-1 rounded-2">#@Model.UsuarioId</code>
-                                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="copiarAlPortapapeles('@Model.UsuarioId')">
+                                    <button class="btn btn-sm btn-outline-primary ms-2">
                                         <i class="bi bi-copy"></i>
                                     </button>
                                 </div>

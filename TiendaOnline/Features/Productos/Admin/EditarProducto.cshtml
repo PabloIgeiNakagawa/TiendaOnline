@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "Editar Producto - " + Model.Nombre;
 }
-<div class="container py-4">
+<div class="container-fluid py-4">
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
@@ -22,16 +22,9 @@
         </ol>
     </nav>
 
-    <div class="mx-auto rounded-3 shadow overflow-hidden" style="max-width: 800px;">
-        <!-- Header -->
-        <div class="bg-success text-white py-4 px-3 text-center">
-            <h2 class="mb-2">
-                <i class="bi bi-pencil-square me-2"></i>
-                Editar Producto
-            </h2>
-            <p class="mb-0 opacity-75">Modifique la información del producto</p>
-        </div>
+    <partial name="_TituloSeccion" model='("Editar producto", "Edición de detalles del producto en sistema.")' />
 
+    <div class="mx-auto rounded-3 border border-1 overflow-hidden" style="max-width: 800px;">
         <!-- Formulario -->
         <div class="p-4">
             <form asp-action="EditarProducto" method="post" enctype="multipart/form-data">
@@ -41,7 +34,7 @@
                 <!-- Información básica -->
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h5 class="text-success mb-3">
+                        <h5 class="text-primary mb-3">
                             <i class="bi bi-info-circle me-2"></i>
                             Información Básica
                         </h5>
@@ -80,16 +73,6 @@
                     <span asp-validation-for="CategoriaId" class="text-danger"></span>
                 </div>
 
-                <!-- Precio -->
-                <div class="row mb-4 mt-4">
-                    <div class="col-12">
-                        <h5 class="text-success mb-3">
-                            <i class="bi bi-currency-dollar me-2"></i>
-                            Precio
-                        </h5>
-                    </div>
-                </div>
-
                 <div class="row">
                     <!-- Precio -->
                     <div class="col-md-6 mb-3">
@@ -104,7 +87,7 @@
                 <!-- Imagen -->
                 <div class="row mb-4 mt-4">
                     <div class="col-12">
-                        <h5 class="text-success mb-3">
+                        <h5 class="text-primary mb-3">
                             <i class="bi bi-image me-2"></i>
                             Imagen del Producto
                         </h5>

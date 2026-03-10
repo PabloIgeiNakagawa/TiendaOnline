@@ -174,22 +174,41 @@
                     </div>
                 </div>
             </div>
+
+            <div class="mt-auto p-3 border-top">
+                <div class="nav-item">
+                    <button id="btn-theme" class="btn btn-link nav-link text-body p-2 rounded-circle" title="Cambiar tema">
+                        <i id="theme-icon" class="bi bi-sun-fill fs-5"></i> Claro/Oscuro
+                    </button>
+                </div>
+
+                <div class="nav-item">
+                    <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis align-items-center" asp-controller="Accounts" asp-action="Logout">
+                        <i class="bi bi-power"></i> Cerrar Sesión
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis  align-items-center" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-house-door"></i> Volver al Sitio
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <button class="btn d-flex align-items-center gap-2 border-0 gap-2 py-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-3 text-primary"></i> Admin TechStore
+                    </button>
+                </div>
+            </div>
         </nav>
     </aside>
 
     <div class="main-wrapper">
-        <header class="navbar navbar-expand bg-body border-bottom sticky-top p-0 shadow-sm" style="height: 70px;">
+        <header class="navbar navbar-expand bg-body border-bottom sticky-top p-0 d-md-none" style="height: 70px;">
             <div class="container-fluid px-4">
                 <button class="btn d-md-none me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarAdmin">
                     <i class="bi bi-list fs-4"></i>
                 </button>
-
-                <nav aria-label="breadcrumb" class="d-none d-sm-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted small">Administración</a></li>
-                        <li class="breadcrumb-item active fw-bold small text-primary" aria-current="page">@ViewData["Title"]</li>
-                    </ol>
-                </nav>
 
                 <div class="ms-auto d-flex align-items-center gap-2">
                     <button id="btn-theme" class="btn nav-link text-body px-2" title="Cambiar tema">
@@ -221,9 +240,9 @@
             </div>
         </header>
 
-        <main class="container-fluid p-4">
+        <main class="container-fluid p-md-4">
             @await Html.PartialAsync("_MensajeTempData")
-            <div class="bg-body border rounded-4 p-4 shadow-sm min-vh-100">
+            <div class="bg-body border rounded-3 p-md-4 min-vh-100">
                 @RenderBody()
             </div>
         </main>

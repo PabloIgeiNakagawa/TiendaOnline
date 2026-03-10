@@ -2,29 +2,16 @@
 @model PedidoListadoViewModel
 @{
     ViewData["Title"] = "Gestión de Pedidos";
-    var esAdmin = User.IsInRole("Administrador");
 }
 
 <div class="container-fluid py-4">
     <!-- Sección de Encabezado -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="mb-1 fw-bold">
-                        <i class="bi bi-receipt me-2 text-primary"></i>
-                        Gestión de Pedidos
-                    </h2>
-                    <p class="text-muted mb-0">Administra todos los pedidos del sistema</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <partial name="_TituloSeccion" model='("Gestión de pedidos", "Administra todos los pedidos del sistema")' />
 
     <!-- Filtros y Búsqueda -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow-sm border-0">
+            <div class="card border">
                 <div class="card-body">
                     <div class="row g-3">
                         <form asp-action="Listado" method="get" class="row g-3">
@@ -222,7 +209,7 @@
                                                    class="btn btn-outline-info btn-sm rounded-2 shadow-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                @if (pedido.EstadoNombre == "Pendiente" && esAdmin)
+                                                @if (pedido.EstadoNombre == "Pendiente")
                                                 {
                                                     <button type="button"
                                                             class="btn btn-outline-success btn-sm rounded-2 shadow-sm btn-cambio-estado"

@@ -5,20 +5,8 @@
 }
 
 <div class="container-fluid py-4">
-    <!-- Encabezado -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="mb-1 fw-bold">
-                        <i class="bi bi-bag-check-fill me-2 text-primary"></i>
-                        Mis pedidos
-                    </h2>
-                    <p class="text-muted mb-0">Historial completo de tus pedidos</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Titulo -->
+    <partial name="_TituloSeccion" model='("Mis pedidos", "Historial completo de tus pedidos")' />
 
     <!-- Lista de Pedidos -->
     <div class="row">
@@ -31,11 +19,13 @@
                         <div class="card mb-4 overflow-hidden">
 
                             <!-- HEADER -->
-                            <div class="card-header bg-transparent border-0 py-3">
-                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                            <div class="card-header bg-transparent border-bottom mb-2 py-3">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mx-3">
 
                                     <div>
-                                        <h5 class="fw-bold mb-1">Pedido #@pedido.PedidoId</h5>
+                                        <h4 class="fw-bold mb-1 tracking-tight">
+                                            Pedido <span class="text-primary">#@pedido.PedidoId</span>
+                                        </h4>
                                         <div class="text-muted small d-flex align-items-center">
                                             <i class="bi bi-calendar3 me-1"></i>
                                             @pedido.FechaPedido.ToString("dd MMM yyyy · HH:mm")
@@ -50,15 +40,9 @@
                             </div>
 
                             <!-- BODY -->
-                            <div class="card-body">
-
+                            <div class="card-body pb-0 mx-2">
                                 <!-- TIMELINE -->
                                 <div class="mb-4">
-
-                                    <h6 class="mb-3 small fw-semibold">
-                                        Estado del pedido
-                                    </h6>
-
                                     <div class="d-flex flex-row align-items-start align-items-md-center justify-content-between">
 
                                         @{
@@ -162,26 +146,30 @@
                                     </div>
                                 </div>
 
-                                <!-- Productos -->
-                                <div>
-                                    <small class="fw-semibold d-block mb-2">
-                                        Productos
-                                    </small>
+                                <hr class="opacity-25"/>
 
-                                    <ul class="list-unstyled mb-0 small">
+                                <!-- Productos -->
+                                <div class="rounded-3 p-3">
+                                    <h6 class="text-uppercase small fw-bold mb-3" style="letter-spacing: 1px;">
+                                        <i class="bi bi-list-ul me-2 text-info"></i>Productos
+                                    </h6>
+                                    <div class="row g-2">
                                         @foreach (var producto in pedido.Productos)
                                         {
-                                            <li class="text-body-secondary">
-                                                • @producto
-                                            </li>
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-center border border-secondary border-opacity-10 p-2 rounded-2 bg-opacity-50">
+                                                    <i class="bi bi-chevron-right text-info small me-2"></i>
+                                                    <span class="small text-truncate">@producto</span>
+                                                </div>
+                                            </div>
                                         }
-                                    </ul>
+                                    </div>
                                 </div>
-
+                                <hr class="opacity-25" />
                             </div>
 
                             <!-- Footer -->
-                            <div class="card-footer bg-transparent border-0 d-flex justify-content-end pb-3">
+                            <div class="card-footer bg-transparent border-0 d-flex justify-content-end pt-0 pb-3">
 
                                 <a asp-action="Detalles"
                                    asp-route-id="@pedido.PedidoId"
