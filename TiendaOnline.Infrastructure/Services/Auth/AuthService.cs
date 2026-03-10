@@ -61,5 +61,21 @@ namespace TiendaOnline.Infrastructure.Services.Auth
             await _context.SaveChangesAsync();
         }
 
+        public async Task<UsuarioDto?> ObtenerUsuarioPorEmailAsync(string email)
+        {
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+            if (usuario == null) return null;
+
+            return new UsuarioDto
+            {
+                UsuarioId = usuario.UsuarioId,
+                Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
+                Telefono = usuario.Telefono,
+                Email = usuario.Email,
+                Rol = usuario.Rol.ToString()
+            };
+        }
+
     }
 }

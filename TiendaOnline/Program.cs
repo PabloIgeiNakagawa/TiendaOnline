@@ -20,7 +20,7 @@ builder.Services.AddDbContext<TiendaContext>(options =>
     ));
 
 // Extensiones personalizadas para organizar la configuración
-builder.Services.AddCustomSecurity(); // Configura Cookies y Session
+builder.Services.AddCustomSecurity(builder.Configuration); // Configura Cookies y Session
 builder.Services.AddBusinessServices(); // Registra todos tus Services
 
 var app = builder.Build();
@@ -35,12 +35,12 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.Use(async (context, next) =>
 {
-    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers.XContentTypeOptions = "nosniff";
     context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
     context.Response.Headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()";
-    context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
+    context.Response.Headers.XFrameOptions = "SAMEORIGIN";
 
-    context.Response.Headers["Content-Security-Policy"] =
+    context.Response.Headers.ContentSecurityPolicy =
         "default-src 'self'; " +
         "img-src 'self' https: data:; " +
         "script-src 'self' https:; " +

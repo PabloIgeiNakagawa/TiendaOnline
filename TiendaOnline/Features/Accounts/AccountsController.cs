@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TiendaOnline.Application.Auth;
@@ -93,6 +95,78 @@ namespace TiendaOnline.Features.Accounts
 
             var role = principal.FindFirstValue(ClaimTypes.Role);
             return role == "Administrador"
+                ? RedirectToAction("IndexAdmin", "Home")
+                : RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet("[action]")]
+        public IActionResult GoogleLogin()
+        {
+            var properties = new AuthenticationProperties { RedirectUri = Url.Action("GoogleResponse") };
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GoogleResponse()
+        {
+            var result = await HttpContext.AuthenticateAsync("ExternalCookie");
+            if (!result.Succeeded)
+            {
+                TempData["MensajeError"] = "Hubo un error al continuar con Google.";
+                return RedirectToAction("Login");
+            }
+                
+            var email = result.Principal.FindFirstValue(ClaimTypes.Email);  
+                
+            // Buscamos si ya existe en la DB
+            var usuarioDto = await _authService.ObtenerUsuarioPorEmailAsync(email);
+
+            // SI NO EXISTE: Lo registramos automáticamente
+            if (usuarioDto == null)
+            {
+                var nombre = result.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "Usuario";
+                var apellido = result.Principal.FindFirstValue(ClaimTypes.Surname) ?? "";
+
+                var nuevoUsuario = new RegisterDto
+                {
+                    Nombre = nombre,
+                    Apellido = apellido,
+                    Email = email,
+                    RolId = 0, // RolId 0 = Usuario
+                    // Generamos una contraseña compleja aleatoria, ya que la DB requiere una
+                    // El usuario nunca la va a usar, porque entrará con Google
+                    Contrasena = Guid.NewGuid().ToString() + "aA1!"
+                };
+
+                await _authService.RegisterAsync(nuevoUsuario);
+
+                // Lo volvemos a buscar ahora que ya se guardó en la DB y tiene un UsuarioId asignado
+                usuarioDto = await _authService.ObtenerUsuarioPorEmailAsync(email);
+            }
+
+            // Armamos los claims
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, usuarioDto!.UsuarioId.ToString()),
+                new Claim(ClaimTypes.Name, usuarioDto.Nombre),
+                new Claim(ClaimTypes.Surname, usuarioDto.Apellido ?? ""),
+                new Claim(ClaimTypes.MobilePhone, usuarioDto.Telefono ?? ""),
+                new Claim(ClaimTypes.Email, usuarioDto.Email),
+                new Claim(ClaimTypes.Role, usuarioDto.Rol)
+            };
+
+            var identity = new ClaimsIdentity(claims, "CookieAuth");
+            var principal = new ClaimsPrincipal(identity);
+
+            // Iniciamos sesión y borramos la temporal
+            await HttpContext.SignInAsync("CookieAuth", principal, new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+            });
+            await HttpContext.SignOutAsync("ExternalCookie");
+
+            return usuarioDto.Rol == "Administrador"
                 ? RedirectToAction("IndexAdmin", "Home")
                 : RedirectToAction("Index", "Home");
         }

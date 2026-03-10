@@ -5,7 +5,7 @@ namespace TiendaOnline.Extensions
 {
     public static class StartupAuthExtensions
     {
-        public static IServiceCollection AddCustomSecurity(this IServiceCollection services)
+        public static IServiceCollection AddCustomSecurity(this IServiceCollection services, IConfiguration config)
         {
             // Authorization
             services.AddAuthorization(options =>
@@ -41,7 +41,18 @@ namespace TiendaOnline.Extensions
                     #else
                         config.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
                     #endif
-                    config.Cookie.SameSite = SameSiteMode.Strict;
+                    config.Cookie.SameSite = SameSiteMode.Lax;
+                })
+                .AddCookie("ExternalCookie", options =>  // <-- Esquema temporal para Google
+                {
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SameSite = SameSiteMode.Lax; // Crucial para que Google pueda escribirla
+                })
+                .AddGoogle(options =>
+                {
+                    options.SignInScheme = "ExternalCookie"; // <-- Le decimos a Google que use el temporal
+                    options.ClientId = config["GoogleKeys:ClientId"] ?? string.Empty;
+                    options.ClientSecret = config["GoogleKeys:ClientSecret"] ?? string.Empty;
                 });
 
             return services;

@@ -35,7 +35,7 @@ namespace TiendaOnline.Infrastructure.Persistence
 
                 var auditoria = new Auditoria
                 {
-                    UsuarioId = currentUserId ?? -1,
+                    UsuarioId = currentUserId,
                     TablaAfectada = nombreTabla,
                     Fecha = DateTime.Now,
                     Accion = entry.State switch

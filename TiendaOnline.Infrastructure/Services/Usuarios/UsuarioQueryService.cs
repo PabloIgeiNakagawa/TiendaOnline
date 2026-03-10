@@ -31,7 +31,7 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
                 Nombre = usuario.Nombre,
                 Apellido = usuario.Apellido,
                 Email = usuario.Email,
-                Telefono = usuario.Telefono,
+                Telefono = usuario.Telefono ?? string.Empty,
                 Direccion = direccionPrincipal != null ? $"{direccionPrincipal.Calle} {direccionPrincipal.Numero}, {direccionPrincipal.Localidad}" : "Sin dirección",
                 FechaNacimiento = usuario.FechaNacimiento,
                 FechaCreacion = usuario.FechaCreacion,
@@ -55,7 +55,7 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
                 UsuarioId = usuario.UsuarioId,
                 Nombre = usuario.Nombre,
                 Apellido = usuario.Apellido,
-                Telefono = usuario.Telefono
+                Telefono = usuario.Telefono ?? string.Empty
             };
         }
 
