@@ -101,7 +101,14 @@
                                 <i class="bi bi-calendar me-2"></i>Fecha de Nacimiento
                             </label>
                             <div class="d-flex align-items-center fw-medium">
-                                @Model.FechaNacimiento.ToString("dd 'de' MMMM 'de' yyyy")
+                                @if (Model.FechaNacimiento != null)
+                                {
+                                    <span>@Model.FechaNacimiento.Value.ToString("dd 'de' MMMM 'de' yyyy", System.Globalization.CultureInfo.CurrentCulture)</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No especificada</span>
+                                }
                             </div>
                         </div>
                     </div>

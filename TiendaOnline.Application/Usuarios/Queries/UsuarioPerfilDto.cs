@@ -8,7 +8,7 @@
         public string Email { get; set; }
         public string Telefono { get; set; }
         public string Direccion { get; set; }
-        public DateTime FechaNacimiento { get; set; }
+        public DateTime? FechaNacimiento { get; set; }
         public DateTime FechaCreacion { get; set; }
         public bool Activo { get; set; }
         public DateTime? UltimaFechaBaja { get; set; }

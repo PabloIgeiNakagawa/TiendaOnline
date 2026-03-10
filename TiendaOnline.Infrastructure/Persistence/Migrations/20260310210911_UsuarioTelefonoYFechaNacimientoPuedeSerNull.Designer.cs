@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TiendaOnline.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using TiendaOnline.Infrastructure.Persistence;
 namespace TiendaOnline.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TiendaContext))]
-    partial class TiendaContextModelSnapshot : ModelSnapshot
+    [Migration("20260310210911_UsuarioTelefonoYFechaNacimientoPuedeSerNull")]
+    partial class UsuarioTelefonoYFechaNacimientoPuedeSerNull
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -443,6 +446,7 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Telefono")
+                        .IsRequired()
                         .HasMaxLength(25)
                         .HasColumnType("nvarchar(25)");
 
