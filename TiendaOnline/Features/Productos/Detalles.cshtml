@@ -15,7 +15,7 @@
         @if (Model.CategoriaNombre != null)
         {
             <li class="breadcrumb-item">
-                <a asp-controller="Categorias" asp-action="Productos" asp-route-id="@Model.CategoriaId" class="text-decoration-none">@Model.CategoriaNombre</a>
+                <a asp-action="Index" asp-route-CategoriaId="@Model.CategoriaId" class="text-decoration-none">@Model.CategoriaNombre</a>
             </li>
         }
         <li class="breadcrumb-item active" aria-current="page">@Model.Nombre</li>
@@ -35,13 +35,25 @@
         <!-- Información del Producto -->
         <div class="col-lg-6 col-md-6">
             <div>
-                <!-- Categoría -->
+                <!-- Categoría y stock -->
                 @if (Model.CategoriaNombre != null)
                 {
                     <div class="producto-categoria-detalle mb-3">
-                        <span class="bg-body-secondary border fw-semibold px-2 py-1 rounded-pill small">
+                        <span class="bg-body-secondary border fw-semibold px-2 py-1 rounded-pill small me-2">
                             <i class="bi bi-tag"></i> @Model.CategoriaNombre
                         </span>
+                        @if (Model.Stock > 0 && Model.Stock <= 5)
+                        {
+                            <span class="badge bg-warning text-dark">Últimas unidades</span>
+                        }
+                        else if (Model.Stock <= 0)
+                        {
+                            <span class="badge bg-danger">Agotado</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Disponible</span>
+                        }
                     </div>
                 }
 
@@ -53,39 +65,13 @@
                     <p class="lead">@Model.Descripcion</p>
                 </div>
 
+                <hr class="my-4 opacity-10">
+
                 <!-- Precio -->
                 <div class="mb-4">
                     <div>
                         <span class="fs-2 fw-bold">@Model.Precio.ToString("C", new System.Globalization.CultureInfo("es-AR"))</span>
                         <small class="fs-2">ARS</small>
-                    </div>
-                </div>
-
-                <!-- Stock -->
-                <div class="mb-4">
-                    <div class="stock-info">
-                        @if (Model.Stock > 0)
-                        {
-                            <div>
-                                <i class="bi bi-check-circle-fill text-success"></i>
-                                <span class="stock-texto">
-                                    <strong>@Model.Stock</strong> unidades disponibles
-                                </span>
-                                @if (Model.Stock <= 5)
-                                {
-                                    <span class="badge bg-warning text-dark ms-2">¡Pocas unidades!</span>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <div>
-                                <i class="bi bi-x-circle-fill text-danger"></i>
-                                <span class="text-danger">
-                                    <strong>Sin stock disponible</strong>
-                                </span>
-                            </div>
-                        }
                     </div>
                 </div>
 
@@ -119,24 +105,20 @@
                 }
 
                 <!-- Información adicional -->
-                <div class="mt-4">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3 mb-md-0">
-                                <i class="bi bi-truck text-primary"></i>
-                                <div>
-                                    <strong>Envío gratis</strong>
-                                    <small class="d-block text-muted">En compras superiores a $50.000</small>
-                                </div>
+                <div class="card bg-body-tertiary border-0 rounded-4 my-4">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-start mb-3">
+                            <i class="bi bi-truck text-primary fs-4 me-3"></i>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Envío a todo el país</h6>
+                                <p class="small text-muted mb-0">Calculá el costo en el checkout.</p>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-shield-check text-primary fs-4 me-3"></i>
                             <div>
-                                <i class="bi bi-arrow-clockwise text-primary"></i>
-                                <div>
-                                    <strong>Devoluciones</strong>
-                                    <small class="d-block text-muted">30 días para cambios</small>
-                                </div>
+                                <h6 class="mb-0 fw-bold">Garantía de Satisfacción</h6>
+                                <p class="small text-muted mb-0">30 días para devoluciones gratuitas.</p>
                             </div>
                         </div>
                     </div>
@@ -144,11 +126,7 @@
 
                 <!-- Botones de navegación -->
                 <div class="my-4">
-                    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver a productos</a>
-                    @if(User.IsInRole("Administrador"))
-                    {
-                        <a asp-controller="Productos" asp-action="EditarProducto" asp-route-id="@Model.ProductoId" class="btn btn-outline-primary ms-2">Editar producto</a>
-                    }
+                    <a asp-action="Index" class="btn text-secondary-emphasis"><i class="bi bi-arrow-left"></i> Volver a productos</a>
                 </div>
             </div>
         </div>
