@@ -1,6 +1,6 @@
-﻿using TiendaOnline.Application.Common;
+﻿using TiendaOnline.Application.Categorias.Common;
+using TiendaOnline.Application.Common;
 using TiendaOnline.Application.Productos.Queries;
-using TiendaOnline.Domain.Entities;
 
 namespace TiendaOnline.Features.Productos
 {
@@ -16,6 +16,6 @@ namespace TiendaOnline.Features.Productos
         public string Orden { get; set; }
 
         // Datos para los componentes de la vista
-        public List<Categoria> CategoriasRaiz { get; set; }
+        public List<CategoriaDto> CategoriasRaiz { get; set; }
     }
 }

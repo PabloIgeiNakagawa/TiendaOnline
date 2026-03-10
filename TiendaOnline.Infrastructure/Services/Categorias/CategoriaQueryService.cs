@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TiendaOnline.Application.Categorias.Common;
 using TiendaOnline.Application.Categorias.Queries;
 using TiendaOnline.Application.Common;
-using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Infrastructure.Services.Categorias
@@ -15,44 +15,57 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
             _context = context;
         }
 
-        public async Task<Categoria?> ObtenerCategoriaAsync(int id)
+        public async Task<IEnumerable<CategoriaDto>> ObtenerCategoriasAsync()
         {
             return await _context.Categorias
                 .AsNoTracking()
-                .Include(c => c.CategoriaPadre)
-                .FirstOrDefaultAsync(c => c.CategoriaId == id);
-        }
-
-        public async Task<List<Categoria>> ObtenerCategoriasAsync()
-        {
-            return await _context.Categorias.ToListAsync();
-        }
-
-        public async Task<IEnumerable<Categoria>> ObtenerCategoriasRaizAsync()
-        {
-            return await _context.Categorias
-                .AsNoTracking()
-                .Include(c => c.Subcategorias)
-                .Include(c => c.Productos) // Para mostrar el conteo (Count)
-                .Where(c => c.CategoriaPadreId == null)
+                .Select(c => new CategoriaDto
+                {
+                    CategoriaId = c.CategoriaId,
+                    Nombre = c.Nombre,
+                    CategoriaPadreId = c.CategoriaPadreId
+                })
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Categoria>> ObtenerCategoriasHojaAsync()
+        public async Task<IEnumerable<CategoriaDto>> ObtenerCategoriasRaizAsync()
         {
             return await _context.Categorias
-                .Include(c => c.CategoriaPadre)
+                .AsNoTracking()
+                .Where(c => c.CategoriaPadreId == null)
+                .Select(c => new CategoriaDto
+                {
+                    CategoriaId = c.CategoriaId,
+                    Nombre = c.Nombre,
+                    CategoriaPadreId = c.CategoriaPadreId,
+                    Subcategorias = c.Subcategorias.Select(s => new CategoriaDto
+                    {
+                        CategoriaId = s.CategoriaId,
+                        Nombre = s.Nombre,
+                        CategoriaPadreId = s.CategoriaPadreId
+                    }).ToList()
+                })
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<CategoriaDto>> ObtenerCategoriasHojaAsync()
+        {
+            return await _context.Categorias
+                .AsNoTracking()
                 .Where(c => !c.Subcategorias.Any())
                 .OrderBy(c => c.CategoriaPadre.Nombre)
                 .ThenBy(c => c.Nombre)
-                .ToListAsync();
-        }
-
-        public async Task<List<Categoria>> ObtenerArbolCategoriasAsync()
-        {
-            return await _context.Categorias
-                .Where(c => c.CategoriaPadreId == null) // Solo las principales
-                .Include(c => c.Subcategorias)          // Carga el primer nivel de hijos
+                .Select(c => new CategoriaDto
+                {
+                    CategoriaId = c.CategoriaId,
+                    Nombre = c.Nombre,
+                    CategoriaPadreId = c.CategoriaPadreId,
+                    CategoriaPadre = c.CategoriaPadre != null ? new CategoriaDto
+                    {
+                        CategoriaId = c.CategoriaPadre.CategoriaId,
+                        Nombre = c.CategoriaPadre.Nombre
+                    } : null
+                })
                 .ToListAsync();
         }
 

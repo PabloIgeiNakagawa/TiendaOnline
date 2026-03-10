@@ -9,5 +9,8 @@ namespace TiendaOnline.Features.Usuarios.Admin
         public string? Busqueda { get; set; }
         public string? RolSeleccionado { get; set; }
         public bool? EstadoSeleccionado { get; set; }
+
+        // Listas para los combos (Dropdowns)
+        public List<string> RolesDisponibles { get; set; } = new ();
     }
 }

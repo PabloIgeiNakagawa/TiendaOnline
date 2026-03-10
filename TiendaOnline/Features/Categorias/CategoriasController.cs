@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TiendaOnline.Application.Categorias.Commands;
+using TiendaOnline.Application.Categorias.Common;
 using TiendaOnline.Application.Categorias.Queries;
 
 namespace TiendaOnline.Features.Categorias

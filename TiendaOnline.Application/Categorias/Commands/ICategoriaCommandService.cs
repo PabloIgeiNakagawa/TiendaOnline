@@ -1,4 +1,6 @@
-﻿namespace TiendaOnline.Application.Categorias.Commands
+﻿using TiendaOnline.Application.Categorias.Common;
+
+namespace TiendaOnline.Application.Categorias.Commands
 {
     public interface ICategoriaCommandService
     {

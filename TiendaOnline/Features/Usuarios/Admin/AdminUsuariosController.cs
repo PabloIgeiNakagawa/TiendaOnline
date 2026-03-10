@@ -24,6 +24,8 @@ namespace TiendaOnline.Features.Usuarios.Admin
         [HttpGet("[action]")]
         public async Task<IActionResult> Listado(int pagina = 1, int tamanoPagina = 10, string? busqueda = null, string? rol = null, string? estado = null)
         {
+            var roles = await _rolService.ObtenerTodosAsync();
+
             bool? estadoBool = estado switch
             {
                 "activo" => true,
@@ -38,7 +40,8 @@ namespace TiendaOnline.Features.Usuarios.Admin
                 UsuariosPaginados = pagedResult,
                 Busqueda = busqueda,
                 RolSeleccionado = rol,
-                EstadoSeleccionado = estadoBool
+                EstadoSeleccionado = estadoBool,
+                RolesDisponibles = roles.Select(r => r.Nombre).ToList()
             };
 
             return View(viewModel);

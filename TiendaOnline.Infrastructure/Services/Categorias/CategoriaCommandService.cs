@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Categorias.Commands;
+using TiendaOnline.Application.Categorias.Common;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
 

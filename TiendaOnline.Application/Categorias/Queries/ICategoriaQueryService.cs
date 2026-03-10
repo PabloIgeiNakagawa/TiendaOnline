@@ -1,15 +1,13 @@
-﻿using TiendaOnline.Application.Common;
-using TiendaOnline.Domain.Entities;
+﻿using TiendaOnline.Application.Categorias.Common;
+using TiendaOnline.Application.Common;
 
 namespace TiendaOnline.Application.Categorias.Queries
 {
     public interface ICategoriaQueryService
     {
-        Task<Categoria?> ObtenerCategoriaAsync(int id);
-        Task<List<Categoria>> ObtenerCategoriasAsync(); // Lista plana
-        Task<IEnumerable<Categoria>> ObtenerCategoriasRaizAsync();
-        Task<IEnumerable<Categoria>> ObtenerCategoriasHojaAsync();
-        Task<List<Categoria>> ObtenerArbolCategoriasAsync(); // Lista jerárquica (Raíces + Subcategorías)
+        Task<IEnumerable<CategoriaDto>> ObtenerCategoriasAsync();
+        Task<IEnumerable<CategoriaDto>> ObtenerCategoriasRaizAsync();
+        Task<IEnumerable<CategoriaDto>> ObtenerCategoriasHojaAsync();
         Task<bool> EsCategoriaHojaAsync(int id);
         Task<PagedResult<CategoriaListadoDto>> ObtenerCategoriasPaginadasAsync(int pagina, int cantidad, string? buscar, string? nivel);
         Task<bool> ExisteNombreAsync(string nombre); // Para evitar duplicados

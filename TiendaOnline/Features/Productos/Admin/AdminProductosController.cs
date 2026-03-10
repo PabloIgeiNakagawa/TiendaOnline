@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using TiendaOnline.Application.Categorias.Commands;
+using TiendaOnline.Application.Categorias.Common;
 using TiendaOnline.Application.Categorias.Queries;
 using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Application.Productos.Queries;
-using TiendaOnline.Domain.Entities;
 
 namespace TiendaOnline.Features.Productos.Admin
 {
@@ -172,7 +171,7 @@ namespace TiendaOnline.Features.Productos.Admin
             });
         }
 
-        private static string ObtenerRutaCompleta(Categoria cat)
+        private static string ObtenerRutaCompleta(CategoriaDto cat)
         {
             if (cat.CategoriaPadre == null) return cat.Nombre;
             return $"{ObtenerRutaCompleta(cat.CategoriaPadre)} > {cat.Nombre}";

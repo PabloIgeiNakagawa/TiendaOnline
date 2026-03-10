@@ -56,10 +56,10 @@
                                 </label>
                                 <select id="filtroRol" name="rol" class="form-select">
                                     <option value="">Todos los roles</option>
-                                    @foreach (var rol in Html.GetEnumSelectList<Rol>())
+                                    @foreach (var rol in Model.RolesDisponibles)
                                     {
-                                        <option value="@rol.Text" selected="@(Model.RolSeleccionado == rol.Text ? "selected" : null)">
-                                            @rol.Text
+                                        <option value="@rol" selected="@(Model.RolSeleccionado == rol ? "selected" : null)">
+                                            @rol
                                         </option>
                                     }
                                 </select>
