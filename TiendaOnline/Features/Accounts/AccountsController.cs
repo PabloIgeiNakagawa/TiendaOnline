@@ -94,6 +94,9 @@ namespace TiendaOnline.Features.Accounts
             });
 
             var role = principal.FindFirstValue(ClaimTypes.Role);
+
+            TempData["MensajeExito"] = $"¡Bienvenido, {usuarioDto.Nombre}!";
+
             return role == "Administrador"
                 ? RedirectToAction("IndexAdmin", "Home")
                 : RedirectToAction("Index", "Home");
@@ -165,6 +168,8 @@ namespace TiendaOnline.Features.Accounts
                 ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
             });
             await HttpContext.SignOutAsync("ExternalCookie");
+
+            TempData["MensajeExito"] = "¡Has iniciado sesión con Google!";
 
             return usuarioDto.Rol == "Administrador"
                 ? RedirectToAction("IndexAdmin", "Home")

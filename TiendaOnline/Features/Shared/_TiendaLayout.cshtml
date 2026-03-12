@@ -35,6 +35,9 @@
     <!-- Modo oscuro y claro -->
     <script src="~/js/site.js" asp-append-version="true"></script>
 </head>
+
+@await Html.PartialAsync("_MensajeTempData")
+
 <body class="h-100 d-flex flex-column">
     <header class="shadow-sm bg-body">
         <div class="container py-3">
@@ -170,7 +173,6 @@
 
     <main role="main">
         <div class="container">
-            @await Html.PartialAsync("_MensajeTempData")
             @RenderBody()
         </div>
     </main>

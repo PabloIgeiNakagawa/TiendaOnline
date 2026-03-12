@@ -49,4 +49,44 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicializar Tooltips
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     const tooltipList = [...tooltipTriggerList].map(t => new bootstrap.Tooltip(t));
+
+
+    if (!(window.bootstrap && bootstrap.Toast)) return;
+
+    // Inicializa todos los toasts y sincroniza la barra de progreso con el timeout
+    var toastEls = Array.from(document.querySelectorAll('.toast'));
+    toastEls.forEach(function (toastEl) {
+        var bsDelayAttr = toastEl.getAttribute('data-bs-delay');
+        var delay = bsDelayAttr ? parseInt(bsDelayAttr, 10) : 5000; // ms fallback
+
+        var toast = new bootstrap.Toast(toastEl, { autohide: true, delay: delay });
+        var progressBar = toastEl.querySelector('.progress-bar');
+
+        // Animación de la barra: usa requestAnimationFrame para fluidez
+        function startProgress() {
+            if (!progressBar) return;
+            var start = performance.now();
+            function frame(now) {
+                var elapsed = now - start;
+                var pct = Math.max(0, 1 - (elapsed / delay));
+                progressBar.style.width = (pct * 100).toFixed(2) + '%';
+                if (elapsed < delay) {
+                    requestAnimationFrame(frame);
+                } else {
+                    progressBar.style.width = '0%';
+                }
+            }
+            // inicial
+            progressBar.style.width = '100%';
+            requestAnimationFrame(frame);
+        }
+
+        // Cuando se muestra el toast, iniciar la animación
+        toastEl.addEventListener('show.bs.toast', function () {
+            startProgress();
+        });
+
+        // finalmente mostrar
+        toast.show();
+    });
 });
