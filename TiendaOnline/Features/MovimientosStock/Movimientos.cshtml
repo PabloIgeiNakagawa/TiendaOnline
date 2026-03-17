@@ -1,6 +1,32 @@
 ﻿@using TiendaOnline.Features.MovimientosStock
 @using TiendaOnline.Features.Shared.ViewModels
 @model MovimientosViewModel
+@{
+    ViewData["Title"] = "Movimientos";
+
+    var filtrosActivos = new List<FiltroPill>();
+
+    if (!string.IsNullOrEmpty(Model.Busqueda))
+    {
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Producto", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
+    }
+
+    if (Model.TipoMovimientoId.HasValue)
+    {
+        var nombreTipo = Model.TiposMovimiento.FirstOrDefault(t => t.Id == Model.TipoMovimientoId)?.Nombre;
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-tag", Etiqueta = "Tipo", Valor = nombreTipo, Propiedad = nameof(Model.TipoMovimientoId) });
+    }
+
+    if (Model.Desde.HasValue)
+    {
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Desde", Valor = Model.Desde.Value.ToShortDateString(), Propiedad = nameof(Model.Desde) });
+    }
+
+    if (Model.Hasta.HasValue)
+    {
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Hasta", Valor = Model.Hasta.Value.ToShortDateString(), Propiedad = nameof(Model.Hasta) });
+    }
+}
 
 <div class="container-fluid py-4">
     <partial name="_TituloSeccion" model='("Movimientos de Stock", "Historial de entradas, salidas y ajustes de inventario")' />
@@ -67,7 +93,15 @@
         </div>
     </form>
 
-    <partial name="_ResumenResultados" model="Model.ResumenFiltros" />
+    <partial name="_ResumenResultados" 
+        model="@(new ResumenResultadosViewModel{
+                    TotalRegistros = Model.MovimientosPaginados.TotalRegistros,
+                    Desde = Model.MovimientosPaginados.DesdeRegistro,
+                    Hasta = Model.MovimientosPaginados.HastaRegistro,
+                    NombreEntidad = "movimientos",
+                    ActionName = "Movimientos",
+                    Filtros = filtrosActivos
+    })" />
 
     <!-- Tabla -->
     <div class="d-none d-lg-block">
