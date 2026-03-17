@@ -17,7 +17,5 @@ namespace TiendaOnline.Features.MovimientosStock
 
         // Listas para los Dropdowns de los filtros
         public IEnumerable<TipoMovimientoDto> TiposMovimiento { get; set; } = new List<TipoMovimientoDto>();
-
-        public ResumenResultadosViewModel Resumen { get; set; }
     }
 }

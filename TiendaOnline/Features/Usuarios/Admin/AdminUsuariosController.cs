@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ClientModel.Primitives;
 using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Application.Usuarios.Queries;
 
 namespace TiendaOnline.Features.Usuarios.Admin
 {
-    [Route("Admin/[controller]")]
+    [Route("admin/usuarios")]
     [Authorize(Roles = "Administrador")]
     public class AdminUsuariosController : Controller
     {
@@ -22,25 +23,25 @@ namespace TiendaOnline.Features.Usuarios.Admin
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> Listado(int pagina = 1, int tamanoPagina = 10, string? busqueda = null, string? rol = null, string? estado = null)
+        public async Task<IActionResult> Listado(FiltrosListadoViewModel model)
         {
             var roles = await _rolService.ObtenerTodosAsync();
 
-            bool? estadoBool = estado switch
+            bool? estadoBool = model.Estado switch
             {
                 "activo" => true,
                 "inactivo" => false,
                 _ => null
             };
 
-            var pagedResult = await _usuarioQueryService.ObtenerUsuariosPaginadosAsync(pagina, tamanoPagina, busqueda, rol, estadoBool);
+            var pagedResult = await _usuarioQueryService.ObtenerUsuariosPaginadosAsync(model.Pagina, model.TamanoPagina, model.Busqueda, model.Rol, estadoBool);
 
             var viewModel = new UsuarioListadoViewModel
             {
                 UsuariosPaginados = pagedResult,
-                Busqueda = busqueda,
-                RolSeleccionado = rol,
-                EstadoSeleccionado = estadoBool,
+                Busqueda = model.Busqueda,
+                Rol = model.Rol,
+                Estado = estadoBool,
                 RolesDisponibles = roles.Select(r => r.Nombre).ToList()
             };
 

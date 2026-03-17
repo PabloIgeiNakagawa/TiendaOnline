@@ -7,8 +7,8 @@ namespace TiendaOnline.Features.Usuarios.Admin
     {
         public PagedResult<UsuarioListadoDto> UsuariosPaginados { get; set; } = null!;
         public string? Busqueda { get; set; }
-        public string? RolSeleccionado { get; set; }
-        public bool? EstadoSeleccionado { get; set; }
+        public string? Rol { get; set; }
+        public bool? Estado { get; set; }
 
         // Listas para los combos (Dropdowns)
         public List<string> RolesDisponibles { get; set; } = new ();

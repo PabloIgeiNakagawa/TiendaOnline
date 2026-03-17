@@ -7,9 +7,7 @@
     var filtrosActivos = new List<FiltroPill>();
 
     if (!string.IsNullOrEmpty(Model.Busqueda))
-    {
         filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Producto", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
-    }
 
     if (Model.TipoMovimientoId.HasValue)
     {
@@ -18,14 +16,10 @@
     }
 
     if (Model.Desde.HasValue)
-    {
         filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Desde", Valor = Model.Desde.Value.ToShortDateString(), Propiedad = nameof(Model.Desde) });
-    }
 
     if (Model.Hasta.HasValue)
-    {
         filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Hasta", Valor = Model.Hasta.Value.ToShortDateString(), Propiedad = nameof(Model.Hasta) });
-    }
 }
 
 <div class="container-fluid py-4">
