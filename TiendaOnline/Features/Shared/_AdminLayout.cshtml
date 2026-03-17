@@ -1,54 +1,119 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+@{
+    var nombreUsuario = User?.FindFirstValue(ClaimTypes.Name);
+}
+@functions {
+    // Definición del objeto de navegación
+    public class AdminNavLink
+    {
+        public string Controller { get; set; }
+        public string Action { get; set; }
+        public string Icon { get; set; }
+        public string Text { get; set; }
+        public string? GroupName { get; set; }
+    }
+
+    // Lógica mejorada para clase activa: compara controller+action y, si el link tiene GroupName,
+    // compara también con valores en route data o query string (soporta varios nombres comunes).
+    public string ActiveClass(string controller, string action, string? groupName = null)
+    {
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+        if (!string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase))
+        {
+            return "";
+        }
+
+        // Si el link NO tiene GroupName -> se activa por controller+action solamente
+        if (string.IsNullOrWhiteSpace(groupName))
+        {
+            return "active bg-primary-subtle text-primary";
+        }
+
+        // Buscar en RouteData o QueryString el nombre del grupo/section/tab que use tu controlador
+        var possibleKeys = new[] { "group", "groupName", "section", "tab", "settingGroup" };
+        string? currentGroup = null;
+
+        foreach (var key in possibleKeys)
+        {
+            if (ViewContext.RouteData.Values.TryGetValue(key, out var v) && v != null)
+            {
+                currentGroup = v.ToString();
+                break;
+            }
+        }
+
+        if (currentGroup == null)
+        {
+            var q = ViewContext.HttpContext.Request.Query;
+            foreach (var key in possibleKeys)
+            {
+                if (q.TryGetValue(key, out var vals) && vals.Count > 0)
+                {
+                    currentGroup = vals[0];
+                    break;
+                }
+            }
+        }
+
+        return string.Equals(currentGroup, groupName, StringComparison.OrdinalIgnoreCase)
+            ? "active bg-primary-subtle text-primary"
+            : "";
+    }
+}
+@{
+    var gestionTiendaLinks = new List<AdminNavLink>
+    {
+        new() { Controller = "AdminReportes", Action = "Dashboard", Icon = "bi-bar-chart-line", Text = "Reportes" },
+        new() { Controller = "AdminProductos", Action = "Catalogo", Icon = "bi-box-seam", Text = "Productos" },
+        new() { Controller = "Categorias", Action = "Listado", Icon = "bi-tags", Text = "Categorías" },
+        new() { Controller = "AdminUsuarios", Action = "Listado", Icon = "bi-people", Text = "Usuarios" }
+    };
+
+    var operacionesLinks = new List<AdminNavLink>
+    {
+        new() { Controller = "AdminPedidos", Action = "Listado", Icon = "bi-cart-check", Text = "Pedidos" },
+        new() { Controller = "AdminAuditorias", Action = "Logs", Icon = "bi-shield-check", Text = "Auditoría" },
+        new() { Controller = "MovimientosStock", Action = "Movimientos", Icon = "bi-arrow-left-right", Text = "Stock" }
+    };
+
+    var configLinks = new List<AdminNavLink>
+    {
+        new() { Controller = "AppSettings", Action = "Estetica", Icon = "bi-gear", Text = "Apariencia" },
+        new() { Controller = "AppSettings", Action = "Index", Icon = "bi-chat-dots", Text = "Contacto", GroupName = "Contacto"},
+        new() { Controller = "AppSettings", Action = "Index", Icon = "bi-search", Text = "SEO", GroupName = "SEO"},
+        new() { Controller = "AppSettings", Action = "Index", Icon = "bi-credit-card", Text = "Pagos", GroupName = "Pagos"}
+    };
+}
+<!DOCTYPE html>
 <html lang="es" class="h-100">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Admin TechStore</title>
 
-    <link rel="icon" type="image/x-icon" href="~/img/TechStore-Logo.png" asp-append-version="true">
+    <title>@ViewData["Title"] - @AppSettings.GetValue("Diseno:NombreDelSitio")</title>
+    <meta name="description" content="@AppSettings.GetValue("Seo:Descripcion")">
+    <meta name="keywords" content="@AppSettings.GetValue("Seo:Palabras claves")">
+    <meta name="author" content="@AppSettings.GetValue("Seo:Autor")">
+    <meta name="description" content="@AppSettings.GetValue("Seo:Descripcion")">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta property="og:site_name" content="@AppSettings.GetValue("Diseno:NombreDelSitio")" />
+    <meta property="og:title" content="@AppSettings.GetValue("OpenGraph:Titulo")">
+    <meta property="og:description" content="@AppSettings.GetValue("OpenGraph:Descripcion")">
+    <meta property="og:image" content="@AppSettings.GetValue("OpenGraph:ImagenUrl")">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_AR">
+
+    <link rel="icon" type="image/x-icon" href="@AppSettings.GetValue("Diseno:FavIconUrl")" asp-append-version="true">
 
     <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-    <style>
-        .sidebar {
-            width: 260px;
-        }
+    <partial name="_Theme" />
 
-        @@media (min-width: 768px) {
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                height: 100vh;
-                z-index: 1000;
-            }
-
-            .main-wrapper {
-                margin-left: 260px;
-            }
-        }
-
-        .sidebar nav {
-            flex: 1 1 auto; /* Esto obliga al nav a ocupar todo el espacio disponible */
-            overflow-x: hidden; /* Prohibimos el scroll hacia la derecha */
-        }
-
-        /* Rotación de flechitas */
-        [data-bs-toggle="collapse"][aria-expanded="true"] .bi-chevron-down {
-            transform: rotate(180deg);
-            transition: 0.3s;
-        }
-
-        .bi-chevron-down {
-            transition: 0.3s;
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
     <script src="~/js/site.js" asp-append-version="true"></script>
 </head>
@@ -63,10 +128,10 @@
 
         <div class="p-4 d-flex align-items-center border-bottom border-light-subtle mb-3">
             <div class="rounded-3 p-2 me-3 d-flex align-items-center justify-content-center shadow-sm">
-                <img src="~/img/TechStore-Logo.png" alt="Logo" width="30" height="30" asp-append-version="true" />
+                <img src="@AppSettings.GetValue("Diseno:LogoUrl")" alt="Logo" width="30" height="30" asp-append-version="true" />
             </div>
             <div class="overflow-hidden">
-                <h6 class="fw-bold mb-0 text-uppercase tracking-wider">TechStore</h6>
+                <h6 class="fw-bold mb-0 text-uppercase tracking-wider">@AppSettings.GetValue("Diseno:NombreDelSitio")</h6>
                 <small class="text-secondary text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 1px;">Admin Panel</small>
             </div>
         </div>
@@ -74,134 +139,82 @@
         <nav class="nav flex-column flex-nowrap overflow-y-auto overflow-x-hidden w-100 px-3" style="flex: 1;">
 
             <div class="nav-item">
-                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex align-items-center bg-body-secondary-hover" asp-controller="HomeAdmin" asp-action="Index">
+                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex align-items-center bg-body-secondary-hover" asp-controller="Home" asp-action="IndexAdmin">
                     <i class="bi bi-house-door me-2 text-primary"></i>
                     <span>Inicio</span>
                 </a>
             </div>
 
+            <div class="nav-item">
+                <hr class="my-2 border-1" />
+            </div>
+
             <small class="text-uppercase text-muted fw-bold mt-3 mb-2 ps-3" style="font-size: 0.7rem;">Gestión de Tienda</small>
 
-            <div class="nav-item">
-                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex justify-content-between align-items-center"
-                   data-bs-toggle="collapse" href="#menuReportes" role="button" aria-expanded="false">
-                    <span><i class="bi bi-bar-chart-line me-2 text-primary"></i> Reportes</span>
-                    <i class="bi bi-chevron-down small opacity-50"></i>
-                </a>
-                <div class="collapse" id="menuReportes">
-                    <div class="nav flex-column ms-3 border-start ps-2 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-secondary small rounded-2" asp-controller="AdminReportes" asp-action="Dashboard">Dashboard General</a>
-                    </div>
+            @foreach (var link in gestionTiendaLinks)
+            {
+                <div class="nav-item">
+                    <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex justify-content-between align-items-center @ActiveClass(link.Controller, link.Action, null)"
+                       asp-controller="@link.Controller" asp-action="@link.Action">
+                        <span><i class="bi @link.Icon me-2 text-primary"></i> @link.Text</span>
+                    </a>
                 </div>
-            </div>
+            }
 
             <div class="nav-item">
-                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex justify-content-between align-items-center"
-                   data-bs-toggle="collapse" href="#menuProducto" role="button" aria-expanded="false">
-                    <span><i class="bi bi-box-seam me-2 text-primary"></i> Productos</span>
-                    <i class="bi bi-chevron-down small opacity-50"></i>
-                </a>
-                <div class="collapse" id="menuProducto">
-                    <div class="nav flex-column ms-3 border-start ps-2 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-secondary small rounded-2" asp-controller="AdminProductos" asp-action="Catalogo">Ver Catálogo</a>
-                        <a class="nav-link py-1 px-3 my-1 text-secondary small rounded-2" asp-controller="AdminProductos" asp-action="AgregarProducto">Nuevo Producto</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="nav-item">
-                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex justify-content-between align-items-center"
-                   data-bs-toggle="collapse" href="#menuCategorias" role="button" aria-expanded="false">
-                    <span><i class="bi bi-tags me-2 text-primary"></i> Categorías</span>
-                    <i class="bi bi-chevron-down small opacity-50"></i>
-                </a>
-                <div class="collapse" id="menuCategorias">
-                    <div class="nav flex-column ms-3 border-start ps-2 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-secondary small rounded-2" asp-controller="Categorias" asp-action="Listado">Listado</a>
-                        <a class="nav-link py-1 px-3 my-1 text-secondary small rounded-2" asp-controller="Categorias" asp-action="AgregarCategoria">Nueva Categoría</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="nav-item">
-                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex justify-content-between align-items-center"
-                   data-bs-toggle="collapse" href="#menuUsuarios" role="button" aria-expanded="false">
-                    <span><i class="bi bi-people me-2 text-primary"></i> Usuarios</span>
-                    <i class="bi bi-chevron-down small opacity-50"></i>
-                </a>
-                <div class="collapse" id="menuUsuarios">
-                    <div class="nav flex-column ms-3 border-start ps-2 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-secondary small rounded-2" asp-controller="AdminUsuarios" asp-action="Listado">Listado</a>
-                        <a class="nav-link py-1 px-3 my-1 text-secondary small rounded-2" asp-controller="AdminUsuarios" asp-action="CrearUsuario">Nuevo Usuario</a>
-                    </div>
-                </div>
+                <hr class="my-2 border-1" />
             </div>
 
             <small class="text-uppercase text-muted fw-bold mt-3 mb-2 ps-3" style="font-size: 0.7rem;">Operaciones</small>
 
-            <div class="nav-item">
-                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex justify-content-between align-items-center"
-                   data-bs-toggle="collapse" href="#menuPedidos" role="button" aria-expanded="false">
-                    <span><i class="bi bi-cart-check me-2 text-primary"></i> Pedidos</span>
-                    <i class="bi bi-chevron-down small opacity-50"></i>
-                </a>
-                <div class="collapse" id="menuPedidos">
-                    <div class="nav flex-column ms-3 border-start ps-2 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-secondary small rounded-2" asp-controller="AdminPedidos" asp-action="Listado">Ver Todos</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="nav-item">
-                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex justify-content-between align-items-center"
-                   data-bs-toggle="collapse" href="#menuAuditoria" role="button" aria-expanded="false">
-                    <span><i class="bi bi-shield-check me-2 text-primary"></i> Auditoría</span>
-                    <i class="bi bi-chevron-down small opacity-50"></i>
-                </a>
-                <div class="collapse" id="menuAuditoria">
-                    <div class="nav flex-column ms-3 border-start ps-2 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-secondary small rounded-2" asp-controller="AdminAuditorias" asp-action="Logs">Registros de Sistema</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="nav-item">
-                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex justify-content-between align-items-center"
-                   data-bs-toggle="collapse" href="#menuMovimientos" role="button" aria-expanded="false">
-                    <span><i class="bi bi-arrow-left-right me-2 text-primary"></i> Stock</span>
-                    <i class="bi bi-chevron-down small opacity-50"></i>
-                </a>
-                <div class="collapse" id="menuMovimientos">
-                    <div class="nav flex-column ms-3 border-start ps-2 mb-2">
-                        <a class="nav-link py-1 px-3 my-1 text-secondary small rounded-2" asp-controller="MovimientosStock" asp-action="Movimientos">Movimientos</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-auto p-3 border-top">
+            @foreach (var link in operacionesLinks)
+            {
                 <div class="nav-item">
-                    <button id="btn-theme" class="btn btn-link nav-link text-body p-2 rounded-circle" title="Cambiar tema">
-                        <i id="theme-icon" class="bi bi-sun-fill fs-5"></i> Claro/Oscuro
-                    </button>
-                </div>
-
-                <div class="nav-item">
-                    <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis align-items-center" asp-controller="Accounts" asp-action="Logout">
-                        <i class="bi bi-power"></i> Cerrar Sesión
+                    <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex justify-content-between align-items-center @ActiveClass(link.Controller, link.Action, null)"
+                       asp-controller="@link.Controller" asp-action="@link.Action">
+                        <span><i class="bi @link.Icon me-2 text-primary"></i> @link.Text</span>
                     </a>
                 </div>
+            }
 
+            <div class="nav-item">
+                <hr class="my-2 border-1" />
+            </div>
+
+            <small class="text-uppercase text-muted fw-bold mt-3 mb-2 ps-3" style="font-size: 0.7rem;">Configuración</small>
+
+            @foreach (var link in configLinks)
+            {
                 <div class="nav-item">
-                    <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis  align-items-center" asp-controller="Home" asp-action="Index">
-                        <i class="bi bi-house-door"></i> Volver al Sitio
+                    <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex justify-content-between align-items-center @ActiveClass(link.Controller, link.Action, link.GroupName)"
+                       asp-controller="@link.Controller" asp-action="@link.Action" asp-route-groupName="@link.GroupName">
+                        <span><i class="bi @link.Icon me-2 text-primary"></i> @link.Text</span>
                     </a>
                 </div>
+            }
 
-                <div class="nav-item">
-                    <button class="btn d-flex align-items-center gap-2 border-0 gap-2 py-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person-circle fs-3 text-primary"></i> Admin TechStore
-                    </button>
-                </div>
+            <div class="nav-item">
+                <button id="btn-theme" class="btn btn-link nav-link text-body p-2 rounded-circle" title="Cambiar tema">
+                    <i id="theme-icon" class="bi bi-sun-fill fs-5"></i> Claro/Oscuro
+                </button>
+            </div>
+
+            <div class="nav-item">
+                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis  align-items-center" asp-controller="Home" asp-action="Index">
+                    <span><i class="bi bi-house-door me-2 text-primary"></i> Volver al Sitio</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis align-items-center" asp-controller="Accounts" asp-action="Logout">
+                    <span><i class="bi bi-power me-2 text-primary"></i> Cerrar Sesión</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <button class="btn d-flex align-items-center gap-2 border-0 gap-2 py-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person-circle fs-4 text-primary"></i> @nombreUsuario
+                </button>
             </div>
         </nav>
     </aside>
@@ -221,7 +234,7 @@
                     <div class="dropdown">
                         <button class="btn d-flex align-items-center gap-2 border-0 p-1 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle fs-2 text-primary"></i>
-                            <p class="mb-0 small fw-bold text-body-emphasis lh-1 me-2">Admin TechStore</p>
+                            <p class="mb-0 small fw-bold text-body-emphasis lh-1 me-2">@nombreUsuario</p>
                         </button>
 
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
@@ -253,7 +266,9 @@
 
     
 </body>
-</html><script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+</html>
+<script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
 <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
+<partial name="_ValidationScriptsPartial" />
 @await RenderSectionAsync("Scripts", required: false)

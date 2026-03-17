@@ -1,7 +1,7 @@
 ﻿using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
-using Microsoft.Extensions.Configuration;
 using TiendaOnline.Application.Common.Interfaces;
+using Microsoft.Extensions.Configuration;
 
 namespace TiendaOnline.Infrastructure.ExternalServices
 {
@@ -19,18 +19,30 @@ namespace TiendaOnline.Infrastructure.ExternalServices
             _cloudinary = new Cloudinary(acc);
         }
 
-        public async Task<string> SubirImagenAsync(Stream archivoStream, string nombreArchivo)
+        public async Task<string> SubirImagenAsync(Stream archivoStream, string nombreArchivo, string subCarpeta = "General", int width = 800, int height = 800)
         {
             if (archivoStream == null || archivoStream.Length == 0) return null;
 
             var uploadParams = new ImageUploadParams()
             {
                 File = new FileDescription(nombreArchivo, archivoStream),
-                Folder = "TechStore",
+                // Carpeta dinámica: TechStore/Productos o TechStore/Branding
+                Folder = $"TechStore/{subCarpeta}",
+
                 Transformation = new Transformation()
-                    .Width(800).Height(800).Crop("limit")
-                    .Quality("auto").FetchFormat("auto")
+                    .Width(width)
+                    .Height(height)
+                    .Crop("limit")
+                    .Quality("auto")
+                    .FetchFormat("auto")
             };
+
+            if (subCarpeta == "Branding")
+            {
+                uploadParams.AccessControl = new List<AccessControlRule> {
+                    new AccessControlRule { AccessType = AccessType.Anonymous }
+                };
+            }
 
             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
 

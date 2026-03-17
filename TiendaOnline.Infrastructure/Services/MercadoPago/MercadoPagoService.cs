@@ -2,16 +2,19 @@
 using MercadoPago.Client.Preference;
 using MercadoPago.Config;
 using Microsoft.Extensions.Configuration;
+using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Application.Payment;
 
 public class MercadoPagoService : IPaymentService
 {
     private readonly IConfiguration _configuration;
+    private readonly IAppSettingsService _appSettingsService;
 
-    public MercadoPagoService(IConfiguration configuration)
+    public MercadoPagoService(IConfiguration configuration, IAppSettingsService appSettingsService)
     {
         _configuration = configuration;
         MercadoPagoConfig.AccessToken = _configuration["MercadoPago:AccessToken"];
+        _appSettingsService = appSettingsService;
     }
 
     public async Task<string> GenerarPreferenciaPagoAsync(PedidoPagoDto pedidoDto)
@@ -30,7 +33,7 @@ public class MercadoPagoService : IPaymentService
             Items = pedidoDto.Items.Select(i => new PreferenceItemRequest
             {
                 Title = i.Nombre,
-                Description = $"Compra en TechStore - {i.Nombre}",
+                Description = $"Compra en {_appSettingsService.GetValue("Diseno:NombreDelSitio")} - {i.Nombre}",
                 Quantity = i.Cantidad,
                 UnitPrice = i.PrecioUnitario,
                 CurrencyId = "ARS"

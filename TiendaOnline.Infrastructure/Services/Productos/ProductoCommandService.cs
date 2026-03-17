@@ -22,7 +22,7 @@ namespace TiendaOnline.Infrastructure.Services.Productos
 
             if (dto.ImagenStream != null)
             {
-                urlImagen = await _imagenService.SubirImagenAsync(dto.ImagenStream, dto.NombreArchivo);
+                urlImagen = await _imagenService.SubirImagenAsync(dto.ImagenStream, dto.NombreArchivo, "Productos");
             }
 
             var nuevoProducto = new Producto
@@ -55,7 +55,7 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 }
 
                 // Subir la nueva
-                producto.ImagenUrl = await _imagenService.SubirImagenAsync(dto.ImagenStream, dto.NombreArchivo ?? "producto");
+                producto.ImagenUrl = await _imagenService.SubirImagenAsync(dto.ImagenStream, dto.NombreArchivo ?? "producto", "Productos");
             }
 
             // Actualización de campos

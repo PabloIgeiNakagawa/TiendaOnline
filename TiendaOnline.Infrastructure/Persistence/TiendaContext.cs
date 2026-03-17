@@ -90,6 +90,7 @@ namespace TiendaOnline.Infrastructure.Persistence
         public DbSet<Categoria> Categorias { get; set; }
         public DbSet<MovimientoStock> MovimientosStock { get; set; }
         public DbSet<OfertaProducto> OfertasProducto { get; set; }
+        public DbSet<AppSetting> AppSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

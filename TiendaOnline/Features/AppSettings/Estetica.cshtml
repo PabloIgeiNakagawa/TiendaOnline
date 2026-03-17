@@ -1,0 +1,106 @@
+﻿@using TiendaOnline.Features.AppSettings
+@model EsteticaViewModel
+@{
+    ViewData["Title"] = "Personalización de Estética";
+}
+
+<div class="container mt-4">
+    <partial name="_TituloSeccion" model='("Apariencia de la Tienda", "Configura la apariencia de tu tienda")' />
+
+    <form asp-controller="AppSettings" asp-action="GuardarEstetica" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card border-secondary h-100">
+                    <div class="card-header bg-transparent border-secondary"><h5 class="mb-0">Identidad</h5></div>
+                    <div class="card-body">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nombre del Sitio</label>
+                            <input asp-for="NombreDelSitio" class="form-control" placeholder="Mi Tienda Online" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Logo de la Tienda</label>
+                            @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                            {
+                                <div class="mb-2">
+                                    <img src="@Model.LogoUrl" alt="Logo actual" style="max-height: 60px; object-fit: contain;" />
+                                </div>
+                            }
+                            <input asp-for="LogoFile" type="file" class="form-control" accept="image/*" />
+                            <input type="hidden" asp-for="LogoUrl" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Favicon (Ícono pestaña)</label>
+                            @if (!string.IsNullOrEmpty(Model.FavIconUrl))
+                            {
+                                <div class="mb-2">
+                                    <img src="@Model.FavIconUrl" alt="Favicon actual" style="max-height: 32px;" />
+                                </div>
+                            }
+                            <input asp-for="FavIconFile" type="file" class="form-control" accept="image/png, image/x-icon" />
+                            <input type="hidden" asp-for="FavIconUrl" />
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card border-secondary h-100">
+                    <div class="card-header bg-transparent border-secondary"><h5 class="mb-0">Colores y Tipografía</h5></div>
+                    <div class="card-body">
+
+                        <div class="row mb-4">
+                            <div class="col-4">
+                                <label class="form-label fw-bold small">Primario</label>
+                                <input asp-for="ColorPrimary" type="color" class="form-control form-control-color w-100" title="Color principal" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Fuente para Títulos</label>
+                                <select asp-for="FuenteTitulo" class="form-select">
+                                    <optgroup label="Modernas">
+                                        <option value="Poppins">Poppins (Recomendada)</option>
+                                        <option value="Montserrat">Montserrat</option>
+                                        <option value="Inter">Inter</option>
+                                    </optgroup>
+                                    <optgroup label="Con Clase">
+                                        <option value="Playfair Display">Playfair Display</option>
+                                        <option value="Lora">Lora</option>
+                                    </optgroup>
+                                    <optgroup label="Impacto">
+                                        <option value="Oswald">Oswald</option>
+                                        <option value="Kanit">Kanit</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Fuente para Textos</label>
+                                <select asp-for="FuenteBody" class="form-select">
+                                    <option value="Inter">Inter (Ultra legible)</option>
+                                    <option value="Roboto">Roboto</option>
+                                    <option value="Open Sans">Open Sans</option>
+                                    <option value="Lato">Lato</option>
+                                    <option value="Nunito">Nunito</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-end mt-3">
+            <button type="submit" class="btn btn-primary px-5 py-2">
+                <i class="bi bi-save me-2"></i> Guardar Apariencia
+            </button>
+        </div>
+    </form>
+</div>

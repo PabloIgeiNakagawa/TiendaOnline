@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using TiendaOnline.Application.AdminOverview;
+using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Application.Auditoria;
 using TiendaOnline.Application.Auth;
 using TiendaOnline.Application.Carritos;
@@ -21,6 +22,7 @@ using TiendaOnline.Application.Usuarios.Queries;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.ExternalServices;
 using TiendaOnline.Infrastructure.Services.AdminOverview;
+using TiendaOnline.Infrastructure.Services.AppSettings;
 using TiendaOnline.Infrastructure.Services.Auditoria;
 using TiendaOnline.Infrastructure.Services.Auth;
 using TiendaOnline.Infrastructure.Services.Carritos;
@@ -61,6 +63,7 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IAuditoriaService, AuditoriaService>();
             services.AddScoped<IMovimientoStockCommandService, MovimientoStockCommandService>();
             services.AddScoped<IMovimientoStockQueryService, MovimientoStockQueryService>();
+            services.AddScoped<IAppSettingsService, AppSettingsService>();
 
             // Autenticación y Sesión de Usuario
             services.AddScoped<IAuthService, AuthService>();

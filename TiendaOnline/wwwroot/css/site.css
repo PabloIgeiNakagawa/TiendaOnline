@@ -8,14 +8,6 @@
     font-weight: 700;
 }
 
-.nav-link {
-    transition: all 0.2s;
-}
-
-    .nav-link:hover {
-        color: #0d6efd !important;
-    }
-
 .hover-lift:hover {
     transform: translateY(-2px);
     color: #0d6efd !important;

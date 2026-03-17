@@ -1,0 +1,165 @@
+﻿@using System.Text.RegularExpressions
+@using TiendaOnline.Features.AppSettings
+@model IndexViewModel
+@{
+    ViewData["Title"] = Model.GroupName;
+
+    // 1. DICCIONARIO DE ICONOS (Bootstrap Icons)
+    // Mapear el "Prefijo" con la clase del icono de Bootstrap Icons (ej. "bi bi-cloud-upload")
+    var iconMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        // Pagos - Transferencias
+        { "Transferencia", "bi bi-bank" },
+
+        // SEO
+        { "Seo", "bi bi-search" },
+
+        // Open Graph
+        { "Tienda", "bi bi-shop" },
+
+        // Contacto / Tienda
+        { "RedesSociales", "bi bi-share-fill" },
+
+        // Branding & Estética / Diseño
+        { "Diseno", "bi bi-palette" },
+
+        // Ubicacion
+        { "Ubicacion", "bi bi-geo-alt" }
+
+        // Agregar más según necesite
+    };
+    var defaultIcon = "bi bi-gear";
+    string nombreGrupo = @Regex.Replace(Model.GroupName, "([a-z])([A-Z])", "$1 $2");
+}
+
+<div class="container mt-4">
+    <partial name="_TituloSeccion" model='($"Configuración de {nombreGrupo}", "")' />
+
+    @if (!Model.Settings.Any())
+    {
+        <div class="alert alert-warning">
+            No hay configuraciones cargadas para el grupo <b>@nombreGrupo</b>.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @* 2. AGRUPAMOS POR EL PREFIJO DE LA KEY (ej: "Cloudinary", "MercadoPago") *@
+            @{
+                var agrupacionesPorPrefijo = Model.Settings
+                .GroupBy(s => s.Key.Split(':').FirstOrDefault())
+                .OrderBy(g => g.Key);
+            }
+
+            @foreach (var subGrupo in agrupacionesPorPrefijo)
+            {
+                // Seleccionamos una clase de icono según el prefijo, o la por defecto
+                string iconClass = iconMap.ContainsKey(subGrupo.Key) ? iconMap[subGrupo.Key] : defaultIcon;
+                string nombreSubGrupo = @Regex.Replace(subGrupo.Key, "([a-z])([A-Z])", "$1 $2");
+
+                <div class="col-12 mb-4">
+                    <div class="card border-secondary">
+
+                        @* Cabecera Dinámica con Icono de Bootstrap *@
+                        <div class="card-header bg-transparent border-secondary py-3 d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <i class="@iconClass me-3 bg-body-tertiary rounded-circle text-primary d-flex justify-content-center align-items-center"
+                                   style="font-size: 1.8rem; height: 60px; width: 60px;"></i>
+                                <div>
+                                    <div class="fs-4 fw-bold">@nombreSubGrupo</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <form asp-controller="AppSettings" asp-action="GuardarConfiguracion" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="GroupName" value="@Model.GroupName" />
+
+                                <div class="row">
+                                    @* 3. RENDERIZAMOS LOS CAMPOS (El bucle inteligente) con soporte para Description, Type y LastModified *@
+                                    @for (int i = 0; i < subGrupo.ToList().Count; i++)
+                                    {
+                                        var setting = subGrupo.ToList()[i];
+                                        // Limpiamos el nombre para que "RedesSociales:Instagram" se lea solo como "Instagram"
+                                        var nombreLimpio = Regex.Replace(setting.Key.Split(':').Last(), @"((?<=[a-z])[A-Z]|(?<=[A-Z])[A-Z](?=[a-z]))", " $1").Trim();
+                                        var inputId = $"input-{setting.Key.Replace(":", "-")}";
+                                        var descId = $"{inputId}-desc";
+                                        var modifiedId = $"{inputId}-modified";
+
+                                        var hasModified = setting.LastModified != null;
+
+                                        // Tipo final del input: si el backend especifica setting.Type usarlo; si no, fallback a password/text según IsSensitive
+                                        var specifiedType = (setting.Type ?? "").Trim();
+
+                                        // Construimos aria-describedby combinando descripción y última modificación (si existen)
+                                        var ariaBuilder = new List<string>();
+                                        ariaBuilder.Add(descId);
+                                        if (hasModified) { ariaBuilder.Add(modifiedId); }
+                                        var describedBy = ariaBuilder.Count > 0 ? string.Join(" ", ariaBuilder) : null;
+
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold mb-1">@nombreLimpio</label>
+                                            <div id="@descId" class="form-text text-muted mb-2">@setting.Description</div>
+
+                                            <input type="hidden" name="Settings[@i].Key" value="@setting.Key" />
+                                            <input type="hidden" name="Settings[@i].Group" value="@setting.Group" />
+                                            <input type="hidden" name="Settings[@i].IsSensitive" value="@(setting.IsSensitive ? "true" : "false")" />
+                                            <input type="hidden" name="Settings[@i].Description" value="@setting.Description" />
+                                            <input type="hidden" name="Settings[@i].Type" value="@setting.Type" />
+                                            <input type="hidden" name="Settings[@i].LastModified" value="@(setting.LastModified?.ToString("o"))" />
+
+                                            <div class="input-group input-group-sm">
+                                                <input name="Settings[@i].Value"
+                                                       id="@inputId"
+                                                       type="@setting.Type"
+                                                       class="form-control border-secondary @(setting.IsSensitive ? "font-monospace" : "")"
+                                                       value="@setting.Value"
+                                                       @(describedBy != null ? $"aria-describedby=\"{describedBy}\"" : "") />
+
+                                                <span asp-validation-for="Settings[@i].Value" class="text-danger small"></span>
+
+                                                @* Mostrar botón toggle sólo si el setting está marcado como sensible (permite alternar password/text) *@
+                                                @if (setting.IsSensitive)
+                                                {
+                                                    <button class="btn btn-outline-info border-secondary js-toggle-btn"
+                                                            type="button" data-target="@inputId" title="Mostrar/Ocultar">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                }
+
+                                                <button class="btn btn-outline-secondary border-secondary js-copy-btn"
+                                                        type="button" data-target="@inputId" title="Copiar valor">
+                                                    <i class="bi bi-clipboard"></i>
+                                                </button>
+                                            </div>
+
+                                            @if (hasModified)
+                                            {
+                                                <div id="@modifiedId" class="form-text text-muted small mt-1">
+                                                    Última modificación: @(setting.LastModified?.ToString("g"))
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+
+                                <div asp-validation-summary="All" class="alert alert-danger small @(ViewData.ModelState.IsValid ? "d-none" : "")"></div>
+
+                                <div class="mt-3 text-end">
+                                    <button type="submit" class="btn btn-primary btn-sm px-4">
+                                        <i class="bi bi-check-circle me-1"></i> Guardar @nombreSubGrupo
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/Features/AppSettings/Index.js" asp-append-version="true"> </script>
+}
