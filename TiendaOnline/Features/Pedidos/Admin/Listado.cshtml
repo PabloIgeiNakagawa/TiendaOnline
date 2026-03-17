@@ -1,11 +1,64 @@
 ﻿@using TiendaOnline.Features.Pedidos.Admin
+@using TiendaOnline.Features.Shared.ViewModels
 @model PedidoListadoViewModel
 @{
     ViewData["Title"] = "Gestión de Pedidos";
+
+    var filtrosActivos = new List<FiltroPill>();
+
+    if (!string.IsNullOrEmpty(Model.Busqueda))
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Producto", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
+
+    string nombreEstado = null;
+    if (Model.EstadoId.HasValue) 
+    {
+        nombreEstado = Model.EstadoId switch
+        {
+            0 => "Pendiente",
+            1 => "Enviado",
+            2 => "Entregado",
+            3 => "Cancelado",
+            _ => ""
+        };
+    }
+
+    if (!string.IsNullOrEmpty(nombreEstado))
+    {
+        filtrosActivos.Add(new FiltroPill { 
+            Icono = "bi-app-indicator", 
+            Etiqueta = "Estado", 
+            Valor = nombreEstado, 
+            Propiedad = nameof(Model.EstadoId)
+        });
+    }
+
+    if (!string.IsNullOrEmpty(Model.FiltroMonto))
+    {
+        var etiquetaMonto = Model.FiltroMonto switch
+        {
+            "bajo" => "Menos de $250.000",
+            "medio" => "$250.000 - $1.000.000",
+            "alto" => "Más de $1.000.000",
+            _ => ""
+        };
+
+        filtrosActivos.Add(new FiltroPill { 
+            Icono = "bi-currency-dollar", 
+            Etiqueta = "Monto", 
+            Valor = etiquetaMonto, 
+            Propiedad = "FiltroMonto" 
+        });
+    }
+
+    if (Model.FechaDesde.HasValue)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Desde", Valor = Model.FechaDesde.Value.ToShortDateString(), Propiedad = nameof(Model.FechaDesde) });
+
+    if (Model.FechaHasta.HasValue)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Hasta", Valor = Model.FechaHasta.Value.ToShortDateString(), Propiedad = nameof(Model.FechaHasta) });
 }
 
 <div class="container-fluid py-4">
-    <!-- Sección de Encabezado -->
+
     <partial name="_TituloSeccion" model='("Gestión de pedidos", "Administra todos los pedidos del sistema")' />
 
     <!-- Filtros y Búsqueda -->
@@ -17,7 +70,7 @@
                         <form asp-action="Listado" method="get" class="row g-3">
                             <div class="col-md-2">
                                 <label class="form-label fw-bold text-muted small">Mostrar</label>
-                                <select name="tamanoPagina" class="form-select" onchange="this.form.submit()">
+                                <select name="TamanoPagina" class="form-select">
                                     @{
                                         int[] opciones = { 10, 25, 50, 75, 100 };
                                         foreach (var cantidad in opciones)
@@ -33,31 +86,31 @@
                                 <label for="campoBusqueda" class="form-label fw-semibold">
                                     <i class="bi bi-search me-1"></i>Buscar
                                 </label>
-                                <input type="text" name="busqueda" class="form-control" placeholder="ID pedido o cliente...">
+                                <input type="text" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="ID pedido o cliente...">
                             </div>
                             <div class="col-md-2">
                                 <label for="filtroEstado" class="form-label fw-semibold">
                                     <i class="bi bi-funnel me-1"></i>Estado
                                 </label>
-                                <select name="estadoId" class="form-select">
+                                <select name="EstadoId" class="form-select">
                                     <option value="">Todos</option>
-                                    <option value="0" selected="@(Model.EstadoNombre == "Pendiente" ? "selected" : null)">Pendiente</option>
-                                    <option value="1" selected="@(Model.EstadoNombre == "Enviado" ? "selected" : null)">Enviado</option>
-                                    <option value="2" selected="@(Model.EstadoNombre == "Entregado" ? "selected" : null)">Entregado</option>
-                                    <option value="3" selected="@(Model.EstadoNombre == "Cancelado" ? "selected" : null)">Cancelado</option>
+                                    <option value="0" selected="@(Model.EstadoId == 0 ? "selected" : null)">Pendiente</option>
+                                    <option value="1" selected="@(Model.EstadoId == 1 ? "selected" : null)">Enviado</option>
+                                    <option value="2" selected="@(Model.EstadoId == 2 ? "selected" : null)">Entregado</option>
+                                    <option value="3" selected="@(Model.EstadoId == 3 ? "selected" : null)">Cancelado</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label fw-semibold"><i class="bi bi-calendar me-1"></i>Desde</label>
-                                <input type="date" name="fechaDesde" value="@Model.FechaDesde?.ToString("yyyy-MM-dd")" class="form-control">
+                                <input type="date" name="FechaDesde" value="@Model.FechaDesde?.ToString("yyyy-MM-dd")" class="form-control">
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label fw-semibold"><i class="bi bi-calendar me-1"></i>Hasta</label>
-                                <input type="date" name="fechaHasta" value="@Model.FechaHasta?.ToString("yyyy-MM-dd")" class="form-control">
+                                <input type="date" name="FechaHasta" value="@Model.FechaHasta?.ToString("yyyy-MM-dd")" class="form-control">
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label fw-semibold"><i class="bi bi-currency-dollar me-1"></i>Monto</label>
-                                <select name="filtroMonto" class="form-select">
+                                <select name="FiltroMonto" class="form-select">
                                     <option value="">Todos</option>
                                     <option value="bajo" selected='@(Model.FiltroMonto == "bajo" ? "selected" : null)'>Menos de $250.000</option>
                                     <option value="medio" selected='@(Model.FiltroMonto == "medio" ? "selected" : null)'>$250.000 - $1.000.000</option>
@@ -79,16 +132,15 @@
         </div>
     </div>
 
-    <!-- Resumen de Resultados -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3 px-1">
-        <div class="text-muted small">
-            Mostrando <strong>@Model.PedidosPaginados.DesdeRegistro</strong> a <strong>@Model.PedidosPaginados.HastaRegistro</strong>
-            de <strong>@Model.PedidosPaginados.TotalRegistros</strong> pedidos
-        </div>
-        <div class="text-muted small">
-            Suma total de la página: <span class="fw-bold">@Model.PedidosPaginados.Items.Sum(x => x.Total).ToString("C0")</span>
-        </div>
-    </div>
+    <partial name="_ResumenResultados" 
+        model="@(new ResumenResultadosViewModel{
+                    TotalRegistros = Model.PedidosPaginados.TotalRegistros,
+                    Desde = Model.PedidosPaginados.DesdeRegistro,
+                    Hasta = Model.PedidosPaginados.HastaRegistro,
+                    NombreEntidad = "pedidos",
+                    ActionName = "Listado",
+                    Filtros = filtrosActivos
+    })" />
 
     <!-- Tabla de Pedidos -->
     <div class="row">
@@ -256,73 +308,11 @@
     </div>
 
     <!-- Paginación -->
-    <nav aria-label="Navegación de pedidos" class="mt-3">
-        <ul class="pagination justify-content-center justify-content-md-end mb-0">
-            @{
-                // Variables para que el código no sea eterno
-                int actual = Model.PedidosPaginados.PaginaActual;
-                int total = Model.PedidosPaginados.TotalPaginas;
-                int radio = 2;
-            }
-
-            @* Botón Anterior *@
-            <li class="page-item @(actual == 1 ? "disabled" : "")">
-                <a class="page-link"
-                   asp-action="Listado"
-                   asp-route-pagina="@(actual - 1)"
-                   asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
-                   asp-route-busqueda="@Model.Busqueda"
-                   asp-route-estado="@Model.EstadoId"
-                   asp-route-filtroMonto="@Model.FiltroMonto"
-                   asp-route-fechaDesde="@Model.FechaDesde?.ToString("yyyy-MM-dd")"
-                   asp-route-fechaHasta="@Model.FechaHasta?.ToString("yyyy-MM-dd")">
-                    <i class="bi bi-chevron-left"></i>
-                </a>
-            </li>
-
-            @* Lógica de Números con Truncado *@
-            @for (int i = 1; i <= total; i++)
-            {
-                // Mostramos: primera, última, y las que están cerca de la actual (radio 2)
-                if (i == 1 || i == total || (i >= actual - radio && i <= actual + radio))
-                {
-                    <li class="page-item @(i == actual ? "active" : "")">
-                        <a class="page-link"
-                           asp-action="Listado"
-                           asp-route-pagina="@i"
-                           asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
-                           asp-route-busqueda="@Model.Busqueda"
-                           asp-route-estado="@Model.EstadoId"
-                           asp-route-filtroMonto="@Model.FiltroMonto"
-                           asp-route-fechaDesde="@Model.FechaDesde?.ToString("yyyy-MM-dd")"
-                           asp-route-fechaHasta="@Model.FechaHasta?.ToString("yyyy-MM-dd")">
-                            @i
-                        </a>
-                    </li>
-                }
-                // Puntos suspensivos
-                else if (i == actual - radio - 1 || i == actual + radio + 1)
-                {
-                    <li class="page-item disabled"><span class="page-link">...</span></li>
-                }
-            }
-
-            @* Botón Siguiente *@
-            <li class="page-item @(actual == total ? "disabled" : "")">
-                <a class="page-link"
-                   asp-action="Listado"
-                   asp-route-pagina="@(actual + 1)"
-                   asp-route-tamanoPagina="@Model.PedidosPaginados.RegistrosPorPagina"
-                   asp-route-busqueda="@Model.Busqueda"
-                   asp-route-estado="@Model.EstadoId"
-                   asp-route-filtroMonto="@Model.FiltroMonto"
-                   asp-route-fechaDesde="@Model.FechaDesde?.ToString("yyyy-MM-dd")"
-                   asp-route-fechaHasta="@Model.FechaHasta?.ToString("yyyy-MM-dd")">
-                    <i class="bi bi-chevron-right"></i>
-                </a>
-            </li>
-        </ul>
-    </nav>
+    <partial name="_Paginacion" model="@(new PaginacionViewModel { 
+        PaginaActual = Model.PedidosPaginados.PaginaActual, 
+        TotalPaginas = Model.PedidosPaginados.TotalPaginas,
+        Accion = "Listado"
+    })" />
 </div>
 
 <!-- Modal de Cambio de Estado -->

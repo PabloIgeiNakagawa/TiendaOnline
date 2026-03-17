@@ -5,7 +5,7 @@ using TiendaOnline.Application.Pedidos.Query;
 
 namespace TiendaOnline.Features.Pedidos.Admin
 {
-    [Route("Admin/[controller]")]
+    [Route("admin/pedidos")]
     [Authorize(Roles = "Administrador")]
     public class AdminPedidosController : Controller
     {
