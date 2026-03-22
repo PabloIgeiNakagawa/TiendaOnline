@@ -14,9 +14,9 @@ namespace TiendaOnline.Features.Productos.Admin
 
         // Estado de los filtros (para mantenerlos al recargar)
         public string? Busqueda { get; set; }
-        public int? CategoriaSeleccionada { get; set; }
-        public string? EstadoSeleccionado { get; set; }
-        public string? StockSeleccionado { get; set; }
+        public int? CategoriaId { get; set; }
+        public string? Estado { get; set; }
+        public string? Stock{ get; set; }
 
         // Totales para los badges
         public int TotalActivos { get; set; }

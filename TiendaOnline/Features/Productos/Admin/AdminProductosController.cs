@@ -8,7 +8,7 @@ using TiendaOnline.Application.Productos.Queries;
 
 namespace TiendaOnline.Features.Productos.Admin
 {
-    [Route("Admin/[controller]")]
+    [Route("admin/productos")]
     [Authorize(Roles = "Administrador")]
     public class AdminProductosController : Controller
     {
@@ -42,9 +42,9 @@ namespace TiendaOnline.Features.Productos.Admin
                 ProductosPaginados = pagedResult,
                 Categorias = categoriasDto,
                 Busqueda = request.Busqueda,
-                CategoriaSeleccionada = request.CategoriaId,
-                EstadoSeleccionado = request.Estado,
-                StockSeleccionado = request.Stock,
+                CategoriaId = request.CategoriaId,
+                Estado = request.Estado,
+                Stock = request.Stock,
                 TotalActivos = pagedResult.Items.Count(x => x.Activo),
                 TotalInactivos = pagedResult.Items.Count(x => !x.Activo)
             };
