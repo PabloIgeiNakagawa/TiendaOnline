@@ -3,7 +3,19 @@
 @model LogsViewModel
 @{
     ViewData["Title"] = "Auditoría del Sistema";
+
+    var filtrosActivos = new List<FiltroPill>();
+
+    if (!string.IsNullOrEmpty(Model.Busqueda))
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Auditorías", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
+
+    if (Model.FechaDesde.HasValue)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Desde", Valor = Model.FechaDesde.Value.ToShortDateString(), Propiedad = nameof(Model.FechaDesde) });
+
+    if (Model.FechaHasta.HasValue)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Hasta", Valor = Model.FechaHasta.Value.ToShortDateString(), Propiedad = nameof(Model.FechaHasta) });
 }
+
 <div class="container-fluid py-4">
     <!-- Encabezado -->
     <partial name="_TituloSeccion" model='("Auditoría del Sistema", "Registro completo de todas las acciones realizadas en el sistema")' />
@@ -17,7 +29,7 @@
                         <div class="row g-3">
                             <div class="col-md-2">
                                 <label class="form-label fw-bold text-muted small">Mostrar</label>
-                                <select name="tamanoPagina" class="form-select" onchange="this.form.submit()">
+                                <select name="TamanoPagina" class="form-select">
                                     @{
                                         int[] opciones = { 10, 25, 50, 75, 100 };
                                         foreach (var cantidad in opciones)
@@ -33,20 +45,20 @@
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-search me-1"></i>Búsqueda
                                 </label>
-                                <input type="text" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Usuario, tabla o acción...">
+                                <input type="text" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="Usuario, tabla o acción...">
                             </div>
 
                             <div class="col-md-2">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-calendar me-1"></i>Desde
                                 </label>
-                                <input type="date" name="fechaDesde" class="form-control">
+                                <input type="date" name="FechaDesde" class="form-control">
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-calendar me-1"></i>Hasta
                                 </label>
-                                <input type="date" name="fechaHasta" class="form-control">
+                                <input type="date" name="FechaHasta" class="form-control">
                             </div>
 
                             <div class="col-md-3 d-flex align-items-end gap-2">
@@ -66,29 +78,15 @@
     </form>
 
     <!-- Resumen resultados -->
-    <div class="d-flex justify-content-between align-items-center mb-3 px-1">
-        <div class="text-muted small">
-            @if (Model.Paginacion.TotalRegistros > 0)
-            {
-                <span>
-                    Mostrando <strong>@Model.Paginacion.DesdeRegistro</strong> a <strong>@Model.Paginacion.HastaRegistro</strong> de
-                    <strong>@Model.Paginacion.TotalRegistros</strong> resultados encontrados
-                </span>
-            }
-            else
-            {
-                <span>No se encontraron resultados para los filtros aplicados.</span>
-            }
-        </div>
-
-        @if (!string.IsNullOrEmpty(Model.Busqueda))
-        {
-            <span class="text-muted small">
-                <i class="bi bi-info-circle me-1 text-primary"></i>
-                Filtrado por: "<strong>@Model.Busqueda</strong>"
-            </span>
-        }
-    </div>
+    <partial name="_ResumenResultados" 
+        model="@(new ResumenResultadosViewModel{
+                    TotalRegistros = Model.Paginacion.TotalRegistros,
+                    Desde = Model.Paginacion.DesdeRegistro,
+                    Hasta = Model.Paginacion.HastaRegistro,
+                    NombreEntidad = "auditorias",
+                    ActionName = "Logs",
+                    Filtros = filtrosActivos
+    })" />
 
     <!-- Tabla de Auditoría -->
     <div class="row">

@@ -5,7 +5,6 @@ namespace TiendaOnline.Features.Auditorias
 {
     public class LogsViewModel
     {
-        // El resultado que viene del Service
         public PagedResult<AuditoriaListaDto> Paginacion { get; set; } = new PagedResult<AuditoriaListaDto>(new List<AuditoriaListaDto>(), 0, 1, 10);
 
         // Filtros

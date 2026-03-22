@@ -4,7 +4,7 @@ using TiendaOnline.Application.Auditoria;
 
 namespace TiendaOnline.Features.Auditorias
 {
-    [Route("Admin/[controller]")]
+    [Route("admin/auditorias")]
     [Authorize(Roles="Administrador")]
     public class AdminAuditoriasController : Controller
     {

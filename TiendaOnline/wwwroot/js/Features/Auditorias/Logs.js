@@ -22,7 +22,7 @@ function verDetalle(id) {
     datosAnteriores.textContent = "Cargando...";
     datosNuevos.textContent = "Cargando...";
 
-    fetch(`/Admin/AdminAuditorias/ObtenerDetalle/${id}`)
+    fetch(`/admin/auditorias/ObtenerDetalle/${id}`)
         .then(response => {
             if (!response.ok) throw new Error();
             return response.json();
