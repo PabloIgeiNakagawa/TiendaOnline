@@ -9,7 +9,7 @@
     if (!string.IsNullOrEmpty(Model.Busqueda))
         filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Producto", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
 
-    string nombreEstado = null;
+    string? nombreEstado = null;
     if (Model.EstadoId.HasValue) 
     {
         nombreEstado = Model.EstadoId switch

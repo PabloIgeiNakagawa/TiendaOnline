@@ -7,6 +7,6 @@ namespace TiendaOnline.Features.Categorias
     {
         public PagedResult<CategoriaListadoDto> Paginacion { get; set; }
         public string? Busqueda { get; set; }
-        public string? NivelSeleccionado { get; set; }
+        public string? Nivel { get; set; }
     }
 }

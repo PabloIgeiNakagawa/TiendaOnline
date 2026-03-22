@@ -7,7 +7,7 @@ using TiendaOnline.Application.Categorias.Queries;
 
 namespace TiendaOnline.Features.Categorias
 {
-    [Route("Admin/[controller]")]
+    [Route("admin/categorias")]
     [Authorize(Roles = "Administrador")]
     public class CategoriasController : Controller
     {
@@ -21,17 +21,15 @@ namespace TiendaOnline.Features.Categorias
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> Listado(int pagina = 1, int tamanoPagina = 10, string? busqueda = null, string? nivel = null)
+        public async Task<IActionResult> Listado(FiltrosListadoViewModel filtros)
         {
-            ViewData["Title"] = "Gestión de Categorías";
-
-            var pagedResult = await _categoriaQueryService.ObtenerCategoriasPaginadasAsync(pagina, tamanoPagina, busqueda, nivel);
+            var pagedResult = await _categoriaQueryService.ObtenerCategoriasPaginadasAsync(filtros.Pagina, filtros.TamanoPagina, filtros.Busqueda, filtros.Nivel);
 
             var viewModel = new CategoriaListadoViewModel
             {
                 Paginacion = pagedResult,
-                Busqueda = busqueda,
-                NivelSeleccionado = nivel
+                Busqueda = filtros.Busqueda,
+                Nivel = filtros.Nivel
             };
 
             return View(viewModel);
