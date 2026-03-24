@@ -23,35 +23,45 @@ namespace TiendaOnline.Authorization
                 return;
             }
 
-            // Obtener el ID del Pedido desde la URL (ej: /Pedidos/Detalles/45)
-            var routeData = _httpContextAccessor.HttpContext?.GetRouteData();
-            var orderIdStr = routeData?.Values["id"]?.ToString();
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null) return;
 
+            // Intentamos obtener el ID del pedido de varios lugares
+            // Primero de la ruta (Ej: /Detalles/45)
+            var orderIdStr = httpContext.GetRouteData()?.Values["id"]?.ToString();
+
+            // Si no está ahí, buscamos en el Query String (Ej: ?id=45)
+            if (string.IsNullOrEmpty(orderIdStr))
+            {
+                orderIdStr = httpContext.Request.Query["id"].ToString();
+            }
+
+            // Si sigue vacío, buscamos el parámetro que envía Mercado Pago (external_reference)
+            if (string.IsNullOrEmpty(orderIdStr))
+            {
+                orderIdStr = httpContext.Request.Query["external_reference"].ToString();
+            }
+
+            // Validamos que el ID sea un número válido
             if (string.IsNullOrEmpty(orderIdStr) || !int.TryParse(orderIdStr, out int orderId))
             {
-                return; // No hay un ID válido en la ruta, no podemos validar propiedad
+                return; // No se encontró ID, el acceso será denegado
             }
 
-            // Obtener el ID del Usuario logueado desde sus Claims
+            // Obtener el ID del Usuario logueado (Claim NameIdentifier)
             var userIdLogueado = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdLogueado)) return;
 
-            if (string.IsNullOrEmpty(userIdLogueado))
-            {
-                return; // Usuario no autenticado
-            }
-
-            // Consultar a la Capa de Aplicación (Application)
-            // Usamos el servicio que ya tenés definido en tu estructura
+            // Consultar el pedido en la base de datos
             var pedido = await _pedidoQueryService.ObtenerPedidoConDetallesAsync(orderId);
 
-            // Validar: ¿El pedido existe y el dueño es quien dice ser?
-            // Importante: Chequeá si en tu DTO el campo es 'UsuarioId' o 'IdUsuario'
+            // Validar propiedad: El pedido existe y el UsuarioId coincide
             if (pedido != null && pedido.UsuarioId.ToString() == userIdLogueado)
             {
                 context.Succeed(requirement);
             }
 
-            // Si no coincide, el sistema por defecto denegará el acceso (403 Forbidden)
+            // Si llegamos acá sin context.Succeed(), ASP.NET devuelve 403 Forbidden automáticamente
         }
     }
 }
