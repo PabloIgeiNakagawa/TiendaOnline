@@ -88,16 +88,26 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             }
 
             if (filtros.EstadoId.HasValue) query = query.Where(p => ((int)p.Estado) == filtros.EstadoId);
+            if (filtros.EstadoPagoId.HasValue) query = query.Where(p => ((int)p.EstadoPago) == filtros.EstadoPagoId);
             if (filtros.Desde.HasValue) query = query.Where(p => p.FechaPedido >= filtros.Desde.Value);
             if (filtros.Hasta.HasValue) query = query.Where(p => p.FechaPedido <= filtros.Hasta.Value);
 
             // Filtro de Monto
-            if (!string.IsNullOrEmpty(filtros.Monto))
+            if (filtros.MontoMin.HasValue || filtros.MontoMax.HasValue)
             {
-                var qMonto = query.Select(p => new { p, Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) });
-                if (filtros.Monto == "bajo") query = qMonto.Where(x => x.Total < 250000).Select(x => x.p);
-                if (filtros.Monto == "medio") query = qMonto.Where(x => x.Total >= 250000 && x.Total <= 1000000).Select(x => x.p);
-                if (filtros.Monto == "alto") query = qMonto.Where(x => x.Total > 1000000).Select(x => x.p);
+                // Proyectamos el total una sola vez para no repetir el cálculo del Sum
+                var qMonto = query.Select(p => new {
+                    p,
+                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad)
+                });
+
+                if (filtros.MontoMin.HasValue)
+                    qMonto = qMonto.Where(x => x.Total >= filtros.MontoMin.Value);
+
+                if (filtros.MontoMax.HasValue)
+                    qMonto = qMonto.Where(x => x.Total <= filtros.MontoMax.Value);
+
+                query = qMonto.Select(x => x.p);
             }
 
             // Conteo Total
@@ -111,12 +121,12 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 .Select(p => new PedidoListadoDto
                 {
                     PedidoId = p.PedidoId,
-                    NombreCliente = p.Usuario.Nombre + " " + p.Usuario.Apellido,
+                    NombreCliente = $"{p.Usuario.Nombre} {p.Usuario.Apellido}",
                     EmailCliente = p.Usuario.Email,
                     FechaPedido = p.FechaPedido,
                     FechaEntrega = p.FechaEntrega,
                     EstadoId = (int)p.Estado,
-                    EstadoNombre = p.Estado.ToString(),
+                    EstadoPagoId = (int)p.EstadoPago,
                     Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad)
                 })
             .ToListAsync();

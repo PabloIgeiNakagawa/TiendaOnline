@@ -1,6 +1,4 @@
-﻿using TiendaOnline.Domain.Entities;
-
-namespace TiendaOnline.Application.Pedidos.Query
+﻿namespace TiendaOnline.Application.Pedidos.Query
 {
     public class PedidoListadoDto
     {
@@ -11,6 +9,6 @@ namespace TiendaOnline.Application.Pedidos.Query
         public DateTime? FechaEntrega { get; set; }
         public decimal Total { get; set; }
         public int EstadoId { get; set; }
-        public string EstadoNombre { get; set; } = string.Empty;
+        public int EstadoPagoId { get; set; }
     }
 }

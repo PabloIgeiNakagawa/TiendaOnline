@@ -1,5 +1,4 @@
 ﻿using TiendaOnline.Application.Common;
-using TiendaOnline.Domain.Entities;
 
 namespace TiendaOnline.Application.Pedidos.Query
 {

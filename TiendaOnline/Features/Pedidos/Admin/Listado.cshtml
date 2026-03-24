@@ -1,4 +1,6 @@
-﻿@using TiendaOnline.Features.Pedidos.Admin
+﻿@using TiendaOnline.Enums
+@using TiendaOnline.Extensions
+@using TiendaOnline.Features.Pedidos.Admin
 @using TiendaOnline.Features.Shared.ViewModels
 @model PedidoListadoViewModel
 @{
@@ -9,46 +11,24 @@
     if (!string.IsNullOrEmpty(Model.Busqueda))
         filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Producto", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
 
-    string? nombreEstado = null;
     if (Model.EstadoId.HasValue) 
     {
-        nombreEstado = Model.EstadoId switch
-        {
-            0 => "Pendiente",
-            1 => "Enviado",
-            2 => "Entregado",
-            3 => "Cancelado",
-            _ => ""
-        };
+        var estadoEnum = (EstadoPedidoUI)Model.EstadoId.Value;
+        string nombreEstado = estadoEnum.GetDisplayName();
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-app-indicator", Etiqueta = "Estado", Valor = nombreEstado, Propiedad = nameof(Model.EstadoId) });
     }
 
-    if (!string.IsNullOrEmpty(nombreEstado))
+    if (Model.EstadoPagoId.HasValue) 
     {
-        filtrosActivos.Add(new FiltroPill { 
-            Icono = "bi-app-indicator", 
-            Etiqueta = "Estado", 
-            Valor = nombreEstado, 
-            Propiedad = nameof(Model.EstadoId)
-        });
+        string nombrePago = ((EstadoPagoUI)Model.EstadoPagoId.Value).GetDisplayName();
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-cash-stack", Etiqueta = "Pago", Valor = nombrePago, Propiedad = nameof(Model.EstadoPagoId) });
     }
 
-    if (!string.IsNullOrEmpty(Model.FiltroMonto))
-    {
-        var etiquetaMonto = Model.FiltroMonto switch
-        {
-            "bajo" => "Menos de $250.000",
-            "medio" => "$250.000 - $1.000.000",
-            "alto" => "Más de $1.000.000",
-            _ => ""
-        };
+    if (Model.MontoMin.HasValue && Model.MontoMin > 0)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-currency-dollar", Etiqueta = "Mínimo", Valor = $"$ {Model.MontoMin:N0}", Propiedad = nameof(Model.MontoMin) });
 
-        filtrosActivos.Add(new FiltroPill { 
-            Icono = "bi-currency-dollar", 
-            Etiqueta = "Monto", 
-            Valor = etiquetaMonto, 
-            Propiedad = "FiltroMonto" 
-        });
-    }
+    if (Model.MontoMax.HasValue && Model.MontoMax > 0)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-currency-dollar", Etiqueta = "Máximo", Valor = $"$ {Model.MontoMax:N0}", Propiedad = nameof(Model.MontoMax) });
 
     if (Model.FechaDesde.HasValue)
         filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Desde", Valor = Model.FechaDesde.Value.ToShortDateString(), Propiedad = nameof(Model.FechaDesde) });
@@ -69,7 +49,7 @@
                     <div class="row g-3">
                         <form asp-action="Listado" method="get" class="row g-3">
                             <div class="col-md-2">
-                                <label class="form-label fw-bold text-muted small">Mostrar</label>
+                                <label class="form-label fw-bold">Mostrar</label>
                                 <select name="TamanoPagina" class="form-select">
                                     @{
                                         int[] opciones = { 10, 25, 50, 75, 100 };
@@ -89,33 +69,46 @@
                                 <input type="text" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="ID pedido o cliente...">
                             </div>
                             <div class="col-md-2">
-                                <label for="filtroEstado" class="form-label fw-semibold">
+                                <label class="form-label fw-semibold">
                                     <i class="bi bi-funnel me-1"></i>Estado
                                 </label>
-                                <select name="EstadoId" class="form-select">
-                                    <option value="">Todos</option>
-                                    <option value="0" selected="@(Model.EstadoId == 0 ? "selected" : null)">Pendiente</option>
-                                    <option value="1" selected="@(Model.EstadoId == 1 ? "selected" : null)">Enviado</option>
-                                    <option value="2" selected="@(Model.EstadoId == 2 ? "selected" : null)">Entregado</option>
-                                    <option value="3" selected="@(Model.EstadoId == 3 ? "selected" : null)">Cancelado</option>
+                                <select asp-for="EstadoId" asp-items="Model.EstadosPedido" class="form-select">
+                                    <option value="">Todos los estados</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label fw-semibold"><i class="bi bi-calendar me-1"></i>Desde</label>
-                                <input type="date" name="FechaDesde" value="@Model.FechaDesde?.ToString("yyyy-MM-dd")" class="form-control">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-semibold"><i class="bi bi-calendar me-1"></i>Hasta</label>
-                                <input type="date" name="FechaHasta" value="@Model.FechaHasta?.ToString("yyyy-MM-dd")" class="form-control">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-semibold"><i class="bi bi-currency-dollar me-1"></i>Monto</label>
-                                <select name="FiltroMonto" class="form-select">
-                                    <option value="">Todos</option>
-                                    <option value="bajo" selected='@(Model.FiltroMonto == "bajo" ? "selected" : null)'>Menos de $250.000</option>
-                                    <option value="medio" selected='@(Model.FiltroMonto == "medio" ? "selected" : null)'>$250.000 - $1.000.000</option>
-                                    <option value="alto" selected='@(Model.FiltroMonto == "alto" ? "selected" : null)'>Más de $1.000.000</option>
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-credit-card me-1"></i>Estado del pago
+                                </label>
+                                <select asp-for="EstadoPagoId" asp-items="Model.EstadosPago" class="form-select">
+                                    <option value="">Todos los pagos</option>
                                 </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-currency-dollar me-1"></i>Rango de Monto
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" name="MontoMin" value="@Model.MontoMin" class="form-control" placeholder="Mín" step="0.01">
+                                    <span class="input-group-text">-</span>
+                                    <input type="number" name="MontoMax" value="@Model.MontoMax" class="form-control" placeholder="Máx" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-calendar-range me-1"></i>Periodo de Fechas
+                                </label>
+                                <div class="input-group">
+                                    <input type="date" name="FechaDesde" 
+                                           value="@Model.FechaDesde?.ToString("yyyy-MM-dd")" 
+                                           class="form-control" title="Fecha Desde">
+        
+                                    <span class="input-group-text">al</span>
+        
+                                    <input type="date" name="FechaHasta" 
+                                           value="@Model.FechaHasta?.ToString("yyyy-MM-dd")" 
+                                           class="form-control" title="Fecha Hasta">
+                                </div>
                             </div>
                             <div class="col-md-3 d-flex align-items-end gap-2">
                                 <button type="submit" class="btn btn-primary rounded-3 flex-fill">
@@ -178,6 +171,11 @@
                                     </th>
                                     <th class="border-0 py-3">
                                         <div class="d-flex align-items-center">
+                                            <i class="bi bi-credit-card me-2 text-primary"></i>Pago
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
                                             <i class="bi bi-flag me-2 text-primary"></i>Estado
                                         </div>
                                     </th>
@@ -227,33 +225,51 @@
                                             <div class="fw-bold text-success">@pedido.Total.ToString("C0")</div>
                                         </td>
                                         <td class="py-3">
-                                            @switch (pedido.EstadoNombre)
-                                            {
-                                                case "Pendiente":
-                                                    <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"
-                                                          style="font-size: 0.8rem; letter-spacing: 0.5px;">
-                                                        <i class="bi bi-clock me-1"></i>Pendiente
-                                                    </span>
-                                                    break;
-                                                case "Enviado":
-                                                    <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-info bg-opacity-10 text-info border border-info border-opacity-25"
-                                                          style="font-size: 0.8rem; letter-spacing: 0.5px;">
-                                                        <i class="bi bi-truck me-1"></i>Enviado
-                                                    </span>
-                                                    break;
-                                                case "Entregado":
-                                                    <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-success bg-opacity-10 text-success border border-success border-opacity-25"
-                                                          style="font-size: 0.8rem; letter-spacing: 0.5px;">
-                                                        <i class="bi bi-check-circle me-1"></i>Entregado
-                                                    </span>
-                                                    break;
-                                                case "Cancelado":
-                                                    <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25"
-                                                          style="font-size: 0.8rem; letter-spacing: 0.5px;">
-                                                        <i class="bi bi-x-circle me-1"></i>Cancelado
-                                                    </span>
-                                                    break;
+                                            @{
+                                                // Extraemos solo lo que cambia (Color e Ícono)
+                                                var (color, icono) = (EstadoPagoUI)pedido.EstadoPagoId switch
+                                                {
+                                                    EstadoPagoUI.Aprobado   => ("success", "bi-check-circle"),
+                                                    EstadoPagoUI.Rechazado  => ("danger",  "bi-x-circle"),
+                                                    EstadoPagoUI.Reembolsado => ("info",    "bi-arrow-left"),
+                                                    _                       => ("warning", "bi-clock") // Pendiente por defecto
+                                                };
+    
+                                                // Obtenemos el texto una sola vez
+                                                var texto = ((EstadoPagoUI)pedido.EstadoPagoId).GetDisplayName();
                                             }
+
+                                            <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 
+                                                         bg-@color bg-opacity-10 text-@color 
+                                                         border border-@color border-opacity-25"
+                                                  style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                                                <i class="bi @icono me-1"></i>
+                                                @texto
+                                            </span>
+                                        </td>
+                                        <td class="py-3">
+                                            @{
+                                                // Definimos la configuración para cada Estado del Pedido
+                                                var conf = (EstadoPedidoUI)pedido.EstadoId switch
+                                                {
+                                                    EstadoPedidoUI.Nuevo         => new { Bg = "info",    Txt = "warning", Icon = "bi-clock" },
+                                                    EstadoPedidoUI.EnPreparacion => new { Bg = "warning", Txt = "warning", Icon = "bi-clock" },
+                                                    EstadoPedidoUI.Enviado       => new { Bg = "success-subtle", Txt = "info", Icon = "bi-truck" },
+                                                    EstadoPedidoUI.Entregado     => new { Bg = "success", Txt = "success", Icon = "bi-check-circle" },
+                                                    EstadoPedidoUI.Cancelado     => new { Bg = "danger",  Txt = "danger",  Icon = "bi-x-circle" },
+                                                    _                            => new { Bg = "secondary", Txt = "secondary", Icon = "bi-question" }
+                                                };
+
+                                                var nombreEstado = ((EstadoPedidoUI)pedido.EstadoId).GetDisplayName();
+                                            }
+
+                                            <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 
+                                                         bg-@conf.Bg bg-opacity-10 text-@conf.Txt 
+                                                         border border-@conf.Txt border-opacity-25"
+                                                  style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                                                <i class="@conf.Icon me-1"></i>
+                                                @nombreEstado
+                                            </span>
                                         </td>
                                         <td class="py-3">
                                             <div class="d-flex justify-content-center gap-1">
@@ -261,7 +277,7 @@
                                                    class="btn btn-outline-info btn-sm rounded-2 shadow-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                @if (pedido.EstadoNombre == "Pendiente")
+                                                @if (pedido.EstadoId == (int)EstadoPedidoUI.Nuevo)
                                                 {
                                                     <button type="button"
                                                             class="btn btn-outline-success btn-sm rounded-2 shadow-sm btn-cambio-estado"
@@ -283,7 +299,7 @@
                                                         <i class="bi bi-x-circle"></i>
                                                     </button>
                                                 }
-                                                else if (pedido.EstadoNombre == "Enviado")
+                                                else if (pedido.EstadoId == (int)EstadoPedidoUI.Enviado)
                                                 {
                                                     <button type="button"
                                                             class="btn btn-outline-success btn-sm rounded-2 shadow-sm btn-cambio-estado"

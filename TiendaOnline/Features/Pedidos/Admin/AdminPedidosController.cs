@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Application.Pedidos.Query;
+using TiendaOnline.Enums;
+using TiendaOnline.Extensions;
 
 namespace TiendaOnline.Features.Pedidos.Admin
 {
@@ -27,7 +29,8 @@ namespace TiendaOnline.Features.Pedidos.Admin
                 EstadoId = model.EstadoId,
                 Desde = model.FechaDesde,
                 Hasta = model.FechaHasta,
-                Monto = model.FiltroMonto,
+                MontoMin = model.MontoMin,
+                MontoMax = model.MontoMax,
                 Pagina = model.Pagina,
                 Cantidad = model.TamanoPagina
             };
@@ -41,9 +44,13 @@ namespace TiendaOnline.Features.Pedidos.Admin
                 PedidosPaginados = pagedResult,
                 Busqueda = model.Busqueda,
                 EstadoId = model.EstadoId,
+                EstadoPagoId = model.EstadoPagoId,
                 FechaDesde = model.FechaDesde,
                 FechaHasta = model.FechaHasta,
-                FiltroMonto = model.FiltroMonto
+                MontoMin = model.MontoMin,
+                MontoMax = model.MontoMax,
+                EstadosPedido = ((EstadoPedidoUI?)model.EstadoId).ToSelectList(),
+                EstadosPago = ((EstadoPagoUI?)model.EstadoPagoId).ToSelectList()
             };
 
             return View(viewModel);
