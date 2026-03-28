@@ -1,0 +1,61 @@
+﻿@using TiendaOnline.Features.Shared.ViewModels
+@model PaginacionViewModel
+@{
+    int radio = 2;
+
+    // Obtener los parámetros actuales de la URL automáticamente
+    Dictionary<string, string> ObtenerRutas(int pagina)
+    {
+        var rutas = new Dictionary<string, string>();
+
+        // Copiamos todo el querystring actual (búsqueda, fechas, tamaño, etc)
+        foreach (var key in Context.Request.Query.Keys)
+        {
+            rutas[key] = Context.Request.Query[key];
+        }
+
+        // Si usaste RutasAdicionales manuales, las agregamos también
+        foreach (var item in Model.RutasAdicionales)
+        {
+            rutas[item.Key] = item.Value;
+        }
+
+        // Sobrescribimos la página con la página que corresponde al botón
+        rutas["pagina"] = pagina.ToString();
+        
+        return rutas;
+    }
+}
+
+<nav aria-label="Navegación de páginas" class="mt-3">
+    <ul class="pagination justify-content-center justify-content-md-end mb-0">
+
+        @* Anterior *@
+        <li class="page-item @(Model.PaginaActual == 1 ? "disabled" : "")">
+            <a class="page-link" asp-action="@Model.Accion" asp-all-route-data="ObtenerRutas(Model.PaginaActual - 1)">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+
+        @for (int i = 1; i <= Model.TotalPaginas; i++)
+        {
+            if (i == 1 || i == Model.TotalPaginas || (i >= Model.PaginaActual - radio && i <= Model.PaginaActual + radio))
+            {
+                <li class="page-item @(i == Model.PaginaActual ? "active" : "")">
+                    <a class="page-link" asp-action="@Model.Accion" asp-all-route-data="ObtenerRutas(i)">@i</a>
+                </li>
+            }
+            else if (i == Model.PaginaActual - radio - 1 || i == Model.PaginaActual + radio + 1)
+            {
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            }
+        }
+
+        @* Siguiente *@
+        <li class="page-item @(Model.PaginaActual == Model.TotalPaginas ? "disabled" : "")">
+            <a class="page-link" asp-action="@Model.Accion" asp-all-route-data="ObtenerRutas(Model.PaginaActual + 1)">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    </ul>
+</nav>

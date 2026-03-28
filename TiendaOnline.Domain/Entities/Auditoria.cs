@@ -7,10 +7,9 @@ namespace TiendaOnline.Domain.Entities
         [Key]
         public int AuditoriaId { get; set; }
 
-        [Required]
-        public int UsuarioId { get; set; }
+        public int? UsuarioId { get; set; }
 
-        public Usuario Usuario { get; set; }
+        public Usuario? Usuario { get; set; }
 
         [Required]
         public string Accion { get; set; }

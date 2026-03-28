@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
-using TiendaOnline.Domain.Interfaces;
+using TiendaOnline.Application.Common.Interfaces;
 
 namespace TiendaOnline.Infrastructure.ExternalServices
 {

@@ -1,0 +1,360 @@
+﻿@using TiendaOnline.Enums
+@using TiendaOnline.Extensions
+@using TiendaOnline.Features.Pedidos.Admin
+@using TiendaOnline.Features.Shared.ViewModels
+@model PedidoListadoViewModel
+@{
+    ViewData["Title"] = "Gestión de Pedidos";
+
+    var filtrosActivos = new List<FiltroPill>();
+
+    if (!string.IsNullOrEmpty(Model.Busqueda))
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Producto", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
+
+    if (Model.EstadoId.HasValue) 
+    {
+        var estadoEnum = (EstadoPedidoUI)Model.EstadoId.Value;
+        string nombreEstado = estadoEnum.GetDisplayName();
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-app-indicator", Etiqueta = "Estado", Valor = nombreEstado, Propiedad = nameof(Model.EstadoId) });
+    }
+
+    if (Model.EstadoPagoId.HasValue) 
+    {
+        string nombrePago = ((EstadoPagoUI)Model.EstadoPagoId.Value).GetDisplayName();
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-cash-stack", Etiqueta = "Pago", Valor = nombrePago, Propiedad = nameof(Model.EstadoPagoId) });
+    }
+
+    if (Model.MontoMin.HasValue && Model.MontoMin > 0)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-currency-dollar", Etiqueta = "Mínimo", Valor = $"$ {Model.MontoMin:N0}", Propiedad = nameof(Model.MontoMin) });
+
+    if (Model.MontoMax.HasValue && Model.MontoMax > 0)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-currency-dollar", Etiqueta = "Máximo", Valor = $"$ {Model.MontoMax:N0}", Propiedad = nameof(Model.MontoMax) });
+
+    if (Model.FechaDesde.HasValue)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Desde", Valor = Model.FechaDesde.Value.ToShortDateString(), Propiedad = nameof(Model.FechaDesde) });
+
+    if (Model.FechaHasta.HasValue)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Hasta", Valor = Model.FechaHasta.Value.ToShortDateString(), Propiedad = nameof(Model.FechaHasta) });
+}
+
+<div class="container-fluid py-4">
+
+    <partial name="_TituloSeccion" model='("Gestión de pedidos", "Administra todos los pedidos del sistema")' />
+
+    <!-- Filtros y Búsqueda -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <form asp-action="Listado" method="get" class="row g-3">
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">Mostrar</label>
+                                <select name="TamanoPagina" class="form-select">
+                                    @{
+                                        int[] opciones = { 10, 25, 50, 75, 100 };
+                                        foreach (var cantidad in opciones)
+                                        {
+                                            <option value="@cantidad" selected="@(Model.PedidosPaginados.RegistrosPorPagina == cantidad ? "selected" : null)">
+                                                @cantidad registros
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="campoBusqueda" class="form-label fw-semibold">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </label>
+                                <input type="text" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="ID pedido o cliente...">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-funnel me-1"></i>Estado
+                                </label>
+                                <select asp-for="EstadoId" asp-items="Model.EstadosPedido" class="form-select">
+                                    <option value="">Todos los estados</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-credit-card me-1"></i>Estado del pago
+                                </label>
+                                <select asp-for="EstadoPagoId" asp-items="Model.EstadosPago" class="form-select">
+                                    <option value="">Todos los pagos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-currency-dollar me-1"></i>Rango de Monto
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" name="MontoMin" value="@Model.MontoMin" class="form-control" placeholder="Mín" step="0.01">
+                                    <span class="input-group-text">-</span>
+                                    <input type="number" name="MontoMax" value="@Model.MontoMax" class="form-control" placeholder="Máx" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-calendar-range me-1"></i>Periodo de Fechas
+                                </label>
+                                <div class="input-group">
+                                    <input type="date" name="FechaDesde" 
+                                           value="@Model.FechaDesde?.ToString("yyyy-MM-dd")" 
+                                           class="form-control" title="Fecha Desde">
+        
+                                    <span class="input-group-text">al</span>
+        
+                                    <input type="date" name="FechaHasta" 
+                                           value="@Model.FechaHasta?.ToString("yyyy-MM-dd")" 
+                                           class="form-control" title="Fecha Hasta">
+                                </div>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary rounded-3 flex-fill">
+                                    <i class="bi bi-filter me-1"></i>
+                                </button>
+                                <a asp-action="Listado" class="btn btn-outline-secondary rounded-3 flex-fill">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_ResumenResultados" 
+        model="@(new ResumenResultadosViewModel{
+                    TotalRegistros = Model.PedidosPaginados.TotalRegistros,
+                    Desde = Model.PedidosPaginados.DesdeRegistro,
+                    Hasta = Model.PedidosPaginados.HastaRegistro,
+                    NombreEntidad = "pedidos",
+                    ActionName = "Listado",
+                    Filtros = filtrosActivos
+    })" />
+
+    <!-- Tabla de Pedidos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="border-bottom">
+                                <tr>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-hash me-2 text-primary"></i>ID Pedido
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-person me-2 text-primary"></i>Cliente
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-calendar me-2 text-primary"></i>Fecha Pedido
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-truck me-2 text-primary"></i>Fecha Entrega
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-currency-dollar me-2 text-primary"></i>Total
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-credit-card me-2 text-primary"></i>Pago
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-flag me-2 text-primary"></i>Estado
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3 text-center">
+                                        <i class="bi bi-gear me-1 text-primary"></i>Acciones
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pedido in Model.PedidosPaginados.Items)
+                                {
+                                    <tr>
+                                        <td class="py-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="fw-semibold px-3 py-2 text-uppercase"
+                                                     style="font-size: 0.9rem; letter-spacing: 0.5px;">
+                                                    #@pedido.PedidoId.ToString("D6")
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="cliente-info">
+                                                <div class="fw-semibold mb-1">@pedido.NombreCliente</div>
+                                                <small class="text-muted">@pedido.EmailCliente</small>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            <div>
+                                                <div class="fw-semibold mb-1">@pedido.FechaPedido.ToString("dd/MM/yyyy")</div>
+                                                <small class="text-muted">@pedido.FechaPedido.ToString("HH:mm")</small>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            @if (pedido.FechaEntrega.HasValue)
+                                            {
+                                                <div class="fecha-info">
+                                                    <div class="fw-semibold">@pedido.FechaEntrega.Value.ToString("dd/MM/yyyy")</div>
+                                                    <small class="text-muted">@pedido.FechaEntrega.Value.ToString("HH:mm")</small>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Sin fecha</span>
+                                            }
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="fw-bold text-success">@pedido.Total.ToString("C0")</div>
+                                        </td>
+                                        <td class="py-3">
+                                            @{
+                                                // Extraemos solo lo que cambia (Color e Ícono)
+                                                var (color, icono) = (EstadoPagoUI)pedido.EstadoPagoId switch
+                                                {
+                                                    EstadoPagoUI.Aprobado   => ("success", "bi-check-circle"),
+                                                    EstadoPagoUI.Rechazado  => ("danger",  "bi-x-circle"),
+                                                    EstadoPagoUI.Reembolsado => ("info",    "bi-arrow-left"),
+                                                    _                       => ("warning", "bi-clock") // Pendiente por defecto
+                                                };
+    
+                                                // Obtenemos el texto una sola vez
+                                                var texto = ((EstadoPagoUI)pedido.EstadoPagoId).GetDisplayName();
+                                            }
+
+                                            <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 
+                                                         bg-@color bg-opacity-10 text-@color 
+                                                         border border-@color border-opacity-25"
+                                                  style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                                                <i class="bi @icono me-1"></i>
+                                                @texto
+                                            </span>
+                                        </td>
+                                        <td class="py-3">
+                                            @{
+                                                // Definimos la configuración para cada Estado del Pedido
+                                                var conf = (EstadoPedidoUI)pedido.EstadoId switch
+                                                {
+                                                    EstadoPedidoUI.Nuevo         => new { Bg = "info",    Txt = "warning", Icon = "bi-clock" },
+                                                    EstadoPedidoUI.EnPreparacion => new { Bg = "warning", Txt = "warning", Icon = "bi-clock" },
+                                                    EstadoPedidoUI.Enviado       => new { Bg = "success-subtle", Txt = "info", Icon = "bi-truck" },
+                                                    EstadoPedidoUI.Entregado     => new { Bg = "success", Txt = "success", Icon = "bi-check-circle" },
+                                                    EstadoPedidoUI.Cancelado     => new { Bg = "danger",  Txt = "danger",  Icon = "bi-x-circle" },
+                                                    _                            => new { Bg = "secondary", Txt = "secondary", Icon = "bi-question" }
+                                                };
+
+                                                var nombreEstado = ((EstadoPedidoUI)pedido.EstadoId).GetDisplayName();
+                                            }
+
+                                            <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 
+                                                         bg-@conf.Bg bg-opacity-10 text-@conf.Txt 
+                                                         border border-@conf.Txt border-opacity-25"
+                                                  style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                                                <i class="@conf.Icon me-1"></i>
+                                                @nombreEstado
+                                            </span>
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@pedido.PedidoId"
+                                                   class="btn btn-outline-info btn-sm rounded-2 shadow-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                @if (pedido.EstadoId == (int)EstadoPedidoUI.Nuevo)
+                                                {
+                                                    <button type="button"
+                                                            class="btn btn-outline-success btn-sm rounded-2 shadow-sm btn-cambio-estado"
+                                                            data-id="@pedido.PedidoId"
+                                                            data-accion="enviar"
+                                                            data-bs-toggle="tooltip"
+                                                            data-bs-placement="top"
+                                                            title="Marcar como enviado">
+                                                        <i class="bi bi-truck"></i>
+                                                    </button>
+
+                                                    <button type="button"
+                                                            class="btn btn-outline-danger btn-sm rounded-2 shadow-sm btn-cambio-estado"
+                                                            data-id="@pedido.PedidoId"
+                                                            data-accion="cancelar"
+                                                            data-bs-toggle="tooltip"
+                                                            data-bs-placement="top"
+                                                            title="Cancelar pedido">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </button>
+                                                }
+                                                else if (pedido.EstadoId == (int)EstadoPedidoUI.Enviado)
+                                                {
+                                                    <button type="button"
+                                                            class="btn btn-outline-success btn-sm rounded-2 shadow-sm btn-cambio-estado"
+                                                            data-id="@pedido.PedidoId"
+                                                            data-accion="entregar"
+                                                            data-bs-toggle="tooltip"
+                                                            data-bs-placement="top"
+                                                            title="Marcar como entregado">
+                                                        <i class="bi bi-check-circle"></i>
+                                                    </button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    <partial name="_Paginacion" model="@(new PaginacionViewModel { 
+        PaginaActual = Model.PedidosPaginados.PaginaActual, 
+        TotalPaginas = Model.PedidosPaginados.TotalPaginas,
+        Accion = "Listado"
+    })" />
+</div>
+
+<!-- Modal de Cambio de Estado -->
+<partial name="_ModalCambiarEstado" />
+
+<!-- Formularios Ocultos -->
+<div style="display: none;">
+    @foreach (var pedido in Model.PedidosPaginados.Items)
+    {
+        <form id="enviarPedido@(pedido.PedidoId)" asp-action="Enviar" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
+        </form>
+
+        <form id="entregarPedido@(pedido.PedidoId)" asp-action="Entregar" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
+        </form>
+
+        <form id="cancelarPedido@(pedido.PedidoId)" asp-action="Cancelar" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
+        </form>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/Features/Pedidos/Admin/Listado.js" asp-append-version="true"></script>
+}

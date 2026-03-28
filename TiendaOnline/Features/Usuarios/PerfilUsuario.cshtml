@@ -1,0 +1,265 @@
+﻿@using TiendaOnline.Features.Usuarios
+@model UsuarioPerfilViewModel
+@{
+    ViewData["Title"] = Model.esPropioPerfil ? "Mi Perfil" : "Perfil de Usuario";
+}
+<div class="container-fluid py-4">
+    <!-- Migas de Pan -->
+    <nav aria-label="breadcrumb" class="mb-4" style="--bs-breadcrumb-divider: '›'; --bs-breadcrumb-divider-color: #6c757d;">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Inicio
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                @(Model.esPropioPerfil ? "Mi Perfil" : "Perfil de Usuario")
+            </li>
+        </ol>
+    </nav>
+
+    <partial name="_TituloSeccion" model='("Mi perfil", $"{Model.Nombre} {Model.Apellido}")' />
+
+    <!-- Contenido Principal -->
+    <div class="row g-4">
+        <!-- Encabezado del Perfil -->
+        <div class="rounded-3 border border-1">
+            <div class="p-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="info-basica">
+                            <h1 class="fs-2 fw-bold mb-2">@Model.Nombre @Model.Apellido</h1>
+                            <div class="d-flex align-items-center gap-3 text-secondary">
+                                <span class="small">
+                                    <i class="bi bi-calendar-plus me-1"></i>
+                                    Miembro desde @Model.FechaCreacion.ToString("MMMM yyyy")
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="acciones-perfil">
+                        @if (Model.esPropioPerfil || User.IsInRole("Administrador"))
+                        {
+                            <a asp-action="EditarUsuario" asp-route-id="@Model.UsuarioId"
+                               class="btn btn-primary">
+                                <i class="bi bi-pencil me-2"></i>Editar Perfil
+                            </a>
+                        }
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            @if (Model.Activo)
+                            {
+                                <button class="btn btn-outline-danger ms-0 ms-md-2 mt-3 mt-md-0 btn-dar-baja"
+                                        data-id="@Model.UsuarioId"
+                                        data-nombre="@Model.Nombre @Model.Apellido">
+                                    <i class="bi bi-person-dash me-2"></i>Dar de Baja
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-success ms-2 btn-dar-alta"
+                                        data-id="@Model.UsuarioId"
+                                        data-nombre="@Model.Nombre @Model.Apellido">
+                                    <i class="bi bi-person-plus me-2"></i>Dar de Alta
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información personal -->
+        <div class="card p-0 rounded-3 border-1">
+            <div class="card-header bg-transparent  border-bottom rounded-top-3 px-4 py-3">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-person-circle me-2 text-primary"></i>
+                    Información Personal
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary mb-2">
+                                <i class="bi bi-person me-2"></i>Nombre Completo
+                            </label>
+                            <div class="d-flex align-items-center fw-medium">@Model.Nombre @Model.Apellido</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary mb-2">
+                                <i class="bi bi-envelope me-2"></i>Correo Electrónico
+                            </label>
+                            <div class="d-flex align-items-center fw-medium">@Model.Email</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary mb-2">
+                                <i class="bi bi-calendar me-2"></i>Fecha de Nacimiento
+                            </label>
+                            <div class="d-flex align-items-center fw-medium">
+                                @if (Model.FechaNacimiento != null)
+                                {
+                                    <span>@Model.FechaNacimiento.Value.ToString("dd 'de' MMMM 'de' yyyy", System.Globalization.CultureInfo.CurrentCulture)</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No especificada</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary mb-2">
+                                <i class="bi bi-telephone me-2"></i>Teléfono
+                            </label>
+                            <div class="d-flex align-items-center fw-medium">
+                                @if (!string.IsNullOrEmpty(Model.Telefono))
+                                {
+                                    <span>@Model.Telefono</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No especificado</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary mb-2">
+                                <i class="bi bi-geo-alt me-2"></i>Dirección
+                            </label>
+                            <div class="d-flex align-items-center fw-medium">
+                                @if (!string.IsNullOrEmpty(Model.Direccion))
+                                {
+                                    <span>@Model.Direccion</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No especificada</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información Administrativa (Solo para Admins) -->
+        @if (User.IsInRole("Administrador"))
+        {
+            <div class="card p-0 rounded-4 shadow-sm border-0">
+                <div class="card-header bg-body-tertiary border-bottom border-light-subtle rounded-top-4 px-4 py-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-shield-check me-2 text-warning"></i>
+                        Información Administrativa
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label small fw-semibold text-secondary mb-2">
+                                    <i class="bi bi-key me-2"></i>ID de Usuario
+                                </label>
+                                <div class="d-flex align-items-center fw-medium">
+                                    <code class="bg-body-secondary text-secondary px-2 py-1 rounded-2">#@Model.UsuarioId</code>
+                                    <button class="btn btn-sm btn-outline-primary ms-2">
+                                        <i class="bi bi-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label small fw-semibold text-secondary mb-2">
+                                    <i class="bi bi-calendar-plus me-2"></i>Fecha de Registro
+                                </label>
+                                <div class="d-flex align-items-center fw-medium">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                        </div>
+                        @if (Model.UltimaFechaAlta != null)
+                        {
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label class="form-label small fw-semibold text-secondary mb-2">
+                                        <i class="bi bi-arrow-up-circle me-2"></i>Última Fecha de Alta
+                                    </label>
+                                    <div class="d-flex align-items-center fw-medium">@Model.UltimaFechaAlta?.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            </div>
+                        }
+                        @if (Model.UltimaFechaBaja != null)
+                        {
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label class="form-label small fw-semibold text-secondary mb-2">
+                                        <i class="bi bi-arrow-down-circle me-2"></i>Última Fecha de Baja
+                                    </label>
+                                    <div class="d-flex align-items-center fw-medium">@Model.UltimaFechaBaja?.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (User.IsInRole("Administrador"))
+        {
+            <!-- Estadísticas del Usuario -->
+            <div class="card p-0 rounded-4 shadow-sm border-0">
+                <div class="card-header bg-body-tertiary border-bottom border-light-subtle rounded-top-4 px-4 py-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-graph-up me-2 text-success"></i>
+                        Estadísticas
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 py-3 border-bottom-0">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 bg-primary text-white fs-5"
+                             style="width: 50px; height: 50px;">
+                            <i class="bi bi-bag-check"></i>
+                        </div>
+                        <div>
+                            <h6 class="m-0 mb-1 small text-secondary fw-medium">Pedidos Realizados</h6>
+                            <span class="fs-4 fw-bold">24</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 py-3 border-bottom-0">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 bg-success text-white fs-5"
+                             style="width: 50px; height: 50px;">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                        <div class="border-bottom-0">
+                            <h6 class="m-0 mb-1 small text-secondary fw-medium">Total Gastado</h6>
+                            <span class="fs-4 fw-bold">$2.450.000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal de Confirmación -->
+<partial name="_ModalCambiarEstado" />
+
+<!-- Formularios Ocultos -->
+<div style="display: none;">
+    <form id="formularioBaja@(Model.UsuarioId)" asp-area="Admin" asp-controller="Usuarios" asp-action="DarBaja" asp-route-id="@Model.UsuarioId" method="post">
+        @Html.AntiForgeryToken()
+    </form>
+    <form id="formularioAlta@(Model.UsuarioId)" asp-area="Admin" asp-controller="Usuarios" asp-action="DarAlta" asp-route-id="@Model.UsuarioId" method="post">
+        @Html.AntiForgeryToken()
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/js/Features/Usuarios/Perfil.js" asp-append-version="true"></script>
+}

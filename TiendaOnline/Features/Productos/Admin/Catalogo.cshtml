@@ -1,0 +1,523 @@
+﻿@using TiendaOnline.Features.Productos.Admin
+@using TiendaOnline.Features.Shared.ViewModels
+@model ProductoCatalogoViewModel
+@{
+    ViewData["Title"] = "Catálogo";
+
+    var filtrosActivos = new List<FiltroPill>();
+
+    if (!string.IsNullOrEmpty(Model.Busqueda))
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Producto", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
+
+    @if (Model.CategoriaId.HasValue)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-tag", Etiqueta = "Categoría", Valor = Model.Categorias.FirstOrDefault(c => c.CategoriaId == Model.CategoriaId)?.Nombre, Propiedad = nameof(Model.CategoriaId) });
+    
+    @if (!string.IsNullOrEmpty(Model.Stock))
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-boxes", Etiqueta = "Stock", Valor = Model.Stock, Propiedad = nameof(Model.Stock) });
+
+    @if (Model.Estado != null)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-toggle-on", Etiqueta = "Estado", Valor = Model.Estado, Propiedad = nameof(Model.Estado) });
+}
+
+<div class="container-fluid py-4">
+    <!-- Sección de Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-md-flex justify-content-md-between align-items-md-center">
+                <partial name="_TituloSeccion" model='("Catálogo", "Administra los productos del sistema")' />
+                <a asp-action="AgregarProducto" class="btn btn-primary btn-lg shadow-sm rounded-3 mt-3 mt-md-0">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Nuevo Producto
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    <!-- Filtros -->
+    <form method="get" asp-action="Catalogo">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card rounded-3 border border-1">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-1">
+                                <label class="form-label fw-bold text-muted small">Ver</label>
+                                <select name="TamanoPagina" class="form-select">
+                                    @{
+                                        int[] opciones = { 10, 25, 50, 75, 100 };
+                                        foreach (var cantidad in opciones)
+                                        {
+                                            <option value="@cantidad" selected="@(Model.ProductosPaginados.RegistrosPorPagina == cantidad ? "selected" : null)">
+                                                @cantidad
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold"><i class="bi bi-search me-1"></i>Buscar</label>
+                                <input type="text" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="Nombre o descripción...">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold"><i class="bi bi-funnel me-1"></i>Categoría</label>
+                                <select name="CategoriaId" class="form-select">
+                                    <option value="">Todas</option>
+                                    @foreach (var cat in Model.Categorias)
+                                    {
+                                        <option value="@cat.CategoriaId" selected="@(Model.CategoriaId == cat.CategoriaId)">@cat.Nombre</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold"><i class="bi bi-boxes me-1"></i>Stock</label>
+                                <select name="Stock" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="disponible" selected="@(Model.Stock == "disponible")">Con stock</option>
+                                    <option value="agotado" selected="@(Model.Stock == "agotado")">Sin stock</option>
+                                    <option value="bajo" selected="@(Model.Stock == "bajo")">Stock bajo (≤5)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold"><i class="bi bi-toggle-on me-1"></i>Estado</label>
+                                <select name="Estado" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="activo" selected="@(Model.Estado == "activo")">Activos</option>
+                                    <option value="inactivo" selected="@(Model.Estado == "inactivo")">Inactivos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary rounded-3 flex-fill">
+                                    <i class="bi bi-filter me-1"></i>
+                                </button>
+                                <a asp-action="Catalogo" class="btn btn-outline-secondary rounded-3 flex-fill">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <partial name="_ResumenResultados" 
+        model="@(new ResumenResultadosViewModel{
+                    TotalRegistros = Model.ProductosPaginados.TotalRegistros,
+                    Desde = Model.ProductosPaginados.DesdeRegistro,
+                    Hasta = Model.ProductosPaginados.HastaRegistro,
+                    NombreEntidad = "productos",
+                    ActionName = "Catalogo",
+                    Filtros = filtrosActivos
+    })" />
+
+    <!-- Tabla de Productos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card rounded-3 shadow-sm border-0">
+                <div class="card-body p-0">
+                    <!-- Vista de Tabla (Desktop) -->
+                    <div class="d-none d-lg-block">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-box me-2 text-primary"></i>Producto
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-tag me-2 text-primary"></i>Categoría
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-currency-dollar me-2 text-primary"></i>Precio
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-boxes me-2 text-primary"></i>Stock
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-toggle-on me-2 text-primary"></i>Estado
+                                        </div>
+                                    </th>
+                                    <th class="border-0 py-3 text-center">
+                                        <i class="bi bi-gear me-1 text-primary"></i>Acciones
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var producto in Model.ProductosPaginados.Items)
+                                {
+                                    <tr class="f@(producto.Activo ? "" : "table-secondary")">
+                                        <td class="py-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="producto-imagen-mini me-3">
+                                                    <img src="@producto.ImagenUrl"
+                                                         alt="@producto.Nombre"
+                                                         class="btn-imagen-producto img-thumbnail @(producto.Activo ? "" : "opacity-50")"
+                                                         style="width: 50px; height: 50px; object-fit: cover; cursor: pointer;"
+                                                         data-url="@producto.ImagenUrl"
+                                                         data-nombre="@producto.Nombre"
+                                                         role="button"
+                                                         data-bs-toggle="tooltip"
+                                                         data-bs-placement="top"
+                                                         data-bs-title="Click para ampliar"
+                                                         title="Click para ampliar" />
+                                                </div>
+                                                <div>
+                                                    <div class="fw-semibold @(producto.Activo ? "" : "text-muted")">@producto.Nombre</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            <div>
+                                                @if (producto.CategoriaId != null)
+                                                {
+                                                    <span class="badge bg-secondary border small fw-medium text-uppercase" style="letter-spacing: 0.5px;">@producto.CategoriaNombre</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Sin categoría</span>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="@(producto.Activo ? "" : "text-muted") fw-semibold">@producto.Precio.ToString("C", new System.Globalization.CultureInfo("es-CO"))</div>
+                                        </td>
+                                        <td class="py-3">
+                                            @if (producto.Stock > 0)
+                                            {
+                                                if (producto.Stock <= 5)
+                                                {
+                                                    <span class="badge bg-warning px-3 py-2 rounded-pill fw-medium text-uppercase" style="letter-spacing: 0.5px;">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>@producto.Stock unidades
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success px-3 py-2 rounded-pill fw-medium text-uppercase" style="letter-spacing: 0.5px;">
+                                                        <i class="bi bi-check-circle me-1"></i>@producto.Stock unidades
+                                                    </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger px-3 py-2 rounded-pill fw-medium text-uppercase" style="letter-spacing: 0.5px;">
+                                                    <i class="bi bi-x-circle me-1"></i>Agotado
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="py-3">
+                                            @if (producto.Activo)
+                                            {
+                                                <span class="badge bg-success px-3 py-2 rounded-pill fw-medium text-uppercase" style="letter-spacing: 0.5px;">
+                                                    <i class="bi bi-check-circle me-1"></i>Activo
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger px-3 py-2 rounded-pill fw-medium text-uppercase" style="letter-spacing: 0.5px;">
+                                                    <i class="bi bi-x-circle me-1"></i>Inactivo
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                @if (producto.Activo)
+                                                {
+                                                    <button type="button" class="btn btn-dar-baja btn-outline-danger btn-sm rounded-3"
+                                                            data-id="@producto.ProductoId"
+                                                            data-nombre="@producto.Nombre"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de baja">
+                                                        <i class="bi bi-toggle-off"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="btn btn-dar-alta btn-outline-success btn-sm rounded-3"
+                                                            data-id="@producto.ProductoId"
+                                                            data-nombre="@producto.Nombre"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de alta">
+                                                        <i class="bi bi-toggle-on"></i>
+                                                    </button>
+                                                }
+                                                <a asp-action="EditarProducto" asp-route-id="@producto.ProductoId"
+                                                   class="btn btn-outline-primary btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar producto">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a asp-action="Detalles" asp-route-id="@producto.ProductoId"
+                                                   class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-movimiento-stock btn-outline-warning btn-sm rounded-3"
+                                                        data-id="@producto.ProductoId"
+                                                        data-nombre="@producto.Nombre"
+                                                        data-stock="@producto.Stock"
+                                                        data-bs-toggle="tooltip" title="Movimiento de Stock">
+                                                    <i class="bi bi-arrow-left-right"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Vista de Cards (Mobile/Tablet) -->
+                    <div class="d-lg-none p-3" id="tablaProductos">
+                        @foreach (var producto in Model.ProductosPaginados.Items)
+                        {
+                            <div class="card mb-3 fila-producto @(producto.Activo ? "" : "bg-light")">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="producto-imagen-mini me-3">
+                                            <img src="@producto.ImagenUrl"
+                                                 alt="@producto.Nombre"
+                                                 class="btn-imagen-producto img-thumbnail @(producto.Activo ? "" : "opacity-50")"
+                                                 style="width: 70px; height: 70px; object-fit: cover; cursor: pointer;"
+                                                 data-url="@producto.ImagenUrl"
+                                                 data-nombre="@producto.Nombre"
+                                                 role="button" />
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="fw-semibold mb-1 @(producto.Activo ? "" : "text-muted")">@producto.Nombre</h6>
+                                            @if (producto.CategoriaId != null)
+                                            {
+                                                <span class="badge bg-secondary border small fw-medium text-uppercase" style="letter-spacing: 0.5px;">@producto.CategoriaNombre</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">Sin categoría</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-currency-dollar text-primary me-1"></i>Precio
+                                            </small>
+                                            <div class="@(producto.Activo ? "" : "text-muted") fw-semibold">
+                                                @producto.Precio.ToString("C", new System.Globalization.CultureInfo("es-CO"))
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-boxes text-primary me-1"></i>Stock
+                                            </small>
+                                            @if (producto.Stock > 0)
+                                            {
+                                                if (producto.Stock <= 5)
+                                                {
+                                                    <span class="badge bg-warning px-2 py-1 fw-medium text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>@producto.Stock und.
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success px-2 py-1 fw-medium text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">
+                                                        <i class="bi bi-check-circle me-1"></i>@producto.Stock und.
+                                                    </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger px-2 py-1 fw-medium text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">
+                                                    <i class="bi bi-x-circle me-1"></i>Agotado
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            @if (producto.Activo)
+                                            {
+                                                <span class="badge bg-success px-2 py-1 fw-medium text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">
+                                                    <i class="bi bi-check-circle me-1"></i>Activo
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger px-2 py-1 fw-medium text-uppercase" style="letter-spacing: 0.5px; font-size: 0.7rem;">
+                                                    <i class="bi bi-x-circle me-1"></i>Inactivo
+                                                </span>
+                                            }
+                                        </div>
+                                        <div class="d-flex gap-1">
+                                            @if (producto.Activo)
+                                            {
+                                                <button type="button" class="btn btn-dar-baja btn-outline-danger btn-sm rounded-3"
+                                                        data-id="@producto.ProductoId"
+                                                        data-nombre="@producto.Nombre"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de baja">
+                                                    <i class="bi bi-toggle-off"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-dar-alta btn-outline-success btn-sm rounded-3"
+                                                        data-id="@producto.ProductoId"
+                                                        data-nombre="@producto.Nombre"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Dar de alta">
+                                                    <i class="bi bi-toggle-on"></i>
+                                                </button>
+                                            }
+                                            <a asp-action="EditarProducto" asp-route-id="@producto.ProductoId"
+                                               class="btn btn-outline-primary btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar producto">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a asp-action="Detalles" asp-route-id="@producto.ProductoId"
+                                               class="btn btn-outline-info btn-sm rounded-3" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-movimiento-stock btn-outline-warning btn-sm rounded-3"
+                                                    data-id="@producto.ProductoId"
+                                                    data-nombre="@producto.Nombre"
+                                                    data-stock="@producto.Stock"
+                                                    data-bs-toggle="tooltip" title="Stock">
+                                                <i class="bi bi-arrow-left-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    <partial name="_Paginacion" model="@(new PaginacionViewModel { 
+        PaginaActual = Model.ProductosPaginados.PaginaActual, 
+        TotalPaginas = Model.ProductosPaginados.TotalPaginas,
+        Accion = "Catalogo"
+    })" />
+</div>
+
+<!-- Modal de Confirmación -->
+<partial name="_ModalCambiarEstado" />
+
+<!-- Modal para Imagen Ampliada -->
+<div class="modal fade" id="modalImagenProducto" tabindex="-1" aria-labelledby="modalImagenProductoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-semibold" id="modalImagenProductoLabel">
+                    <i class="bi bi-image me-2 text-primary"></i>
+                    <span id="nombreProductoModal"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="text-center p-4">
+                    <img id="imagenProductoModal" class="img-fluid rounded" style="max-height: 70vh; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalMovimientoStock" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-secondary shadow">
+            <form id="formStock" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title d-flex align-items-center">
+                        <i class="bi bi-box-seam me-2 text-primary"></i> Movimiento de Stock
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="p-3 mb-4 rounded bg-body-tertiary border border-secondary-subtle">
+                        <input type="hidden" id="mov_ProductoId" name="ProductoId" />
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-secondary d-block">Producto</small>
+                                <strong id="mov_NombreProducto" class="fs-5">...</strong>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-secondary d-block">Stock Actual</small>
+                                <span id="mov_StockActual" class="fs-6">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary-emphasis small text-uppercase">Tipo de Operación</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-body-secondary border-secondary"><i class="bi bi-arrow-left-right text-primary"></i></span>
+                            <select id="selectTipo" class="form-select border-secondary-subtle focus-ring focus-ring-primary" required>
+                                <option value="Entrada" data-url="@Url.Action("RegistrarEntrada", "MovimientosStock")">
+                                    Entrada de Mercadería (+)
+                                </option>
+                                <option value="Ajuste" data-url="@Url.Action("RegistrarAjuste", "MovimientosStock")">
+                                    Ajuste Manual (-)
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary-emphasis small text-uppercase">Cantidad</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-body-secondary border-secondary"><i class="bi bi-plus-slash-minus text-primary"></i></span>
+                            <input type="number" id="inputCantidad" name="Cantidad"
+                                   class="form-control border-secondary-subtle"
+                                   placeholder="0" required />
+                        </div>
+                        <div class="form-text mt-2" id="helpCantidad">
+                            <i class="bi bi-info-circle"></i> Para entradas usar positivos.
+                        </div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label fw-bold text-secondary-emphasis small text-uppercase">Observaciones</label>
+                        <textarea id="inputObs" name="Observaciones"
+                                  class="form-control border-secondary-subtle"
+                                  rows="3" placeholder="Escribe el motivo o detalle aquí..."></textarea>
+                        <div class="form-text mt-2" id="helpObs">
+                            Opcional para entradas.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                        <i class="bi bi-check-lg me-1"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Formularios Ocultos -->
+<div style="display: none;">
+    @foreach (var producto in Model.ProductosPaginados.Items)
+    {
+        <form id="formularioBaja@(producto.ProductoId)" asp-action="DarBaja" asp-route-id="@producto.ProductoId" method="post">
+            @Html.AntiForgeryToken()
+        </form>
+        <form id="formularioAlta@(producto.ProductoId)" asp-action="DarAlta" asp-route-id="@producto.ProductoId" method="post">
+            @Html.AntiForgeryToken()
+        </form>
+    }
+</div>
+
+@section Scripts{
+    <script src="~/js/Features/Productos/Admin/Catalogo.js" asp-append-version="true"></script>
+}
+

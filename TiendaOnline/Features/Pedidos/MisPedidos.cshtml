@@ -1,0 +1,212 @@
+﻿@using TiendaOnline.Features.Pedidos
+@model MisPedidosViewModel
+@{
+    ViewData["Title"] = "Mis Pedidos";
+}
+
+<div class="container-fluid py-4">
+    <!-- Titulo -->
+    <partial name="_TituloSeccion" model='("Mis pedidos", "Historial completo de tus pedidos")' />
+
+    <!-- Lista de Pedidos -->
+    <div class="row">
+        <div class="col-12">
+            <div style="min-height: 400px;">
+                @if (Model.Pedidos.Any())
+                {
+                    @foreach (var pedido in Model.Pedidos)
+                    {
+                        <div class="card mb-4 overflow-hidden">
+
+                            <!-- HEADER -->
+                            <div class="card-header bg-transparent border-bottom mb-2 py-3">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mx-3">
+
+                                    <div>
+                                        <h4 class="fw-bold mb-1 tracking-tight">
+                                            Pedido <span class="text-primary">#@pedido.PedidoId</span>
+                                        </h4>
+                                        <div class="text-muted small d-flex align-items-center">
+                                            <i class="bi bi-calendar3 me-1"></i>
+                                            @pedido.FechaPedido.ToString("dd MMM yyyy · HH:mm")
+                                        </div>
+                                    </div>
+
+                                    <span class="badge @pedido.EstadoCss rounded-pill px-3 py-2 fw-semibold">
+                                        @pedido.Estado
+                                    </span>
+
+                                </div>
+                            </div>
+
+                            <!-- BODY -->
+                            <div class="card-body pb-0 mx-2">
+                                <!-- TIMELINE -->
+                                <div class="mb-4">
+                                    <div class="d-flex flex-row align-items-start align-items-md-center justify-content-between">
+
+                                        @{
+                                            var pasoActual = 1;
+
+                                            if (pedido.EstaCancelado)
+                                                pasoActual = 3;
+                                            else if (pedido.EstaEntregado)
+                                                pasoActual = 3;
+                                            else if (pedido.FechaEnvio.HasValue)
+                                                pasoActual = 2;
+                                        }
+
+                                    <!-- PASO 1 -->
+                                    <div class="text-center flex-fill mb-3 mb-md-0">
+                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center
+                                                @(pasoActual > 1 ? "bg-success text-white" :
+                                                pasoActual == 1 ? "bg-primary text-white" :
+                                                "bg-body-secondary text-secondary")"
+                                            style="width:3rem;height:3rem;">
+                                            <i class="bi bi-cart-check"></i>
+                                        </div>
+
+                                        <h6 class="m-0 small fw-semibold">Pedido realizado</h6>
+                                        <small class="text-muted d-block">
+                                            @pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")
+                                        </small>
+                                    </div>
+
+                                    <!-- Línea 1 -->
+                                    <div class="flex-grow-1 border-top mx-3 d-none d-md-block @(pasoActual > 1 ? "border-success" : "border-secondary")">
+                                    </div>
+
+                                    <!-- PASO 2 -->
+                                    <div class="text-center flex-fill mb-3 mb-md-0">
+                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center
+                                                    @(pasoActual > 2 ? "bg-success text-white" :
+                                                    pasoActual == 2 ? "bg-primary text-white" :
+                                                    "bg-body-secondary text-secondary")"
+                                         style="width:3rem;height:3rem;">
+                                        <i class="bi bi-truck"></i>
+                                    </div>
+
+                                    @if (pedido.FechaEnvio.HasValue)
+                                            {
+                                                <h6 class="m-0 small fw-semibold">Enviado</h6>
+                                                <small class="text-muted d-block">
+                                                    @pedido.FechaEnvio.Value.ToString("dd/MM/yyyy HH:mm")
+                                                </small>
+                                            }
+                                            else
+                                            {
+                                                <h6 class="m-0 small fw-semibold">Pendiente de envío</h6>
+                                            }
+                                    </div>
+
+                                    <!-- Línea 2 -->
+                                    <div class="flex-grow-1 border-top mx-3 d-none d-md-block
+                                                @(pasoActual == 3 ? (pedido.EstaCancelado ? "border-danger" : "border-success") : "border-secondary")">
+                                    </div>
+
+                                    <!-- PASO 3 -->
+                                    <div class="text-center flex-fill">
+                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center
+                                                    @(pedido.EstaCancelado ? "bg-danger text-white" :
+                                                    pasoActual == 3 ? "bg-success text-white" :
+                                                    "bg-body-secondary text-secondary")"
+                                         style="width:3rem;height:3rem;">
+
+                                        @if (pedido.EstaCancelado)
+                                                {
+                                                    <i class="bi bi-x-circle"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-check-circle"></i>
+                                                }
+
+                                            </div>
+
+                                            @if (pedido.EstaCancelado)
+                                            {
+                                                <h6 class="m-0 small fw-semibold text-danger">Cancelado</h6>
+                                                <small class="text-muted d-block">
+                                                    @pedido.FechaCancelado?.ToString("dd/MM/yyyy HH:mm")
+                                                </small>
+                                            }
+                                            else if (pedido.EstaEntregado)
+                                            {
+                                                <h6 class="m-0 small fw-semibold text-success">Entregado</h6>
+                                                <small class="text-muted d-block">
+                                                    @pedido.FechaEntrega?.ToString("dd/MM/yyyy HH:mm")
+                                                </small>
+                                            }
+                                            else
+                                            {
+                                                <h6 class="m-0 small fw-semibold">Pendiente de entrega</h6>
+                                            }
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <hr class="opacity-25"/>
+
+                                <!-- Productos -->
+                                <div class="rounded-3 p-3">
+                                    <h6 class="text-uppercase small fw-bold mb-3" style="letter-spacing: 1px;">
+                                        <i class="bi bi-list-ul me-2 text-info"></i>Productos
+                                    </h6>
+                                    <div class="row g-2">
+                                        @foreach (var producto in pedido.Productos)
+                                        {
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-center border border-secondary border-opacity-10 p-2 rounded-2 bg-opacity-50">
+                                                    <i class="bi bi-chevron-right text-info small me-2"></i>
+                                                    <span class="small text-truncate">@producto</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                                <hr class="opacity-25" />
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="card-footer bg-transparent border-0 d-flex justify-content-end pt-0 pb-3">
+
+                                <a asp-action="Detalles"
+                                   asp-route-id="@pedido.PedidoId"
+                                   class="btn border-0 fw-bold">
+                                    Ver detalles <i class="bi bi-arrow-right"></i>
+                                </a>
+
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="bi bi-bag-x" style="font-size: 4rem;"></i>
+                        </div>
+                        <h5 class="text-muted">No tienes pedidos aún</h5>
+                        <p class="text-muted">¡Explora nuestro catálogo y realiza tu primera compra!</p>
+                        <a asp-action="Index" class="btn btn-primary">
+                            <i class="bi bi-shop me-2"></i>Ver Productos
+                        </a>
+                    </div>
+                }
+            </div>
+
+            <!-- Mensaje cuando no hay resultados filtrados -->
+            <div id="noResultados" class="text-center py-5" style="display: none;">
+                <div class="mb-3">
+                    <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="text-muted">No se encontraron pedidos</h5>
+                <p class="text-muted">Intenta ajustar los filtros de búsqueda</p>
+                <button class="btn btn-primary" id="limpiarBusqueda">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

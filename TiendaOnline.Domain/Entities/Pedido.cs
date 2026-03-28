@@ -2,12 +2,21 @@
 
 namespace TiendaOnline.Domain.Entities
 {
-    public enum EstadoPedido
+    public enum EstadoPago
     {
         Pendiente = 0,
-        Enviado = 1,
-        Entregado = 2,
-        Cancelado = 3
+        Aprobado = 1,
+        Rechazado = 2,
+        Reembolsado = 3
+    }
+
+    public enum EstadoPedido
+    {
+        Nuevo = 0,
+        EnPreparacion = 1, // Ya se pagó, el admin está armando la caja
+        Enviado = 2,
+        Entregado = 3,
+        Cancelado = 4
     }
 
     public class Pedido
@@ -24,8 +33,20 @@ namespace TiendaOnline.Domain.Entities
 
         public DateTime? FechaCancelado { get; set; }
 
+        // --- Manejo de Estados Separados ---
         [Required]
-        public EstadoPedido Estado { get; set; } = EstadoPedido.Pendiente;
+        public EstadoPedido Estado { get; set; } = EstadoPedido.Nuevo;
+
+        [Required]
+        public EstadoPago EstadoPago { get; set; } = EstadoPago.Pendiente;
+
+        // --- Pagos ---
+        [Required]
+        public int MetodoDePagoId { get; set; }
+        public MetodoDePago MetodoDePago { get; set; } // Propiedad de navegación
+
+        [MaxLength(100)]
+        public string? TransaccionPagoId { get; set; } // Acá guardás el ID que te devuelve MP o Stripe
 
         [Required]
         public bool EsEnvioADomicilio { get; set; }

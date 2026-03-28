@@ -1,0 +1,149 @@
+﻿@using TiendaOnline.Features.Usuarios
+@model UsuarioUpdateViewModel
+@{
+    ViewData["Title"] = "Editar Usuario";
+}
+
+<div class="container-fluid py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4" style="--bs-breadcrumb-divider: '›'; --bs-breadcrumb-divider-color: #6c757d;">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Inicio
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-action="PerfilUsuario" asp-route-id="@Model.UsuarioId  " class="text-decoration-none">
+                    <i class="bi bi-person me-1"></i>Perfil
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Editar Usuario</li>
+        </ol>
+    </nav>
+
+    <partial name="_TituloSeccion" model='("Editar Usuario", $"{Model.Nombre} {Model.Apellido}")' />
+
+    <!-- Formulario -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card rounded-3 border-1 overflow-hidden">
+                <div class="card-header bg-transparent p-3 border-bottom">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-person-gear me-2 text-primary"></i>
+                        Información del usuario
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="EditarUsuario" asp-route-id="@Model.UsuarioId" method="post" id="formularioEditarUsuario" novalidate>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="UsuarioId" />
+
+                        <!-- Sección de Información Personal -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3 fw-semibold">
+                                <i class="bi bi-person-circle me-2"></i>Información Personal
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input asp-for="Nombre" class="form-control" id="campoNombre" placeholder="Nombre" />
+                                        <label for="campoNombre">
+                                            <i class="bi bi-person me-1"></i>Nombre
+                                        </label>
+                                        <span asp-validation-for="Nombre" class="text-danger small mt-1"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input asp-for="Apellido" class="form-control" id="campoApellido" placeholder="Apellido" />
+                                        <label for="campoApellido">
+                                            <i class="bi bi-person me-1"></i>Apellido
+                                        </label>
+                                        <span asp-validation-for="Apellido" class="text-danger small mt-1"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección de Información de Contacto -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3 fw-semibold">
+                                <i class="bi bi-telephone me-2"></i>Información de Contacto
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input asp-for="Telefono" class="form-control" id="campoTelefono" placeholder="Teléfono" />
+                                        <label for="campoTelefono">
+                                            <i class="bi bi-telephone me-1"></i>Teléfono
+                                        </label>
+                                        <span asp-validation-for="Telefono" class="text-danger small mt-1"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección de Rol (Solo para Administradores) -->
+                        @* @if (User.IsInRole("Administrador"))
+                        {
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-3 fw-semibold">
+                                    <i class="bi bi-shield-check me-2"></i>Configuración de Acceso
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <select asp-for="Rol" class="form-select" id="campoRol" asp-items="Html.GetEnumSelectList<Rol>()">
+                                            </select>
+                                            <label for="campoRol">
+                                                <i class="bi bi-shield me-1"></i>Rol del Usuario
+                                            </label>
+                                            <span asp-validation-for="Rol" class="text-danger small mt-1"></span>
+                                        </div>
+                                        <div class="form-text">
+                                            <small class="text-muted">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                El rol determina los permisos del usuario en el sistema
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        } *@
+
+                        <!-- Botones de Acción -->
+                        <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center pt-3 border-top gap-2">
+                            @if(User.IsInRole("Administrador"))
+                            {
+                                <a asp-area="Admin" asp-controller="Usuarios" asp-action="Index" class="btn btn-outline-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Usuarios" asp-action="PerfilUsuario" asp-route-id="@Model.UsuarioId" class="btn btn-outline-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                                </a>
+                            }
+                            <button type="button"
+                                    id="btnRestablecer"
+                                    class="btn btn-outline-secondary px-4">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Restablecer
+                            </button>
+                            <button type="submit" class="btn btn-primary px-4 ms-md-auto" id="botonGuardar">
+                                <i class="bi bi-check-circle me-2"></i>
+                                <span class="texto-boton">Guardar Cambios</span>
+                                <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="~/js/Features/Usuarios/EditarUsuario.js" asp-append-version="true"></script>
+}

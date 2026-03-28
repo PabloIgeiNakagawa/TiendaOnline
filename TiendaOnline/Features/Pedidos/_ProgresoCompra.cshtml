@@ -1,0 +1,94 @@
+﻿@model int
+@* Model representa el paso actual: 1, 2, 3 o 4 *@
+
+<div class="mb-5 px-3">
+    <div class="d-flex align-items-center justify-content-between position-relative">
+
+        @* PASO 1: CARRITO *@
+        <div class="text-center" style="z-index: 2;">
+            <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center shadow-sm
+                        @(Model > 1 ? "bg-success text-white" : "bg-primary text-white")"
+                 style="width:2.8rem; height:2.8rem;">
+                @if (Model > 1)
+                {
+                    <i class="bi bi-check-lg"></i>
+                }
+                else
+                {
+
+                    <span class="fw-bold">1</span>
+                }
+            </div>
+            <h6 class="m-0 small @(Model == 1 ? "fw-bold text-primary" : "fw-semibold text-muted")">Carrito</h6>
+        </div>
+
+        @* LÍNEA 1 *@
+        <div class="flex-grow-1 border-top mx-2 @(Model > 1 ? "border-success" : "border-secondary-subtle")"
+             style="margin-top: -20px; border-width: 2px !important;"></div>
+
+        @* PASO 2: CHECKOUT *@
+        <div class="text-center" style="z-index: 2;">
+            <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center shadow-sm
+                        @(Model > 2 ? "bg-success text-white" :
+                                           Model == 2 ? "bg-primary text-white" : "bg-body-secondary text-secondary")"
+                 style="width:2.8rem; height:2.8rem;">
+                @if (Model > 2)
+                {
+                    <i class="bi bi-check-lg"></i>
+                }
+                else
+                {
+
+                    <span class="fw-bold">2</span>
+                }
+            </div>
+            <h6 class="m-0 small @(Model == 2 ? "fw-bold text-primary" : "fw-semibold text-muted")">Checkout</h6>
+        </div>
+
+        @* LÍNEA 2 *@
+        <div class="flex-grow-1 border-top mx-2 @(Model > 2 ? "border-success" : "border-secondary-subtle")"
+             style="margin-top: -20px; border-width: 2px !important;"></div>
+
+        @* PASO 3: CONFIRMACIÓN *@
+        <div class="text-center" style="z-index: 2;">
+            <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center shadow-sm
+                        @(Model > 3 ? "bg-success text-white" :
+                                           Model == 3 ? "bg-primary text-white" : "bg-body-secondary text-secondary")"
+                 style="width:2.8rem; height:2.8rem;">
+                @if (Model > 3)
+                {
+                    <i class="bi bi-check-lg"></i>
+                }
+                else
+                {
+
+                    <span class="fw-bold">3</span>
+                }
+            </div>
+            <h6 class="m-0 small @(Model == 3 ? "fw-bold text-primary" : "fw-semibold text-muted")">Confirmación</h6>
+        </div>
+
+        @* LÍNEA 3 *@
+        <div class="flex-grow-1 border-top mx-2 @(Model > 3 ? "border-success" : "border-secondary-subtle")"
+             style="margin-top: -20px; border-width: 2px !important;"></div>
+
+        @* PASO 4: PAGO *@
+        <div class="text-center" style="z-index: 2;">
+            <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center shadow-sm
+                        @(Model == 4 ? "bg-success text-white shadow" : "bg-body-secondary text-secondary")"
+                 style="width:2.8rem; height:2.8rem;">
+                @if (Model == 4)
+                {
+                    <i class="bi bi-credit-card"></i>
+                }
+                else
+                {
+
+                    <span class="fw-bold">4</span>
+                }
+            </div>
+            <h6 class="m-0 small @(Model == 4 ? "fw-bold text-success" : "fw-semibold text-muted")">Pago</h6>
+        </div>
+
+    </div>
+</div>

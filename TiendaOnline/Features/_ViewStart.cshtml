@@ -1,0 +1,31 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Mvc.Controllers
+
+@{
+    var controllerActionDescriptor = ViewContext.ActionDescriptor as ControllerActionDescriptor;
+    Layout = "~/Features/Shared/_TiendaLayout.cshtml"; // default
+
+    if (controllerActionDescriptor != null)
+    {
+        // Obtenemos los atributos de la acción y del controller
+        var actionAttrs = controllerActionDescriptor.MethodInfo
+            .GetCustomAttributes(typeof(AuthorizeAttribute), true)
+            .Cast<AuthorizeAttribute>();
+
+        var controllerAttrs = controllerActionDescriptor.ControllerTypeInfo
+            .GetCustomAttributes(typeof(AuthorizeAttribute), true)
+            .Cast<AuthorizeAttribute>();
+
+        var allAttrs = actionAttrs.Concat(controllerAttrs);
+
+        // Ejemplo: si la acción o controller tiene [Authorize(Roles="Administrador")]
+        if (allAttrs.Any(a => a.Roles != null && a.Roles.Contains("Administrador")))
+        {
+            Layout = "~/Features/Shared/_AdminLayout.cshtml";
+        }
+        else if (allAttrs.Any(a => a.Roles != null && a.Roles.Contains("Repartidor")))
+        {
+            Layout = "~/Features/Shared/_RepartidorLayout.cshtml";
+        }
+    }
+}

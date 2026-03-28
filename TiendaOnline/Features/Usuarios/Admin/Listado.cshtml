@@ -1,0 +1,262 @@
+﻿@using TiendaOnline.Features.Shared.ViewModels
+@using TiendaOnline.Features.Usuarios.Admin
+@model UsuarioListadoViewModel
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+
+    var filtrosActivos = new List<FiltroPill>();
+
+    if (!string.IsNullOrEmpty(Model.Busqueda))
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Producto", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
+
+    if (!string.IsNullOrEmpty(Model.Rol))
+    {
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-shield", Etiqueta = "Rol", Valor = Model.Rol, Propiedad = nameof(Model.Rol) });
+    }
+
+    if (Model.Estado.HasValue)
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-toggle-on", Etiqueta = "Estado", Valor = Model.Estado == true ? "Activo" : Model.Estado == false ? "Inactivo" : "", Propiedad = nameof(Model.Estado) });
+}
+
+<div class="container-fluid py-4">
+    <!-- Sección de Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-md-flex justify-content-between align-items-center">
+                <partial name="_TituloSeccion" model='("Gestión de Usuarios", "Administra los usuarios del sistema")' />
+                <a asp-action="CrearUsuario" class="btn btn-primary btn-lg shadow-sm rounded-2">
+                    <i class="bi bi-person-plus me-2"></i>
+                    Nuevo Usuario
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <form method="get" asp-action="Listado">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card rounded-3 border border-1">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold text-muted small">Mostrar</label>
+                                <select name="tamanoPagina" class="form-select">
+                                    @{
+                                        int[] opciones = { 10, 25, 50, 75, 100 };
+                                        foreach (var cantidad in opciones)
+                                        {
+                                            <option value="@cantidad" selected="@(Model.UsuariosPaginados.RegistrosPorPagina == cantidad ? "selected" : null)">
+                                                @cantidad registros
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="busqueda" class="form-label fw-semibold">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </label>
+                                <input type="text" id="busqueda" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="Buscar por nombre o email...">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filtroRol" class="form-label fw-semibold">
+                                    <i class="bi bi-funnel me-1"></i>Filtrar por Rol
+                                </label>
+                                <select id="filtroRol" name="Rol" class="form-select">
+                                    <option value="">Todos los roles</option>
+                                    @foreach (var rol in Model.RolesDisponibles)
+                                    {
+                                        <option value="@rol" selected="@(Model.Rol== rol ? "selected" : null)">
+                                            @rol
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="filtroEstado" class="form-label fw-semibold">
+                                    <i class="bi bi-toggle-on me-1"></i>Estado
+                                </label>
+                                <select id="filtroEstado" name="Estado" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="activo" selected='@(Model.Estado == true ? "selected" : null)'>Activos</option>
+                                    <option value="inactivo" selected='@(Model.Estado == false ? "selected" : null)'>Inactivos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end gap-2">
+                                <button type="submit" class="btn btn-primary rounded-3 flex-fill">
+                                    <i class="bi bi-filter me-1"></i>
+                                </button>
+                                <a asp-action="Listado" class="btn btn-outline-secondary rounded-3 flex-fill">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <partial name="_ResumenResultados" 
+        model="@(new ResumenResultadosViewModel{
+                    TotalRegistros = Model.UsuariosPaginados.TotalRegistros,
+                    Desde = Model.UsuariosPaginados.DesdeRegistro,
+                    Hasta = Model.UsuariosPaginados.HastaRegistro,
+                    NombreEntidad = "usuarios",
+                    ActionName = "Listado",
+                    Filtros = filtrosActivos
+    })" />
+
+
+    <!-- Tabla de Usuarios -->
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="border-bottom">
+                <tr>
+                    <th class="border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-hash me-2 text-primary"></i>ID Usuario
+                        </div>
+                    </th>
+                    <th class="border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-person me-2 text-primary"></i>Nombre y Apellido
+                        </div>
+                    </th>
+                    <th class="border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-envelope me-2 text-primary"></i>Correo Electrónico
+                        </div>
+                    </th>
+                    <th class="border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-shield me-2 text-primary"></i>Rol
+                        </div>
+                    </th>
+                    <th class="ordenable border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-activity me-2 text-primary"></i>Estado
+                        </div>
+                    </th>
+                    <th class="border-0 py-3 text-center">
+                        <i class="bi bi-gear me-1 text-primary"></i>Acciones
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var usuario in Model.UsuariosPaginados.Items)
+                {
+                    <tr>
+                        <td class="py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="fw-semibold px-3 py-2 text-uppercase"
+                                        style="font-size: 0.9rem; letter-spacing: 0.5px;">
+                                    #@usuario.UsuarioId.ToString("D6")
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3">
+                            <span>@usuario.NombreCompleto</span>
+                        </td>
+                        <td class="py-3">
+                            <div>@usuario.Email</div>
+                        </td>
+                        <td class="py-3">
+                            @{
+                                string claseInsignia = usuario.RolNombre switch
+                                {
+                                    "Administrador" => "bg-danger",
+                                    "Usuario" => "bg-info",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <span class="badge @claseInsignia px-3 py-2 rounded-pill small fw-medium">
+                                @Html.DisplayFor(modelItem => usuario.RolNombre)
+                            </span>
+                        </td>
+                        <td class="py-3">
+                            @if (usuario.Activo)
+                            {
+                                <span class="badge bg-success px-3 py-2 rounded-pill small fw-medium">
+                                    <i class="bi bi-check-circle me-1"></i>Activo
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary px-3 py-2 rounded-pill small fw-medium">
+                                    <i class="bi bi-x-circle me-1"></i>Inactivo
+                                </span>
+                            }
+                        </td>
+                        <td class="py-3">
+                            <div class="d-flex justify-content-center gap-1">
+                                @if (usuario.Activo)
+                                {
+                                    <button type="button"
+                                            class="btn btn-outline-danger btn-sm rounded-2 btn-cambio-estado"
+                                            data-id="@usuario.UsuarioId"
+                                            data-nombre="@usuario.NombreCompleto"
+                                            data-tipo="baja"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title="Dar de baja">
+                                        <i class="bi bi-person-dash"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button"
+                                            class="btn btn-outline-success btn-sm rounded-2 btn-cambio-estado"
+                                            data-id="@usuario.UsuarioId"
+                                            data-nombre="@usuario.NombreCompleto"
+                                            data-tipo="alta"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title="Dar de alta">
+                                        <i class="bi bi-person-plus"></i>
+                                    </button>
+                                }
+                                <a asp-action="EditarUsuario" asp-route-id="@usuario.UsuarioId"
+                                    class="btn btn-outline-primary btn-sm rounded-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar usuario">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a asp-controller="Usuarios" asp-action="PerfilUsuario" asp-route-id="@usuario.UsuarioId"
+                                    class="btn btn-outline-info btn-sm rounded-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver perfil">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <partial name="_Paginacion" model="@(new PaginacionViewModel { 
+        PaginaActual = Model.UsuariosPaginados.PaginaActual, 
+        TotalPaginas = Model.UsuariosPaginados.TotalPaginas,
+        Accion = "Listado"
+    })" />
+</div>
+
+<!-- Modal de Confirmación -->
+<partial name="_ModalCambiarEstado" />
+
+<!-- Formularios Ocultos -->
+<div style="display: none;">
+    @foreach (var usuario in Model.UsuariosPaginados.Items)
+    {
+        <form id="formularioBaja@(usuario.UsuarioId)" asp-action="DarBaja" asp-route-id="@usuario.UsuarioId" method="post">
+            @Html.AntiForgeryToken()
+        </form>
+        <form id="formularioAlta@(usuario.UsuarioId)" asp-action="DarAlta" asp-route-id="@usuario.UsuarioId" method="post">
+            @Html.AntiForgeryToken()
+        </form>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/Features/Usuarios/Admin/Listado.js" asp-append-version="true"></script>
+}

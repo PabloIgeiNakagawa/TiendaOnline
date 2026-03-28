@@ -1,0 +1,114 @@
+﻿using Microsoft.EntityFrameworkCore;
+using TiendaOnline.Application.Common;
+using TiendaOnline.Application.Usuarios.Commands;
+using TiendaOnline.Application.Usuarios.Queries;
+using TiendaOnline.Domain.Entities;
+using TiendaOnline.Infrastructure.Persistence;
+
+namespace TiendaOnline.Infrastructure.Services.Usuarios
+{
+    public class UsuarioQueryService : IUsuarioQueryService
+    {
+        private readonly TiendaContext _context;
+
+        public UsuarioQueryService(TiendaContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<UsuarioPerfilDto> ObtenerPerfil(int usuarioId)
+        {
+            var usuario = await _context.Usuarios
+                .Include(u => u.Direcciones)
+                .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
+
+            if (usuario == null) throw new Exception("Usuario no encontrado.");
+
+            var direccionPrincipal = usuario.Direcciones.FirstOrDefault(d => d.EsPrincipal);
+            return new UsuarioPerfilDto
+            {
+                UsuarioId = usuario.UsuarioId,
+                Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
+                Email = usuario.Email,
+                Telefono = usuario.Telefono ?? string.Empty,
+                Direccion = direccionPrincipal != null ? $"{direccionPrincipal.Calle} {direccionPrincipal.Numero}, {direccionPrincipal.Localidad}" : "Sin dirección",
+                FechaNacimiento = usuario.FechaNacimiento,
+                FechaCreacion = usuario.FechaCreacion,
+                Activo = usuario.Activo,
+                UltimaFechaAlta = usuario.UltimaFechaAlta,
+                UltimaFechaBaja = usuario.UltimaFechaBaja
+            };
+        }
+
+        public async Task<UsuarioUpdateDto> ObtenerUsuarioParaEdicionAsync(int usuarioId)
+        {
+            var usuario = await _context.Usuarios
+                .Include(u => u.Direcciones)
+                .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
+
+            if (usuario == null) throw new Exception("Usuario no encontrado.");
+
+            var direccionPrincipal = usuario.Direcciones.FirstOrDefault(d => d.EsPrincipal);
+            return new UsuarioUpdateDto
+            {
+                UsuarioId = usuario.UsuarioId,
+                Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
+                Telefono = usuario.Telefono ?? string.Empty
+            };
+        }
+
+        public async Task<Usuario?> ObtenerUsuarioAsync(int usuarioId)
+        {
+            return await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
+        }
+        public async Task EditarUsuarioAsync(UsuarioUpdateDto dto)
+        {
+            var usuario = await _context.Usuarios
+                        .FirstOrDefaultAsync(u => u.UsuarioId == dto.UsuarioId);
+
+            if (usuario == null) throw new KeyNotFoundException($"No se encontró el usuario con ID {dto.UsuarioId}");
+
+            usuario.Nombre = dto.Nombre;
+            usuario.Apellido = dto.Apellido;
+            usuario.Telefono = dto.Telefono;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<PagedResult<UsuarioListadoDto>> ObtenerUsuariosPaginadosAsync(int pagina, int cantidad, string? buscar, string? rol, bool? activo)
+        {
+            var query = _context.Usuarios.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(buscar))
+                query = query.Where(u => u.Nombre.Contains(buscar) || u.Apellido.Contains(buscar) || u.Email.Contains(buscar));
+
+            if (!string.IsNullOrEmpty(rol) && Enum.TryParse<Rol>(rol, out var rolEnum))
+            {
+                query = query.Where(u => u.Rol == rolEnum);
+            }
+
+            if (activo.HasValue)
+                query = query.Where(u => u.Activo == activo.Value);
+
+            var total = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(u => u.Apellido)
+                .Skip((pagina - 1) * cantidad)
+                .Take(cantidad)
+                .Select(u => new UsuarioListadoDto
+                {
+                    UsuarioId = u.UsuarioId,
+                    NombreCompleto = $"{u.Nombre} {u.Apellido}",
+                    Email = u.Email,
+                    RolNombre = u.Rol.ToString(),
+                    Activo = u.Activo
+                })
+                .ToListAsync();
+
+            return new PagedResult<UsuarioListadoDto>(items, total, pagina, cantidad);
+        }
+    }
+}

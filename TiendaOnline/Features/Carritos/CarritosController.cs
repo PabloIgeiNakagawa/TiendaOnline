@@ -1,0 +1,70 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using TiendaOnline.Application.Carritos;
+
+namespace TiendaOnline.Features.Carritos
+{
+    [Route("Carrito")]
+    public class CarritosController : Controller
+    {
+        private readonly ICarritoService _carritoService;
+
+        public CarritosController(ICarritoService carritoService)
+        {
+            _carritoService = carritoService;
+        }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> Index()
+        {
+            var carrito = await _carritoService.ObtenerAsync();
+            return View(carrito);
+        }
+
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Agregar(int id)
+        {
+            if (id <= 0)
+                return BadRequest();
+
+            await _carritoService.AgregarAsync(id);
+            TempData["MensajeExito"] = "Producto agregado al carrito.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminarItem(int id)
+        {
+            await _carritoService.EliminarAsync(id);
+            TempData["MensajeExito"] = "Producto eliminado del carrito.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActualizarCantidad(int productoId, int cantidad)
+        {
+            if (cantidad <= 0)
+            {
+                await _carritoService.EliminarAsync(productoId);
+                TempData["MensajeExito"] = "Producto eliminado del carrito.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _carritoService.ActualizarCantidadAsync(productoId, cantidad);
+            TempData["MensajeExito"] = "Cantidad actualizada.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Vaciar()
+        {
+            await _carritoService.VaciarAsync();
+            TempData["MensajeExito"] = "Se ha vaciado el carrito.";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+
+}

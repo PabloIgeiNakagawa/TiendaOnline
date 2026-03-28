@@ -1,0 +1,145 @@
+﻿@model TiendaOnline.Features.Pedidos.ConfirmacionPedidoViewModel
+
+<div class="row mt-5">
+    <partial name="_ProgresoCompra" model="3" />
+
+    <partial name="_TituloSeccion" model='("Revisá tu pedido", "Por favor, verificá que toda la información sea correcta antes de finalizar")' />
+
+    <!-- Tabla de productos -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header py-3">
+                <h5 class="mb-0">Productos en tu carrito</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Producto</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end pe-4">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            @if (!string.IsNullOrEmpty(item.ImagenUrl))
+                                            {
+                                                <img src="@item.ImagenUrl" alt="@item.Nombre" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                            }
+                                            <div>
+                                                <span class="fw-bold d-block">@item.Nombre</span>
+                                                <small class="text-muted">Precio unitario: @item.Precio.ToString("C")</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">@item.Cantidad</td>
+                                    <td class="text-end pe-4 fw-bold">@((item.Precio * item.Cantidad).ToString("C"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Datos de entrega -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title d-flex justify-content-between">
+                    <span class="fw-black text-primary text-uppercase tracking-widest mb-1" style="letter-spacing: 2px;">Entrega</span>
+                    <span class="badge @(Model.MetodoEntrega == "RetiroLocal" ? "bg-info" : "bg-primary")">
+                        @(Model.MetodoEntrega == "RetiroLocal" ? "Retiro en Local" : "Envío a Domicilio")
+                    </span>
+                </h5>
+
+                @if (Model.MetodoEntrega == "EnvioDomicilio" && Model.Direccion != null)
+                {
+                    <div class="mt-3">
+                        <p class="mb-0 fw-bold text-uppercase small">Etiqueta: @Model.Direccion.Etiqueta</p>
+                        <p class="mb-0">Dirección: @Model.Direccion.Calle @Model.Direccion.Numero</p>
+                        <p class="mb-0 text-muted small">Localidad y provincia: @Model.Direccion.Localidad, @Model.Direccion.Provincia</p>
+                        <p class="mb-2 text-muted small">Código postal: @Model.Direccion.CodigoPostal</p>
+
+                        @if (!string.IsNullOrEmpty(Model.Direccion.Observaciones))
+                        {
+                            <div class="p-2 rounded border-start border-3">
+                                <small class="text-muted"><strong>Obs:</strong> @Model.Direccion.Observaciones</small>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="mt-3 mb-0"><i class="bi bi-shop me-2"></i> Retirás por nuestra sucursal central.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Datos del usuario -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Tus Datos</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Nombre</p>
+                        <p class="fw-bold">@Model.NombreUsuario</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Email de contacto</p>
+                        <p class="fw-bold">@Model.EmailUsuario</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-4 fw-bold">Resumen de compra</h5>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal</span>
+                    <span class="fw-medium">@Model.SubTotal.ToString("C")</span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Envío</span>
+                    <span class="fw-medium">@(Model.CostoEnvio == 0 ? "¡GRATIS!" : Model.CostoEnvio.ToString("C"))</span>
+                </div>
+
+                <hr class="my-3 opacity-25">
+
+                <div class="d-flex justify-content-between align-items-end mb-1 text-primary">
+                    <span class="h5 mb-0">Total</span>
+                    <span class="h4 mb-0 fw-bold">@((Model.SubTotal + Model.CostoEnvio).ToString("C"))</span>
+                </div>
+
+                <div class="text-end mb-4">
+                    <small class="text-muted" style="font-size: 0.75rem;">(IVA incluido)</small>
+                </div>
+
+                <form asp-action="FinalizarCompra" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" name="metodoDePagoId" value="1" />
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-credit-card"></i> Pagar con Mercado Pago
+                    </button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <a asp-action="CheckOut" class="text-decoration-none small text-muted hover-primary">
+                        <i class="bi bi-arrow-left me-1"></i> Volver a datos de envío
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
