@@ -6,5 +6,6 @@ namespace TiendaOnline.Application.Direcciones
     {
         Task<DireccionDto> ObtenerPorIdAsync(int? id);
         Task<List<DireccionDto>> ObtenerDireccionesAsync(int usuarioId);
+        Task<int> GuardarDireccionAsync(int usuarioId, DireccionDto direccion);
     }
 }

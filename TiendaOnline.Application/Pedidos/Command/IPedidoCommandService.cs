@@ -4,7 +4,7 @@ namespace TiendaOnline.Application.Pedidos.Command
 {
     public interface IPedidoCommandService
     {
-        Task<PedidoPagoDto> CrearPedidoYPrepararPagoAsync(int usuarioId, int metodoDePagoId);
+        Task<PedidoPagoDto> CrearPedidoYPrepararPagoAsync(CrearPedidoDto dto);
         Task<bool> ConfirmarPagoAsync(InfoPagoDto infoPago);
         Task<PedidoPagoDto?> ObtenerDatosParaPagoAsync(int pedidoId);
         Task PedidoEnviadoAsync(int pedidoId);

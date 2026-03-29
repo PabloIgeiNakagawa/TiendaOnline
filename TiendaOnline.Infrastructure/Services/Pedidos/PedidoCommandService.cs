@@ -11,55 +11,63 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
     public class PedidoCommandService : IPedidoCommandService
     {
         private readonly TiendaContext _context;
-        private readonly ICarritoService _carritoService;
         private readonly IMovimientoStockCommandService _movimientoStockCommandService;
 
-        public PedidoCommandService(TiendaContext context, ICarritoService carritoService, IMovimientoStockCommandService movimientoStockCommandService)
+        public PedidoCommandService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService)
         {
             _context = context;
-            _carritoService = carritoService;
             _movimientoStockCommandService = movimientoStockCommandService;
         }
 
-        public async Task<PedidoPagoDto> CrearPedidoYPrepararPagoAsync(int usuarioId, int metodoDePagoId)
+        public async Task<PedidoPagoDto> CrearPedidoYPrepararPagoAsync(CrearPedidoDto dto)
         {
-            var carrito = await _carritoService.ObtenerAsync();
-            if (!carrito.Any()) throw new Exception("El carrito está vacío");
+            if (dto.Items == null || !dto.Items.Any()) 
+                throw new Exception("El pedido no tiene ítems.");
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                var productoIds = carrito.Select(c => c.ProductoId).ToList();
-                var productosDb = await _context.Productos
-                    .Where(p => productoIds.Contains(p.ProductoId))
-                    .ToListAsync();
-
                 var pedido = new Pedido
                 {
-                    UsuarioId = usuarioId,
-                    MetodoDePagoId = metodoDePagoId,
+                    UsuarioId = dto.UsuarioId,
+                    MetodoDePagoId = dto.MetodoDePagoId,
+                    EsEnvioADomicilio = dto.EsEnvioADomicilio,
+                    EnvioCalle = dto.EnvioCalle,
+                    EnvioNumero = dto.EnvioNumero,
+                    EnvioPiso = dto.EnvioPiso,
+                    EnvioDepartamento = dto.EnvioDepartamento,
+                    EnvioObservaciones = dto.EnvioObservaciones,
+                    EnvioLocalidad = dto.EnvioLocalidad,
+                    EnvioProvincia = dto.EnvioProvincia,
+                    EnvioCodigoPostal = dto.EnvioCodigoPostal,
                     FechaPedido = DateTime.Now,
                     Estado = EstadoPedido.Nuevo,
                     EstadoPago = EstadoPago.Pendiente,
                     DetallesPedido = new List<DetallePedido>()
                 };
 
-                foreach (var item in carrito)
+                foreach (var itemDto in dto.Items)
                 {
-                    var producto = productosDb.FirstOrDefault(p => p.ProductoId == item.ProductoId);
-                    if (producto == null) throw new Exception("Producto no encontrado");
+                    // Buscamos el producto en BD para validar stock y obtener nombre real
+                    var producto = await _context.Productos.FindAsync(itemDto.ProductoId);
 
-                    if (producto.Stock < item.Cantidad)
+                    if (producto == null) 
+                        throw new Exception($"Producto {itemDto.ProductoId} no encontrado.");
+
+                    if (producto.Stock < itemDto.Cantidad) 
+                        throw new Exception($"Sin stock para {producto.Nombre}");
+
+                    if (producto.Stock < itemDto.Cantidad)
                         throw new Exception($"Sin stock suficiente para {producto.Nombre}");
 
                     // 1. Descontamos stock en la entidad
-                    producto.Stock -= item.Cantidad;
+                    producto.Stock -= itemDto.Cantidad;
 
                     pedido.DetallesPedido.Add(new DetallePedido
                     {
                         ProductoId = producto.ProductoId,
-                        Cantidad = item.Cantidad,
+                        Cantidad = itemDto.Cantidad,
                         PrecioUnitario = producto.Precio,
                         Producto = producto // Importante para que el PaymentService tenga el nombre
                     });
@@ -82,7 +90,6 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
-                await _carritoService.VaciarAsync();
 
                 // RECARGAMOS EL PEDIDO CON SUS INCLUDES
                 var pedidoCompleto = await _context.Pedidos

@@ -27,7 +27,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     FechaEntrega = p.FechaEntrega,
                     FechaCancelado = p.FechaCancelado,
                     EstadoId = (int)p.Estado,
-                    EstadoNombre = p.Estado.ToString(),
+                    EstadoPagoId = (int)p.EstadoPago,
 
                     Productos = p.DetallesPedido
                                 .Select(d => d.Producto.Nombre)
@@ -49,18 +49,17 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     FechaEntrega = p.FechaEntrega,
                     FechaCancelado = p.FechaCancelado,
                     EstadoId = (int)p.Estado,
-                    EstadoNombre = p.Estado.ToString(),
+                    EstadoPagoId = (int)p.EstadoPago,
+                    MetodoPagoId = p.MetodoDePagoId,
 
                     UsuarioId = p.Usuario.UsuarioId,
                     UsuarioNombre = p.Usuario.Nombre,
                     UsuarioEmail = p.Usuario.Email,
                     UsuarioTelefono = p.Usuario.Telefono,
 
-                    DireccionCompleta = $"{p.EnvioCalle} {p.EnvioNumero}" +
-                                (string.IsNullOrEmpty(p.EnvioPiso) ? "" : $", Piso: {p.EnvioPiso}") +
-                                (string.IsNullOrEmpty(p.EnvioDepartamento) ? "" : $" Depto: {p.EnvioDepartamento}"),
-                    Localidad = p.EnvioLocalidad,
-                    Provincia = p.EnvioProvincia,
+                    DireccionCompleta = p.EsEnvioADomicilio == false ? null : $"{p.EnvioCalle} {p.EnvioNumero}, Piso: {p.EnvioPiso}, Depto: {p.EnvioDepartamento}, {p.EnvioLocalidad}, {p.EnvioProvincia}",
+                    Observaciones = p.EnvioObservaciones,
+                    
 
                     Items = p.DetallesPedido.Select(d => new PedidoItemDto
                     {

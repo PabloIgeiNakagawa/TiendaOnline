@@ -1,4 +1,6 @@
-﻿namespace TiendaOnline.Features.Pedidos
+﻿using TiendaOnline.Enums;
+
+namespace TiendaOnline.Features.Pedidos
 {
     public class PedidoDetalleViewModel
     {
@@ -10,7 +12,9 @@
         public DateTime? FechaEntrega { get; set; }
         public DateTime? FechaCancelado { get; set; }
 
-        public string Estado { get; set; } = string.Empty;
+        public EstadoPedidoUI Estado { get; set; }
+        public EstadoPagoUI EstadoPago { get; set; }
+        public MetodoPagoId MetodoPagoId { get; set; }
 
         // Usuario
         public string? UsuarioNombre { get; set; }
@@ -19,8 +23,7 @@
 
         // Dirección de envío (si aplica)
         public string? DireccionCompleta { get; set; }
-        public string? Localidad { get; set; }
-        public string? Provincia { get; set; }
+        public string? Observaciones { get; set; }
 
         // Productos
         public List<PedidoItemViewModel> Items { get; set; } = new();

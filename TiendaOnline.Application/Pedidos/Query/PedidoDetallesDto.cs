@@ -1,6 +1,4 @@
-﻿using TiendaOnline.Domain.Entities;
-
-namespace TiendaOnline.Application.Pedidos.Query
+﻿namespace TiendaOnline.Application.Pedidos.Query
 {
     public class PedidoDetallesDto
     {
@@ -11,7 +9,8 @@ namespace TiendaOnline.Application.Pedidos.Query
         public DateTime? FechaCancelado { get; set; }
 
         public int EstadoId { get; set; }
-        public string EstadoNombre { get; set; } = string.Empty;
+        public int EstadoPagoId { get; set; }
+        public int MetodoPagoId { get; set; }
 
         // Usuario
         public int? UsuarioId { get; set; }
@@ -21,8 +20,7 @@ namespace TiendaOnline.Application.Pedidos.Query
 
         // Dirección de envío (si aplica)
         public string? DireccionCompleta { get; set; }
-        public string? Localidad { get; set; }
-        public string? Provincia { get; set; }
+        public string? Observaciones { get; set; }
 
         // Items
         public List<PedidoItemDto> Items { get; set; } = new();

@@ -1,4 +1,6 @@
-﻿namespace TiendaOnline.Features.Pedidos
+﻿using TiendaOnline.Enums;
+
+namespace TiendaOnline.Features.Pedidos
 {
     public class MisPedidosViewModel
     {
@@ -14,9 +16,9 @@
         public DateTime? FechaCancelado { get; set; }
         public List<string> Productos { get; set; } = new();
 
-        public string Estado { get; set; } = string.Empty;
+        public EstadoPedidoUI Estado { get; set; }
 
-        public string EstadoCss { get; set; } = string.Empty;
+        public EstadoPagoUI EstadoPago { get; set; }
 
         public bool EstaEnviado => FechaEnvio.HasValue;
         public bool EstaEntregado => FechaEntrega.HasValue;
