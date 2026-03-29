@@ -1,4 +1,5 @@
-﻿@using TiendaOnline.Features.Pedidos
+﻿@using TiendaOnline.Extensions
+@using TiendaOnline.Features.Pedidos
 @model MisPedidosViewModel
 @{
     ViewData["Title"] = "Mis Pedidos";
@@ -17,28 +18,23 @@
                     @foreach (var pedido in Model.Pedidos)
                     {
                         <div class="card mb-4 overflow-hidden">
-
                             <!-- HEADER -->
-                            <div class="card-header bg-transparent border-bottom mb-2 py-3">
-                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mx-3">
-
+                            <div class="card-header bg-body-tertiary border-bottom-0 py-3">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <div>
-                                        <h4 class="fw-bold mb-1 tracking-tight">
-                                            Pedido <span class="text-primary">#@pedido.PedidoId</span>
-                                        </h4>
-                                        <div class="text-muted small d-flex align-items-center">
-                                            <i class="bi bi-calendar3 me-1"></i>
-                                            @pedido.FechaPedido.ToString("dd MMM yyyy · HH:mm")
-                                        </div>
+                                        <h5 class="fw-bold mb-0">Pedido <span class="text-primary">#@pedido.PedidoId</span></h5>
+                                        <small class="text-secondary">@pedido.FechaPedido.ToString("D")</small>
                                     </div>
-
-                                    <span class="badge @pedido.EstadoCss rounded-pill px-3 py-2 fw-semibold">
-                                        @pedido.Estado
-                                    </span>
-
+                                    <div class="d-flex gap-2">
+                                        <span class="badge rounded-pill @(pedido.EstaCancelado ? "bg-danger-subtle text-danger" : "bg-primary-subtle text-primary") border border-primary-subtle px-3 py-2">
+                                            @pedido.Estado.GetDisplayName()
+                                        </span>
+                                        <span class="badge rounded-pill bg-body-secondary text-body-emphasis border px-3 py-2">
+                                            <i class="bi bi-credit-card me-1"></i> @pedido.EstadoPago.GetDisplayName()
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-
                             <!-- BODY -->
                             <div class="card-body pb-0 mx-2">
                                 <!-- TIMELINE -->
@@ -71,11 +67,9 @@
                                             @pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")
                                         </small>
                                     </div>
-
                                     <!-- Línea 1 -->
                                     <div class="flex-grow-1 border-top mx-3 d-none d-md-block @(pasoActual > 1 ? "border-success" : "border-secondary")">
                                     </div>
-
                                     <!-- PASO 2 -->
                                     <div class="text-center flex-fill mb-3 mb-md-0">
                                         <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center
@@ -98,12 +92,10 @@
                                                 <h6 class="m-0 small fw-semibold">Pendiente de envío</h6>
                                             }
                                     </div>
-
                                     <!-- Línea 2 -->
                                     <div class="flex-grow-1 border-top mx-3 d-none d-md-block
                                                 @(pasoActual == 3 ? (pedido.EstaCancelado ? "border-danger" : "border-success") : "border-secondary")">
                                     </div>
-
                                     <!-- PASO 3 -->
                                     <div class="text-center flex-fill">
                                         <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center
@@ -146,37 +138,37 @@
                                     </div>
                                 </div>
 
-                                <hr class="opacity-25"/>
+                                <hr class="my-4 border-secondary opacity-10">
 
                                 <!-- Productos -->
-                                <div class="rounded-3 p-3">
-                                    <h6 class="text-uppercase small fw-bold mb-3" style="letter-spacing: 1px;">
-                                        <i class="bi bi-list-ul me-2 text-info"></i>Productos
+                                <div class="px-4 py-3 rounded-bottom-3">
+                                    <h6 class="text-uppercase small fw-bold mb-3 text-secondary-emphasis" style="letter-spacing: 1px;">
+                                        <i class="bi bi-box-seam me-2 text-primary"></i>Productos
                                     </h6>
+
                                     <div class="row g-2">
                                         @foreach (var producto in pedido.Productos)
                                         {
-                                            <div class="col-md-4">
-                                                <div class="d-flex align-items-center border border-secondary border-opacity-10 p-2 rounded-2 bg-opacity-50">
-                                                    <i class="bi bi-chevron-right text-info small me-2"></i>
-                                                    <span class="small text-truncate">@producto</span>
+                                            <div class="col-12 col-md-auto">
+                                                <div class="bg-body border border-secondary-subtle rounded-2 px-3 py-2 d-flex align-items-center h-100 shadow-sm">
+                                                    <i class="bi bi-dot text-primary me-1 flex-shrink-0"></i>
+                                                    <span class="small text-body-emphasis">@producto</span>
                                                 </div>
                                             </div>
                                         }
                                     </div>
                                 </div>
-                                <hr class="opacity-25" />
-                            </div>
 
+                                <hr class="my-4 border-secondary opacity-10">
+
+                            </div>
                             <!-- Footer -->
                             <div class="card-footer bg-transparent border-0 d-flex justify-content-end pt-0 pb-3">
-
                                 <a asp-action="Detalles"
                                    asp-route-id="@pedido.PedidoId"
                                    class="btn border-0 fw-bold">
                                     Ver detalles <i class="bi bi-arrow-right"></i>
                                 </a>
-
                             </div>
                         </div>
                     }
@@ -194,18 +186,6 @@
                         </a>
                     </div>
                 }
-            </div>
-
-            <!-- Mensaje cuando no hay resultados filtrados -->
-            <div id="noResultados" class="text-center py-5" style="display: none;">
-                <div class="mb-3">
-                    <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
-                </div>
-                <h5 class="text-muted">No se encontraron pedidos</h5>
-                <p class="text-muted">Intenta ajustar los filtros de búsqueda</p>
-                <button class="btn btn-primary" id="limpiarBusqueda">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar Filtros
-                </button>
             </div>
         </div>
     </div>

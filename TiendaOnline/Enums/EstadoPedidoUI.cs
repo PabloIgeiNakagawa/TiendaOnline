@@ -7,7 +7,7 @@ namespace TiendaOnline.Enums
         [Display(Name = "Nuevo")]
         Nuevo = 0,
 
-        [Display(Name = "En Preparación")]
+        [Display(Name = "En preparación")]
         EnPreparacion = 1, // Ya se pagó, el admin está armando la caja
 
         [Display(Name = "Enviado")]

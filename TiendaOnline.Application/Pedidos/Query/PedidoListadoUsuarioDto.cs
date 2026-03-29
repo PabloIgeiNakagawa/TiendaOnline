@@ -1,6 +1,4 @@
-﻿using TiendaOnline.Domain.Entities;
-
-namespace TiendaOnline.Application.Pedidos.Query
+﻿namespace TiendaOnline.Application.Pedidos.Query
 {
     public class PedidoListadoUsuarioDto
     {
@@ -10,7 +8,7 @@ namespace TiendaOnline.Application.Pedidos.Query
         public DateTime? FechaEntrega { get; set; }
         public DateTime? FechaCancelado { get; set; }
         public int EstadoId { get; set; }
-        public string EstadoNombre { get; set; } = string.Empty;
+        public int EstadoPagoId { get; set; }
         public List<string> Productos { get; set; } = new();
     }
 }

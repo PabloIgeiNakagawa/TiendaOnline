@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using TiendaOnline.Enums;
 
 namespace TiendaOnline.Features.Pedidos
 {
@@ -10,14 +11,9 @@ namespace TiendaOnline.Features.Pedidos
         public decimal CostoEnvio { get; set; }
         public decimal Total => SubTotal + CostoEnvio;
 
-        // Datos del Usuario
-        public string Nombre { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Telefono { get; set; } = string.Empty;
-
         // Lógica de Entrega
         [Required(ErrorMessage = "Seleccioná un método de entrega")]
-        public string MetodoEntrega { get; set; } = "RetiroLocal"; // "RetiroLocal" o "EnvioDomicilio"
+        public MetodoEntrega MetodoEntrega { get; set; } 
 
         // Direcciones
         // Para mostrar un Dropdown con las direcciones que el usuario ya guardó antes
@@ -34,6 +30,8 @@ namespace TiendaOnline.Features.Pedidos
         public string Etiqueta { get; set; } // Ej: "Casa", "Trabajo"
         public string Calle { get; set; }
         public string Numero { get; set; }
+        public string? Piso { get; set; }
+        public string? Departamento { get; set; }
         public string Localidad { get; set; }
         public string Provincia { get; set; }
         public string CodigoPostal { get; set; }

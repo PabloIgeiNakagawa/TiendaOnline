@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Direcciones;
 using TiendaOnline.Application.Usuarios.Common;
+using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Infrastructure.Services.Direcciones
@@ -54,6 +55,28 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
                 .FirstOrDefaultAsync();
 
             return direccion ?? throw new InvalidOperationException($"No se encontró la dirección con ID {id}.");
+        }
+
+        public async Task<int> GuardarDireccionAsync(int usuarioId, DireccionDto direccion)
+        {
+            var nuevaDireccion = new Direccion
+            {
+                UsuarioId = usuarioId,
+                Etiqueta = direccion.Etiqueta,
+                Calle = direccion.Calle,
+                Numero = direccion.Numero,
+                Localidad = direccion.Localidad,
+                Provincia = direccion.Provincia,
+                CodigoPostal = direccion.CodigoPostal,
+                Piso = direccion.Piso,
+                Departamento = direccion.Departamento,
+                Observaciones = direccion.Observaciones
+            };
+
+            _context.Direcciones.Add(nuevaDireccion);
+            await _context.SaveChangesAsync();
+
+            return nuevaDireccion.DireccionId;
         }
     }
 }

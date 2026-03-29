@@ -1,4 +1,6 @@
-﻿@using TiendaOnline.Features.Pedidos
+﻿@using TiendaOnline.Enums
+@using TiendaOnline.Extensions
+@using TiendaOnline.Features.Pedidos
 @model PedidoDetalleViewModel
 @{
     ViewData["Title"] = $"Pedido #{Model.PedidoId.ToString("D6")}";
@@ -114,24 +116,29 @@
                         <div class="pedido-badge">
                             @switch (Model.Estado)
                             {
-                                case "Pendiente":
+                                case EstadoPedidoUI.Nuevo:
                                     <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-warning-subtle text-warning-emphasis border border-warning-subtle ms-1 ms-md-0">
-                                        <i class="bi bi-clock me-1"></i>Pendiente
+                                        <i class="bi bi-clock me-1"></i>@EstadoPedidoUI.Nuevo.GetDisplayName()
                                     </span>
                                     break;
-                                case "Enviado":
+                                case EstadoPedidoUI.EnPreparacion:
                                     <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-info-subtle text-info-emphasis border border-info-subtle ms-1 ms-md-0">
-                                        <i class="bi bi-truck me-1"></i>Enviado
+                                        <i class="bi bi-truck me-1"></i>@EstadoPedidoUI.EnPreparacion.GetDisplayName()
                                     </span>
                                     break;
-                                case "Entregado":
+                                case EstadoPedidoUI.Enviado:
+                                    <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-primary-subtle text-primary-emphasis border border-primary-subtle ms-1 ms-md-0">
+                                        <i class="bi bi-check-circle me-1"></i>@EstadoPedidoUI.Enviado.GetDisplayName()
+                                    </span>
+                                    break;
+                                case EstadoPedidoUI.Entregado:
                                     <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-success-subtle text-success-emphasis border border-success-subtle ms-1 ms-md-0">
-                                        <i class="bi bi-check-circle me-1"></i>Entregado
+                                        <i class="bi bi-x-circle me-1"></i>@EstadoPedidoUI.Entregado.GetDisplayName()
                                     </span>
                                     break;
-                                case "Cancelado":
+                                case EstadoPedidoUI.Cancelado:
                                     <span class="badge px-3 py-2 rounded-2 fw-semibold text-uppercase bg-danger-subtle text-danger-emphasis border border-danger-subtle ms-1 ms-md-0">
-                                        <i class="bi bi-x-circle me-1"></i>Cancelado
+                                        <i class="bi bi-x-circle me-1"></i>@EstadoPedidoUI.Cancelado.GetDisplayName()
                                     </span>
                                     break;
                             }
@@ -151,11 +158,11 @@
                             </div>
                             <div class="mb-3">
                                 <div class="small text-secondary mb-1">
-                                    @if (Model.Estado == "Entregado")
+                                    @if (Model.Estado == EstadoPedidoUI.Entregado)
                                     {
                                         <text>Fecha de Entrega</text>
                                     }
-                                    else if (Model.Estado == "Enviado")
+                                    else if (Model.Estado == EstadoPedidoUI.Enviado)
                                     {
                                         <text>Fecha Estimada de Entrega</text>
                                     }
@@ -169,7 +176,7 @@
                                     {
                                         @Model.FechaEntrega.Value.ToString("dd/MM/yyyy HH:mm")
                                     }
-                                    else if (Model.Estado == "Enviado")
+                                    else if (Model.Estado == EstadoPedidoUI.Enviado)
                                     {
                                         <span class="text-info">@Model.FechaPedido.AddDays(3).ToString("dd/MM/yyyy")</span>
                                     }
@@ -181,50 +188,37 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            @if (Model.EsAdmin)
+                            <div class="mb-3">
+                                <div class="small text-secondary mb-1">Estado del Pedido</div>
+                                <div class="fw-medium">
+                                    @Model.Estado.GetDisplayName()
+                                </div>
+                            </div>
+                            @if (Model.Estado == EstadoPedidoUI.Enviado)
                             {
                                 <div class="mb-3">
-                                    <div class="small text-secondary mb-1">Cliente</div>
-                                    <div class="fw-medium">@(Model.UsuarioNombre ?? "Cliente no disponible")</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="small text-secondary mb-1">Email</div>
-                                    <div class="fw-medium">@(Model.UsuarioEmail ?? "Email no disponible")</div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="small text-secondary mb-1">Teléfono</div>
-                                    <div class="fw-medium">@(Model.UsuarioTelefono ?? "Teléfono no disponible")</div>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="mb-3">
-                                    <div class="small text-secondary mb-1">Estado del Pedido</div>
+                                    <div class="small text-secondary mb-1">Número de Seguimiento</div>
                                     <div class="fw-medium">
-                                        @Model.Estado
-                                    </div>
-                                </div>
-                                @if (Model.Estado == "Enviado")
-                                {
-                                    <div class="mb-3">
-                                        <div class="small text-secondary mb-1">Número de Seguimiento</div>
-                                        <div class="fw-medium">
-                                            <code>TRK@(Model.PedidoId.ToString("D6"))CO</code>
-                                            <button id="btnCopiarSeguimiento"
-                                                    class="btn btn-sm btn-outline-primary ms-2">
-                                                <i class="bi bi-clipboard"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                }
-                                <div class="mb-3">
-                                    <div class="small text-secondary mb-1">Método de Pago</div>
-                                    <div class="fw-medium">
-                                        <i class="bi bi-credit-card me-1"></i>
-                                        Tarjeta de Crédito
+                                        <code>TRK@(Model.PedidoId.ToString("D6"))CO</code>
+                                        <button id="btnCopiarSeguimiento"
+                                                class="btn btn-sm btn-outline-primary ms-2">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
                                     </div>
                                 </div>
                             }
+                            <div class="mb-3">
+                                <div class="small text-secondary mb-1">Método de Pago</div>
+                                <div class="fw-medium">
+                                    @Model.MetodoPagoId.GetDisplayName()
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="small text-secondary mb-1">Estado del Pago</div>
+                                <div class="fw-medium">
+                                    @Model.EstadoPago.GetDisplayName()
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -355,7 +349,7 @@
                             </div>
                         </div>
 
-                        @if (Model.Estado == "Enviado" || Model.Estado == "Entregado")
+                        @if (Model.Estado == EstadoPedidoUI.Enviado || Model.Estado == EstadoPedidoUI.Entregado)
                         {
                             <div class="position-relative pb-4">
                                 <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-info z-1"
@@ -373,7 +367,7 @@
                                             <text>Pedido en camino</text>
                                         }
                                     </h6>
-                                    <p class="mb-0 text-muted">@(Model.Estado == "Enviado" ? Model.FechaEnvio?.ToString("dd/MM/yyyy HH:mm") : Model.FechaEntrega?.ToString("dd/MM/yyyy HH:mm"))</p>
+                                    <p class="mb-0 text-muted">@(Model.Estado == EstadoPedidoUI.Enviado ? Model.FechaEnvio?.ToString("dd/MM/yyyy HH:mm") : Model.FechaEntrega?.ToString("dd/MM/yyyy HH:mm"))</p>
                                     <small class="text-muted">
                                         @if (Model.EsAdmin)
                                         {
@@ -388,7 +382,7 @@
                             </div>
                         }
 
-                        @if (Model.Estado == "Entregado")
+                        @if (Model.Estado == EstadoPedidoUI.Entregado)
                         {
                             <div class="position-relative pb-4">
                                 <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-success z-1"
@@ -421,7 +415,7 @@
                             </div>
                         }
 
-                        @if (Model.Estado == "Cancelado")
+                        @if (Model.Estado == EstadoPedidoUI.Cancelado)
                         {
                             <div class="position-relative pb-4">
                                 <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-danger z-1"
@@ -479,8 +473,8 @@
                 </div>
                 <div class="card-body p-4">
                     <address class="mb-0">
-                        <i class="bi bi-person"></i> @(Model.UsuarioNombre ?? "Cliente")<br>
-                        <i class="bi bi-geo-alt"></i> @(Model.DireccionCompleta ?? "Retiro en el local")<br> 
+                        <i class="bi bi-person me-1"></i> @(Model.UsuarioNombre ?? "Cliente")<br>
+                        <i class="bi bi-geo-alt me-1"></i> @(Model.DireccionCompleta ?? "Retiro en el local")<br>
                         <i class="bi bi-telephone me-1"></i> @(Model.UsuarioTelefono ?? "No disponible")<br>
                         <i class="bi bi-envelope me-1"></i> @(Model.UsuarioEmail ?? "No disponible")
                     </address>
@@ -504,7 +498,7 @@
                 <div class="card-body p-4">
                     @if (Model.EsAdmin)
                     {
-                        @if (Model.Estado == "Pendiente")
+                        @if (Model.Estado == EstadoPedidoUI.EnPreparacion)
                         {
                             <button class="btn btn-info btn-lg w-100 mb-3 btn-enviar"
                                     data-pedido-id="@Model.PedidoId">
@@ -516,7 +510,7 @@
                                 <i class="bi bi-x-circle me-2"></i>Cancelar Pedido
                             </button>
                         }
-                        else if (Model.Estado == "Enviado" && (Model.EsAdmin || Model.EsRepartidor))
+                        else if (Model.Estado == EstadoPedidoUI.Enviado && (Model.EsAdmin || Model.EsRepartidor))
                         {
                             <button class="btn btn-success btn-lg w-100 btn-entregar"
                                     data-pedido-id="@Model.PedidoId">
@@ -531,9 +525,9 @@
                             </div>
                         }
                     }
-                    else if (Model.EsPropioPedido)
+                    else
                     {
-                        @if (Model.Estado == "Pendiente")
+                        @if (Model.Estado == EstadoPedidoUI.Nuevo)
                         {
                             <button class="btn btn-outline-danger btn-lg w-100 mb-3 btn-cancelar"
                                     data-pedido-id="@Model.PedidoId">
@@ -541,7 +535,7 @@
                             </button>
                         }
 
-                        @if (Model.Estado == "Entregado")
+                        @if (Model.Estado == EstadoPedidoUI.Entregado)
                         {
                             <a asp-controller="Productos" asp-action="Index" class="btn btn-primary btn-lg w-100 mb-3">
                                 <i class="bi bi-cart-plus me-2"></i>Comprar de Nuevo
@@ -551,13 +545,6 @@
                         <a asp-controller="Soporte" asp-action="Index" class="btn btn-outline-info btn-lg w-100">
                             <i class="bi bi-headset me-2"></i>Contactar Soporte
                         </a>
-                    }
-                    else
-                    {
-                        <div class="alert alert-warning mb-0">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            No tienes permisos para modificar este pedido.
-                        </div>
                     }
                 </div>
             </div>
