@@ -29,20 +29,16 @@ builder.Services.AddDataProtection();
 
 var app = builder.Build();
 
-#if DEBUG
-    // Ejecutar el Seed
-    using (var scope = app.Services.CreateScope())
-    {
-        var context = scope.ServiceProvider.GetRequiredService<TiendaContext>();
-        DbInitializer.SeedSettings(context);
-    }
-#endif
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<TiendaContext>();
+        DbInitializer.SeedSettings(context);
+    }
 }
 
 app.UseHttpsRedirection();
