@@ -1,0 +1,80 @@
+﻿<footer class="border-top mt-auto pt-5 pb-4">
+    <div class="container">
+        <div class="row gy-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3">
+                    <img src="@AppSettings.GetValue("Diseno:LogoUrl")" alt="@AppSettings.GetValue("Diseno:NombreDelSitio") Logo" loading="lazy" width="30" height="30" asp-append-version="true" class="img-fluid me-2" />
+                    <small class="fw-bold small text-uppercase text-center text-md-start" style="letter-spacing: 1px;">Expertos en componentes de PC</small>
+                </div>
+                <p class="text-secondary small mb-4 text-center text-md-start">
+                    Tu tienda de confianza para armar la PC de tus sueños. Componentes de alto rendimiento y asesoramiento especializado.
+                </p>
+                <div class="d-flex gap-3 justify-content-center justify-content-md-start">
+                    <a href="@AppSettings.GetValue("RedesSociales:Facebook")" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-facebook"></i></a>
+                    <a href="@AppSettings.GetValue("RedesSociales:Instagram")" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-instagram"></i></a>
+                    <a href="@AppSettings.GetValue("RedesSociales:X")" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-twitter-x"></i></a>
+                    <a href="@AppSettings.GetValue("RedesSociales:Linkedin")" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-linkedin"></i></a>
+                    <a href="@AppSettings.GetValue("RedesSociales:Tiktok")" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-tiktok"></i></a>
+                    <a href="@AppSettings.GetValue("RedesSociales:Youtube")" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-youtube"></i></a>
+                </div>
+            </div>
+
+            <div class="col-lg-2 col-md-6">
+                <h6 class="fw-bold mb-3 small text-uppercase text-center text-md-start" style="letter-spacing: 1px;">Navegación</h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-2 text-center text-md-start"><a asp-controller="Home" asp-action="Index" class="text-secondary text-decoration-none">Inicio</a></li>
+                    <li class="mb-2 text-center text-md-start"><a asp-controller="Productos" asp-action="Index" class="text-secondary text-decoration-none">Productos</a></li>
+                    <li class="mb-2 text-center text-md-start"><a href="#" class="text-secondary text-decoration-none">Promociones</a></li>
+                    <li class="mb-2 text-center text-md-start"><a href="#" class="text-secondary text-decoration-none">Contacto</a></li>
+                    <li class="mb-2 text-center text-md-start"><a asp-controller="Home" asp-action="Privacy" class="text-secondary text-decoration-none">Privacidad</a></li>
+                </ul>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <h6 class="fw-bold mb-3 small text-uppercase text-center text-md-start" style="letter-spacing: 1px;">Aceptamos</h6>
+                <div class="d-flex flex-wrap gap-2 fs-3 text-secondary justify-content-center justify-content-md-start">
+                    <img src="~/img/logos/visa_logo.svg" alt="Visa" loading="lazy" width="40" height="25" class="img-fluid" asp-append-version="true">
+                    <img src="~/img/logos/mastercard_logo.svg" alt="MasterCard" loading="lazy" width="40" height="25" class="img-fluid" asp-append-version="true">
+                    <img src="~/img/logos/mercado_pago_logo.svg" alt="Mercado Pago" loading="lazy" width="40" height="25" class="img-fluid" asp-append-version="true">
+                    <i class="bi bi-bank"></i>
+                </div>
+                <p class="small text-secondary mt-3 text-center text-md-start">
+                    <i class="bi bi-truck me-2"></i>Envíos a todo el país.
+                </p>
+            </div>
+
+            <div class="col-lg-3 col-md-4">
+                <h6 class="fw-bold mb-3 small text-uppercase text-center text-md-start" style="letter-spacing: 1px;">Soporte</h6>
+                <ul class="list-unstyled footer-contact">
+                    <li class="d-flex align-items-center mb-3 justify-content-center justify-content-md-start">
+                        <div class="contact-icon me-2"><i class="bi bi-envelope text-info "></i></div>
+                        <span class="small">@AppSettings.GetValue("Tienda:EmailDeContacto")</span>
+                    </li>
+                    <li class="d-flex align-items-center mb-3 justify-content-center justify-content-md-start">
+                        <div class="contact-icon me-2"><i class="bi bi-whatsapp text-success"></i></div>
+                        <span class="small">@AppSettings.GetValue("Tienda:Whatsapp")</span>
+                    </li>
+                    <li class="d-flex align-items-center justify-content-center justify-content-md-start">
+                        <div class="contact-icon me-2"><i class="bi bi-geo-alt"></i></div>
+                        <span class="small">@AppSettings.GetValue("Ubicacion:Direccion"), @AppSettings.GetValue("Ubicacion:Ciudad"), @AppSettings.GetValue("Ubicacion:Provincia"), @AppSettings.GetValue("Ubicacion:CodigoPostal").</span>
+                    </li>
+                </ul>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(AppSettings.GetValue("Ubicacion:Direccion")))
+            {
+                <iframe height="350"
+                        style="border:0; width:100%;"
+                        loading="lazy"
+                        src="https://maps.google.com/maps?q=@Uri.EscapeDataString(AppSettings.GetValue("Ubicacion:Direccion"))&output=embed">
+                </iframe>
+            }
+        </div>
+
+        <hr class="my-4 border-secondary opacity-25">
+
+        <div class="small text-secondary mt-3 text-center">
+            &copy; 2026 TechStore PC. Todos los derechos reservados.
+        </div>
+    </div>
+</footer>
