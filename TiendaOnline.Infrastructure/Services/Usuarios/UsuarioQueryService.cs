@@ -37,7 +37,12 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
                 FechaCreacion = usuario.FechaCreacion,
                 Activo = usuario.Activo,
                 UltimaFechaAlta = usuario.UltimaFechaAlta,
-                UltimaFechaBaja = usuario.UltimaFechaBaja
+                UltimaFechaBaja = usuario.UltimaFechaBaja,
+                CantidadPedidos = _context.Pedidos.Count(p => p.UsuarioId == usuarioId && p.Estado != EstadoPedido.Cancelado),
+                TotalGastado = _context.Pedidos
+                    .Where(p => p.UsuarioId == usuarioId && p.Estado != EstadoPedido.Cancelado)
+                    .SelectMany(p => p.DetallesPedido)
+                    .Sum(d => d.Cantidad * d.PrecioUnitario)
             };
         }
 

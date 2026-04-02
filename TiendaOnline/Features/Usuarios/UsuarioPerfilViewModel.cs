@@ -13,10 +13,11 @@
         public bool Activo { get; set; }
         public DateTime? UltimaFechaBaja { get; set; }
         public DateTime? UltimaFechaAlta { get; set; }
-        public bool esPropioPerfil { get; set; } // Para saber si el usuario está viendo su propio perfil o el de otro
 
         // Aquí puedes agregar los datos que antes estaban hardcodeados
         public int CantidadPedidos { get; set; }
         public decimal TotalGastado { get; set; }
+
+        public List<DireccionViewModel> Direcciones { get; set; } = new();
     }
 }
