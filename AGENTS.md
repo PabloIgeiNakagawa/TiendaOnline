@@ -1,6 +1,8 @@
 # TiendaOnline
 
 ## Project Overview
+E-commerce con catálogo de productos, carrito de compras, checkout con MercadoPago, gestión de pedidos y panel de administración.
+
 - **Framework**: ASP.NET Core 8 con Clean Architecture
 - **Database**: SQL Server + Entity Framework Core (Code First)
 - **Frontend**: MVC con Razor Views + Bootstrap 5
@@ -172,3 +174,37 @@ services.AddScoped<IProductoCommandService, ProductoCommandService>();
 - Productos: `/Productos`
 - Pedidos: `/Pedidos`
 - Admin: `/AdminUsuarios`, `/AdminPedidos`
+
+## Testing
+- Framework: xUnit + Moq + EF Core InMemory
+- Tests en `TiendaOnline.Tests/`
+- Nombrar tests: `Metodo_Escenario_Resultado`
+- Mockear servicios externos (MercadoPago, Cloudinary)
+- Usar `WebApplicationFactory` para tests de integración
+
+## Dependencias Externas
+- MercadoPago SDK → pagos y webhooks
+- Cloudinary → almacenamiento de imágenes
+- Google OAuth → login externo
+- Bootstrap 5 → frontend
+- Newtonsoft.Json → serialización en auditoría
+
+## Security
+- Nunca expongas `ex.Message` al usuario; usar mensajes genéricos y loguear detalles
+- Siempre `[ValidateAntiForgeryToken]` en POSTs que modifiquen datos (checkout, pagos, admin)
+- Nunca commitees `appsettings.Development.json` ni `.Production.json`
+- Validar tipo y tamaño de archivos antes de subir
+- Rate limiting en endpoints críticos (login, webhooks)
+- Verificar firma de webhooks externos (MercadoPago)
+- No confiar en datos del cliente; recalcular precios en servidor
+
+## Git
+- Commits en español: `Agregar X`, `Corregir Y`, `Refactorizar Z`
+- Branches: `feature/nombre`, `fix/nombre`, `refactor/nombre`, `hotfix/nombre`
+- No commitear `appsettings.*.json` con credenciales reales
+
+## Restricciones Operativas
+- NUNCA correr migraciones (`dotnet ef database update`) sin confirmación explícita
+- NUNCA hacer commit o push sin confirmación explícita
+- NUNCA modificar `appsettings.json` con credenciales reales
+- Siempre presentar un plan antes de cambios estructurales grandes
