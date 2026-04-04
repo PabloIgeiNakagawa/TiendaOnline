@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using TiendaOnline.Application.Auth;
 using TiendaOnline.Application.Usuarios.Queries;
@@ -48,6 +49,7 @@ namespace TiendaOnline.Features.Accounts
 
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("registro")]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
@@ -101,6 +103,7 @@ namespace TiendaOnline.Features.Accounts
 
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("login")]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid) return View(model);

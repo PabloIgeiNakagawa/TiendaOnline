@@ -19,12 +19,13 @@ builder.Services.AddDbContext<TiendaContext>(options =>
         b => b.MigrationsAssembly("TiendaOnline.Infrastructure")
     ));
 
-// Extensiones personalizadas para organizar la configuraci�n
+// Extensiones personalizadas para organizar la configuración
 builder.Services.AddCustomSecurity(builder.Configuration); // Configura Cookies y Session
 builder.Services.AddBusinessServices(); // Registra todos tus Services
 builder.Services.AddMemoryCache();
+builder.Services.AddRateLimitingConfig(); // Rate limiting para endpoints críticos
 
-// Hash de contrase�as y protecci�n de datos (para tokens, etc.)
+// Hash de contraseñas y protección de datos (para tokens, etc.)
 builder.Services.AddDataProtection();
 
 var app = builder.Build();
@@ -64,11 +65,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseRateLimiter(); // Rate limiting antes de auth
 app.UseSession(); // Para el carrito
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 1. Ruta para �reas (Primero)
+// 1. Ruta para áreas (Primero)
 app.MapControllerRoute(
     name: "MyAreas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
