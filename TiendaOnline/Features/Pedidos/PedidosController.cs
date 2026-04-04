@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.Direcciones;
@@ -157,6 +158,7 @@ namespace TiendaOnline.Features.Pedidos
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("checkout")]
         public async Task<IActionResult> ProcesarCheckout(CheckOutViewModel model)
         {
             // RECARGAR DATOS DEL CARRITO (Vital para que no se pierdan los Items)
@@ -294,6 +296,7 @@ namespace TiendaOnline.Features.Pedidos
         [Authorize]
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("checkout")]
         public async Task<IActionResult> FinalizarCompra(ConfirmacionPedidoViewModel model, MetodoPagoId metodoDePagoId)
         {
             var usuarioId = ObtenerUsuarioId();

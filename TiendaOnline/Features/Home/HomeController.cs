@@ -71,6 +71,13 @@ namespace TiendaOnline.Features.Home
             return View();
         }
 
+        [AllowAnonymous]
+        [HttpGet("Home/Error429")]
+        public IActionResult Error429()
+        {
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

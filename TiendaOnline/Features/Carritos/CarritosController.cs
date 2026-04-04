@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TiendaOnline.Application.Carritos;
 
 namespace TiendaOnline.Features.Carritos
@@ -22,6 +23,7 @@ namespace TiendaOnline.Features.Carritos
 
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("carrito")]
         public async Task<IActionResult> Agregar(int id)
         {
             if (id <= 0)
