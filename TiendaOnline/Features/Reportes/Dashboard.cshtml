@@ -1,4 +1,6 @@
-﻿@using TiendaOnline.Features.Reportes
+﻿@using TiendaOnline.Extensions
+@using TiendaOnline.Features.Reportes
+@using TiendaOnline.Enums
 @model DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
@@ -128,23 +130,51 @@
         </div>
     </div>
 
-    <!-- Productos Bajo Stock -->
+    <!-- Ticket Promedio -->
     <div class="col-12 col-sm-6 col-xl-3">
         <div class="card bg-body-tertiary border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted mb-1 small">Productos Bajo Stock</p>
-                        <h3 class="mb-0 fw-bold">@Model.MetricasGenerales.ProductosBajoStock</h3>
+                        <p class="text-muted mb-1 small">Ticket Promedio</p>
+                        <h3 class="mb-0 fw-bold">@Model.MetricasGenerales.PromedioVentaPorPedido.ToString("C", new System.Globalization.CultureInfo("es-CO"))</h3>
                     </div>
-                    <div class="bg-warning bg-opacity-10 rounded-3 p-3">
-                        <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
+                    <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                        <i class="bi bi-receipt text-success fs-4"></i>
                     </div>
                 </div>
                 <div class="mt-3">
-                    <span class="badge bg-warning bg-opacity-10 text-warning">
-                        <i class="bi bi-box"></i> Requiere atención
-                    </span>
+                    <small class="text-muted">Promedio por compra</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Métricas Secundarias -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted mb-1 small">Tiempo Promedio de Preparación</p>
+                        @if (Model.MetricasGenerales.TiempoPromedioPreparacionHoras > 0)
+                        {
+                            var horas = (int)Model.MetricasGenerales.TiempoPromedioPreparacionHoras;
+                            var minutos = (int)((Model.MetricasGenerales.TiempoPromedioPreparacionHoras - horas) * 60);
+                            <h3 class="mb-0 fw-bold">@horas<span class="fs-5">h</span> @minutos<span class="fs-5">m</span></h3>
+                            <small class="text-muted">De "En preparación" a "Enviado"</small>
+                        }
+                        else
+                        {
+                            <h3 class="mb-0 fw-bold text-muted">--</h3>
+                            <small class="text-muted">Sin datos suficientes</small>
+                        }
+                    </div>
+                    <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                        <i class="bi bi-clock-history text-warning fs-4"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -190,7 +220,7 @@
     </div>
 </div>
 
-<!-- Ventas por Categoría y Top Productos -->
+<!-- Ventas por Categoría, Top Productos y Método de Pago -->
 <div class="row g-3 mb-4">
     <!-- Ventas por Categoría -->
     <div class="col-12 col-lg-6">
@@ -226,6 +256,83 @@
         </div>
     </div>
 
+    <!-- Ventas por Método de Pago -->
+    <div class="col-12 col-lg-6">
+        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 pt-4 pb-3">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-credit-card text-primary me-2"></i>
+                    Ventas por Método de Pago
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.VentasPorMetodoDePago.Any())
+                {
+                    <canvas id="graficoMetodoPago" style="max-height: 200px;" class="mb-3"></canvas>
+                    <script type="application/json" id="datosMetodoPago">
+                        @Html.Raw(Json.Serialize(Model.VentasPorMetodoDePago))
+                    </script>
+                    <div class="table-responsive bg-transparent">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th class="bg-transparent text-muted small uppercase">Método</th>
+                                    <th class="text-end bg-transparent text-muted small uppercase">Pedidos</th>
+                                    <th class="text-end bg-transparent text-muted small uppercase">Total</th>
+                                    <th class="text-end bg-transparent text-muted small uppercase">%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var metodo in Model.VentasPorMetodoDePago)
+                                {
+                                    <tr>
+                                        <td class="bg-transparent">
+                                            <div class="d-flex align-items-center">
+                                                @if (metodo.MetodoDePago.Contains("Mercado"))
+                                                {
+                                                    <i class="bi bi-wallet2 text-info me-2"></i>
+                                                }
+                                                else if (metodo.MetodoDePago.Contains("Transferencia"))
+                                                {
+                                                    <i class="bi bi-bank text-success me-2"></i>
+                                                }
+                                                else if (metodo.MetodoDePago.Contains("Tarjeta"))
+                                                {
+                                                    <i class="bi bi-credit-card text-primary me-2"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-cash text-warning me-2"></i>
+                                                }
+                                                <span class="fw-medium">@metodo.MetodoDePago</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end bg-transparent">
+                                            <span class="fw-semibold">@metodo.CantidadPedidos</span>
+                                        </td>
+                                        <td class="text-end fw-semibold bg-transparent">
+                                            @metodo.TotalVentas.ToString("C", new System.Globalization.CultureInfo("es-CO"))
+                                        </td>
+                                        <td class="text-end bg-transparent">
+                                            <span class="badge bg-primary bg-opacity-10 text-primary">@metodo.PorcentajeDelTotal%</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center py-4">No hay datos disponibles</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Productos y Top Clientes -->
+<div class="row g-3 mb-4">
     <!-- Top Productos -->
     <div class="col-12 col-lg-6">
         <div class="card bg-body-tertiary border-0 shadow-sm h-100">
@@ -241,7 +348,7 @@
                     <div class="list-group list-group-flush">
                         @foreach (var producto in Model.TopProductos.Take(5))
                         {
-                            <div class="list-group-item border-0">
+                            <div class="list-group-item bg-transparent border-0">
                                 <div class="d-flex align-items-center">
                                     <img src="@producto.ImagenUrl" alt="@producto.Nombre"
                                          class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
@@ -265,9 +372,7 @@
             </div>
         </div>
     </div>
-</div>
-<!-- Top Clientes y Productos Bajo Stock -->
-<div class="row g-3 mb-4">
+
     <!-- Top Clientes -->
     <div class="col-12 col-lg-6">
         <div class="card bg-body-tertiary border-0 shadow-sm h-100">
@@ -280,29 +385,29 @@
             <div class="card-body">
                 @if (Model.TopClientes.Any())
                 {
-                    <div class="table-responsive">
+                    <div class="table-responsive bg-transparent">
                         <table class="table table-hover align-middle">
                             <thead>
                                 <tr>
-                                    <th>Cliente</th>
-                                    <th class="text-end">Pedidos</th>
-                                    <th class="text-end">Total</th>
+                                    <th class="bg-transparent text-muted small uppercase">Cliente</th>
+                                    <th class="text-end bg-transparent text-muted small uppercase">Pedidos</th>
+                                    <th class="text-end bg-transparent text-muted small uppercase">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var cliente in Model.TopClientes.Take(5))
                                 {
                                     <tr>
-                                        <td>
+                                        <td class="bg-transparent">
                                             <div>
                                                 <div class="fw-medium">@cliente.NombreCompleto</div>
                                                 <small class="text-muted">@cliente.Email</small>
                                             </div>
                                         </td>
-                                        <td class="text-end">
+                                        <td class="text-end bg-transparent">
                                             <span class="fw-semibold">@cliente.TotalPedidos</span>
                                         </td>
-                                        <td class="text-end fw-semibold">
+                                        <td class="text-end fw-semibold bg-transparent">
                                             @cliente.TotalGastado.ToString("C", new System.Globalization.CultureInfo("es-CO"))
                                         </td>
                                     </tr>
@@ -318,10 +423,13 @@
             </div>
         </div>
     </div>
+</div>
 
+<!-- Productos Bajo Stock -->
+<div class="row g-3 mb-4">
     <!-- Productos Bajo Stock -->
-    <div class="col-12 col-lg-6">
-        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
+    <div class="col-12">
+        <div class="card bg-body-tertiary border-0 shadow-sm">
             <div class="card-header bg-transparent border-0 pt-4 pb-3">
                 <h5 class="mb-0 fw-semibold">
                     <i class="bi bi-exclamation-triangle text-warning me-2"></i>
@@ -331,10 +439,10 @@
             <div class="card-body">
                 @if (Model.ProductosBajoStock.Any())
                 {
-                    <div class="list-group list-group-flush">
+                    <div class="row g-3">
                         @foreach (var producto in Model.ProductosBajoStock.Take(5))
                         {
-                            <div class="list-group-item border-0">
+                            <div class="col-12 col-sm-6 col-lg">
                                 <div class="d-flex align-items-center">
                                     <img src="@producto.ImagenUrl" alt="@producto.Nombre"
                                          class="rounded me-3" style="width: 45px; height: 45px; object-fit: cover;">
@@ -373,6 +481,132 @@
     </div>
 </div>
 
+<!-- Pedidos por Día y Hora -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card bg-body-tertiary border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-4 pb-3">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-calendar2-week text-primary me-2"></i>
+                    Pedidos por Día y Hora
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="graficoDiaHora" style="max-height: 350px;"></canvas>
+                <script type="application/json" id="datosDiaHora">
+                    @Html.Raw(Json.Serialize(Model.VentasPorDiaHora))
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Inmovilizado (Productos "Hueso") -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card bg-body-tertiary border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 pt-4 pb-3">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-box-seam text-danger me-2"></i>
+                    Stock Inmovilizado (sin ventas en 90 días)
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.StockInmovilizado != null && Model.StockInmovilizado.Any())
+                {
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <p class="text-muted mb-0 small">
+                            @Model.StockInmovilizado.Count productos con stock sin ventas en los últimos 90 días
+                        </p>
+                        <span class="badge bg-danger">
+                            $@Model.StockInmovilizado.Sum(s => s.ValorInvertido).ToString("N0", new System.Globalization.CultureInfo("es-CO")) invertido
+                        </span>
+                    </div>
+                    <div class="table-responsive bg-transparent">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th class="bg-transparent text-muted small uppercase">Producto</th>
+                                    <th class="text-center bg-transparent text-muted small uppercase">Stock</th>
+                                    <th class="text-end bg-transparent text-muted small uppercase">Precio</th>
+                                    <th class="text-end bg-transparent text-muted small uppercase">Valor Invertido</th>
+                                    <th class="text-center bg-transparent text-muted small uppercase">Última Venta</th>
+                                    <th class="text-center bg-transparent text-muted small uppercase">Días sin venta</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var producto in Model.StockInmovilizado.Take(15))
+                                {
+                                    <tr>
+                                        <td class="bg-transparent">
+                                            <div class="d-flex align-items-center">
+                                                <img src="@producto.ImagenUrl" alt="@producto.Nombre"
+                                                     class="rounded me-3" style="width: 45px; height: 45px; object-fit: cover;">
+                                                <div>
+                                                    <div class="fw-medium">@producto.Nombre</div>
+                                                    <small class="text-muted">@producto.Categoria</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center bg-transparent">
+                                            <span class="fw-bold">@producto.Stock</span>
+                                        </td>
+                                        <td class="text-end bg-transparent">
+                                            @producto.Precio.ToString("C", new System.Globalization.CultureInfo("es-CO"))
+                                        </td>
+                                        <td class="text-end bg-transparent">
+                                            <span class="fw-bold text-danger">
+                                                @producto.ValorInvertido.ToString("C", new System.Globalization.CultureInfo("es-CO"))
+                                            </span>
+                                        </td>
+                                        <td class="text-center bg-transparent">
+                                            @if (producto.UltimaVenta.HasValue)
+                                            {
+                                                <small class="text-muted">@producto.UltimaVenta.Value.ToString("dd/MM/yyyy")</small>
+                                            }
+                                            else
+                                            {
+                                                <small class="text-muted">Nunca</small>
+                                            }
+                                        </td>
+                                        <td class="text-center bg-transparent">
+                                            @if (producto.DiasSinVenta > 120)
+                                            {
+                                                <span class="badge bg-danger">@producto.DiasSinVenta días</span>
+                                            }
+                                            else if (producto.DiasSinVenta > 90)
+                                            {
+                                                <span class="badge bg-warning text-dark">@producto.DiasSinVenta días</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">@producto.DiasSinVenta días</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (Model.StockInmovilizado.Count > 15)
+                    {
+                        <p class="text-muted text-center small mt-2">
+                            Mostrando 15 de @Model.StockInmovilizado.Count productos
+                        </p>
+                    }
+                }
+                else
+                {
+                    <p class="text-success text-center py-4">
+                        <i class="bi bi-check-circle fs-3 d-block mb-2"></i>
+                        Todos los productos con stock han tenido ventas recientes
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Pedidos Recientes -->
 <div class="row g-3 mb-4">
     <div class="col-12">
@@ -383,7 +617,7 @@
                         <i class="bi bi-clock-history text-primary me-2"></i>
                         Pedidos Recientes
                     </h5>
-                    <a asp-area="Admin" asp-controller="Pedidos" asp-action="Listado" class="btn btn-sm btn-outline-primary">
+                    <a asp-controller="AdminPedidos" asp-action="Listado" class="btn btn-sm btn-outline-primary">
                         Ver todos <i class="bi bi-arrow-right ms-1"></i>
                     </a>
                 </div>
@@ -393,43 +627,46 @@
                 {
                     <!-- Vista Desktop -->
                     <div class="table-responsive d-none d-lg-block">
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table table-hover align-middle mb-0 bg-transparent">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Cliente</th>
-                                    <th>Fecha</th>
-                                    <th class="text-end">Total</th>
-                                    <th class="text-center">Estado</th>
-                                    <th class="text-end">Acciones</th>
+                                    <th class="bg-transparent text-muted small uppercase">ID</th>
+                                    <th class="bg-transparent text-muted small uppercase">Cliente</th>
+                                    <th class="bg-transparent text-muted small uppercase">Fecha</th>
+                                    <th class="bg-transparent text-end text-muted small uppercase">Total</th>
+                                    <th class="bg-transparent text-center text-muted small uppercase">Estado</th>
+                                    <th class="bg-transparent text-end text-muted small uppercase">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var pedido in Model.PedidosRecientes)
                                 {
                                     <tr>
-                                        <td class="fw-medium">#@pedido.PedidoId</td>
-                                        <td>@pedido.Cliente</td>
-                                        <td>@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
-                                        <td class="text-end fw-semibold">@pedido.Total.ToString("C", new System.Globalization.CultureInfo("es-CO"))</td>
-                                        <td class="text-center">
-                                            @switch (pedido.EstadoNumero)
+                                        <td class="fw-medium bg-transparent">#@pedido.PedidoId</td>
+                                        <td class="bg-transparent">@pedido.Cliente</td>
+                                        <td class="bg-transparent">@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="text-end fw-semibold bg-transparent">@pedido.Total.ToString("C", new System.Globalization.CultureInfo("es-CO"))</td>
+                                        <td class="text-center bg-transparent">
+                                            @switch (pedido.EstadoPedido)
                                             {
-                                                case 0:
-                                                    <span class="badge bg-warning">@pedido.Estado</span>
+                                                case EstadoPedidoUI.Nuevo:
+                                                    <span class="badge bg-secondary">@pedido.EstadoPedido.GetDisplayName()</span>
                                                     break;
-                                                case 1:
-                                                    <span class="badge bg-info">@pedido.Estado</span>
+                                                case EstadoPedidoUI.EnPreparacion:
+                                                    <span class="badge bg-info">@pedido.EstadoPedido.GetDisplayName()</span>
                                                     break;
-                                                case 2:
-                                                    <span class="badge bg-success">@pedido.Estado</span>
+                                                case EstadoPedidoUI.Enviado:
+                                                    <span class="badge bg-primary">@pedido.EstadoPedido.GetDisplayName()</span>
                                                     break;
-                                                case 3:
-                                                    <span class="badge bg-danger">@pedido.Estado</span>
+                                                case EstadoPedidoUI.Entregado:
+                                                    <span class="badge bg-success">@pedido.EstadoPedido.GetDisplayName()</span>
+                                                    break;
+                                                case EstadoPedidoUI.Cancelado:
+                                                    <span class="badge bg-danger">@pedido.EstadoPedido.GetDisplayName()</span>
                                                     break;
                                             }
                                         </td>
-                                        <td class="text-end">
+                                        <td class="text-end bg-transparent">
                                             <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@pedido.PedidoId"
                                                class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-eye"></i> Ver
@@ -452,19 +689,22 @@
                                             <h6 class="mb-0">Pedido #@pedido.PedidoId</h6>
                                             <small class="text-muted">@pedido.Cliente</small>
                                         </div>
-                                        @switch (pedido.EstadoNumero)
+                                        @switch (pedido.EstadoPedido)
                                         {
-                                            case 0:
-                                                <span class="badge bg-warning">@pedido.Estado</span>
+                                            case EstadoPedidoUI.Nuevo:
+                                                <span class="badge bg-secondary">@pedido.EstadoPedido.GetDisplayName()</span>
                                                 break;
-                                            case 1:
-                                                <span class="badge bg-info">@pedido.Estado</span>
+                                            case EstadoPedidoUI.EnPreparacion:
+                                                <span class="badge bg-info">@pedido.EstadoPedido.GetDisplayName()</span>
                                                 break;
-                                            case 2:
-                                                <span class="badge bg-success">@pedido.Estado</span>
+                                            case EstadoPedidoUI.Enviado:
+                                                <span class="badge bg-primary">@pedido.EstadoPedido.GetDisplayName()</span>
                                                 break;
-                                            case 3:
-                                                <span class="badge bg-danger">@pedido.Estado</span>
+                                            case EstadoPedidoUI.Entregado:
+                                                <span class="badge bg-success">@pedido.EstadoPedido.GetDisplayName()</span>
+                                                break;
+                                            case EstadoPedidoUI.Cancelado:
+                                                <span class="badge bg-danger">@pedido.EstadoPedido.GetDisplayName()</span>
                                                 break;
                                         }
                                     </div>

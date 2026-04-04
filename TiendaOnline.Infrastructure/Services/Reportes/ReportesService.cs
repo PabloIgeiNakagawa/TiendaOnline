@@ -25,7 +25,10 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                 VentasPorMes = await ObtenerVentasPorMesAsync(12),
                 EstadisticasPedidos = await ObtenerEstadisticasPedidosAsync(),
                 ProductosBajoStock = await ObtenerProductosBajoStockAsync(10),
-                PedidosRecientes = await ObtenerPedidosRecientesAsync(10)
+                PedidosRecientes = await ObtenerPedidosRecientesAsync(10),
+                VentasPorMetodoDePago = await ObtenerVentasPorMetodoDePagoAsync(),
+                VentasPorDiaHora = await ObtenerVentasPorDiaHoraAsync(),
+                StockInmovilizado = await ObtenerStockInmovilizadoAsync()
             };
 
             return dashboard;
@@ -89,6 +92,8 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
 
             var promedioVentaPorPedido = totalPedidos > 0 ? ventasTotales / totalPedidos : 0;
 
+            var tiempoPromedioPreparacionHoras = await CalcularTiempoPromedioPreparacionAsync();
+
             return new MetricasGeneralesDto
             {
                 VentasTotales = ventasTotales,
@@ -99,10 +104,148 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                 ClientesMesActual = clientesMesActual,
                 ProductosBajoStock = productosBajoStock,
                 PromedioVentaPorPedido = promedioVentaPorPedido,
+                TiempoPromedioPreparacionHoras = tiempoPromedioPreparacionHoras,
                 PorcentajeCambioVentas = CalcularPorcentajeCambio(ventasMesAnterior, ventasMesActual),
                 PorcentajeCambioPedidos = CalcularPorcentajeCambio(pedidosMesAnterior, pedidosMesActual),
                 PorcentajeCambioClientes = CalcularPorcentajeCambio(clientesMesAnterior, clientesMesActual)
             };
+        }
+
+        private async Task<double> CalcularTiempoPromedioPreparacionAsync()
+        {
+            var todosPedidos = await _context.Pedidos
+                .AsNoTracking()
+                .Select(p => new { p.FechaEnPreparacion, p.FechaEnvio })
+                .ToListAsync();
+
+            var conAmbasFechas = todosPedidos
+                .Where(p => p.FechaEnPreparacion.HasValue && p.FechaEnvio.HasValue)
+                .Select(p => (p.FechaEnvio!.Value - p.FechaEnPreparacion!.Value).TotalHours)
+                .Where(h => h >= 0)
+                .ToList();
+
+            return conAmbasFechas.Any() ? conAmbasFechas.Average() : 0;
+        }
+
+        private async Task<List<VentasPorDiaHoraDto>> ObtenerVentasPorDiaHoraAsync()
+        {
+            var pedidos = await _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.Estado != EstadoPedido.Cancelado)
+                .Select(p => new { p.FechaPedido })
+                .ToListAsync();
+
+            var diasSemana = new Dictionary<DayOfWeek, string>
+            {
+                { DayOfWeek.Monday, "Lunes" },
+                { DayOfWeek.Tuesday, "Martes" },
+                { DayOfWeek.Wednesday, "Miércoles" },
+                { DayOfWeek.Thursday, "Jueves" },
+                { DayOfWeek.Friday, "Viernes" },
+                { DayOfWeek.Saturday, "Sábado" },
+                { DayOfWeek.Sunday, "Domingo" }
+            };
+
+            var diasOrden = new List<DayOfWeek>
+            {
+                DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday,
+                DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday
+            };
+
+            var datos = new Dictionary<DayOfWeek, Dictionary<string, int>>();
+            foreach (var dia in diasOrden)
+            {
+                datos[dia] = new Dictionary<string, int>
+                {
+                    { "Madrugada", 0 },
+                    { "Manana", 0 },
+                    { "Tarde", 0 },
+                    { "Noche", 0 }
+                };
+            }
+
+            foreach (var pedido in pedidos)
+            {
+                var diaSemana = pedido.FechaPedido.DayOfWeek;
+                var hora = pedido.FechaPedido.Hour;
+
+                string franja = hora switch
+                {
+                    >= 0 and < 6 => "Madrugada",
+                    >= 6 and < 12 => "Manana",
+                    >= 12 and < 18 => "Tarde",
+                    _ => "Noche"
+                };
+
+                if (datos.ContainsKey(diaSemana))
+                {
+                    datos[diaSemana][franja]++;
+                }
+            }
+
+            return diasOrden.Select((dia, index) => new VentasPorDiaHoraDto
+            {
+                DiaSemana = diasSemana[dia],
+                OrdenDia = index,
+                Madrugada = datos[dia]["Madrugada"],
+                Manana = datos[dia]["Manana"],
+                Tarde = datos[dia]["Tarde"],
+                Noche = datos[dia]["Noche"]
+            }).ToList();
+        }
+
+        private async Task<List<StockInmovilizadoDto>> ObtenerStockInmovilizadoAsync()
+        {
+            var fechaLimite = DateTime.Now.AddDays(-90);
+
+            var productosConStock = await _context.Productos
+                .AsNoTracking()
+                .Where(p => p.Stock > 0 && p.Activo)
+                .ToListAsync();
+
+            var productosVendidosRecientemente = await _context.DetallesPedido
+                .AsNoTracking()
+                .Where(dp => dp.Pedido.Estado != EstadoPedido.Cancelado
+                          && dp.Pedido.FechaPedido >= fechaLimite)
+                .Select(dp => dp.ProductoId)
+                .Distinct()
+                .ToListAsync();
+
+            var ultimaVentaTodos = await _context.DetallesPedido
+                .AsNoTracking()
+                .Where(dp => dp.Pedido.Estado != EstadoPedido.Cancelado)
+                .GroupBy(dp => dp.ProductoId)
+                .Select(g => new { ProductoId = g.Key, UltimaVenta = g.Max(dp => dp.Pedido.FechaPedido) })
+                .ToListAsync();
+
+            var ultimaVentaMap = ultimaVentaTodos.ToDictionary(p => p.ProductoId, p => p.UltimaVenta);
+
+            var stockInmovilizado = productosConStock
+                .Where(p => !productosVendidosRecientemente.Contains(p.ProductoId))
+                .Select(p =>
+                {
+                    var ultimaVenta = ultimaVentaMap.ContainsKey(p.ProductoId) ? ultimaVentaMap[p.ProductoId] : (DateTime?)null;
+                    var diasSinVenta = ultimaVenta.HasValue
+                        ? (int)(DateTime.Now - ultimaVenta.Value).Days
+                        : 90;
+
+                    return new StockInmovilizadoDto
+                    {
+                        ProductoId = p.ProductoId,
+                        Nombre = p.Nombre,
+                        Categoria = p.Categoria.Nombre,
+                        Stock = p.Stock,
+                        Precio = p.Precio,
+                        ValorInvertido = p.Stock * p.Precio,
+                        ImagenUrl = p.ImagenUrl,
+                        UltimaVenta = ultimaVenta,
+                        DiasSinVenta = diasSinVenta
+                    };
+                })
+                .OrderByDescending(s => s.ValorInvertido)
+                .ToList();
+
+            return stockInmovilizado;
         }
 
         private async Task<List<ProductoMasVendidoDto>> ObtenerTopProductosAsync(int cantidad)
@@ -217,18 +360,21 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
 
             var totalPedidos = estados.Sum(e => e.Cantidad);
 
-            int pendientes = estados.FirstOrDefault(e => e.Estado == EstadoPedido.EnPreparacion)?.Cantidad ?? 0;
+            int nuevos = estados.FirstOrDefault(e => e.Estado == EstadoPedido.Nuevo)?.Cantidad ?? 0;
+            int enPreparacion = estados.FirstOrDefault(e => e.Estado == EstadoPedido.EnPreparacion)?.Cantidad ?? 0;
             int enviados = estados.FirstOrDefault(e => e.Estado == EstadoPedido.Enviado)?.Cantidad ?? 0;
             int entregados = estados.FirstOrDefault(e => e.Estado == EstadoPedido.Entregado)?.Cantidad ?? 0;
             int cancelados = estados.FirstOrDefault(e => e.Estado == EstadoPedido.Cancelado)?.Cantidad ?? 0;
 
             return new EstadisticasPedidosDto
             {
-                TotalPendientes = pendientes,
+                TotalNuevos = nuevos,
+                TotalEnPreparacion = enPreparacion,
                 TotalEnviados = enviados,
                 TotalEntregados = entregados,
                 TotalCancelados = cancelados,
-                PorcentajePendientes = totalPedidos > 0 ? (decimal)pendientes / totalPedidos * 100 : 0,
+                PorcentajeNuevos = totalPedidos > 0 ? (decimal)nuevos / totalPedidos * 100 : 0,
+                PorcentajeEnPreparacion = totalPedidos > 0 ? (decimal)enPreparacion / totalPedidos * 100 : 0,
                 PorcentajeEnviados = totalPedidos > 0 ? (decimal)enviados / totalPedidos * 100 : 0,
                 PorcentajeEntregados = totalPedidos > 0 ? (decimal)entregados / totalPedidos * 100 : 0,
                 PorcentajeCancelados = totalPedidos > 0 ? (decimal)cancelados / totalPedidos * 100 : 0
@@ -287,10 +433,33 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                     FechaPedido = p.FechaPedido,
                     Cliente = p.Usuario.Nombre + " " + p.Usuario.Apellido,
                     Total = p.DetallesPedido.Sum(dp => dp.Cantidad * dp.PrecioUnitario),
-                    Estado = p.Estado.ToString(),
-                    EstadoNumero = (int)p.Estado
+                    EstadoPedidoId = (int)p.Estado
                 })
                 .ToListAsync();
+        }
+
+        private async Task<List<VentaPorMetodoDePagoDto>> ObtenerVentasPorMetodoDePagoAsync()
+        {
+            var ventas = await _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.Estado != EstadoPedido.Cancelado)
+                .GroupBy(p => p.MetodoDePago.Nombre)
+                .Select(g => new VentaPorMetodoDePagoDto
+                {
+                    MetodoDePago = g.Key,
+                    CantidadPedidos = g.Count(),
+                    TotalVentas = g.SelectMany(p => p.DetallesPedido).Sum(dp => dp.Cantidad * dp.PrecioUnitario)
+                })
+                .OrderByDescending(v => v.TotalVentas)
+                .ToListAsync();
+
+            var totalVentas = ventas.Sum(v => v.TotalVentas);
+            foreach (var venta in ventas)
+            {
+                venta.PorcentajeDelTotal = totalVentas > 0 ? (int)(venta.TotalVentas / totalVentas * 100) : 0;
+            }
+
+            return ventas;
         }
 
         private decimal CalcularPorcentajeCambio(decimal valorAnterior, decimal valorActual)

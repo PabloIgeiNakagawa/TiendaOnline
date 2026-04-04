@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Application.Reportes;
+using TiendaOnline.Enums;
 
 namespace TiendaOnline.Features.Reportes
 {
@@ -32,6 +33,7 @@ namespace TiendaOnline.Features.Reportes
                     ClientesMesActual = datosDto.MetricasGenerales.ClientesMesActual,
                     ProductosBajoStock = datosDto.MetricasGenerales.ProductosBajoStock,
                     PromedioVentaPorPedido = datosDto.MetricasGenerales.PromedioVentaPorPedido,
+                    TiempoPromedioPreparacionHoras = datosDto.MetricasGenerales.TiempoPromedioPreparacionHoras,
                     PorcentajeCambioVentas = datosDto.MetricasGenerales.PorcentajeCambioVentas,
                     PorcentajeCambioPedidos = datosDto.MetricasGenerales.PorcentajeCambioPedidos,
                     PorcentajeCambioClientes = datosDto.MetricasGenerales.PorcentajeCambioClientes
@@ -76,11 +78,13 @@ namespace TiendaOnline.Features.Reportes
 
                 EstadisticasPedidos = new EstadisticasPedidos
                 {
-                    TotalPendientes = datosDto.EstadisticasPedidos.TotalPendientes,
+                    TotalNuevos = datosDto.EstadisticasPedidos.TotalNuevos,
+                    TotalEnPreparacion = datosDto.EstadisticasPedidos.TotalEnPreparacion,
                     TotalEnviados = datosDto.EstadisticasPedidos.TotalEnviados,
                     TotalEntregados = datosDto.EstadisticasPedidos.TotalEntregados,
                     TotalCancelados = datosDto.EstadisticasPedidos.TotalCancelados,
-                    PorcentajePendientes = datosDto.EstadisticasPedidos.PorcentajePendientes,
+                    PorcentajeNuevos = datosDto.EstadisticasPedidos.PorcentajeNuevos,
+                    PorcentajeEnPreparacion = datosDto.EstadisticasPedidos.PorcentajeEnPreparacion,
                     PorcentajeEnviados = datosDto.EstadisticasPedidos.PorcentajeEnviados,
                     PorcentajeEntregados = datosDto.EstadisticasPedidos.PorcentajeEntregados,
                     PorcentajeCancelados = datosDto.EstadisticasPedidos.PorcentajeCancelados
@@ -102,8 +106,38 @@ namespace TiendaOnline.Features.Reportes
                     FechaPedido = p.FechaPedido,
                     Cliente = p.Cliente,
                     Total = p.Total,
-                    Estado = p.Estado,
-                    EstadoNumero = p.EstadoNumero
+                    EstadoPedido = (EstadoPedidoUI)p.EstadoPedidoId
+                }).ToList(),
+
+                VentasPorMetodoDePago = datosDto.VentasPorMetodoDePago.Select(v => new VentaPorMetodoDePago
+                {
+                    MetodoDePago = v.MetodoDePago,
+                    CantidadPedidos = v.CantidadPedidos,
+                    TotalVentas = v.TotalVentas,
+                    PorcentajeDelTotal = v.PorcentajeDelTotal
+                }).ToList(),
+
+                VentasPorDiaHora = datosDto.VentasPorDiaHora.Select(v => new VentasPorDiaHora
+                {
+                    DiaSemana = v.DiaSemana,
+                    OrdenDia = v.OrdenDia,
+                    Madrugada = v.Madrugada,
+                    Manana = v.Manana,
+                    Tarde = v.Tarde,
+                    Noche = v.Noche
+                }).ToList(),
+
+                StockInmovilizado = datosDto.StockInmovilizado.Select(s => new StockInmovilizado
+                {
+                    ProductoId = s.ProductoId,
+                    Nombre = s.Nombre,
+                    Categoria = s.Categoria,
+                    Stock = s.Stock,
+                    Precio = s.Precio,
+                    ValorInvertido = s.ValorInvertido,
+                    UltimaVenta = s.UltimaVenta,
+                    DiasSinVenta = s.DiasSinVenta,
+                    ImagenUrl = s.ImagenUrl
                 }).ToList()
             };
 

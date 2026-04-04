@@ -10,6 +10,9 @@
         public EstadisticasPedidosDto EstadisticasPedidos { get; set; }
         public List<ProductoBajoStockDto> ProductosBajoStock { get; set; }
         public List<PedidoRecienteDto> PedidosRecientes { get; set; }
+        public List<VentaPorMetodoDePagoDto> VentasPorMetodoDePago { get; set; }
+        public List<VentasPorDiaHoraDto> VentasPorDiaHora { get; set; }
+        public List<StockInmovilizadoDto> StockInmovilizado { get; set; }
     }
 
     public class MetricasGeneralesDto
@@ -22,6 +25,7 @@
         public int ClientesMesActual { get; set; }
         public int ProductosBajoStock { get; set; }
         public decimal PromedioVentaPorPedido { get; set; }
+        public double TiempoPromedioPreparacionHoras { get; set; }
         public decimal PorcentajeCambioVentas { get; set; }
         public decimal PorcentajeCambioPedidos { get; set; }
         public decimal PorcentajeCambioClientes { get; set; }
@@ -66,11 +70,13 @@
 
     public class EstadisticasPedidosDto
     {
-        public int TotalPendientes { get; set; }
+        public int TotalNuevos { get; set; }
+        public int TotalEnPreparacion { get; set; }
         public int TotalEnviados { get; set; }
         public int TotalEntregados { get; set; }
         public int TotalCancelados { get; set; }
-        public decimal PorcentajePendientes { get; set; }
+        public decimal PorcentajeNuevos { get; set; }
+        public decimal PorcentajeEnPreparacion { get; set; }
         public decimal PorcentajeEnviados { get; set; }
         public decimal PorcentajeEntregados { get; set; }
         public decimal PorcentajeCancelados { get; set; }
@@ -92,7 +98,37 @@
         public DateTime FechaPedido { get; set; }
         public string Cliente { get; set; }
         public decimal Total { get; set; }
-        public string Estado { get; set; }
-        public int EstadoNumero { get; set; }
+        public int EstadoPedidoId { get; set; }
+    }
+
+    public class VentaPorMetodoDePagoDto
+    {
+        public string MetodoDePago { get; set; }
+        public int CantidadPedidos { get; set; }
+        public decimal TotalVentas { get; set; }
+        public int PorcentajeDelTotal { get; set; }
+    }
+
+    public class VentasPorDiaHoraDto
+    {
+        public string DiaSemana { get; set; }
+        public int OrdenDia { get; set; }
+        public int Madrugada { get; set; }
+        public int Manana { get; set; }
+        public int Tarde { get; set; }
+        public int Noche { get; set; }
+    }
+
+    public class StockInmovilizadoDto
+    {
+        public int ProductoId { get; set; }
+        public string Nombre { get; set; }
+        public string Categoria { get; set; }
+        public int Stock { get; set; }
+        public decimal Precio { get; set; }
+        public decimal ValorInvertido { get; set; }
+        public DateTime? UltimaVenta { get; set; }
+        public int DiasSinVenta { get; set; }
+        public string ImagenUrl { get; set; }
     }
 }
