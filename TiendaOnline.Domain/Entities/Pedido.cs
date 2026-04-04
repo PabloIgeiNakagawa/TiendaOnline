@@ -29,6 +29,8 @@ namespace TiendaOnline.Domain.Entities
 
         public DateTime? FechaEnvio { get; set; }
 
+        public DateTime? FechaEnPreparacion { get; set; }
+
         public DateTime? FechaEntrega { get; set; }
 
         public DateTime? FechaCancelado { get; set; }

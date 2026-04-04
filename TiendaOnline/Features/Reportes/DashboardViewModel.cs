@@ -1,4 +1,6 @@
-﻿namespace TiendaOnline.Features.Reportes
+﻿using TiendaOnline.Enums;
+
+namespace TiendaOnline.Features.Reportes
 {
     // ViewModel principal del Dashboard
     public class DashboardViewModel
@@ -14,6 +16,9 @@
         public EstadisticasPedidos EstadisticasPedidos { get; set; }
         public List<ProductoBajoStock> ProductosBajoStock { get; set; }
         public List<PedidoReciente> PedidosRecientes { get; set; }
+        public List<VentaPorMetodoDePago> VentasPorMetodoDePago { get; set; }
+        public List<VentasPorDiaHora> VentasPorDiaHora { get; set; }
+        public List<StockInmovilizado> StockInmovilizado { get; set; }
     }
 
 
@@ -28,6 +33,7 @@
         public int ClientesMesActual { get; set; }
         public int ProductosBajoStock { get; set; }
         public decimal PromedioVentaPorPedido { get; set; }
+        public double TiempoPromedioPreparacionHoras { get; set; }
 
         // Comparaciones con mes anterior
         public decimal PorcentajeCambioVentas { get; set; }
@@ -79,11 +85,13 @@
     // Estadísticas de estados de pedidos
     public class EstadisticasPedidos
     {
-        public int TotalPendientes { get; set; }
+        public int TotalNuevos { get; set; }
+        public int TotalEnPreparacion { get; set; }
         public int TotalEnviados { get; set; }
         public int TotalEntregados { get; set; }
         public int TotalCancelados { get; set; }
-        public decimal PorcentajePendientes { get; set; }
+        public decimal PorcentajeNuevos { get; set; }
+        public decimal PorcentajeEnPreparacion { get; set; }
         public decimal PorcentajeEnviados { get; set; }
         public decimal PorcentajeEntregados { get; set; }
         public decimal PorcentajeCancelados { get; set; }
@@ -107,7 +115,40 @@
         public DateTime FechaPedido { get; set; }
         public string Cliente { get; set; }
         public decimal Total { get; set; }
-        public string Estado { get; set; }
-        public int EstadoNumero { get; set; }
+        public EstadoPedidoUI EstadoPedido { get; set; }
+    }
+
+    // Ventas por método de pago
+    public class VentaPorMetodoDePago
+    {
+        public string MetodoDePago { get; set; }
+        public int CantidadPedidos { get; set; }
+        public decimal TotalVentas { get; set; }
+        public int PorcentajeDelTotal { get; set; }
+    }
+
+    // Mapa de calor: ventas por día y hora
+    public class VentasPorDiaHora
+    {
+        public string DiaSemana { get; set; }
+        public int OrdenDia { get; set; }
+        public int Madrugada { get; set; }
+        public int Manana { get; set; }
+        public int Tarde { get; set; }
+        public int Noche { get; set; }
+    }
+
+    // Productos con stock pero sin ventas en los últimos 90 días
+    public class StockInmovilizado
+    {
+        public int ProductoId { get; set; }
+        public string Nombre { get; set; }
+        public string Categoria { get; set; }
+        public int Stock { get; set; }
+        public decimal Precio { get; set; }
+        public decimal ValorInvertido { get; set; }
+        public DateTime? UltimaVenta { get; set; }
+        public int DiasSinVenta { get; set; }
+        public string ImagenUrl { get; set; }
     }
 }

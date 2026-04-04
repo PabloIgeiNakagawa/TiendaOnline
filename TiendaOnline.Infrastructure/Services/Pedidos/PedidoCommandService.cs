@@ -146,6 +146,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             {
                 pedido.EstadoPago = EstadoPago.Aprobado;
                 pedido.Estado = EstadoPedido.EnPreparacion;
+                pedido.FechaEnPreparacion = DateTime.Now;
                 pedido.TransaccionPagoId = infoPago.TransaccionId;
 
                 await _context.SaveChangesAsync();
