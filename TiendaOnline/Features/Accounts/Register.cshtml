@@ -1,17 +1,27 @@
-﻿@using TiendaOnline.Features.Accounts
+﻿@using TiendaOnline.Enums
+@using TiendaOnline.Features.Accounts
 @model RegisterViewModel
 @{
-    ViewData["Title"] = "Registrarse";
+    var esAdmin = User.IsInRole("Administrador");
+    ViewData["Title"] = esAdmin ? "Crear usuario" : "Registrarse";
 }
 
 <div class="container py-5">
-    <partial name="_TituloSeccion" model='("Registrarse", "Complete sus datos para crear su cuenta en TechStore")' />
+    @if (esAdmin)
+    {
+        <partial name="_TituloSeccion" model='("Crear usuario", "Complete la información para crear un nuevo usuario en el sistema")' />
+    }
+    else
+    {
+        <partial name="_TituloSeccion" model='("Registrarse", "Complete sus datos para crear su cuenta en TechStore")' />
+    }
+
     <div class="row justify-content-center">
         <div class="col-lg-8 col-xl-6">
             <!-- Formulario -->
             <div class="border rounded-3 overflow-hidden">
                 <div class="p-5">
-                    <form asp-action="Register" method="post" id="formularioRegistro" novalidate>
+                    <form asp-controller="Accounts" asp-action="Register" method="post" id="formularioRegistro" novalidate>
                         @Html.AntiForgeryToken()
 
                         <!-- Información Personal -->
@@ -106,24 +116,71 @@
                             </div>
                         </div>
 
-                        <!-- Términos y Condiciones -->
-                        <div class="seccion-formulario mb-4">
-                            <div class="form-check">
-                                <input class="" type="checkbox" id="aceptarTerminos" required>
-                                <label class="form-check-label" for="aceptarTerminos">
-                                    Acepto los <a href="#" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">términos y condiciones</a> y la
-                                    <a href="#" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">política de privacidad</a>
-                                </label>
+                        @if (esAdmin)
+                        {
+                            <div class="seccion-formulario mb-4">
+                                <h6 class="border-bottom mb-3 text-secondary fw-semibold small text-uppercase pb-2" style="letter-spacing: 0.5px;">
+                                    <i class="bi bi-shield-check me-2"></i>Configuración de Acceso
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <select asp-for="RolId" class="form-select" id="campoRol" asp-items="Model.RolesDisponibles" required>
+                                                <option value="" disabled selected>Seleccione un rol</option>
+                                            </select>
+                                            <label for="campoRol">
+                                                <i class="bi bi-shield me-1"></i>Rol del Usuario
+                                            </label>
+                                            <span asp-validation-for="RolId" class="text-danger small"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="alert alert-info border-0 h-100 d-flex align-items-center">
+                                            <div>
+                                                <i class="bi bi-info-circle me-2"></i>
+                                                <strong>Roles:</strong><br>
+                                                <small>
+                                                    • <strong>Usuario:</strong> Acceso básico<br>
+                                                    • <strong>Administrador:</strong> Acceso completo<br>
+                                                    • <strong>Repartidor:</strong> Acceso a pedidos y entregas
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        }
+                        else
+                        {
+                            <input asp-for="RolId" value="@((int)Rol.Usuario)" type="hidden" />
+
+                            <!-- Términos y Condiciones -->
+                            <div class="seccion-formulario mb-4">
+                                <div class="form-check">
+                                    <input class="" type="checkbox" id="aceptarTerminos" required>
+                                    <label class="form-check-label" for="aceptarTerminos">
+                                        Acepto los <a href="#" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">términos y condiciones</a> y la
+                                        <a href="#" class="fw-semibold text-decoration-none link-underline-opacity-100-hover">política de privacidad</a>
+                                    </label>
+                                </div>
+                            </div>
+                        }
 
                         <!-- Botones -->
                         <div class="d-lg-flex justify-content-between gap-2 align-items-center pt-3 border-top">
-                            <a asp-action="Login" class="btn btn-outline-info fw-medium rounded-3 d-block" my-2 my-lg-0>
-                                <i class="bi bi-box-arrow-in-right me-1"></i>¿Ya tienes cuenta?
-                            </a>
-                            <a id="btnLimpiar"
-                               class="btn btn-outline-secondary fw-medium rounded-3 my-2 my-lg-0 d-block">
+                            @if (esAdmin)
+                            {
+                                <a asp-action="Listado" class="btn btn-outline-danger fw-medium rounded-3 d-block my-2 my-lg-0">
+                                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-action="Login" class="btn btn-outline-info fw-medium rounded-3 d-block" my-2 my-lg-0>
+                                    <i class="bi bi-box-arrow-in-right me-1"></i>¿Ya tienes cuenta?
+                                </a>
+                            }
+                            <a id="btnLimpiar" class="btn btn-outline-secondary fw-medium rounded-3 my-2 my-lg-0 d-block">
                                 <i class="bi bi-arrow-clockwise me-2"></i>Limpiar
                             </a>
                             <button type="submit" class="btn btn-primary fw-medium rounded-3 my-2 my-lg-0" id="botonEnviar">

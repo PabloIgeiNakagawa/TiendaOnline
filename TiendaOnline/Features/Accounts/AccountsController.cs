@@ -1,10 +1,13 @@
-﻿using CloudinaryDotNet.Actions;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
 using TiendaOnline.Application.Auth;
-using TiendaOnline.Domain.Exceptions;
+using TiendaOnline.Application.Usuarios.Queries;
+using TiendaOnline.Enums;
+using TiendaOnline.Features.Home;
+using TiendaOnline.Features.Usuarios.Admin;
 
 namespace TiendaOnline.Features.Accounts
 {
@@ -12,46 +15,82 @@ namespace TiendaOnline.Features.Accounts
     public class AccountsController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly IRolQueryService _rolService;
 
-        public AccountsController(IAuthService authService)
+        public AccountsController(IAuthService authService, IRolQueryService rolQueryService)
         {
             _authService = authService;
+            _rolService = rolQueryService;
         }
 
         [HttpGet("[action]")]
-        public IActionResult Register()
+        public async Task<IActionResult> Register()
         {
-            return View();
+            var model = new RegisterViewModel();
+
+            if (User.IsInRole("Administrador"))
+            {
+                var roles = await _rolService.ObtenerTodosAsync();
+                model.RolesDisponibles = roles.Select(r => new SelectListItem
+                {
+                    Value = r.Id.ToString(),
+                    Text = r.Nombre
+                }).ToList();
+            }
+            else
+            {
+                model.RolesDisponibles = new List<SelectListItem>();
+                model.RolId = (int)Rol.Usuario;
+            }
+
+            return View(model);
         }
 
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
-
-            try
+            if (!ModelState.IsValid)
             {
-                var dto = new RegisterDto
+                // Recargar roles si el modelo no es válido
+                var roles = await _rolService.ObtenerTodosAsync();
+                model.RolesDisponibles = roles.Select(r => new SelectListItem
                 {
-                    Nombre = model.Nombre,
-                    Apellido = model.Apellido,
-                    Email = model.Email,
-                    Telefono = model.Telefono,
-                    FechaNacimiento = model.FechaNacimiento,
-                    Contrasena = model.Contrasena,
-                    RolId = model.RolId
-                };
-
-                await _authService.RegisterAsync(dto);
-                TempData["MensajeExito"] = "¡Te has registrado!";
-                return RedirectToAction("Login");
-            }
-            catch (EmailDuplicadoException ex)
-            {
-                ModelState.AddModelError("Email", ex.Message);
+                    Value = r.Id.ToString(),
+                    Text = r.Nombre
+                }).ToList();
                 return View(model);
             }
+
+            var esAdmin = User.IsInRole("Administrador");
+
+            if (!esAdmin)
+            {
+                model.RolId = (int)Rol.Usuario;
+            }
+
+            var dto = new RegisterDto
+            {
+                Nombre = model.Nombre,
+                Apellido = model.Apellido,
+                Email = model.Email,
+                Telefono = model.Telefono,
+                FechaNacimiento = model.FechaNacimiento,
+                Contrasena = model.Contrasena,
+                RolId = model.RolId
+            };
+
+            await _authService.RegisterAsync(dto);
+            if (esAdmin)    
+            {
+                TempData["MensajeExito"] = "¡Usuario registrado!";
+                return RedirectToAction(nameof(AdminUsuariosController.Listado), "AdminUsuarios");
+            }
+            else
+            {
+                TempData["MensajeExito"] = "¡Te has registrado!";
+                return RedirectToAction(nameof(Login));
+            } 
         }
 
         [HttpGet("[action]")]
@@ -116,7 +155,7 @@ namespace TiendaOnline.Features.Accounts
             if (!result.Succeeded)
             {
                 TempData["MensajeError"] = "Hubo un error al continuar con Google.";
-                return RedirectToAction("Login");
+                return RedirectToAction(nameof(Login));
             }
                 
             var email = result.Principal.FindFirstValue(ClaimTypes.Email);  
@@ -172,14 +211,15 @@ namespace TiendaOnline.Features.Accounts
             TempData["MensajeExito"] = "¡Has iniciado sesión con Google!";
 
             return usuarioDto.Rol == "Administrador"
-                ? RedirectToAction("IndexAdmin", "Home")
-                : RedirectToAction("Index", "Home");
+                ? RedirectToAction(nameof(HomeController.IndexAdmin), "Home")
+                : RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
+        [HttpGet]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync("CookieAuth");
-            return RedirectToAction("Login");
+            return RedirectToAction(nameof(Login));
         }
     }
 }
