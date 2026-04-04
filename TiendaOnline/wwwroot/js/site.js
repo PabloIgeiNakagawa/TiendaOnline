@@ -89,4 +89,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // finalmente mostrar
         toast.show();
     });
+
+    // Logout seguro (POST con anti-forgery)
+    document.querySelectorAll('.btn-logout').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var form = document.getElementById('logoutForm');
+            if (form) form.submit();
+        });
+    });
 });
