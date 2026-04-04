@@ -1,7 +1,6 @@
 ﻿document.addEventListener('DOMContentLoaded', function () {
 
     const formulario = document.getElementById('formularioRegistro');
-    const botonEnviar = document.getElementById('botonEnviar');
     const botonLimpiar = document.getElementById('btnLimpiar');
 
     if (!formulario) return;
