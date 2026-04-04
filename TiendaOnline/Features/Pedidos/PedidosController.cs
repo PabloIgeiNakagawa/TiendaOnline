@@ -154,7 +154,9 @@ namespace TiendaOnline.Features.Pedidos
             return View(viewModel);
         }
 
+        [Authorize]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcesarCheckout(CheckOutViewModel model)
         {
             // RECARGAR DATOS DEL CARRITO (Vital para que no se pierdan los Items)
@@ -289,6 +291,7 @@ namespace TiendaOnline.Features.Pedidos
             return View(viewModel);
         }
 
+        [Authorize]
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> FinalizarCompra(ConfirmacionPedidoViewModel model, MetodoPagoId metodoDePagoId)
