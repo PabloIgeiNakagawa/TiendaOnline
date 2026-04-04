@@ -57,6 +57,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
         }
 
         [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Enviar(int pedidoId)
         {
             if (pedidoId <= 0)
@@ -69,6 +70,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
         }
 
         [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrador, Repartidor")]
         public async Task<IActionResult> Entregar(int pedidoId)
         {
@@ -82,6 +84,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
         }
 
         [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancelar(int pedidoId)
         {
             if (pedidoId <= 0)

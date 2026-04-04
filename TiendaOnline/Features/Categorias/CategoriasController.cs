@@ -103,6 +103,7 @@ namespace TiendaOnline.Features.Categorias
         }*/
 
         [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Eliminar(int id)
         {
             bool eliminado = await _categoriaCommandService.EliminarCategoriaAsync(id);
