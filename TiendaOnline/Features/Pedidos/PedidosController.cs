@@ -394,6 +394,7 @@ namespace TiendaOnline.Features.Pedidos
 
         [Authorize(Policy = "EsDuenioDelPedido")]
         [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ReintentarPago(int pedidoId)
         {
             // Buscamos el pedido existente con sus datos
