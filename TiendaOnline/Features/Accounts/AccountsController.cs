@@ -218,7 +218,8 @@ namespace TiendaOnline.Features.Accounts
                 : RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
-        [HttpGet]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync("CookieAuth");

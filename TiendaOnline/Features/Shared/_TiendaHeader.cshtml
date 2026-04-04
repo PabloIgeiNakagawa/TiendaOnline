@@ -83,9 +83,9 @@
 
                             <li><hr class="dropdown-divider mx-2"></li>
                             <li>
-                                <a class="dropdown-item rounded-2 py-2 text-danger" asp-controller="Accounts" asp-action="Logout">
+                                <button type="button" class="dropdown-item rounded-2 py-2 text-danger btn-logout" style="cursor:pointer; border:none; background:transparent; width:100%; text-align:left;">
                                     <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
-                                </a>
+                                </button>
                             </li>
                         }
                         else
@@ -130,3 +130,7 @@
         </div>
     </div>
 </header>
+
+<form id="logoutForm" asp-controller="Accounts" asp-action="Logout" method="post" class="d-none">
+    @Html.AntiForgeryToken()
+</form>

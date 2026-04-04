@@ -206,9 +206,9 @@
             </div>
 
             <div class="nav-item">
-                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis align-items-center" asp-controller="Accounts" asp-action="Logout">
+                <button type="button" class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis align-items-center btn-logout" style="cursor:pointer; border:none; background:transparent; width:100%; text-align:left;">
                     <span><i class="bi bi-power me-2 text-primary"></i> Cerrar Sesión</span>
-                </a>
+                </button>
             </div>
 
             <div class="nav-item">
@@ -246,15 +246,19 @@
                             </li>
                             <li><hr class="dropdown-divider opacity-50"></li>
                             <li>
-                                <a class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" asp-controller="Accounts" asp-action="Logout">
+                                <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger btn-logout" style="cursor:pointer; border:none; background:transparent; width:100%; text-align:left;">
                                     <i class="bi bi-power"></i> Cerrar Sesión
-                                </a>
+                                </button>
                             </li>
                         </ul>
                     </div>
                 </div>
             </div>
         </header>
+
+<form id="logoutForm" asp-controller="Accounts" asp-action="Logout" method="post" class="d-none">
+    @Html.AntiForgeryToken()
+</form>
 
         <main class="container-fluid p-md-4">
             
