@@ -129,10 +129,11 @@ namespace TiendaOnline.Features.Accounts
             var identity = new ClaimsIdentity(claims, "CookieAuth");
             var principal = new ClaimsPrincipal(identity);
 
+            // Prevenir session fixation: limpiar sesión anterior antes de crear nueva
+            await HttpContext.SignOutAsync("CookieAuth");
             await HttpContext.SignInAsync("CookieAuth", principal, new AuthenticationProperties
             {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+                IsPersistent = true
             });
 
             var role = principal.FindFirstValue(ClaimTypes.Role);
@@ -203,11 +204,12 @@ namespace TiendaOnline.Features.Accounts
             var identity = new ClaimsIdentity(claims, "CookieAuth");
             var principal = new ClaimsPrincipal(identity);
 
+            // Prevenir session fixation: limpiar sesión anterior antes de crear nueva
+            await HttpContext.SignOutAsync("CookieAuth");
             // Iniciamos sesión y borramos la temporal
             await HttpContext.SignInAsync("CookieAuth", principal, new AuthenticationProperties
             {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+                IsPersistent = true
             });
             await HttpContext.SignOutAsync("ExternalCookie");
 
