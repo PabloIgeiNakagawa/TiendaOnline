@@ -178,9 +178,9 @@ namespace TiendaOnline.Features.Accounts
                     Apellido = apellido,
                     Email = email,
                     RolId = 0, // RolId 0 = Usuario
-                    // Generamos una contraseña compleja aleatoria, ya que la DB requiere una
+                    // Generamos una contraseña criptográficamente aleatoria
                     // El usuario nunca la va a usar, porque entrará con Google
-                    Contrasena = Guid.NewGuid().ToString() + "aA1!"
+                    Contrasena = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32))
                 };
 
                 await _authService.RegisterAsync(nuevoUsuario);
