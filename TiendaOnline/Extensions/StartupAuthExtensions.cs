@@ -36,6 +36,9 @@ namespace TiendaOnline.Extensions
                     config.LogoutPath = "/Accounts/Logout";
                     config.AccessDeniedPath = "/Home/AccesoDenegado";
                     config.Cookie.HttpOnly = true;
+                    config.Cookie.IsEssential = true;
+                    config.SlidingExpiration = true;
+                    config.ExpireTimeSpan = TimeSpan.FromHours(2);
                     #if DEBUG
                         config.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                     #else
