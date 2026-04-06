@@ -7,6 +7,9 @@
         public decimal Precio { get; set; }
         public int Cantidad { get; set; }
         public string? ImagenUrl { get; set; }
+        public int StockDisponible { get; set; }
+        public bool HayStockSuficiente => StockDisponible >= Cantidad;
+        public bool SinStock => StockDisponible == 0;
     }
 
 }

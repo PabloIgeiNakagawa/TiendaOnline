@@ -1,26 +1,16 @@
-﻿@using TiendaOnline.Application.Carritos
+@using TiendaOnline.Application.Carritos
 @model List<ItemCarrito>
 @{
     ViewData["Title"] = "Carrito de Compras";
     bool usuarioEstaAutenticado = User.Identity != null && User.Identity.IsAuthenticated;
     decimal total = Model.Sum(i => i.Precio * i.Cantidad);
     var productosTotal = Model.Sum(i => i.Cantidad);
+    var itemsSinStock = Model.Where(i => !i.HayStockSuficiente).ToList();
+    var tieneStockInsuficiente = itemsSinStock.Any();
 }
-@section Styles{
-    <style>
-        .carrito-item {
-            transition: all 0.3s ease;
-        }
 
-        .carrito-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-    </style>
-}
 
 <div class="container py-4">
-    <!-- Encabezado del carrito -->
     <div class="mb-4 border-bottom pb-3">
         <h1 class="fs-3 fw-bold d-flex align-items-center text-primary gap-2">
             <i class="bi bi-cart3"></i>
@@ -34,7 +24,6 @@
 
     @if (Model == null || !Model.Any())
     {
-        <!-- Carrito vacío -->
         <div class="rounded-3 shadow-sm p-5 text-center my-4">
             <i class="bi bi-cart-x fs-1 mb-4 opacity-50"></i>
             <h3 class="h4 fw-semibold mb-3">Tu carrito está vacío</h3>
@@ -48,12 +37,24 @@
     }
     else
     {
+        @if (tieneStockInsuficiente)
+        {
+            <div class="alert alert-warning mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                    <div>
+                        <strong>Algunos productos tienen stock limitado.</strong>
+                        <p class="mb-0 small">Los productos marcados en amarillo o rojo tienen menos stock del solicitado. Ajusta las cantidades antes de continuar.</p>
+                    </div>
+                </div>
+            </div>
+        }
+
         <div class="row">
-            <!-- Lista de productos -->
             <div class="col-lg-8">
                 @foreach (var item in Model)
                 {
-                    <div class="carrito-item card border shadow-sm mb-4 rounded-3 overflow-hidden">
+                    <div class="card border shadow-sm mb-4 rounded-3 overflow-hidden">
                         <div class="d-flex flex-column flex-md-row p-3 p-md-4">
 
                             <div class="d-flex align-items-center justify-content-center bg-light mb-3 mb-md-0 me-md-4 flex-shrink-0 rounded-2 overflow-hidden mx-auto mx-md-0"
@@ -74,6 +75,26 @@
                                 <div class="text-center text-md-start">
                                     <a asp-controller="Productos" asp-action="Detalles" asp-route-id="@item.ProductoId" class="h5 fw-semibold mb-1 text-decoration-none">@item.Nombre</a>
                                     <div class="fs-5 fw-bold mb-2">@item.Precio.ToString("C0")</div>
+
+                                    @if (item.SinStock)
+                                    {
+                                        <span class="badge bg-danger mb-2">
+                                            <i class="bi bi-x-circle me-1"></i> Sin stock
+                                        </span>
+                                    }
+                                    else if (!item.HayStockSuficiente)
+                                    {
+                                        <span class="badge bg-warning text-dark mb-2">
+                                            <i class="bi bi-exclamation-triangle me-1"></i> Stock bajo: @item.StockDisponible disponibles
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success mb-2">
+                                            <i class="bi bi-check-circle me-1"></i> @item.StockDisponible en stock
+                                        </span>
+                                    }
+
                                     <div class="small text-muted mb-3">
                                         Subtotal: <strong>@((item.Precio * item.Cantidad).ToString("C0"))</strong>
                                     </div>
@@ -89,17 +110,19 @@
                                             <button type="button"
                                                     class="btn text-secondary d-flex align-items-center justify-content-center p-0 border-0 btn-disminuir"
                                                     data-producto-id="@item.ProductoId"
+                                                    @(item.SinStock ? "disabled" : "")
                                                     style="width: 32px; height: 32px;">
                                                 <i class="bi bi-dash"></i>
                                             </button>
                                             <input id="cantidad-@item.ProductoId"
                                                    type="number" name="cantidad"
-                                                   value="@item.Cantidad" min="1"
+                                                   value="@item.Cantidad" min="1" max="@(item.SinStock ? 0 : item.StockDisponible)"
                                                    class="form-control border-0 text-center fw-semibold p-1 shadow-none"
                                                    style="width: 50px;" />
                                             <button type="button"
                                                     class="btn text-secondary d-flex align-items-center justify-content-center p-0 border-0 btn-aumentar"
                                                     data-producto-id="@item.ProductoId"
+                                                    @(item.SinStock || !item.HayStockSuficiente ? "disabled" : "")
                                                     style="width: 32px; height: 32px;">
                                                 <i class="bi bi-plus"></i>
                                             </button>
@@ -127,14 +150,12 @@
                     </div>
                 }
 
-                <!-- Botón continuar comprando -->
                 <div class="text-center mb-4">
                     <a asp-controller="Productos" asp-action="Index" class="btn btn-outline-info fw-semibold rounded-2 d-inline-flex align-items-center gap-2 mt-3">
                         <i class="bi bi-arrow-left"></i>
                         Continuar comprando
                     </a>
                 </div>
-                <!-- Botón vaciar carrito -->
                 <div class="text-center mb-4">
                     <form asp-action="Vaciar" method="post">
                         @Html.AntiForgeryToken()
@@ -147,7 +168,6 @@
                 </div>
             </div>
 
-            <!-- Resumen del carrito -->
             <div class="col-lg-4">
                 <div class="bg-body-tertiary rounded-3 shadow-sm p-4 border">
                     <h3 class="h5 fw-semibold mb-4 pb-3 border-bottom">Resumen del pedido</h3>
@@ -156,8 +176,16 @@
                     {
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="pe-2">
-                                <p class="mb-0 fw-semibold small text-truncate" style="max-width: 180px;">
+                                <p class="mb-0 fw-semibold small text-truncate @(item.SinStock ? "text-danger" : (!item.HayStockSuficiente ? "text-warning" : ""))" style="max-width: 180px;">
                                     @item.Nombre
+                                    @if (item.SinStock)
+                                    {
+                                        <i class="bi bi-x-circle text-danger ms-1" title="Sin stock"></i>
+                                    }
+                                    else if (!item.HayStockSuficiente)
+                                    {
+                                        <i class="bi bi-exclamation-triangle text-warning ms-1" title="Stock bajo"></i>
+                                    }
                                 </p>
                                 <small class="text-muted">Cantidad: @item.Cantidad</small>
                             </div>
@@ -174,11 +202,21 @@
 
                     @if (usuarioEstaAutenticado)
                     {
-                        <form asp-controller="Pedidos" asp-action="CheckOut" method="get">
-                            <button type="submit" class="btn btn-success fw-bold w-100 mt-4 d-flex align-items-center justify-content-center gap-2 rounded-2">
-                                <i class="bi bi-cart-check"></i> Ir al CheckOut
+                        @if (tieneStockInsuficiente)
+                        {
+                            <button type="button" class="btn btn-secondary fw-bold w-100 mt-4 d-flex align-items-center justify-content-center gap-2 rounded-2" disabled>
+                                <i class="bi bi-cart-check"></i> Ajustar stock antes de continuar
                             </button>
-                        </form>
+                            <p class="text-center small text-muted mt-2 mb-0">Corrige las cantidades marcadas en amarillo/rojo</p>
+                        }
+                        else
+                        {
+                            <form asp-controller="Pedidos" asp-action="CheckOut" method="get">
+                                <button type="submit" class="btn btn-success fw-bold w-100 mt-4 d-flex align-items-center justify-content-center gap-2 rounded-2">
+                                    <i class="bi bi-cart-check"></i> Ir al CheckOut
+                                </button>
+                            </form>
+                        }
                     }
                     else
                     {
