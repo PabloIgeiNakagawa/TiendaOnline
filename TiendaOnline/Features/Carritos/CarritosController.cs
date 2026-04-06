@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using TiendaOnline.Application.Carritos;
 
@@ -17,6 +17,20 @@ namespace TiendaOnline.Features.Carritos
         [HttpGet("[action]")]
         public async Task<IActionResult> Index()
         {
+            var validacion = await _carritoService.ValidarStockAsync();
+            if (validacion.IsFailure)
+            {
+                TempData["MensajeError"] = validacion.Error;
+            }
+
+            if (validacion.IsSuccess && !validacion.Value.TodoOK)
+            {
+                foreach (var item in validacion.Value.ItemsSinStock)
+                {
+                    TempData["MensajeError"] = $"Stock insuficiente para {item.Nombre}: solicitaste {item.CantidadSolicitada} pero hay {item.StockDisponible} disponibles.";
+                }
+            }
+
             var carrito = await _carritoService.ObtenerAsync();
             return View(carrito);
         }
@@ -29,8 +43,17 @@ namespace TiendaOnline.Features.Carritos
             if (id <= 0)
                 return BadRequest();
 
-            await _carritoService.AgregarAsync(id);
-            TempData["MensajeExito"] = "Producto agregado al carrito.";
+            var resultado = await _carritoService.AgregarAsync(id);
+
+            if (resultado.IsFailure)
+            {
+                TempData["MensajeError"] = resultado.Error;
+            }
+            else
+            {
+                TempData["MensajeExito"] = "Producto agregado al carrito.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -38,8 +61,17 @@ namespace TiendaOnline.Features.Carritos
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EliminarItem(int id)
         {
-            await _carritoService.EliminarAsync(id);
-            TempData["MensajeExito"] = "Producto eliminado del carrito.";
+            var resultado = await _carritoService.EliminarAsync(id);
+
+            if (resultado.IsFailure)
+            {
+                TempData["MensajeError"] = resultado.Error;
+            }
+            else
+            {
+                TempData["MensajeExito"] = "Producto eliminado del carrito.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -49,13 +81,22 @@ namespace TiendaOnline.Features.Carritos
         {
             if (cantidad <= 0)
             {
-                await _carritoService.EliminarAsync(productoId);
+                var resultado = await _carritoService.EliminarAsync(productoId);
                 TempData["MensajeExito"] = "Producto eliminado del carrito.";
                 return RedirectToAction(nameof(Index));
             }
 
-            await _carritoService.ActualizarCantidadAsync(productoId, cantidad);
-            TempData["MensajeExito"] = "Cantidad actualizada.";
+            var result = await _carritoService.ActualizarCantidadAsync(productoId, cantidad);
+
+            if (result.IsFailure)
+            {
+                TempData["MensajeError"] = result.Error;
+            }
+            else
+            {
+                TempData["MensajeExito"] = "Cantidad actualizada.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -68,5 +109,4 @@ namespace TiendaOnline.Features.Carritos
             return RedirectToAction(nameof(Index));
         }
     }
-
 }
