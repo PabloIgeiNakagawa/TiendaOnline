@@ -118,8 +118,6 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 </head>
 
-@await Html.PartialAsync("_MensajeTempData")
-
 <body>
     <aside class="sidebar offcanvas-md offcanvas-start bg-body-tertiary d-flex flex-column vh-100 border-end" id="sidebarAdmin">
         <div class="d-md-none p-3 text-end">
@@ -261,8 +259,8 @@
 </form>
 
         <main class="container-fluid p-md-4">
-            
             <div class="bg-body border rounded-3 p-md-4 min-vh-100">
+                <partial name="_MensajeTempData" />
                 @RenderBody()
             </div>
         </main>

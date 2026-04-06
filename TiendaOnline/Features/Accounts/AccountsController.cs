@@ -138,11 +138,9 @@ namespace TiendaOnline.Features.Accounts
 
             var role = principal.FindFirstValue(ClaimTypes.Role);
 
-            TempData["MensajeExito"] = $"¡Bienvenido, {usuarioDto.Nombre}!";
-
             return role == "Administrador"
-                ? RedirectToAction("IndexAdmin", "Home")
-                : RedirectToAction("Index", "Home");
+                ? RedirectToAction(nameof(HomeController.IndexAdmin), "Home")
+                : RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         [HttpGet("[action]")]
@@ -178,7 +176,7 @@ namespace TiendaOnline.Features.Accounts
                     Nombre = nombre,
                     Apellido = apellido,
                     Email = email,
-                    RolId = 0, // RolId 0 = Usuario
+                    RolId = (int)Rol.Usuario,
                     // Generamos una contraseña criptográficamente aleatoria
                     // El usuario nunca la va a usar, porque entrará con Google
                     Contrasena = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32))
@@ -212,8 +210,6 @@ namespace TiendaOnline.Features.Accounts
                 IsPersistent = true
             });
             await HttpContext.SignOutAsync("ExternalCookie");
-
-            TempData["MensajeExito"] = "¡Has iniciado sesión con Google!";
 
             return usuarioDto.Rol == "Administrador"
                 ? RedirectToAction(nameof(HomeController.IndexAdmin), "Home")

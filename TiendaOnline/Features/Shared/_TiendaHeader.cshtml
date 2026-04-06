@@ -38,8 +38,12 @@
                 </button>
 
                 <div class="dropdown">
-                    <button class="btn nav-link px-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn nav-link px-2 dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-person fs-3"></i>
+                        @if (User?.Identity?.IsAuthenticated == true)
+                        {
+                            <span class="d-none d-sm-inline small fw-medium">@User.FindFirstValue(ClaimTypes.Name)</span>
+                        }
                     </button>
 
                     <ul class="dropdown-menu dropdown-menu-end rounded-3 p-2" style="min-width: 200px;">
