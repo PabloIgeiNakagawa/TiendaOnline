@@ -1,70 +1,25 @@
-﻿@{
+@{
     var mensajeExito = TempData["MensajeExito"];
     var mensajeError = TempData["MensajeError"];
-}
-@section Styles {
-    <style>
-        .toast-progress {
-            width: 100%;
-            animation: toastProgress linear forwards;
-        }
-
-        @@keyframes toastProgress {
-            from {
-                width: 100%;
-            }
-            to {
-                width: 0%;
-            }
-        }
-    </style>
 }
 
 @if (mensajeExito != null || mensajeError != null)
 {
-    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1080; max-width:420px;">
-        @if (mensajeExito != null)
-        {
-            <div class="toast align-items-start text-bg-success border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true"
-                 data-bs-autohide="true" data-bs-delay="4500">
-                <div class="d-flex">
-                    <div class="toast-body d-flex gap-3 align-items-start">
-                        <i class="bi bi-check-circle-fill fs-4 mt-1" aria-hidden="true"></i>
-                        <div class="me-auto">
-                            <strong class="d-block">¡Éxito!</strong>
-                            <div class="small opacity-75">@mensajeExito</div>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
-                </div>
+    @if (mensajeExito != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            @mensajeExito
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    }
 
-                <!-- Barra de progreso -->
-                <div class="progress mt-1" style="height:4px;">
-                    <div class="progress-bar bg-white opacity-50 toast-progress"></div>
-                </div>
-            </div>
-        }
-
-        @if (mensajeError != null)
-        {
-            <div class="toast align-items-start text-bg-danger border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true"
-                 data-bs-autohide="true" data-bs-delay="6000">
-                <div class="d-flex">
-                    <div class="toast-body d-flex gap-3 align-items-start">
-                        <i class="bi bi-x-circle-fill fs-4 mt-1" aria-hidden="true"></i>
-                        <div class="me-auto">
-                            <strong class="d-block">Error</strong>
-                            <div class="small opacity-75">@mensajeError</div>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
-                </div>
-
-                <!-- Barra de progreso -->
-                <div class="progress mt-1" style="height:4px;">
-                    <div class="progress-bar bg-white opacity-75 toast-progress"></div>
-                </div>
-            </div>
-        }
-    </div>
+    @if (mensajeError != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-x-circle-fill me-2"></i>
+            @mensajeError
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    }
 }
