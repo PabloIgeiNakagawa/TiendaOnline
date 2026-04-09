@@ -6,7 +6,7 @@
         public string ProductoNombre { get; set; }
         public string ImagenUrl { get; set; }
         public int Cantidad { get; set; }
-        public string Tipo { get; set; } // Entrada, Salida, Ajuste, etc
+        public int TipoMovimientoId { get; set; }
         public DateTime Fecha { get; set; }
         public int? PedidoId { get; set; }
         public string Observaciones { get; set; }

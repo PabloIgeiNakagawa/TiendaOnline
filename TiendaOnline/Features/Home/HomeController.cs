@@ -31,13 +31,11 @@ namespace TiendaOnline.Features.Home
             return View();
         }
 
-        [Route("Admin")]
+        [Route("admin")]
         [Authorize(Roles = "Administrador")]
         [HttpGet]
         public async Task<IActionResult> IndexAdmin()
         {
-            ViewData["Title"] = "Inicio";
-
             var datosHome = await _adminOverviewService.ObtenerResumenHomeAsync();
 
             var viewModel = new HomeAdminViewModel
@@ -46,6 +44,17 @@ namespace TiendaOnline.Features.Home
                 VersionApp = datosHome.AppVersion,
                 Entorno = datosHome.Environment,
 
+                ResumenDiario = new ResumenDiarioViewModel
+                {
+                    VentasHoy = datosHome.ResumenDiario.VentasHoy,
+                    PorcentajeVentas = datosHome.ResumenDiario.PorcentajeVentas,
+                    PedidosHoy = datosHome.ResumenDiario.PedidosHoy,
+                    PorcentajePedidos = datosHome.ResumenDiario.PorcentajePedidos,
+                    EnviadosHoy = datosHome.ResumenDiario.EnviadosHoy,
+                    PorcentajeEnviados = datosHome.ResumenDiario.PorcentajeEnviados,
+                    StockBajo = datosHome.ResumenDiario.StockBajo
+                },
+
                 UltimosCambios = datosHome.UltimosCambios.Select(a => new AuditoriaItemViewModel
                 {
                     Usuario = a.UsuarioNombre,
@@ -53,16 +62,64 @@ namespace TiendaOnline.Features.Home
                     Fecha = a.Fecha
                 }).ToList(),
 
-                PedidosEstancados = datosHome.PedidosEstancados.Select(p => new PedidoEstancadoViewModel
+                PaginaActual = 1,
+                TotalPaginas = 1,
+                TotalRegistros = 0,
+
+                UltimosMovimientosStock = datosHome.UltimosMovimientosStock.Select(m => new MovimientoStockItemViewModel
+                {
+                    ProductoNombre = m.ProductoNombre,
+                    Cantidad = m.Cantidad,
+                    TipoMovimientoId = m.TipoMovimientoId,
+                    Fecha = m.Fecha,
+                    Observaciones = m.Observaciones
+                }).ToList(),
+
+                ProductosBajoStock = datosHome.ProductosBajoStock.Select(p => new ProductoBajoStockItemViewModel
+                {
+                    ProductoId = p.ProductoId,
+                    Nombre = p.Nombre,
+                    ImagenUrl = p.ImagenUrl,
+                    Categoria = p.Categoria,
+                    Stock = p.Stock
+                }).ToList(),
+
+                PedidosRecientes = datosHome.PedidosRecientes.Select(p => new PedidoRecienteItemViewModel
                 {
                     PedidoId = p.PedidoId,
-                    Cliente = p.ClienteNombre,
-                    Fecha = p.Fecha,
-                    HorasTranscurridas = p.HorasTranscurridas
+                    FechaPedido = p.FechaPedido,
+                    Cliente = p.Cliente,
+                    Total = p.Total,
+                    EstadoPedido = p.EstadoPedido,
+                    EstadoPedidoId = p.EstadoPedidoId
                 }).ToList()
             };
 
             return View(viewModel);
+        }
+
+        [Route("admin/pedidos-estancados")]
+        [Authorize(Roles = "Administrador")]
+        [HttpGet]
+        public async Task<IActionResult> ObtenerPedidosEstancados(int pagina = 1)
+        {
+            var resultado = await _adminOverviewService.ObtenerPedidosEstancadosPaginadoAsync(pagina);
+
+            var pedidos = resultado.Pedidos.Select(p => new PedidoEstancadoViewModel
+            {
+                PedidoId = p.PedidoId,
+                Cliente = p.ClienteNombre,
+                Fecha = p.Fecha,
+                HorasTranscurridas = p.HorasTranscurridas
+            }).ToList();
+
+            return Json(new
+            {
+                pedidos,
+                paginaActual = resultado.PaginaActual,
+                totalPaginas = resultado.TotalPaginas,
+                totalRegistros = resultado.TotalRegistros
+            });
         }
 
         [AllowAnonymous]

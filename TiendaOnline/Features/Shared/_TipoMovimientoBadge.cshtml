@@ -1,0 +1,20 @@
+@using TiendaOnline.Enums
+@using TiendaOnline.Extensions
+@model TipoMovimiento
+
+@{
+    var (clase, icono) = Model switch
+    {
+        TipoMovimiento.EntradaStock => ("success", "arrow-down-circle"),
+        TipoMovimiento.SalidaVenta => ("danger", "arrow-up-circle"),
+        TipoMovimiento.Devolucion => ("info", "arrow-return-left"),
+        TipoMovimiento.AjusteManual => ("warning", "pencil-square"),
+        TipoMovimiento.CancelacionPedido => ("secondary", "x-circle"),
+        _ => ("muted", "box")
+    };
+    var texto = Model.GetDisplayName();
+}
+
+<span class="badge bg-@clase bg-opacity-10 text-@clase px-3 py-2 rounded-pill border border-@clase border-opacity-25">
+    <i class="bi bi-@icono me-1"></i>@texto
+</span>

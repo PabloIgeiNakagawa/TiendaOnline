@@ -1,4 +1,5 @@
 ﻿@using TiendaOnline.Features.MovimientosStock
+@using TiendaOnline.Enums
 @using TiendaOnline.Features.Shared.ViewModels
 @model MovimientosViewModel
 @{
@@ -126,24 +127,10 @@
                             </div>
                         </td>
                         <td>
-                            @if (item.Tipo.ToLower().Contains("entrada"))
-                            {
-                                <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill border border-success border-opacity-25">
-                                    <i class="bi bi-arrow-down-circle me-1"></i>@item.Tipo
-                                </span>
+                            @{
+                                var tipo = (TipoMovimiento)item.TipoMovimientoId;
                             }
-                            else if (item.Tipo.ToLower().Contains("salida"))
-                            {
-                                <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill border border-danger border-opacity-25">
-                                    <i class="bi bi-arrow-up-circle me-1"></i>@item.Tipo
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill border border-warning border-opacity-25">
-                                    <i class="bi bi-pencil-square me-1"></i>@item.Tipo
-                                </span>
-                            }
+                            <partial name="_TipoMovimientoBadge" model="@tipo" />
                         </td>
                         <td class="text-center">
                             <span class="fw-bold @(item.Cantidad < 0 ? "text-danger" : "text-success")">
@@ -193,9 +180,10 @@
                         </div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="badge @(item.Tipo.ToLower().Contains("salida") ? "bg-danger" : "bg-success")">
-                            @item.Tipo
-                        </span>
+                        @{
+                            var tipoMobile = (TipoMovimiento)item.TipoMovimientoId;
+                        }
+                        <partial name="_TipoMovimientoBadge" model="@tipoMobile" />
                         <span class="fw-bold fs-5 @(item.Cantidad < 0 ? "text-danger" : "text-success")">
                             @(item.Cantidad < 0 ? "" : "+")@item.Cantidad
                         </span>
