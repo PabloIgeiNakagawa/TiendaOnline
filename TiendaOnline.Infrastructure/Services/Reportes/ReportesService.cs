@@ -24,8 +24,6 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                 VentasPorCategoria = await ObtenerVentasPorCategoriaAsync(),
                 VentasPorMes = await ObtenerVentasPorMesAsync(12),
                 EstadisticasPedidos = await ObtenerEstadisticasPedidosAsync(),
-                ProductosBajoStock = await ObtenerProductosBajoStockAsync(10),
-                PedidosRecientes = await ObtenerPedidosRecientesAsync(10),
                 VentasPorMetodoDePago = await ObtenerVentasPorMetodoDePagoAsync(),
                 VentasPorDiaHora = await ObtenerVentasPorDiaHoraAsync(),
                 StockInmovilizado = await ObtenerStockInmovilizadoAsync()
@@ -379,63 +377,6 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                 PorcentajeEntregados = totalPedidos > 0 ? (decimal)entregados / totalPedidos * 100 : 0,
                 PorcentajeCancelados = totalPedidos > 0 ? (decimal)cancelados / totalPedidos * 100 : 0
             };
-        }
-
-        private async Task<List<ProductoBajoStockDto>> ObtenerProductosBajoStockAsync(int cantidad)
-        {
-            var fechaInicioMes = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-
-            var ventasUltimoMes = await _context.DetallesPedido
-                .AsNoTracking()
-                .Where(dp => dp.Pedido.FechaPedido >= fechaInicioMes
-                          && dp.Pedido.Estado != EstadoPedido.Cancelado)
-                .GroupBy(dp => dp.ProductoId)
-                .Select(g => new
-                {
-                    ProductoId = g.Key,
-                    Cantidad = g.Sum(dp => dp.Cantidad)
-                })
-                .ToDictionaryAsync(x => x.ProductoId, x => x.Cantidad);
-
-            var productos = await _context.Productos
-                .AsNoTracking()
-                .Where(p => p.Stock < 10 && p.Activo)
-                .Select(p => new ProductoBajoStockDto
-                {
-                    ProductoId = p.ProductoId,
-                    Nombre = p.Nombre,
-                    Categoria = p.Categoria.Nombre,
-                    Stock = p.Stock,
-                    ImagenUrl = p.ImagenUrl
-                })
-                .ToListAsync();
-
-            foreach (var producto in productos)
-            {
-                if (ventasUltimoMes.TryGetValue(producto.ProductoId, out var cantidadVendida))
-                {
-                    producto.CantidadVendidaUltimoMes = cantidadVendida;
-                }
-            }
-
-            return productos;
-        }
-
-        private async Task<List<PedidoRecienteDto>> ObtenerPedidosRecientesAsync(int cantidad)
-        {
-            return await _context.Pedidos
-                .AsNoTracking()
-                .OrderByDescending(p => p.FechaPedido)
-                .Take(cantidad)
-                .Select(p => new PedidoRecienteDto
-                {
-                    PedidoId = p.PedidoId,
-                    FechaPedido = p.FechaPedido,
-                    Cliente = p.Usuario.Nombre + " " + p.Usuario.Apellido,
-                    Total = p.DetallesPedido.Sum(dp => dp.Cantidad * dp.PrecioUnitario),
-                    EstadoPedidoId = (int)p.Estado
-                })
-                .ToListAsync();
         }
 
         private async Task<List<VentaPorMetodoDePagoDto>> ObtenerVentasPorMetodoDePagoAsync()

@@ -8,8 +8,6 @@
         public List<VentaPorCategoriaDto> VentasPorCategoria { get; set; }
         public List<VentaPorMesDto> VentasPorMes { get; set; }
         public EstadisticasPedidosDto EstadisticasPedidos { get; set; }
-        public List<ProductoBajoStockDto> ProductosBajoStock { get; set; }
-        public List<PedidoRecienteDto> PedidosRecientes { get; set; }
         public List<VentaPorMetodoDePagoDto> VentasPorMetodoDePago { get; set; }
         public List<VentasPorDiaHoraDto> VentasPorDiaHora { get; set; }
         public List<StockInmovilizadoDto> StockInmovilizado { get; set; }
@@ -80,25 +78,6 @@
         public decimal PorcentajeEnviados { get; set; }
         public decimal PorcentajeEntregados { get; set; }
         public decimal PorcentajeCancelados { get; set; }
-    }
-
-    public class ProductoBajoStockDto
-    {
-        public int ProductoId { get; set; }
-        public string Nombre { get; set; }
-        public string Categoria { get; set; }
-        public int Stock { get; set; }
-        public int CantidadVendidaUltimoMes { get; set; }
-        public string ImagenUrl { get; set; }
-    }
-
-    public class PedidoRecienteDto
-    {
-        public int PedidoId { get; set; }
-        public DateTime FechaPedido { get; set; }
-        public string Cliente { get; set; }
-        public decimal Total { get; set; }
-        public int EstadoPedidoId { get; set; }
     }
 
     public class VentaPorMetodoDePagoDto

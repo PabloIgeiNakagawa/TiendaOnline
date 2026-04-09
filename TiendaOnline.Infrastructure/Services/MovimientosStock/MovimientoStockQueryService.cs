@@ -57,27 +57,28 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
                 .OrderByDescending(m => m.Fecha)
                 .Skip((filtros.Pagina - 1) * filtros.RegistrosPorPagina)
                 .Take(filtros.RegistrosPorPagina)
-                .Select(m => new MovimientosDto
-                {
-                    MovimientoId = m.MovimientoStockId,
-                    ProductoNombre = m.Producto.Nombre,
-                    ImagenUrl = m.Producto.ImagenUrl,
-                    Cantidad = m.Cantidad,
-                    Tipo = m.Tipo.ToString(),
-                    Fecha = m.Fecha,
-                    Observaciones = m.Observaciones,
-                    PedidoId = m.PedidoId
-                })
                 .ToListAsync();
 
-            return new PagedResult<MovimientosDto>(items, totalElementos, filtros.Pagina, filtros.RegistrosPorPagina);
+            var resultado = items.Select(m => new MovimientosDto
+            {
+                MovimientoId = m.MovimientoStockId,
+                ProductoNombre = m.Producto.Nombre,
+                ImagenUrl = m.Producto.ImagenUrl,
+                Cantidad = m.Cantidad,
+                TipoMovimientoId = (int)Enum.Parse(typeof(Domain.Entities.TipoMovimiento), m.Tipo.ToString()),
+                Fecha = m.Fecha,
+                Observaciones = m.Observaciones,
+                PedidoId = m.PedidoId
+            }).ToList();
+
+            return new PagedResult<MovimientosDto>(resultado, totalElementos, filtros.Pagina, filtros.RegistrosPorPagina);
         }
 
         public async Task<IEnumerable<TipoMovimientoDto>> ObtenerTiposMovimientoAsync()
         {
             // Obtenemos todos los valores del Enum 'TipoMovimiento'
-            var tipos = Enum.GetValues(typeof(TipoMovimiento))
-                            .Cast<TipoMovimiento>()
+            var tipos = Enum.GetValues(typeof(Domain.Entities.TipoMovimiento))
+                            .Cast<Domain.Entities.TipoMovimiento>()
                             .Select(t => new TipoMovimientoDto
                             {
                                 Id = (int)t,
@@ -105,7 +106,7 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
                     ProductoNombre = m.Producto?.Nombre,
                     ImagenUrl = m.Producto?.ImagenUrl,
                     Cantidad = m.Cantidad,
-                    Tipo = m.Tipo.ToString(),
+                    TipoMovimientoId = (int)Enum.Parse(typeof(Domain.Entities.TipoMovimiento), m.Tipo.ToString()),
                     Fecha = m.Fecha,
                     Observaciones = m.Observaciones,
                     PedidoId = m.PedidoId

@@ -90,25 +90,6 @@ namespace TiendaOnline.Features.Reportes
                     PorcentajeCancelados = datosDto.EstadisticasPedidos.PorcentajeCancelados
                 },
 
-                ProductosBajoStock = datosDto.ProductosBajoStock.Select(p => new ProductoBajoStock
-                {
-                    ProductoId = p.ProductoId,
-                    Nombre = p.Nombre,
-                    Categoria = p.Categoria,
-                    Stock = p.Stock,
-                    CantidadVendidaUltimoMes = p.CantidadVendidaUltimoMes,
-                    ImagenUrl = p.ImagenUrl
-                }).ToList(),
-
-                PedidosRecientes = datosDto.PedidosRecientes.Select(p => new PedidoReciente
-                {
-                    PedidoId = p.PedidoId,
-                    FechaPedido = p.FechaPedido,
-                    Cliente = p.Cliente,
-                    Total = p.Total,
-                    EstadoPedido = (EstadoPedidoUI)p.EstadoPedidoId
-                }).ToList(),
-
                 VentasPorMetodoDePago = datosDto.VentasPorMetodoDePago.Select(v => new VentaPorMetodoDePago
                 {
                     MetodoDePago = v.MetodoDePago,

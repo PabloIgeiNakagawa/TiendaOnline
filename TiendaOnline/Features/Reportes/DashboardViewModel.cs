@@ -14,8 +14,6 @@ namespace TiendaOnline.Features.Reportes
         public List<VentaPorCategoria> VentasPorCategoria { get; set; }
         public List<VentaPorMes> VentasPorMes { get; set; }
         public EstadisticasPedidos EstadisticasPedidos { get; set; }
-        public List<ProductoBajoStock> ProductosBajoStock { get; set; }
-        public List<PedidoReciente> PedidosRecientes { get; set; }
         public List<VentaPorMetodoDePago> VentasPorMetodoDePago { get; set; }
         public List<VentasPorDiaHora> VentasPorDiaHora { get; set; }
         public List<StockInmovilizado> StockInmovilizado { get; set; }
@@ -95,27 +93,6 @@ namespace TiendaOnline.Features.Reportes
         public decimal PorcentajeEnviados { get; set; }
         public decimal PorcentajeEntregados { get; set; }
         public decimal PorcentajeCancelados { get; set; }
-    }
-
-    // Producto con bajo stock
-    public class ProductoBajoStock
-    {
-        public int ProductoId { get; set; }
-        public string Nombre { get; set; }
-        public string Categoria { get; set; }
-        public int Stock { get; set; }
-        public int CantidadVendidaUltimoMes { get; set; }
-        public string ImagenUrl { get; set; }
-    }
-
-    // Pedido reciente para la tabla
-    public class PedidoReciente
-    {
-        public int PedidoId { get; set; }
-        public DateTime FechaPedido { get; set; }
-        public string Cliente { get; set; }
-        public decimal Total { get; set; }
-        public EstadoPedidoUI EstadoPedido { get; set; }
     }
 
     // Ventas por método de pago
