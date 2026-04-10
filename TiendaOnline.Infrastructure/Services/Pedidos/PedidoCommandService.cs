@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Application.Payment;
@@ -12,11 +13,13 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
     {
         private readonly TiendaContext _context;
         private readonly IMovimientoStockCommandService _movimientoStockCommandService;
+        private readonly ILogger<PedidoCommandService> _logger;
 
-        public PedidoCommandService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService)
+        public PedidoCommandService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, ILogger<PedidoCommandService> logger)
         {
             _context = context;
             _movimientoStockCommandService = movimientoStockCommandService;
+            _logger = logger;
         }
 
         public async Task<PedidoPagoDto> CrearPedidoYPrepararPagoAsync(CrearPedidoDto dto)
@@ -28,6 +31,17 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
             try
             {
+                // CONSOLIDAMOS items por ProductoId para evitar duplicados
+                var itemsAgrupados = dto.Items
+                    .GroupBy(i => i.ProductoId)
+                    .Select(g => new CrearPedidoDetalleDto
+                    {
+                        ProductoId = g.Key,
+                        Cantidad = g.Sum(x => x.Cantidad),
+                        PrecioUnitario = g.First().PrecioUnitario
+                    })
+                    .ToList();
+
                 var pedido = new Pedido
                 {
                     UsuarioId = dto.UsuarioId,
@@ -47,7 +61,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     DetallesPedido = new List<DetallePedido>()
                 };
 
-                foreach (var itemDto in dto.Items)
+                foreach (var itemDto in itemsAgrupados)
                 {
                     // Buscamos el producto en BD para validar stock y obtener nombre real
                     var producto = await _context.Productos.FindAsync(itemDto.ProductoId);
@@ -127,8 +141,23 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 .FirstOrDefaultAsync(p => p.PedidoId == infoPago.PedidoId);
 
             // Idempotencia y existencia: Si no existe o ya está pagado, cortamos acá
-            if (pedido == null || pedido.EstadoPago == EstadoPago.Aprobado)
+            if (pedido == null)
+            {
+                _logger.LogWarning("No se encontró el pedido {PedidoId} para confirmar pago.", infoPago.PedidoId);
                 return false;
+            }
+
+            if (pedido.EstadoPago == EstadoPago.Aprobado)
+            {
+                _logger.LogInformation("El pedido {PedidoId} ya estaba aprobado. Ignorando.", infoPago.PedidoId);
+                return false;
+            }
+
+            if (pedido.EstadoPago == EstadoPago.Rechazado)
+            {
+                _logger.LogInformation("El pedido {PedidoId} ya estaba rechazado. Ignorando.", infoPago.PedidoId);
+                return false;
+            }
 
             // Calculamos el total en el momento
             decimal totalCalculado = pedido.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario);
@@ -137,23 +166,83 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             // Usamos una diferencia menor a 0.01 por temas de decimales en C#
             if (Math.Abs((double)infoPago.MontoPagado - (double)totalCalculado) > 0.01)
             {
-                // Fraude o error de montos
+                _logger.LogWarning("Mismatch de montos en pedido {PedidoId}. MP: {MontoMP}, Sistema: {MontoSistema}, TransaccionId: {TransaccionId}",
+                    infoPago.PedidoId, infoPago.MontoPagado, totalCalculado, infoPago.TransaccionId);
                 return false;
             }
 
-            // Confirmamos el pago
-            if (infoPago.Estado == "approved")
+            try
             {
-                pedido.EstadoPago = EstadoPago.Aprobado;
-                pedido.Estado = EstadoPedido.EnPreparacion;
-                pedido.FechaEnPreparacion = DateTime.Now;
-                pedido.TransaccionPagoId = infoPago.TransaccionId;
+                switch (infoPago.Estado)
+                {
+                    case "approved":
+                        pedido.EstadoPago = EstadoPago.Aprobado;
+                        pedido.Estado = EstadoPedido.EnPreparacion;
+                        pedido.FechaEnPreparacion = DateTime.Now;
+                        pedido.TransaccionPagoId = infoPago.TransaccionId;
+                        await _context.SaveChangesAsync();
+                        _logger.LogInformation("Pedido {PedidoId} confirmado como aprobado. Transacción: {TransaccionId}",
+                            infoPago.PedidoId, infoPago.TransaccionId);
+                        return true;
 
-                await _context.SaveChangesAsync();
-                return true;
+                    case "rejected":
+                    case "declined":
+                        pedido.EstadoPago = EstadoPago.Rechazado;
+                        pedido.TransaccionPagoId = infoPago.TransaccionId;
+                        // No cambiamos EstadoPedido a Cancelado porque podría ser reintento
+                        await _context.SaveChangesAsync();
+                        _logger.LogWarning("Pedido {PedidoId} rechazado. Transacción: {TransaccionId}",
+                            infoPago.PedidoId, infoPago.TransaccionId);
+                        return true;
+
+                    case "cancelled":
+                        pedido.EstadoPago = EstadoPago.Rechazado;
+                        pedido.Estado = EstadoPedido.Cancelado;
+                        pedido.FechaCancelado = DateTime.Now;
+                        pedido.TransaccionPagoId = infoPago.TransaccionId;
+
+                        // Devolver stock
+                        foreach (var detalle in pedido.DetallesPedido)
+                        {
+                            detalle.Producto = detalle.Producto ?? await _context.Productos.FindAsync(detalle.ProductoId);
+                            if (detalle.Producto != null)
+                            {
+                                detalle.Producto.Stock += detalle.Cantidad;
+                                _movimientoStockCommandService.GenerarMovimiento(
+                                    detalle.Producto,
+                                    detalle.Cantidad,
+                                    TipoMovimiento.CancelacionPedido,
+                                    pedido.PedidoId,
+                                    $"Devolución por cancelación de pago en Pedido #{pedido.PedidoId}"
+                                );
+                            }
+                        }
+
+                        await _context.SaveChangesAsync();
+                        _logger.LogWarning("Pedido {PedidoId} cancelado por pago cancelado. Stock revertido.", infoPago.PedidoId);
+                        return true;
+
+                    case "refunded":
+                    case "charged_back":
+                        pedido.EstadoPago = EstadoPago.Reembolsado;
+                        pedido.TransaccionPagoId = infoPago.TransaccionId;
+                        await _context.SaveChangesAsync();
+                        _logger.LogWarning("Pedido {PedidoId} reembolsado. Transacción: {TransaccionId}",
+                            infoPago.PedidoId, infoPago.TransaccionId);
+                        return true;
+
+                    default:
+                        _logger.LogInformation("Pago {PedidoId} en estado '{Estado}' (pending/in_process). No se toma acción.",
+                            infoPago.PedidoId, infoPago.Estado);
+                        return false;
+                }
             }
-
-            return false;
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Error al actualizar el pedido {PedidoId} al confirmar pago con estado '{Estado}'",
+                    infoPago.PedidoId, infoPago.Estado);
+                throw;
+            }
         }
 
         public async Task<PedidoPagoDto?> ObtenerDatosParaPagoAsync(int pedidoId)
