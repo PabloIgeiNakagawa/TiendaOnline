@@ -301,17 +301,19 @@ namespace TiendaOnline.Features.Pedidos
         {
             var usuarioId = ObtenerUsuarioId();
 
+            // Recargamos los items del carrito (vital porque el POST no los envía)
             var carritoItems = await _carritoService.ObtenerAsync();
 
-            if (model == null)
+            if (model == null || carritoItems == null || !carritoItems.Any())
             {
                 TempData["MensajeError"] = "La sesión de compra expiró o los datos son inválidos.";
                 return RedirectToAction("CheckOut");
             }
 
-            if (model == null || model.Direccion == null || model.Items == null)
+            // Para envío a domicilio, la dirección es obligatoria
+            if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio && model.Direccion == null)
             {
-                TempData["MensajeError"] = "La sesión de compra expiró o los datos son inválidos.";
+                TempData["MensajeError"] = "La dirección de envío es requerida.";
                 return RedirectToAction("CheckOut");
             }
 
@@ -320,14 +322,14 @@ namespace TiendaOnline.Features.Pedidos
                 UsuarioId = usuarioId,
                 MetodoDePagoId = (int)metodoDePagoId,
                 EsEnvioADomicilio = model.MetodoEntrega == MetodoEntrega.EnvioDomicilio,
-                EnvioCalle = model.Direccion.Calle,
-                EnvioNumero = model.Direccion.Numero,
-                EnvioPiso = model.Direccion.Piso,
-                EnvioDepartamento = model.Direccion.Departamento,
-                EnvioObservaciones = model.Direccion.Observaciones,
-                EnvioLocalidad = model.Direccion.Localidad,
-                EnvioProvincia = model.Direccion.Provincia,
-                EnvioCodigoPostal = model.Direccion.CodigoPostal,
+                EnvioCalle = model.Direccion?.Calle,
+                EnvioNumero = model.Direccion?.Numero,
+                EnvioPiso = model.Direccion?.Piso,
+                EnvioDepartamento = model.Direccion?.Departamento,
+                EnvioObservaciones = model.Direccion?.Observaciones,
+                EnvioLocalidad = model.Direccion?.Localidad,
+                EnvioProvincia = model.Direccion?.Provincia,
+                EnvioCodigoPostal = model.Direccion?.CodigoPostal,
                 Items = carritoItems.Select(i => new CrearPedidoDetalleDto
                 {
                     ProductoId = i.ProductoId,
@@ -341,7 +343,7 @@ namespace TiendaOnline.Features.Pedidos
                 // Crear el pedido en BD
                 var pedido = await _pedidoCommandService.CrearPedidoYPrepararPagoAsync(dto);
 
-                if (model.Direccion.EsNueva == true && model.MetodoEntrega == MetodoEntrega.EnvioDomicilio)
+                if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio && model.Direccion?.EsNueva == true)
                 {
                     // Si es envío a domicilio, guardamos la dirección para el usuario
                     await _direccionService.GuardarDireccionAsync(usuarioId, new DireccionDto
@@ -379,8 +381,20 @@ namespace TiendaOnline.Features.Pedidos
 
         [Authorize(Policy = "EsDuenioDelPedido")]
         [HttpGet("[action]")]
-        public IActionResult PagoExitoso([FromQuery] string external_reference, [FromQuery] string payment_id)
+        public async Task<IActionResult> PagoExitoso([FromQuery] string external_reference, [FromQuery] string payment_id)
         {
+            // Confirmar el pago manualmente si el webhook no llegó
+            if (!string.IsNullOrEmpty(payment_id))
+            {
+                var infoPago = await _paymentService.ObtenerDetallesPagoAsync(payment_id);
+                if (infoPago != null && infoPago.Estado == "approved")
+                {
+                    await _pedidoCommandService.ConfirmarPagoAsync(infoPago);
+                    await _carritoService.VaciarAsync();
+                    TempData["MensajeExito"] = "¡Pago confirmado exitosamente!";
+                }
+            }
+
             ViewBag.PedidoId = external_reference;
             ViewBag.PagoId = payment_id;
 
