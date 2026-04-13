@@ -457,14 +457,32 @@
                     </div>
                     <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
                         <span>Envío</span>
-                        <div class="fw-medium">Gratis</div>
+                        <div class="fw-medium">@(Model.CostoEnvio == 0 ? "Gratis" : Model.CostoEnvio.ToString("C0"))</div>
                     </div>
                     <div class="d-flex justify-content-between mt-4 pt-3 fw-medium fs-4">
                         <span>Total</span>
-                        <div>@Model.Subtotal.ToString("C0")</div>
+                        <div>@Model.Total.ToString("C0")</div>
                     </div>
                 </div>
             </div>
+
+            <!-- Comprobante de Pago -->
+            @if (Model.EstadoPago == EstadoPagoUI.Aprobado)
+            {
+                <div class="card rounded-3 mb-4 overflow-hidden">
+                    <div class="card-header bg-primary-subtle border-0 p-4">
+                        <h5 class="mb-0 fw-bold text-primary">
+                            <i class="bi bi-receipt me-2"></i>Comprobante de Pago
+                        </h5>
+                    </div>
+                    <div class="card-body p-4 pt-3">
+                        <a asp-action="ComprobantePDF" asp-route-id="@Model.PedidoId"
+                           class="btn btn-outline-primary w-100" target="_blank">
+                            <i class="bi bi-download me-2"></i>Descargar comprobante
+                        </a>
+                    </div>
+                </div>
+            }
 
             <!-- Datos de entrega -->
             <div class="card rounded-3 mb-4 overflow-hidden">

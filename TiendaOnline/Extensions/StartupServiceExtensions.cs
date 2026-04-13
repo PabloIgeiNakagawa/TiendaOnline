@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using QuestPDF.Infrastructure;
 using TiendaOnline.Application.AdminOverview;
 using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Application.Auditoria;
@@ -27,6 +28,7 @@ using TiendaOnline.Infrastructure.Services.Auditoria;
 using TiendaOnline.Infrastructure.Services.Auth;
 using TiendaOnline.Infrastructure.Services.Carritos;
 using TiendaOnline.Infrastructure.Services.Categorias;
+using TiendaOnline.Infrastructure.Services.ComprobantePdf;
 using TiendaOnline.Infrastructure.Services.Direcciones;
 using TiendaOnline.Infrastructure.Services.Geo;
 using TiendaOnline.Infrastructure.Services.MovimientosStock;
@@ -39,6 +41,11 @@ namespace TiendaOnline.Extensions
 {
     public static class StartupServiceExtensions
     {
+        static StartupServiceExtensions()
+        {
+            QuestPDF.Settings.License = LicenseType.Community;
+        }
+
         public static IServiceCollection AddBusinessServices(this IServiceCollection services)
         {
             // Servicios base
@@ -64,6 +71,7 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IMovimientoStockCommandService, MovimientoStockCommandService>();
             services.AddScoped<IMovimientoStockQueryService, MovimientoStockQueryService>();
             services.AddScoped<IAppSettingsService, AppSettingsService>();
+            services.AddScoped<IComprobantePdfService, ComprobantePdfService>();
 
             // Autenticación y Sesión de Usuario
             services.AddScoped<IAuthService, AuthService>();

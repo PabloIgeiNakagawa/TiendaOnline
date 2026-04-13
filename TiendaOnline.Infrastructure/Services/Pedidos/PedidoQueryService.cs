@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Common;
+using TiendaOnline.Application.Pedidos.DTOs;
 using TiendaOnline.Application.Pedidos.Query;
 using TiendaOnline.Infrastructure.Persistence;
 
@@ -12,6 +13,13 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
         public PedidoQueryService(TiendaContext context)
         {
             _context = context;
+        }
+
+        private static string? FormatearDireccionEnvio(TiendaOnline.Domain.Entities.Pedido p)
+        {
+            if (p.EsEnvioADomicilio == false) return null;
+
+            return $"{p.EnvioCalle ?? ""} {p.EnvioNumero ?? ""}, Piso: {p.EnvioPiso ?? "N/A"}, Depto: {p.EnvioDepartamento ?? "N/A"}, {p.EnvioLocalidad ?? ""}, {p.EnvioProvincia ?? ""}";
         }
 
         public async Task<List<PedidoListadoUsuarioDto>> ObtenerPedidosDeUsuarioAsync(int id)
@@ -57,9 +65,9 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     UsuarioEmail = p.Usuario.Email,
                     UsuarioTelefono = p.Usuario.Telefono,
 
-                    DireccionCompleta = p.EsEnvioADomicilio == false ? null : $"{p.EnvioCalle} {p.EnvioNumero}, Piso: {p.EnvioPiso}, Depto: {p.EnvioDepartamento}, {p.EnvioLocalidad}, {p.EnvioProvincia}",
+                    DireccionCompleta = FormatearDireccionEnvio(p),
                     Observaciones = p.EnvioObservaciones,
-                    
+
 
                     Items = p.DetallesPedido.Select(d => new PedidoItemDto
                     {
@@ -67,9 +75,63 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                         ProductoImagenUrl = d.Producto.ImagenUrl,
                         Cantidad = d.Cantidad,
                         PrecioUnitario = d.PrecioUnitario
-                    }).ToList()
+                    }).ToList(),
+
+                    TransaccionPagoId = p.TransaccionPagoId,
+                    CostoEnvio = p.CostoEnvio
                 })
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<ComprobantePedidoDto?> ObtenerComprobanteDtoAsync(int pedidoId)
+        {
+            var pedido = await _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.PedidoId == pedidoId)
+                .Select(p => new
+                {
+                    p.PedidoId,
+                    p.FechaPedido,
+                    p.CostoEnvio,
+                    UsuarioNombre = p.Usuario.Nombre + " " + p.Usuario.Apellido,
+                    UsuarioEmail = p.Usuario.Email,
+                    UsuarioTelefono = p.Usuario.Telefono,
+                    DireccionCompleta = FormatearDireccionEnvio(p),
+                    MetodoPago = p.MetodoDePago.Nombre,
+                    EstadoPagoId = (int)p.EstadoPago,
+                    p.TransaccionPagoId,
+                    Items = p.DetallesPedido.Select(d => new
+                    {
+                        d.Producto.Nombre,
+                        d.Cantidad,
+                        d.PrecioUnitario,
+                        Subtotal = d.Cantidad * d.PrecioUnitario
+                    }).ToList(),
+                    Subtotal = p.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario)
+                })
+                .FirstOrDefaultAsync();
+
+            if (pedido == null) return null;
+
+            var total = pedido.Subtotal + pedido.CostoEnvio;
+            var numeroComprobante = $"CI-0001-{pedido.PedidoId:D6}";
+
+            return new ComprobantePedidoDto(
+                pedido.PedidoId,
+                numeroComprobante,
+                DateTime.Now,
+                pedido.UsuarioNombre,
+                pedido.UsuarioEmail,
+                pedido.UsuarioTelefono ?? "N/A",
+                pedido.DireccionCompleta,
+                pedido.MetodoPago,
+                pedido.EstadoPagoId,
+                pedido.TransaccionPagoId,
+                pedido.Items.Select(i => new ComprobanteItemDto(i.Nombre, i.Cantidad, i.PrecioUnitario, i.Subtotal)).ToList(),
+                pedido.Subtotal,
+                pedido.CostoEnvio,
+                total
+            );
         }
 
         public async Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(PedidosFiltroDto filtros)
@@ -97,7 +159,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 // Proyectamos el total una sola vez para no repetir el cálculo del Sum
                 var qMonto = query.Select(p => new {
                     p,
-                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad)
+                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
                 });
 
                 if (filtros.MontoMin.HasValue)
@@ -126,7 +188,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     FechaEntrega = p.FechaEntrega,
                     EstadoId = (int)p.Estado,
                     EstadoPagoId = (int)p.EstadoPago,
-                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad)
+                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
                 })
             .ToListAsync();
 

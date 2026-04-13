@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using TiendaOnline.Application.Carritos;
+using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Application.Direcciones;
 using TiendaOnline.Application.Payment;
 using TiendaOnline.Application.Pedidos.Command;
@@ -20,14 +22,18 @@ namespace TiendaOnline.Features.Pedidos
         private readonly ICarritoService _carritoService;
         private readonly IDireccionService _direccionService;
         private readonly IPaymentService _paymentService;
+        private readonly IComprobantePdfService _comprobantePdfService;
+        private readonly ILogger<PedidosController> _logger;
 
-        public PedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService, ICarritoService carritoService, IDireccionService direccionService, IPaymentService paymentService)
+        public PedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService, ICarritoService carritoService, IDireccionService direccionService, IPaymentService paymentService, IComprobantePdfService comprobantePdfService, ILogger<PedidosController> logger)
         {
             _pedidoQueryService = pedidoQueryService;
             _pedidoCommandService = pedidoCommandService;
             _carritoService = carritoService;
             _direccionService = direccionService;
             _paymentService = paymentService;
+            _comprobantePdfService = comprobantePdfService;
+            _logger = logger;
         }
 
         [HttpGet("[action]")]
@@ -101,6 +107,10 @@ namespace TiendaOnline.Features.Pedidos
                 }).ToList(),
 
                 Subtotal = subtotal,
+                Total = subtotal + pedido.CostoEnvio,
+                CostoEnvio = pedido.CostoEnvio,
+
+                TransaccionPagoId = pedido.TransaccionPagoId,
 
                 EsAdmin = User.IsInRole("Administrador"),
                 EsRepartidor = User.IsInRole("Repartidor"),
@@ -330,6 +340,7 @@ namespace TiendaOnline.Features.Pedidos
                 EnvioLocalidad = model.Direccion?.Localidad,
                 EnvioProvincia = model.Direccion?.Provincia,
                 EnvioCodigoPostal = model.Direccion?.CodigoPostal,
+                CostoEnvio = model.MetodoEntrega == MetodoEntrega.EnvioDomicilio ? 500 : 0,
                 Items = carritoItems.Select(i => new CrearPedidoDetalleDto
                 {
                     ProductoId = i.ProductoId,
@@ -424,6 +435,38 @@ namespace TiendaOnline.Features.Pedidos
 
             // Mandamos al usuario a pagar otra vez
             return Redirect(urlPago);
+        }
+
+        [Authorize(Policy = "EsDuenioDelPedido")]
+        [EnableRateLimiting("comprobante")]
+        [HttpGet("[action]")]
+        public async Task<IActionResult> ComprobantePDF(int id)
+        {
+            var comprobanteDto = await _pedidoQueryService.ObtenerComprobanteDtoAsync(id);
+            if (comprobanteDto == null)
+            {
+                return NotFound();
+            }
+
+            // Solo generar PDF si el pago está aprobado
+            if (comprobanteDto.EstadoPagoId != (int)EstadoPagoUI.Aprobado)
+            {
+                TempData["MensajeError"] = "El comprobante solo está disponible para pagos aprobados.";
+                return RedirectToAction("Detalles", new { id });
+            }
+
+            try
+            {
+                var pdfBytes = await _comprobantePdfService.GenerarComprobanteAsync(comprobanteDto);
+
+                return File(pdfBytes, "application/pdf", $"Comprobante_Pedido_{id:D6}.pdf");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generando comprobante PDF para pedido {PedidoId}", id);
+                TempData["MensajeError"] = "No se pudo generar el comprobante. Intente nuevamente más tarde.";
+                return RedirectToAction("Detalles", new { id });
+            }
         }
 
         private int ObtenerUsuarioId()

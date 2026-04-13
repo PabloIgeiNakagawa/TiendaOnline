@@ -24,6 +24,11 @@
 
         // Items
         public List<PedidoItemDto> Items { get; set; } = new();
+
+        // Pago
+        public string? TransaccionPagoId { get; set; }
+
+        public decimal CostoEnvio { get; set; }
     }
 
     public class PedidoItemDto

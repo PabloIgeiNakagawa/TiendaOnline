@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TiendaOnline.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using TiendaOnline.Infrastructure.Persistence;
 namespace TiendaOnline.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TiendaContext))]
-    partial class TiendaContextModelSnapshot : ModelSnapshot
+    [Migration("20260410034352_AgregarComprobanteUrlPedido")]
+    partial class AgregarComprobanteUrlPedido
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -323,8 +326,9 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PedidoId"));
 
-                    b.Property<decimal>("CostoEnvio")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<string>("ComprobanteUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("EnvioCalle")
                         .HasMaxLength(100)

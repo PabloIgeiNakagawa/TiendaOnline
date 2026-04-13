@@ -30,11 +30,15 @@ namespace TiendaOnline.Features.Pedidos
 
         // Totales ya calculados
         public decimal Subtotal { get; set; }
+        public decimal CostoEnvio { get; set; }
         public decimal Total { get; set; }
 
         // Tracking
         public string? NumeroSeguimiento { get; set; }
         public DateTime? FechaEstimadaEntrega { get; set; }
+
+        // Comprobante de pago
+        public string? TransaccionPagoId { get; set; }
 
         // Permisos (la vista NO debería calcular esto)
         public bool EsAdmin { get; set; }

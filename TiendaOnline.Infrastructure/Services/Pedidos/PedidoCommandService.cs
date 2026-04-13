@@ -55,6 +55,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     EnvioLocalidad = dto.EnvioLocalidad,
                     EnvioProvincia = dto.EnvioProvincia,
                     EnvioCodigoPostal = dto.EnvioCodigoPostal,
+                    CostoEnvio = dto.CostoEnvio,
                     FechaPedido = DateTime.Now,
                     Estado = EstadoPedido.Nuevo,
                     EstadoPago = EstadoPago.Pendiente,

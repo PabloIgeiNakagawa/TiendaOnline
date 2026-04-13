@@ -49,6 +49,14 @@ namespace TiendaOnline.Extensions
                     return new ValueTask();
                 };
 
+                // Comprobante PDF: 10 por minuto por IP (evitar abuso de generación de PDFs)
+                options.AddFixedWindowLimiter("comprobante", opt =>
+                {
+                    opt.PermitLimit = 10;
+                    opt.Window = TimeSpan.FromMinutes(1);
+                    opt.QueueLimit = 0;
+                });
+
                 // Usar IP como clave de rate limiting
                 options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                     RateLimitPartition.GetFixedWindowLimiter(

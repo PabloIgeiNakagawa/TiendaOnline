@@ -42,7 +42,14 @@ namespace TiendaOnline.Infrastructure.Persistence
                 new AppSetting { Key = "Diseno:FavIconUrl", Group = "Estetica", IsSensitive = false, Description = "URL del favicon del sitio.", Type = "url", LastModified = null },
                 new AppSetting { Key = "Diseno:ColorPrimary", Group = "Estetica", IsSensitive = false, Description = "Color primario para la interfaz.", Type = "color", LastModified = null },
                 new AppSetting { Key = "Diseno:FuenteTitulo", Group = "Estetica", IsSensitive = false, Description = "Fuente tipográfica utilizada para títulos.", Type = "select", LastModified = null },
-                new AppSetting { Key = "Diseno:FuenteBody", Group = "Estetica", IsSensitive = false, Description = "Fuente tipográfica utilizada para el cuerpo del contenido.", Type = "select", LastModified = null }
+                new AppSetting { Key = "Diseno:FuenteBody", Group = "Estetica", IsSensitive = false, Description = "Fuente tipográfica utilizada para el cuerpo del contenido.", Type = "select", LastModified = null },
+
+                // === Datos Fiscales de la Empresa (para comprobantes) ===
+                new AppSetting { Key = "Empresa:Cuit", Group = "Empresa", IsSensitive = false, Description = "CUIT de la empresa para comprobantes.", Type = "text", LastModified = null },
+                new AppSetting { Key = "Empresa:RazonSocial", Group = "Empresa", IsSensitive = false, Description = "Razón social de la empresa.", Type = "text", LastModified = null },
+                new AppSetting { Key = "Empresa:CondicionIva", Group = "Empresa", IsSensitive = false, Description = "Condición frente al IVA (Responsable Inscripto, Monotributista, Exento, etc.).", Type = "text", LastModified = null },
+                new AppSetting { Key = "Empresa:IngresosBrutos", Group = "Empresa", IsSensitive = false, Description = "Número de Ingresos Brutos.", Type = "text", LastModified = null },
+                new AppSetting { Key = "Empresa:InicioActividades", Group = "Empresa", IsSensitive = false, Description = "Fecha de inicio de actividades.", Type = "text", LastModified = null }
             };
 
             foreach (var setting in defaultSettings)

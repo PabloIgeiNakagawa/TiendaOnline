@@ -17,6 +17,8 @@
         public string? EnvioProvincia { get; set; }
         public string? EnvioCodigoPostal { get; set; }
 
+        public decimal CostoEnvio { get; set; }
+
         public List<CrearPedidoDetalleDto> Items { get; set; } = new();
     }
 
