@@ -14,18 +14,21 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function updateThemeUI(theme) {
+    const iconClass = theme === 'dark' ? 'bi bi-moon fs-5' : 'bi bi-sun fs-5';
+
+    // Header normal de la tienda
     const icon = document.getElementById('theme-icon');
-    const texto = document.getElementById('modo-actual');
-
-    if (!icon) return;
-
-    if (theme === 'dark') {
-        icon.className = 'bi bi-moon fs-4';
-        if (texto) texto.innerText = 'Oscuro';
-    } else {
-        icon.className = 'bi bi-sun fs-4';
-        if (texto) texto.innerText = 'Claro';
+    if (icon) {
+        icon.className = theme === 'dark' ? 'bi bi-moon fs-4' : 'bi bi-sun fs-4';
     }
+
+    // Admin layout - desktop
+    const iconDesktop = document.getElementById('theme-icon-desktop');
+    if (iconDesktop) iconDesktop.className = iconClass;
+
+    // Admin layout - mobile
+    const iconMobile = document.getElementById('theme-icon-mobile');
+    if (iconMobile) iconMobile.className = theme === 'dark' ? 'bi bi-moon fs-4' : 'bi bi-sun fs-4';
 }
 
 function toggleTheme() {
@@ -44,6 +47,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('btn-theme');
     if (btn) {
         btn.addEventListener('click', toggleTheme);
+    }
+
+    // Toggle sidebar
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function () {
+            document.querySelector('.sidebar')?.classList.toggle('collapsed');
+            document.querySelector('.main-wrapper')?.classList.toggle('sidebar-collapsed');
+        });
     }
 
     // Inicializar Tooltips
@@ -88,13 +100,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // finalmente mostrar
         toast.show();
-    });
-
-    // Logout seguro (POST con anti-forgery)
-    document.querySelectorAll('.btn-logout').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var form = document.getElementById('logoutForm');
-            if (form) form.submit();
-        });
     });
 });
