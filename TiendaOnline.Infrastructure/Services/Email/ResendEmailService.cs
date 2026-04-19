@@ -107,5 +107,70 @@ namespace TiendaOnline.Infrastructure.Services.Email
         </html>";
 
             await EnviarEmailAsync(destinoEmail, $"Confirmaci&oacute;n de pedido #{pedidoId:D6}", cuerpoHtml);        
-        }    }
+        }
+
+        public async Task EnviarEmailPagoExitosoAsync(string destinoEmail, string nombreUsuario, int pedidoId, decimal total)
+        {
+            var nombreSitio = _appSettings.GetValue("Diseno:NombreDelSitio") ?? "Tienda";
+            var siteUrl = _globalSettings.SiteUrl.TrimEnd('/');
+
+            var cuerpoHtml = $@"
+        <!DOCTYPE html>
+        <html lang=""es"">
+        <head>
+        <meta charset=""utf-8"">
+        <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+        <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }}
+        .container {{ max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
+        .header {{ background: #198754; color: white; padding: 24px; text-align: center; }}
+        .header h1 {{ margin: 0; font-size: 24px; }}
+        .content {{ padding: 24px; }}
+        .content p {{ color: #333; line-height: 1.6; }}
+        .payment-box {{ border: 2px solid #198754; border-radius: 8px; padding: 20px; text-align: center; margin: 16px 0; background-color: #f8fffb; }}
+        .payment-box h2 {{ color: #198754; margin-top: 0; }}
+        .order-box {{ background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 16px; margin: 16px 0; }}
+        .order-box .row {{ display: flex; justify-content: space-between; padding: 6px 0; }}
+        .btn {{ display: inline-block; background: #198754; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500; margin-top: 16px; }}
+        .footer {{ background: #f8f9fa; padding: 16px; text-align: center; color: #6c757d; font-size: 13px; }}
+        </style>
+        </head>
+        <body>
+        <div class=""container"">
+        <div class=""header"">
+            <h1>&iexcl;Pago Recibido Correctamente!</h1>
+        </div>
+        <div class=""content"">
+            <p>Hola {nombreUsuario},</p>
+            <p>Te confirmamos que hemos recibido el pago de tu pedido. &iexcl;Muchas gracias!</p>
+            
+            <div class=""payment-box"">
+                <h2>Pago Confirmado</h2>
+                <p>Tu pedido #{pedidoId:D6} ha pasado a estado <strong>En Preparaci&oacute;n</strong>.</p>
+            </div>
+
+            <div class=""order-box"">
+                <div class=""row"">
+                    <span>N&uacute;mero de pedido:</span>
+                    <strong>#{pedidoId:D6}</strong>
+                </div>
+                <div class=""row"">
+                    <span>Monto pagado:</span>
+                    <strong>${total:N2}</strong>
+                </div>
+            </div>
+
+            <p>En cuanto el paquete est&eacute; en camino, te enviaremos otro email con los detalles del env&iacute;o.</p>
+            <a href=""{siteUrl}/Pedidos/Detalles/{pedidoId}"" class=""btn"">Ver detalles de mi pedido</a>
+        </div>
+        <div class=""footer"">
+            <p>{nombreSitio} &copy; {DateTime.Now.Year} - Este es un email autom&aacute;tico, por favor no responder.</p>
+        </div>
+        </div>
+        </body>
+        </html>";
+
+            await EnviarEmailAsync(destinoEmail, $"Pago recibido - Pedido #{pedidoId:D6}", cuerpoHtml);
+        }
+    }
 }

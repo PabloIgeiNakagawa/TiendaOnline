@@ -153,43 +153,50 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
         public async Task<bool> ConfirmarPagoAsync(InfoPagoDto infoPago)
         {
-            var pedido = await _context.Pedidos
-                .Include(p => p.DetallesPedido)
-                .FirstOrDefaultAsync(p => p.PedidoId == infoPago.PedidoId);
-
-            // Idempotencia y existencia: Si no existe o ya está pagado, cortamos acá
-            if (pedido == null)
-            {
-                _logger.LogWarning("No se encontró el pedido {PedidoId} para confirmar pago.", infoPago.PedidoId);
-                return false;
-            }
-
-            if (pedido.EstadoPago == EstadoPago.Aprobado)
-            {
-                _logger.LogInformation("El pedido {PedidoId} ya estaba aprobado. Ignorando.", infoPago.PedidoId);
-                return false;
-            }
-
-            if (pedido.EstadoPago == EstadoPago.Rechazado)
-            {
-                _logger.LogInformation("El pedido {PedidoId} ya estaba rechazado. Ignorando.", infoPago.PedidoId);
-                return false;
-            }
-
-            // Calculamos el total en el momento
-            decimal totalCalculado = pedido.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario);
-
-            // Seguridad: Comparamos el monto pagado en MP vs el total en nuestra DB
-            // Usamos una diferencia menor a 0.01 por temas de decimales en C#
-            if (Math.Abs((double)infoPago.MontoPagado - (double)totalCalculado) > 0.01)
-            {
-                _logger.LogWarning("Mismatch de montos en pedido {PedidoId}. MP: {MontoMP}, Sistema: {MontoSistema}, TransaccionId: {TransaccionId}",
-                    infoPago.PedidoId, infoPago.MontoPagado, totalCalculado, infoPago.TransaccionId);
-                return false;
-            }
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
+                var pedido = await _context.Pedidos
+                    .Include(p => p.Usuario)
+                    .Include(p => p.DetallesPedido)
+                        .ThenInclude(d => d.Producto)
+                    .FirstOrDefaultAsync(p => p.PedidoId == infoPago.PedidoId);
+
+                // Idempotencia y existencia: Si no existe o ya está pagado, cortamos acá
+                if (pedido == null)
+                {
+                    _logger.LogWarning("No se encontró el pedido {PedidoId} para confirmar pago.", infoPago.PedidoId);
+                    return false;
+                }
+
+                if (pedido.EstadoPago == EstadoPago.Aprobado)
+                {
+                    _logger.LogInformation("El pedido {PedidoId} ya estaba aprobado. Ignorando.", infoPago.PedidoId);
+                    return false;
+                }
+
+                if (pedido.EstadoPago == EstadoPago.Rechazado)
+                {
+                    _logger.LogInformation("El pedido {PedidoId} ya estaba rechazado. Ignorando.", infoPago.PedidoId);
+                    return false;
+                }
+
+                // Calculamos el total real (Subtotal + Envío) con precisión decimal
+                decimal subtotal = pedido.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario);
+                decimal totalCalculado = subtotal + pedido.CostoEnvio;
+
+                // Seguridad: Comparamos el monto pagado en MP vs el total en nuestra DB
+                // Usamos una diferencia menor a 0.01m por temas de redondeo
+                if (Math.Abs(infoPago.MontoPagado - totalCalculado) > 0.01m)
+                {
+                    _logger.LogWarning("Mismatch de montos en pedido {PedidoId}. MP: {MontoMP}, Sistema: {MontoSistema} (Subtotal: {Subtotal}, Envío: {Envio}), TransaccionId: {TransaccionId}",
+                        infoPago.PedidoId, infoPago.MontoPagado, totalCalculado, subtotal, pedido.CostoEnvio, infoPago.TransaccionId);
+                    return false;
+                }
+
+                bool resultadoEfectivo = false;
+
                 switch (infoPago.Estado)
                 {
                     case "approved":
@@ -197,20 +204,15 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                         pedido.Estado = EstadoPedido.EnPreparacion;
                         pedido.FechaEnPreparacion = DateTime.Now;
                         pedido.TransaccionPagoId = infoPago.TransaccionId;
-                        await _context.SaveChangesAsync();
-                        _logger.LogInformation("Pedido {PedidoId} confirmado como aprobado. Transacción: {TransaccionId}",
-                            infoPago.PedidoId, infoPago.TransaccionId);
-                        return true;
+                        resultadoEfectivo = true;
+                        break;
 
                     case "rejected":
                     case "declined":
                         pedido.EstadoPago = EstadoPago.Rechazado;
                         pedido.TransaccionPagoId = infoPago.TransaccionId;
-                        // No cambiamos EstadoPedido a Cancelado porque podría ser reintento
-                        await _context.SaveChangesAsync();
-                        _logger.LogWarning("Pedido {PedidoId} rechazado. Transacción: {TransaccionId}",
-                            infoPago.PedidoId, infoPago.TransaccionId);
-                        return true;
+                        resultadoEfectivo = true;
+                        break;
 
                     case "cancelled":
                         pedido.EstadoPago = EstadoPago.Rechazado;
@@ -218,10 +220,9 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                         pedido.FechaCancelado = DateTime.Now;
                         pedido.TransaccionPagoId = infoPago.TransaccionId;
 
-                        // Devolver stock
+                        // Devolver stock (Ya cargado eficientemente mediante ThenInclude)
                         foreach (var detalle in pedido.DetallesPedido)
                         {
-                            detalle.Producto = detalle.Producto ?? await _context.Productos.FindAsync(detalle.ProductoId);
                             if (detalle.Producto != null)
                             {
                                 detalle.Producto.Stock += detalle.Cantidad;
@@ -234,30 +235,44 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                                 );
                             }
                         }
-
-                        await _context.SaveChangesAsync();
-                        _logger.LogWarning("Pedido {PedidoId} cancelado por pago cancelado. Stock revertido.", infoPago.PedidoId);
-                        return true;
+                        resultadoEfectivo = true;
+                        break;
 
                     case "refunded":
                     case "charged_back":
                         pedido.EstadoPago = EstadoPago.Reembolsado;
                         pedido.TransaccionPagoId = infoPago.TransaccionId;
-                        await _context.SaveChangesAsync();
-                        _logger.LogWarning("Pedido {PedidoId} reembolsado. Transacción: {TransaccionId}",
-                            infoPago.PedidoId, infoPago.TransaccionId);
-                        return true;
-
-                    default:
-                        _logger.LogInformation("Pago {PedidoId} en estado '{Estado}' (pending/in_process). No se toma acción.",
-                            infoPago.PedidoId, infoPago.Estado);
-                        return false;
+                        resultadoEfectivo = true;
+                        break;
                 }
+
+                if (resultadoEfectivo)
+                {
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    // SOLO ENCOLAR EMAIL SI SE APROBÓ EL PAGO (Post-Commit)
+                    if (infoPago.Estado == "approved")
+                    {
+                        BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoExitosoAsync(
+                            pedido.Usuario.Email,
+                            $"{pedido.Usuario.Nombre} {pedido.Usuario.Apellido}",
+                            pedido.PedidoId,
+                            totalCalculado
+                        ));
+                    }
+
+                    _logger.LogInformation("Pedido {PedidoId} procesado con estado MP: {Estado}. Transacción: {TransaccionId}",
+                        infoPago.PedidoId, infoPago.Estado, infoPago.TransaccionId);
+                    return true;
+                }
+
+                return false;
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al actualizar el pedido {PedidoId} al confirmar pago con estado '{Estado}'",
-                    infoPago.PedidoId, infoPago.Estado);
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error al procesar el pago del pedido {PedidoId}", infoPago.PedidoId);
                 throw;
             }
         }
