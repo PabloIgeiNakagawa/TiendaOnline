@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+using TiendaOnline.Application.Common.Settings;
+using Hangfire;
+using Microsoft.AspNetCore.Identity;
 using QuestPDF.Infrastructure;
 using TiendaOnline.Application.AdminOverview;
 using TiendaOnline.Application.AppSettings;
@@ -30,7 +32,9 @@ using TiendaOnline.Infrastructure.Services.Carritos;
 using TiendaOnline.Infrastructure.Services.Categorias;
 using TiendaOnline.Infrastructure.Services.ComprobantePdf;
 using TiendaOnline.Infrastructure.Services.Direcciones;
+using TiendaOnline.Infrastructure.Services.Email;
 using TiendaOnline.Infrastructure.Services.Geo;
+using Resend;
 using TiendaOnline.Infrastructure.Services.MovimientosStock;
 using TiendaOnline.Infrastructure.Services.Pedidos;
 using TiendaOnline.Infrastructure.Services.Productos;
@@ -46,8 +50,23 @@ namespace TiendaOnline.Extensions
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
-        public static IServiceCollection AddBusinessServices(this IServiceCollection services)
+        public static IServiceCollection AddBusinessServices(this IServiceCollection services, IConfiguration configuration)
         {
+            // Mapear AppSettings a Clases (IOptions)
+            services.Configure<ResendSettings>(configuration.GetSection("Resend"));
+            services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
+            services.Configure<MercadoPagoSettings>(configuration.GetSection("MercadoPago"));
+            services.Configure<GlobalSettings>(o => o.SiteUrl = configuration["SiteUrl"] ?? "");
+
+            // Hangfire
+            services.AddHangfire(config => config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseSqlServerStorage(configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddHangfireServer();
+
             // Servicios base
             services.AddScoped<IUsuarioQueryService, UsuarioQueryService>();
             services.AddScoped<IUsuarioCommandService, UsuarioCommandService>();
@@ -63,6 +82,15 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IGeoService, GeoService>();
             services.AddScoped<IDireccionService, DireccionService>();
             services.AddScoped<IPaymentService, MercadoPagoService>();
+
+            // Email
+            services.AddOptions<ResendClientOptions>().Configure(o =>
+            {
+                o.ApiToken = configuration["Resend:ApiKey"] ?? "";
+            });
+            services.AddHttpClient<ResendClient>();
+            services.AddTransient<IResend, ResendClient>();
+            services.AddScoped<IEmailService, ResendEmailService>();
 
             // Administración
             services.AddScoped<IAdminOverviewService, AdminOverviewService>();

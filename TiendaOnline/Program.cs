@@ -21,7 +21,7 @@ builder.Services.AddDbContext<TiendaContext>(options =>
 
 // Extensiones personalizadas para organizar la configuración
 builder.Services.AddCustomSecurity(builder.Configuration); // Configura Cookies y Session
-builder.Services.AddBusinessServices(); // Registra todos tus Services
+builder.Services.AddBusinessServices(builder.Configuration); // Registra todos tus Services
 builder.Services.AddMemoryCache();
 builder.Services.AddRateLimitingConfig(); // Rate limiting para endpoints críticos
 
@@ -69,6 +69,8 @@ app.UseRateLimiter(); // Rate limiting antes de auth
 app.UseSession(); // Para el carrito
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseHangfireDashboard();
 
 // 1. Ruta para áreas (Primero)
 app.MapControllerRoute(

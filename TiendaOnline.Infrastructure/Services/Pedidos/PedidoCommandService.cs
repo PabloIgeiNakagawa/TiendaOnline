@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TiendaOnline.Application.Carritos;
+using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Application.Payment;
 using TiendaOnline.Application.Pedidos.Command;
@@ -13,18 +15,20 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
     {
         private readonly TiendaContext _context;
         private readonly IMovimientoStockCommandService _movimientoStockCommandService;
+        private readonly IEmailService _emailService;
         private readonly ILogger<PedidoCommandService> _logger;
 
-        public PedidoCommandService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, ILogger<PedidoCommandService> logger)
+        public PedidoCommandService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, IEmailService emailService, ILogger<PedidoCommandService> logger)
         {
             _context = context;
             _movimientoStockCommandService = movimientoStockCommandService;
+            _emailService = emailService;
             _logger = logger;
         }
 
         public async Task<PedidoPagoDto> CrearPedidoYPrepararPagoAsync(CrearPedidoDto dto)
         {
-            if (dto.Items == null || !dto.Items.Any()) 
+            if (dto.Items == null || !dto.Items.Any())
                 throw new Exception("El pedido no tiene ítems.");
 
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -64,20 +68,21 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 foreach (var itemDto in itemsAgrupados)
                 {
-                    // Buscamos el producto en BD para validar stock y obtener nombre real
+                    // 1. Descontamos stock de forma atómica en la base de datos
+                    // Solo se restará si el stock actual es mayor o igual a la cantidad solicitada
+                    var filasAfectadas = await _context.Productos
+                        .Where(p => p.ProductoId == itemDto.ProductoId && p.Stock >= itemDto.Cantidad)
+                        .ExecuteUpdateAsync(s => s.SetProperty(p => p.Stock, p => p.Stock - itemDto.Cantidad));
+
+                    if (filasAfectadas == 0)
+                    {
+                        // Buscamos el nombre para dar un error descriptivo
+                        var productoError = await _context.Productos.FindAsync(itemDto.ProductoId);
+                        throw new Exception($"Lo sentimos, ya no queda stock suficiente para {productoError?.Nombre ?? "el producto " + itemDto.ProductoId}.");
+                    }
+
+                    // 2. Buscamos el producto para obtener datos de visualización (precio, nombre)
                     var producto = await _context.Productos.FindAsync(itemDto.ProductoId);
-
-                    if (producto == null) 
-                        throw new Exception($"Producto {itemDto.ProductoId} no encontrado.");
-
-                    if (producto.Stock < itemDto.Cantidad) 
-                        throw new Exception($"Sin stock para {producto.Nombre}");
-
-                    if (producto.Stock < itemDto.Cantidad)
-                        throw new Exception($"Sin stock suficiente para {producto.Nombre}");
-
-                    // 1. Descontamos stock en la entidad
-                    producto.Stock -= itemDto.Cantidad;
 
                     pedido.DetallesPedido.Add(new DetallePedido
                     {
@@ -115,6 +120,17 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 if (pedidoCompleto == null) throw new Exception("Error al recuperar el pedido creado.");
 
+                // Enviar email de confirmación usando Hangfire (Persistente y con reintentos)
+                var subtotal = pedidoCompleto.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario);
+                var total = subtotal + pedidoCompleto.CostoEnvio;
+
+                BackgroundJob.Enqueue<IEmailService>(x => x.EnviarConfirmacionPedidoAsync(
+                    pedidoCompleto.Usuario.Email,
+                    pedidoCompleto.Usuario.Nombre,
+                    pedidoCompleto.PedidoId,
+                    total
+                ));
+
                 return new PedidoPagoDto
                 {
                     PedidoId = pedidoCompleto.PedidoId,
@@ -127,9 +143,9 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     }).ToList()
                 };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                //_logger.LogError(ex, "Error al crear el pedido para el usuario {UsuarioId}", usuarioId);
+                _logger.LogError(ex, "Error al crear el pedido.");
                 await transaction.RollbackAsync();
                 throw;
             }
