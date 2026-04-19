@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Extensions;
 using TiendaOnline.Infrastructure.Persistence;
+using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 

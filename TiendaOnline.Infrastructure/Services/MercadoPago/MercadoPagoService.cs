@@ -1,24 +1,25 @@
 ﻿using MercadoPago.Client.Payment;
 using MercadoPago.Client.Preference;
 using MercadoPago.Config;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Application.Payment;
+using TiendaOnline.Application.Common.Settings;
 
 public class MercadoPagoService : IPaymentService
 {
-    private readonly IConfiguration _configuration;
+    private readonly MercadoPagoSettings _settings;
     private readonly IAppSettingsService _appSettingsService;
     private readonly ILogger<MercadoPagoService> _logger;
 
-    public MercadoPagoService(IConfiguration configuration, IAppSettingsService appSettingsService, ILogger<MercadoPagoService> logger)
+    public MercadoPagoService(IOptions<MercadoPagoSettings> options, IAppSettingsService appSettingsService, ILogger<MercadoPagoService> logger)
     {
-        _configuration = configuration;
-        MercadoPagoConfig.AccessToken = _configuration["MercadoPago:AccessToken"];
+        _settings = options.Value;
+        MercadoPagoConfig.AccessToken = _settings.AccessToken;
         _appSettingsService = appSettingsService;
         _logger = logger;
     }
@@ -26,13 +27,13 @@ public class MercadoPagoService : IPaymentService
     public async Task<string> GenerarPreferenciaPagoAsync(PedidoPagoDto pedidoDto)
     {
         var client = new PreferenceClient();
-        var notificationUrl = _configuration["MercadoPago:NotificationUrl"];
-        var successUrl = _configuration["MercadoPago:BackUrls:Success"];
-        var failureUrl = _configuration["MercadoPago:BackUrls:Failure"];
+        var notificationUrl = _settings.NotificationUrl;
+        var successUrl = _settings.BackUrls.Success;
+        var failureUrl = _settings.BackUrls.Failure;
 
         // Validación defensiva: si las URLs son nulas, lanzá una excepción clara
         if (string.IsNullOrEmpty(successUrl))
-            throw new Exception("La URL de retorno (Success) no está configurada en appsettings.json");
+            throw new Exception("La URL de retorno (Success) no está configurada en MercadoPagoSettings");
 
         var request = new PreferenceRequest
         {
@@ -100,17 +101,16 @@ public class MercadoPagoService : IPaymentService
         try
         {
             // En desarrollo, permitir bypass de la firma si está configurado explícitamente
-            var bypassConfig = _configuration["MercadoPago:BypassSignatureValidation"];
-            if (bool.TryParse(bypassConfig, out bool shouldBypass) && shouldBypass)
+            if (_settings.BypassSignatureValidation)
             {
                 _logger.LogWarning("⚠ VALIDACIÓN DE FIRMA BYPASSEADA - Esto solo debería estar habilitado en desarrollo");
                 return true;
             }
 
-            var secret = _configuration["MercadoPago:WebhookSecret"];
+            var secret = _settings.WebhookSecret;
             if (string.IsNullOrEmpty(secret))
             {
-                _logger.LogError("WebhookSecret no está configurado en appsettings.json");
+                _logger.LogError("WebhookSecret no está configurado en MercadoPagoSettings");
                 return false;
             }
 

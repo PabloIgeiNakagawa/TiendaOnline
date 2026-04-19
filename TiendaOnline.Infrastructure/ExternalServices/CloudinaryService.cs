@@ -1,7 +1,8 @@
 ﻿using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
 using TiendaOnline.Application.Common.Interfaces;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using TiendaOnline.Application.Common.Settings;
 
 namespace TiendaOnline.Infrastructure.ExternalServices
 {
@@ -9,12 +10,13 @@ namespace TiendaOnline.Infrastructure.ExternalServices
     {
         private readonly Cloudinary _cloudinary;
 
-        public CloudinaryService(IConfiguration config)
+        public CloudinaryService(IOptions<CloudinarySettings> config)
         {
+            var settings = config.Value;
             var acc = new Account(
-                config["CloudinarySettings:CloudName"],
-                config["CloudinarySettings:ApiKey"],
-                config["CloudinarySettings:ApiSecret"]
+                settings.CloudName,
+                settings.ApiKey,
+                settings.ApiSecret
             );
             _cloudinary = new Cloudinary(acc);
         }

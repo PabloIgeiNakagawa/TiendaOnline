@@ -21,6 +21,7 @@ namespace TiendaOnline.Application.Common.Settings
         public MercadoPagoBackUrls BackUrls { get; set; } = new();
         public string NotificationUrl { get; set; } = string.Empty;
         public string WebhookSecret { get; set; } = string.Empty;
+        public bool BypassSignatureValidation { get; set; } = false;
     }
 
     public class MercadoPagoBackUrls
@@ -30,8 +31,19 @@ namespace TiendaOnline.Application.Common.Settings
         public string Pending { get; set; } = string.Empty;
     }
 
+    public class GoogleKeys
+    {
+        public string ClientId { get; set; } = string.Empty;
+        public string ClientSecret { get; set; } = string.Empty;
+    }
+
     public class GlobalSettings
     {
         public string SiteUrl { get; set; } = string.Empty;
+    }
+
+    public class SystemSettings
+    {
+        public string Environment { get; set; } = "Production";
     }
 }
