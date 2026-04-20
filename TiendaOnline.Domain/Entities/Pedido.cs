@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TiendaOnline.Domain.Entities
@@ -22,6 +22,8 @@ namespace TiendaOnline.Domain.Entities
 
     public class Pedido
     {
+        public static readonly TimeSpan TiempoMaximoPagoPendiente = TimeSpan.FromHours(24);
+
         [Key]
         public int PedidoId { get; set; }
 
@@ -88,5 +90,13 @@ namespace TiendaOnline.Domain.Entities
 
         public ICollection<DetallePedido> DetallesPedido { get; set; } = new List<DetallePedido>();
         public virtual ICollection<MovimientoStock> Movimientos { get; set; } = new List<MovimientoStock>();
+
+        public bool EstaVencido()
+        {
+            if (EstadoPago == EstadoPago.Aprobado)
+                return false;
+
+            return FechaPedido.Add(TiempoMaximoPagoPendiente) <= DateTime.Now;
+        }
     }
 }

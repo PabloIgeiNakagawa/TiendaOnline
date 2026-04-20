@@ -81,6 +81,7 @@ namespace TiendaOnline.Extensions
             services.AddScoped<ICarritoService, CarritoService>();
             services.AddScoped<IPedidoQueryService, PedidoQueryService>();
             services.AddScoped<IPedidoCommandService, PedidoCommandService>();
+            services.AddScoped<IPedidoVencimientoService, PedidoVencimientoService>();
             services.AddScoped<IGeoService, GeoService>();
             services.AddScoped<IDireccionService, DireccionService>();
             services.AddScoped<IPaymentService, MercadoPagoService>();

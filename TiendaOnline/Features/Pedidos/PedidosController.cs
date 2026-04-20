@@ -400,9 +400,16 @@ namespace TiendaOnline.Features.Pedidos
                 var infoPago = await _paymentService.ObtenerDetallesPagoAsync(payment_id);
                 if (infoPago != null && infoPago.Estado == "approved")
                 {
-                    await _pedidoCommandService.ConfirmarPagoAsync(infoPago);
-                    await _carritoService.VaciarAsync();
-                    TempData["MensajeExito"] = "¡Pago confirmado exitosamente!";
+                    var pagoConfirmado = await _pedidoCommandService.ConfirmarPagoAsync(infoPago);
+                    if (pagoConfirmado)
+                    {
+                        await _carritoService.VaciarAsync();
+                        TempData["MensajeExito"] = "¡Pago confirmado exitosamente!";
+                    }
+                    else
+                    {
+                        TempData["MensajeError"] = "El pago fue recibido, pero el pedido ya no pudo confirmarse automáticamente. Contactanos para revisarlo.";
+                    }
                 }
             }
 

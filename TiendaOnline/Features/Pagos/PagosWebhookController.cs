@@ -85,11 +85,12 @@ namespace TiendaOnline.Features.Pagos
                 // Le pedimos al servicio de MP que traiga la data real usando el ID unificado
                 var infoPago = await _paymentService.ObtenerDetallesPagoAsync(finalId);
 
-                // Si MP nos devolvió data y el pago está aprobado
-                if (infoPago != null && infoPago.Estado == "approved")
+                if (infoPago != null)
                 {
-                    await _pedidoCommandService.ConfirmarPagoAsync(infoPago);
-                    _logger.LogInformation("Pago {Id} confirmado y pedido actualizado.", finalId);
+                    // Delegamos todo el procesamiento al servicio, que ya maneja los estados:
+                    // approved, rejected, cancelled, refunded, etc.
+                    var procesado = await _pedidoCommandService.ConfirmarPagoAsync(infoPago);
+                    _logger.LogInformation("Webhook procesado para Pago {Id} con estado {Estado}. Resultado efectivo: {Procesado}.", finalId, infoPago.Estado, procesado);
                 }
             }
 

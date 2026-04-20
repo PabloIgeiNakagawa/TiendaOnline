@@ -11,18 +11,16 @@ using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Infrastructure.Services.Pedidos
 {
-    public class PedidoCommandService : IPedidoCommandService
+public class PedidoCommandService : IPedidoCommandService
     {
         private readonly TiendaContext _context;
         private readonly IMovimientoStockCommandService _movimientoStockCommandService;
-        private readonly IEmailService _emailService;
         private readonly ILogger<PedidoCommandService> _logger;
 
-        public PedidoCommandService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, IEmailService emailService, ILogger<PedidoCommandService> logger)
+        public PedidoCommandService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, ILogger<PedidoCommandService> logger)
         {
             _context = context;
             _movimientoStockCommandService = movimientoStockCommandService;
-            _emailService = emailService;
             _logger = logger;
         }
 
@@ -68,21 +66,10 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 foreach (var itemDto in itemsAgrupados)
                 {
-                    // 1. Descontamos stock de forma atómica en la base de datos
-                    // Solo se restará si el stock actual es mayor o igual a la cantidad solicitada
-                    var filasAfectadas = await _context.Productos
-                        .Where(p => p.ProductoId == itemDto.ProductoId && p.Stock >= itemDto.Cantidad)
-                        .ExecuteUpdateAsync(s => s.SetProperty(p => p.Stock, p => p.Stock - itemDto.Cantidad));
-
-                    if (filasAfectadas == 0)
-                    {
-                        // Buscamos el nombre para dar un error descriptivo
-                        var productoError = await _context.Productos.FindAsync(itemDto.ProductoId);
-                        throw new Exception($"Lo sentimos, ya no queda stock suficiente para {productoError?.Nombre ?? "el producto " + itemDto.ProductoId}.");
-                    }
-
-                    // 2. Buscamos el producto para obtener datos de visualización (precio, nombre)
+                    // Guardamos el snapshot del pedido, pero el stock se reservará recién cuando el pago sea aprobado.
                     var producto = await _context.Productos.FindAsync(itemDto.ProductoId);
+                    if (producto == null)
+                        throw new Exception($"No se encontró el producto con ID {itemDto.ProductoId}.");
 
                     pedido.DetallesPedido.Add(new DetallePedido
                     {
@@ -94,20 +81,6 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 }
 
                 _context.Pedidos.Add(pedido);
-                await _context.SaveChangesAsync();
-
-                // 2. Generamos movimientos de stock (solo lógica de auditoría)
-                foreach (var detalle in pedido.DetallesPedido)
-                {
-                    _movimientoStockCommandService.GenerarMovimiento(
-                        detalle.Producto,
-                        -detalle.Cantidad,
-                        TipoMovimiento.SalidaVenta,
-                        pedido.PedidoId,
-                        $"Reserva por Pedido #{pedido.PedidoId}"
-                    );
-                }
-
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
@@ -170,25 +143,14 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     return false;
                 }
 
-                if (pedido.EstadoPago == EstadoPago.Aprobado)
-                {
-                    _logger.LogInformation("El pedido {PedidoId} ya estaba aprobado. Ignorando.", infoPago.PedidoId);
-                    return false;
-                }
-
-                if (pedido.EstadoPago == EstadoPago.Rechazado)
-                {
-                    _logger.LogInformation("El pedido {PedidoId} ya estaba rechazado. Ignorando.", infoPago.PedidoId);
-                    return false;
-                }
-
                 // Calculamos el total real (Subtotal + Envío) con precisión decimal
                 decimal subtotal = pedido.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario);
                 decimal totalCalculado = subtotal + pedido.CostoEnvio;
+                var estadoNormalizado = infoPago.Estado?.Trim().ToLowerInvariant();
+                var pedidoVencido = pedido.EstaVencido();
 
-                // Seguridad: Comparamos el monto pagado en MP vs el total en nuestra DB
-                // Usamos una diferencia menor a 0.01m por temas de redondeo
-                if (Math.Abs(infoPago.MontoPagado - totalCalculado) > 0.01m)
+                // Seguridad: solo validamos monto cuando el pago viene efectivamente aprobado.
+                if (estadoNormalizado == "approved" && Math.Abs(infoPago.MontoPagado - totalCalculado) > 0.01m)
                 {
                     _logger.LogWarning("Mismatch de montos en pedido {PedidoId}. MP: {MontoMP}, Sistema: {MontoSistema} (Subtotal: {Subtotal}, Envío: {Envio}), TransaccionId: {TransaccionId}",
                         infoPago.PedidoId, infoPago.MontoPagado, totalCalculado, subtotal, pedido.CostoEnvio, infoPago.TransaccionId);
@@ -196,74 +158,178 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 }
 
                 bool resultadoEfectivo = false;
+                string? tipoEmailAEnviar = null;
+                var nombreCompletoUsuario = string.Join(" ", new[] { pedido.Usuario.Nombre, pedido.Usuario.Apellido }
+                    .Where(x => !string.IsNullOrWhiteSpace(x)));
 
-                switch (infoPago.Estado)
+                switch (estadoNormalizado)
                 {
                     case "approved":
+                        if (pedido.EstadoPago == EstadoPago.Aprobado)
+                        {
+                            _logger.LogInformation("El pedido {PedidoId} ya estaba aprobado. Ignorando.", infoPago.PedidoId);
+                            return false;
+                        }
+
+                        if (pedidoVencido)
+                        {
+                            _logger.LogWarning("El pedido {PedidoId} ya venció. Ignorando aprobación tardía. Transacción: {TransaccionId}",
+                                infoPago.PedidoId, infoPago.TransaccionId);
+                            return false;
+                        }
+
+                        if (pedido.Estado == EstadoPedido.Cancelado)
+                        {
+                            _logger.LogInformation("El pedido {PedidoId} ya estaba cancelado. Ignorando aprobación tardía.", infoPago.PedidoId);
+                            return false;
+                        }
+
+                        if (pedido.EstadoPago == EstadoPago.Reembolsado)
+                        {
+                            _logger.LogInformation("El pedido {PedidoId} ya estaba reembolsado. Ignorando aprobación tardía.", infoPago.PedidoId);
+                            return false;
+                        }
+
+                        var reservaStockExitosa = await IntentarReservarStockAsync(pedido);
+                        if (!reservaStockExitosa)
+                        {
+                            await transaction.RollbackAsync();
+                            return false;
+                        }
+
+                        foreach (var detalle in pedido.DetallesPedido.Where(d => d.Producto != null))
+                        {
+                            _movimientoStockCommandService.GenerarMovimiento(
+                                detalle.Producto!,
+                                -detalle.Cantidad,
+                                TipoMovimiento.SalidaVenta,
+                                pedido.PedidoId,
+                                $"Venta confirmada por pago aprobado en Pedido #{pedido.PedidoId}"
+                            );
+                        }
+
                         pedido.EstadoPago = EstadoPago.Aprobado;
                         pedido.Estado = EstadoPedido.EnPreparacion;
                         pedido.FechaEnPreparacion = DateTime.Now;
                         pedido.TransaccionPagoId = infoPago.TransaccionId;
                         resultadoEfectivo = true;
+                        tipoEmailAEnviar = "aprobado";
                         break;
 
                     case "rejected":
                     case "declined":
+                        if (pedido.Estado == EstadoPedido.Cancelado)
+                        {
+                            _logger.LogInformation("El pedido {PedidoId} ya estaba cancelado. Ignorando rechazo posterior.", infoPago.PedidoId);
+                            return false;
+                        }
+
+                        if (pedido.EstadoPago == EstadoPago.Rechazado)
+                        {
+                            _logger.LogInformation("El pedido {PedidoId} ya estaba rechazado. Ignorando.", infoPago.PedidoId);
+                            return false;
+                        }
+
+                        if (pedido.EstadoPago == EstadoPago.Reembolsado)
+                        {
+                            _logger.LogInformation("El pedido {PedidoId} ya estaba reembolsado. Ignorando rechazo posterior.", infoPago.PedidoId);
+                            return false;
+                        }
+
+                        if (pedido.EstadoPago == EstadoPago.Aprobado)
+                        {
+                            _logger.LogInformation("El pedido {PedidoId} ya estaba aprobado. Ignorando rechazo posterior.", infoPago.PedidoId);
+                            return false;
+                        }
+
                         pedido.EstadoPago = EstadoPago.Rechazado;
                         pedido.TransaccionPagoId = infoPago.TransaccionId;
                         resultadoEfectivo = true;
+                        tipoEmailAEnviar = "rechazado";
                         break;
 
                     case "cancelled":
+                        if (pedido.Estado == EstadoPedido.Cancelado)
+                        {
+                            _logger.LogInformation("El pedido {PedidoId} ya estaba cancelado. Ignorando.", infoPago.PedidoId);
+                            return false;
+                        }
+
+                        if (pedido.EstadoPago == EstadoPago.Reembolsado)
+                        {
+                            _logger.LogInformation("El pedido {PedidoId} ya estaba reembolsado. Ignorando cancelación posterior.", infoPago.PedidoId);
+                            return false;
+                        }
+
+                        if (pedido.EstadoPago == EstadoPago.Aprobado)
+                        {
+                            _logger.LogInformation("El pedido {PedidoId} ya estaba aprobado. Ignorando cancelación posterior.", infoPago.PedidoId);
+                            return false;
+                        }
+
                         pedido.EstadoPago = EstadoPago.Rechazado;
                         pedido.Estado = EstadoPedido.Cancelado;
                         pedido.FechaCancelado = DateTime.Now;
                         pedido.TransaccionPagoId = infoPago.TransaccionId;
-
-                        // Devolver stock (Ya cargado eficientemente mediante ThenInclude)
-                        foreach (var detalle in pedido.DetallesPedido)
-                        {
-                            if (detalle.Producto != null)
-                            {
-                                detalle.Producto.Stock += detalle.Cantidad;
-                                _movimientoStockCommandService.GenerarMovimiento(
-                                    detalle.Producto,
-                                    detalle.Cantidad,
-                                    TipoMovimiento.CancelacionPedido,
-                                    pedido.PedidoId,
-                                    $"Devolución por cancelación de pago en Pedido #{pedido.PedidoId}"
-                                );
-                            }
-                        }
                         resultadoEfectivo = true;
+                        tipoEmailAEnviar = "rechazado";
                         break;
 
                     case "refunded":
                     case "charged_back":
+                        if (pedido.EstadoPago == EstadoPago.Reembolsado)
+                        {
+                            _logger.LogInformation("El pedido {PedidoId} ya estaba reembolsado. Ignorando.", infoPago.PedidoId);
+                            return false;
+                        }
+
+                        if (pedido.EstadoPago != EstadoPago.Aprobado)
+                        {
+                            _logger.LogInformation("El pedido {PedidoId} no estaba aprobado. Ignorando reembolso para estado {EstadoPago}.", infoPago.PedidoId, pedido.EstadoPago);
+                            return false;
+                        }
+
                         pedido.EstadoPago = EstadoPago.Reembolsado;
                         pedido.TransaccionPagoId = infoPago.TransaccionId;
                         resultadoEfectivo = true;
+                        tipoEmailAEnviar = "reembolsado";
                         break;
                 }
 
-                if (resultadoEfectivo)
+if (resultadoEfectivo)
                 {
+                    switch (tipoEmailAEnviar)
+                    {
+                        case "aprobado":
+                            BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoExitosoAsync(
+                                pedido.Usuario.Email,
+                                nombreCompletoUsuario,
+                                pedido.PedidoId,
+                                totalCalculado));
+                            break;
+
+                        case "rechazado":
+                            BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoRechazadoAsync(
+                                pedido.Usuario.Email,
+                                nombreCompletoUsuario,
+                                pedido.PedidoId,
+                                totalCalculado));
+                            break;
+
+                        case "reembolsado":
+                            BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoReembolsadoAsync(
+                                pedido.Usuario.Email,
+                                nombreCompletoUsuario,
+                                pedido.PedidoId,
+                                totalCalculado));
+                            break;
+                    }
+
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    // SOLO ENCOLAR EMAIL SI SE APROBÓ EL PAGO (Post-Commit)
-                    if (infoPago.Estado == "approved")
-                    {
-                        BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoExitosoAsync(
-                            pedido.Usuario.Email,
-                            $"{pedido.Usuario.Nombre} {pedido.Usuario.Apellido}",
-                            pedido.PedidoId,
-                            totalCalculado
-                        ));
-                    }
-
                     _logger.LogInformation("Pedido {PedidoId} procesado con estado MP: {Estado}. Transacción: {TransaccionId}",
-                        infoPago.PedidoId, infoPago.Estado, infoPago.TransaccionId);
+                        infoPago.PedidoId, estadoNormalizado, infoPago.TransaccionId);
                     return true;
                 }
 
@@ -290,6 +356,9 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             // Solo permitimos reintentar si el pedido sigue pendiente
             if (pedido.EstadoPago == EstadoPago.Aprobado)
                 throw new Exception("Este pedido ya ha sido pagado.");
+
+            if (pedido.Estado == EstadoPedido.Cancelado || pedido.EstaVencido())
+                throw new Exception("Este pedido ya no admite nuevos intentos de pago.");
 
             return new PedidoPagoDto
             {
@@ -356,21 +425,41 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 if (pedido.Estado == EstadoPedido.Enviado)
                     throw new Exception("El pedido ya fue enviado, debe procesarse como devolución.");
 
-                // Devolver el stock por cada detalle
-                foreach (var detalle in pedido.DetallesPedido)
-                {
-                    // Sumamos lo que antes restamos
-                    detalle.Producto.Stock += detalle.Cantidad;
+                var debeDevolverStock = pedido.EstadoPago == EstadoPago.Aprobado || pedido.EstadoPago == EstadoPago.Reembolsado;
 
-                    // Registramos el movimiento de entrada por cancelación
-                    // Cantidad positiva porque entra de nuevo
-                    _movimientoStockCommandService.GenerarMovimiento(
-                        detalle.Producto,
-                        detalle.Cantidad,
-                        TipoMovimiento.CancelacionPedido,
-                        pedido.PedidoId,
-                        $"Devolución por cancelación de Pedido #{pedido.PedidoId}"
-                    );
+if (debeDevolverStock)
+                {
+                    var movimientosARegistrar = new List<(int ProductoId, int Cantidad, string NombreProducto)>();
+
+                    foreach (var detalle in pedido.DetallesPedido)
+                    {
+                        var filasAfectadas = await _context.Productos
+                            .Where(p => p.ProductoId == detalle.ProductoId)
+                            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Stock, p => p.Stock + detalle.Cantidad));
+
+                        if (filasAfectadas == 0)
+                        {
+                            _logger.LogWarning("No se pudo devolver stock para producto {ProductoId}. Puede que haya sido eliminado.", detalle.ProductoId);
+                            continue;
+                        }
+
+                        movimientosARegistrar.Add((detalle.ProductoId, detalle.Cantidad, detalle.Producto?.Nombre ?? $"ID {detalle.ProductoId}"));
+                    }
+
+                    foreach (var mov in movimientosARegistrar)
+                    {
+                        var producto = await _context.Productos.FindAsync(mov.ProductoId);
+                        if (producto != null)
+                        {
+                            _movimientoStockCommandService.GenerarMovimiento(
+                                producto,
+                                mov.Cantidad,
+                                TipoMovimiento.CancelacionPedido,
+                                pedido.PedidoId,
+                                $"Devolución por cancelación de Pedido #{pedido.PedidoId}"
+                            );
+                        }
+                    }
                 }
 
                 pedido.Estado = EstadoPedido.Cancelado;
@@ -385,6 +474,26 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 await transaction.RollbackAsync();
                 throw;
             }
+}
+
+        private async Task<bool> IntentarReservarStockAsync(Pedido pedido)
+        {
+            foreach (var detalle in pedido.DetallesPedido)
+            {
+                var filasAfectadas = await _context.Productos
+                    .Where(p => p.ProductoId == detalle.ProductoId && p.Stock >= detalle.Cantidad)
+                    .ExecuteUpdateAsync(s => s.SetProperty(p => p.Stock, p => p.Stock - detalle.Cantidad));
+
+                if (filasAfectadas == 0)
+                {
+                    var nombreProducto = detalle.Producto?.Nombre ?? $"ID {detalle.ProductoId}";
+                    _logger.LogWarning("Stock insuficiente para aprobar el pedido {PedidoId}. Producto: {ProductoId} ({NombreProducto}), Cantidad: {Cantidad}",
+                        pedido.PedidoId, detalle.ProductoId, nombreProducto, detalle.Cantidad);
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

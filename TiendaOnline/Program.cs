@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Extensions;
 using TiendaOnline.Infrastructure.Persistence;
 using Hangfire;
+using TiendaOnline.Application.Pedidos.Command;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -72,6 +73,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseHangfireDashboard();
+
+RecurringJob.AddOrUpdate<IPedidoVencimientoService>(
+    "cancelar-pedidos-vencidos",
+    x => x.CancelarPedidosVencidosAsync(),
+    "*/5 * * * *");
 
 // 1. Ruta para áreas (Primero)
 app.MapControllerRoute(
