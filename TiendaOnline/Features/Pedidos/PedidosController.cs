@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
@@ -235,13 +235,21 @@ namespace TiendaOnline.Features.Pedidos
                 return View("CheckOut", model);
             }
 
-            return RedirectToAction("Confirmacion", model);
+            var modelJson = System.Text.Json.JsonSerializer.Serialize(model);
+            TempData["CheckOutTemp"] = modelJson;
+            return RedirectToAction("Confirmacion");
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> Confirmacion(CheckOutViewModel model)
+        public async Task<IActionResult> Confirmacion()
         {
-            if (model == null) return RedirectToAction("CheckOut");
+            var modelJson = TempData["CheckOutTemp"] as string;
+            if (string.IsNullOrEmpty(modelJson))
+                return RedirectToAction("CheckOut");
+
+            var model = System.Text.Json.JsonSerializer.Deserialize<CheckOutViewModel>(modelJson);
+            if (model == null)
+                return RedirectToAction("CheckOut");
 
             var carritoItems = await _carritoService.ObtenerAsync();
 
