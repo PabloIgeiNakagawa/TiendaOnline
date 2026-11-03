@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Extensions;
+using TiendaOnline.Hangfire;
 using TiendaOnline.Infrastructure.Persistence;
 using Hangfire;
 using TiendaOnline.Application.Pedidos.Command;
@@ -72,7 +73,10 @@ app.UseSession(); // Para el carrito
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseHangfireDashboard();
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireDashboardAuthFilter() }
+});
 
 RecurringJob.AddOrUpdate<IPedidoVencimientoService>(
     "cancelar-pedidos-vencidos",
