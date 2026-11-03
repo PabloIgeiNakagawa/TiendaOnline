@@ -1,0 +1,58 @@
+# Build, test, publish y deploy automático a MonsterASP.NET (ex-somee).
+# Se dispara en cada push a main (y se puede correr a mano desde la pestaña Actions).
+#
+# Secretos requeridos en el repo (Settings > Secrets and variables > Actions),
+# con los valores de la tarjeta "Visual Studio access" de la página Deploy del
+# Control Panel:
+#   WEBSITE_NAME           ej. siteXXXX
+#   SERVER_COMPUTER_NAME   ej. https://siteXXXX.siteasp.net:8172
+#   SERVER_USERNAME        el Login del Web Deploy
+#   SERVER_PASSWORD        la contraseña del Web Deploy
+# Docs: https://help.monsterasp.net/websites/git-deploy/github-actions
+
+name: Deploy a MonsterASP.NET
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+# Deploys de a uno: si llegan dos pushes juntos, el segundo espera al primero
+# (cancelarlo a mitad del upload dejaría el sitio en un estado raro).
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build_and_deploy:
+    runs-on: windows-latest
+    steps:
+      - name: 1. Descargar código
+        uses: actions/checkout@v4
+
+      - name: 2. Configurar .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: 3. Restaurar paquetes NuGet
+        run: dotnet restore
+
+      # Gate: si los tests no pasan, no se publica ni se sube nada al servidor.
+      - name: 4. Ejecutar tests
+        run: dotnet test --no-restore --verbosity minimal
+
+      # Solo el proyecto web, no la sln (las DLLs de tests no van a producción).
+      # Framework-dependent (self-contained false): el runtime lo provee el server.
+      # Si algún día devuelve HTTP 500.30 por falta de runtime .NET 10, cambiar a
+      # --self-contained true y el paquete lleva el runtime adentro.
+      - name: 5. Publicar la app web
+        run: dotnet publish TiendaOnline/TiendaOnline.csproj --configuration Release --self-contained false --output ./publish --runtime win-x86
+
+      - name: 6. Deploy a MonsterASP.NET vía Web Deploy
+        uses: rasmusbuchholdt/simply-web-deploy@2.1.0
+        with:
+          website-name: ${{ secrets.WEBSITE_NAME }}
+          server-computer-name: ${{ secrets.SERVER_COMPUTER_NAME }}
+          server-username: ${{ secrets.SERVER_USERNAME }}
+          server-password: ${{ secrets.SERVER_PASSWORD }}
