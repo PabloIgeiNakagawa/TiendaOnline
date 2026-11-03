@@ -296,44 +296,47 @@ public class PedidoCommandService : IPedidoCommandService
                         break;
                 }
 
-if (resultadoEfectivo)
+                if (!resultadoEfectivo)
                 {
-                    switch (tipoEmailAEnviar)
-                    {
-                        case "aprobado":
-                            BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoExitosoAsync(
-                                pedido.Usuario.Email,
-                                nombreCompletoUsuario,
-                                pedido.PedidoId,
-                                totalCalculado));
-                            break;
-
-                        case "rechazado":
-                            BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoRechazadoAsync(
-                                pedido.Usuario.Email,
-                                nombreCompletoUsuario,
-                                pedido.PedidoId,
-                                totalCalculado));
-                            break;
-
-                        case "reembolsado":
-                            BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoReembolsadoAsync(
-                                pedido.Usuario.Email,
-                                nombreCompletoUsuario,
-                                pedido.PedidoId,
-                                totalCalculado));
-                            break;
-                    }
-
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    _logger.LogInformation("Pedido {PedidoId} procesado con estado MP: {Estado}. Transacción: {TransaccionId}",
-                        infoPago.PedidoId, estadoNormalizado, infoPago.TransaccionId);
-                    return true;
+                    return false;
                 }
 
-                return false;
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                // Emails: se encolan recién DESPUÉS del commit.
+                // Si el commit falla, el cliente no debe recibir "pago aprobado"
+                // por un pedido que quedó sin confirmar en la base.
+                switch (tipoEmailAEnviar)
+                {
+                    case "aprobado":
+                        BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoExitosoAsync(
+                            pedido.Usuario.Email,
+                            nombreCompletoUsuario,
+                            pedido.PedidoId,
+                            totalCalculado));
+                        break;
+
+                    case "rechazado":
+                        BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoRechazadoAsync(
+                            pedido.Usuario.Email,
+                            nombreCompletoUsuario,
+                            pedido.PedidoId,
+                            totalCalculado));
+                        break;
+
+                    case "reembolsado":
+                        BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoReembolsadoAsync(
+                            pedido.Usuario.Email,
+                            nombreCompletoUsuario,
+                            pedido.PedidoId,
+                            totalCalculado));
+                        break;
+                }
+
+                _logger.LogInformation("Pedido {PedidoId} procesado con estado MP: {Estado}. Transacción: {TransaccionId}",
+                    infoPago.PedidoId, estadoNormalizado, infoPago.TransaccionId);
+                return true;
             }
             catch (Exception ex)
             {
