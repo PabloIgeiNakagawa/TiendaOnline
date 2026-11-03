@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -11,21 +11,23 @@
     <PackageReference Include="Hangfire.Core" Version="1.8.23" />
     <PackageReference Include="Hangfire.SqlServer" Version="1.8.23" />
     <PackageReference Include="mercadopago-sdk" Version="2.11.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.24" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.24">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.24" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.24">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.14">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="QRCoder" Version="1.8.0" />
     <PackageReference Include="QuestPDF" Version="2026.2.4" />
     <PackageReference Include="Resend" Version="0.4.0" />
+    <!-- Override de la transitiva 9.0.11 (vía Microsoft.Data.SqlClient) afectada
+         por CVE-2026-84008 (GHSA-846f-f764-76mx, high). Fix en 10.0.13. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>
