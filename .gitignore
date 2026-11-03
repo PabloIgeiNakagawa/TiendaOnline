@@ -10,3 +10,7 @@ obj/
 .vs/
 .idea/
 *.user
+
+# Docs internos (notas del proyecto; no se publican)
+*.md
+!README.md
