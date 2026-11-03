@@ -82,7 +82,7 @@ namespace TiendaOnline.Features.Accounts
                 RolId = model.RolId
             };
 
-            await _authService.RegisterAsync(dto);
+            await _authService.RegisterAsync(dto, permitirRolPersonalizado: esAdmin);
             if (esAdmin)    
             {
                 TempData["MensajeExito"] = "¡Usuario registrado!";
@@ -188,10 +188,26 @@ namespace TiendaOnline.Features.Accounts
                 usuarioDto = await _authService.ObtenerUsuarioPorEmailAsync(email);
             }
 
+            // Defensa: si el re-fetch no devuelve nada (email vacío, carrera de datos),
+            // cortamos acá con mensaje genérico en vez de tirar un NRE como 500.
+            if (usuarioDto == null)
+            {
+                TempData["MensajeError"] = "No pudimos iniciar sesión con Google. Intentá de nuevo.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            // Usuario deshabilitado por el panel: no puede iniciar sesión ni con Google
+            // (AuthService ya lo bloquea en Password; acá cubrimos la ruta OAuth)
+            if (!usuarioDto.Activo)
+            {
+                TempData["MensajeError"] = "Tu cuenta fue deshabilitada. Contactate con soporte.";
+                return RedirectToAction(nameof(Login));
+            }
+
             // Armamos los claims
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, usuarioDto!.UsuarioId.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, usuarioDto.UsuarioId.ToString()),
                 new Claim(ClaimTypes.Name, usuarioDto.Nombre),
                 new Claim(ClaimTypes.Surname, usuarioDto.Apellido ?? ""),
                 new Claim(ClaimTypes.MobilePhone, usuarioDto.Telefono ?? ""),

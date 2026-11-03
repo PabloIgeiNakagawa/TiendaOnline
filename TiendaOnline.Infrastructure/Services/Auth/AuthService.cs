@@ -20,7 +20,7 @@ namespace TiendaOnline.Infrastructure.Services.Auth
 
         public async Task<UsuarioDto?> ValidarCredencialesAsync(string email, string password)
         {
-            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email && u.Activo);
             if (usuario == null) return null;
 
             var resultado = _passwordHasher.VerifyHashedPassword(usuario, usuario.Contrasena, password);
@@ -33,11 +33,12 @@ namespace TiendaOnline.Infrastructure.Services.Auth
                 Apellido = usuario.Apellido,
                 Telefono = usuario.Telefono,
                 Email = usuario.Email,
-                Rol = usuario.Rol.ToString()
+                Rol = usuario.Rol.ToString(),
+                Activo = usuario.Activo
             };
         }
 
-        public async Task RegisterAsync(RegisterDto model)
+        public async Task RegisterAsync(RegisterDto model, bool permitirRolPersonalizado = false)
         {
             model.Email = model.Email.Trim().ToLower();
 
@@ -51,7 +52,9 @@ namespace TiendaOnline.Infrastructure.Services.Auth
                 Email = model.Email,
                 Telefono = model.Telefono,
                 FechaNacimiento = model.FechaNacimiento,
-                Rol = (Rol)model.RolId,
+                // Seguridad: el rol del cliente SOLO se respeta si el caller (controller admin)
+                // lo pidió explícito con permitirRolPersonalizado. El resto cae a Usuario.
+                Rol = permitirRolPersonalizado ? (Rol)model.RolId : Rol.Usuario,
                 FechaCreacion = DateTime.Now
             };
 
@@ -73,7 +76,8 @@ namespace TiendaOnline.Infrastructure.Services.Auth
                 Apellido = usuario.Apellido,
                 Telefono = usuario.Telefono,
                 Email = usuario.Email,
-                Rol = usuario.Rol.ToString()
+                Rol = usuario.Rol.ToString(),
+                Activo = usuario.Activo
             };
         }
 
