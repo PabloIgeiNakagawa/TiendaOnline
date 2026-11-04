@@ -3,6 +3,10 @@ name: CI TiendaOnline
 on:
   push:
     branches: [ main, feature-tests ]
+    # Igual que publish.yml: pushes de solo docs (README/*.md) no corren CI.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
   pull_request:
     branches: [ main ]
 

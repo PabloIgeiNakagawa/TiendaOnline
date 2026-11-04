@@ -1,5 +1,8 @@
 # Build, test, publish y deploy automático a MonsterASP.NET (ex-somee).
 # Se dispara en cada push a main (y se puede correr a mano desde la pestaña Actions).
+# Los pushes de solo documentación (README, *.md) no deployan: el código de la
+# app no cambió y el sitio sería idéntico; para redeploy sin cambios, usar la
+# pestaña Actions (workflow_dispatch).
 #
 # Secretos requeridos en el repo (Settings > Secrets and variables > Actions),
 # con los valores de la tarjeta "Visual Studio access" de la página Deploy del
@@ -15,6 +18,11 @@ name: Deploy a MonsterASP.NET
 on:
   push:
     branches: [ main ]
+    # paths-ignore omite el run solo si TODOS los archivos del push matchean:
+    # un push que mezcla código y docs deploya igual.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
   workflow_dispatch:
 
 # Deploys de a uno: si llegan dos pushes juntos, el segundo espera al primero
