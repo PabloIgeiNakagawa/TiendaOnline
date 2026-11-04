@@ -4,6 +4,7 @@ using TiendaOnline.Hangfire;
 using TiendaOnline.Infrastructure.Persistence;
 using Hangfire;
 using TiendaOnline.Application.Pedidos.Command;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,10 @@ builder.Services.AddMemoryCache();
 builder.Services.AddRateLimitingConfig(); // Rate limiting para endpoints críticos
 
 // Hash de contraseñas y protección de datos (para tokens, etc.)
-builder.Services.AddDataProtection();
+// Llaves de DataProtection persistidas en App_Data del sitio: sobreviven recycles y deploys.
+builder.Services.AddDataProtection()
+    .SetApplicationName("TiendaOnline")
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataProtection-Keys")));
 
 var app = builder.Build();
 
