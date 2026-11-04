@@ -34,7 +34,7 @@
                         <div class="row g-3">
                             <div class="col-md-1">
                                 <label class="form-label fw-bold text-muted small">Ver</label>
-                                <select name="RegistrosPorPagina" class="form-select" onchange="this.form.submit()">
+                                <select name="RegistrosPorPagina" class="form-select">
                                     @{
                                         int[] opciones = { 20, 50, 100 };
                                         foreach (var cantidad in opciones)

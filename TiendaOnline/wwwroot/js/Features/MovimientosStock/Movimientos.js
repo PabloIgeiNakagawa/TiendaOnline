@@ -16,4 +16,12 @@
         ).show();
     });
 
+    // "Ver 20/50/100": envía el formulario de filtros al cambiar el tamaño de página.
+    const selectPaginado = document.querySelector('select[name="RegistrosPorPagina"]');
+    if (selectPaginado) {
+        selectPaginado.addEventListener('change', function () {
+            selectPaginado.closest('form').submit();
+        });
+    }
+
 });
