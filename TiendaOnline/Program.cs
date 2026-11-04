@@ -38,11 +38,35 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
+
+    // Aplica a la DB las migraciones pendientes antes de servir requests.
+    // Si la DB no responde al arrancar, se loguea y la app queda arriba.
+    try
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<TiendaContext>();
+            context.Database.Migrate();
+        }
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Migraciones pendientes no aplicadas al arrancar (DB no disponible). Se reintenta en el próximo boot.");
+    }
+}
+
+// Seed idempotente de AppSettings: inserta solo las keys que faltan.
+try
+{
     using (var scope = app.Services.CreateScope())
     {
         var context = scope.ServiceProvider.GetRequiredService<TiendaContext>();
         DbInitializer.SeedSettings(context);
     }
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "Seed de AppSettings falló al arrancar (DB no disponible). Se reintenta en el próximo boot.");
 }
 
 app.UseHttpsRedirection();
@@ -78,10 +102,19 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
     Authorization = new[] { new HangfireDashboardAuthFilter() }
 });
 
-RecurringJob.AddOrUpdate<IPedidoVencimientoService>(
-    "cancelar-pedidos-vencidos",
-    x => x.CancelarPedidosVencidosAsync(),
-    "*/5 * * * *");
+// Registro del job en el storage de Hangfire (SQL); si la DB no responde al
+// arrancar, se loguea y se re-registra en el próximo boot (AddOrUpdate es idempotente).
+try
+{
+    RecurringJob.AddOrUpdate<IPedidoVencimientoService>(
+        "cancelar-pedidos-vencidos",
+        x => x.CancelarPedidosVencidosAsync(),
+        "*/5 * * * *");
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "No se pudo registrar el job 'cancelar-pedidos-vencidos' (DB no disponible al arrancar). Se re-registra en el próximo boot.");
+}
 
 // 1. Ruta para áreas (Primero)
 app.MapControllerRoute(
