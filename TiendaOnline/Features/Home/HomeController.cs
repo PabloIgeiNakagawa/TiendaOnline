@@ -42,7 +42,6 @@ namespace TiendaOnline.Features.Home
             {
                 EstaDbOnline = datosHome.DbOnline,
                 VersionApp = datosHome.AppVersion,
-                Entorno = datosHome.Environment,
 
                 ResumenDiario = new ResumenDiarioViewModel
                 {
@@ -132,6 +131,7 @@ namespace TiendaOnline.Features.Home
         [HttpGet("Home/Error429")]
         public IActionResult Error429()
         {
+            Response.StatusCode = StatusCodes.Status429TooManyRequests;
             return View();
         }
 

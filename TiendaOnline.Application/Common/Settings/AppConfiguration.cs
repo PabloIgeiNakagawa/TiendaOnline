@@ -41,9 +41,4 @@ namespace TiendaOnline.Application.Common.Settings
     {
         public string SiteUrl { get; set; } = string.Empty;
     }
-
-    public class SystemSettings
-    {
-        public string Environment { get; set; } = "Production";
-    }
 }

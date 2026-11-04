@@ -57,7 +57,6 @@ namespace TiendaOnline.Extensions
             services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
             services.Configure<MercadoPagoSettings>(configuration.GetSection("MercadoPago"));
             services.Configure<GoogleKeys>(configuration.GetSection("GoogleKeys"));
-            services.Configure<SystemSettings>(configuration);
             services.Configure<GlobalSettings>(o => o.SiteUrl = configuration["SiteUrl"] ?? "");
 
             // Hangfire

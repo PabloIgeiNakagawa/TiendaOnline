@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using System.Reflection;
 using TiendaOnline.Application.AdminOverview;
-using TiendaOnline.Application.Common.Settings;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
 
@@ -11,12 +9,10 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
     public class AdminOverviewService : IAdminOverviewService
     {
         private readonly TiendaContext _context;
-        private readonly SystemSettings _settings;
 
-        public AdminOverviewService(TiendaContext context, IOptions<SystemSettings> options)
+        public AdminOverviewService(TiendaContext context)
         {
             _context = context;
-            _settings = options.Value;
         }
 
         public async Task<AdminOverviewDto> ObtenerResumenHomeAsync()
@@ -24,8 +20,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
             var dto = new AdminOverviewDto
             {
                 DbOnline = await VerificarEstadoBaseDatosAsync(),
-                AppVersion = ObtenerVersionApp(),
-                Environment = _settings.Environment
+                AppVersion = ObtenerVersionApp()
             };
 
             // Timeline de Auditoría (Últimos 5 cambios de productos o precios)

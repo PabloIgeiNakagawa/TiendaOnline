@@ -5,7 +5,6 @@
         // Status del Sistema
         public bool DbOnline { get; set; }
         public string AppVersion { get; set; }
-        public string Environment { get; set; }
 
         // Resumen Diario
         public ResumenDiarioDTO ResumenDiario { get; set; }

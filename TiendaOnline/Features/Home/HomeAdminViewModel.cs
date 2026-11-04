@@ -8,7 +8,6 @@ namespace TiendaOnline.Features.Home
         // --- SECCIÓN: STATUS DEL SISTEMA ---
         public bool EstaDbOnline { get; set; }
         public string VersionApp { get; set; }
-        public string Entorno { get; set; }
 
         // --- SECCIÓN: RESUMEN DIARIO ---
         public ResumenDiarioViewModel ResumenDiario { get; set; }
