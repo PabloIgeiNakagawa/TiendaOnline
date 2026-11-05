@@ -143,12 +143,14 @@ namespace TiendaOnline.Tests.TestSupport
             EstadoPago estadoPago = EstadoPago.Pendiente,
             DateTime? fechaPedido = null,
             decimal costoEnvio = 0,
-            string? transaccionId = null)
+            string? transaccionId = null,
+            int? metodoDePagoId = null,
+            string? comprobanteUrl = null)
         {
             var pedido = new Pedido
             {
                 UsuarioId = usuario.UsuarioId,
-                MetodoDePagoId = SeedMetodoDePago(ctx).MetodoDePagoId,
+                MetodoDePagoId = metodoDePagoId ?? SeedMetodoDePago(ctx).MetodoDePagoId,
                 EsEnvioADomicilio = false,
                 Estado = estado,
                 EstadoPago = estadoPago,
@@ -156,7 +158,8 @@ namespace TiendaOnline.Tests.TestSupport
                 FechaEnPreparacion = estado == EstadoPedido.EnPreparacion ? DateTime.Now : null,
                 FechaCancelado = estado == EstadoPedido.Cancelado ? DateTime.Now : null,
                 CostoEnvio = costoEnvio,
-                TransaccionPagoId = transaccionId
+                TransaccionPagoId = transaccionId,
+                ComprobanteUrl = comprobanteUrl
             };
 
             pedido.DetallesPedido.Add(new DetallePedido
