@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Application.Pedidos.Query;
 using TiendaOnline.Enums;
@@ -13,11 +15,13 @@ namespace TiendaOnline.Features.Pedidos.Admin
     {
         private readonly IPedidoQueryService _pedidoQueryService;
         private readonly IPedidoCommandService _pedidoCommandService;
+        private readonly ILogger<AdminPedidosController> _logger;
 
-        public AdminPedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService)
+        public AdminPedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService, ILogger<AdminPedidosController> logger)
         {
             _pedidoQueryService = pedidoQueryService;
             _pedidoCommandService = pedidoCommandService;
+            _logger = logger;
         }
 
         [HttpGet("[action]")]
@@ -65,6 +69,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
                 return NotFound();
             }
             await _pedidoCommandService.PedidoEnviadoAsync(pedidoId);
+            _logger.LogInformation("Pedido {PedidoId} marcado Enviado por {Admin}", pedidoId, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Estado del pedido actualizado a Enviado";
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
@@ -79,6 +84,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
                 return NotFound();
             }
             await _pedidoCommandService.PedidoEntregadoAsync(pedidoId);
+            _logger.LogInformation("Pedido {PedidoId} marcado Entregado por {Admin}", pedidoId, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Estado del pedido actualizado a Entregado";
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
@@ -92,6 +98,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
                 return NotFound();
             }
             await _pedidoCommandService.PedidoCanceladoAsync(pedidoId);
+            _logger.LogInformation("Pedido {PedidoId} cancelado por {Admin} (con devolución de stock si estaba pagado)", pedidoId, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Estado del pedido actualizado a Cancelado";
             return RedirectToAction("Detalles", new { id = pedidoId });
         }

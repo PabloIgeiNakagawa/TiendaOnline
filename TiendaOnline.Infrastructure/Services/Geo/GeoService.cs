@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 using TiendaOnline.Application.Geo;
 
 namespace TiendaOnline.Infrastructure.Services.Geo
@@ -6,10 +7,12 @@ namespace TiendaOnline.Infrastructure.Services.Geo
     public class GeoService : IGeoService
     {
         private readonly HttpClient _httpClient;
+        private readonly ILogger<GeoService> _logger;
 
-        public GeoService(IHttpClientFactory httpClientFactory)
+        public GeoService(IHttpClientFactory httpClientFactory, ILogger<GeoService> logger)
         {
             _httpClient = httpClientFactory.CreateClient();
+            _logger = logger;
         }
 
         public async Task<IEnumerable<LocationDto>> GetProvinciasAsync()
@@ -36,6 +39,9 @@ namespace TiendaOnline.Infrastructure.Services.Geo
             }
             catch (Exception ex)
             {
+                // El checkout sigue usable (el usuario carga la localidad a mano), pero la falla
+                // externa queda registrada para saber si el proveedor de datos está caído.
+                _logger.LogWarning(ex, "API georef no devolvió localidades para {Provincia}", provinciaNombre);
                 return Enumerable.Empty<LocationDto>();
             }
         }

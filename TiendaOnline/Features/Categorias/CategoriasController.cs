@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 using TiendaOnline.Application.Categorias.Commands;
 using TiendaOnline.Application.Categorias.Common;
 using TiendaOnline.Application.Categorias.Queries;
@@ -13,11 +15,13 @@ namespace TiendaOnline.Features.Categorias
     {
         private readonly ICategoriaQueryService _categoriaQueryService;
         private readonly ICategoriaCommandService _categoriaCommandService;
+        private readonly ILogger<CategoriasController> _logger;
 
-        public CategoriasController(ICategoriaQueryService categoriaQueryService, ICategoriaCommandService categoriaCommandService)
+        public CategoriasController(ICategoriaQueryService categoriaQueryService, ICategoriaCommandService categoriaCommandService, ILogger<CategoriasController> logger)
         {
             _categoriaQueryService = categoriaQueryService;
             _categoriaCommandService = categoriaCommandService;
+            _logger = logger;
         }
 
         [HttpGet("[action]")]
@@ -60,6 +64,8 @@ namespace TiendaOnline.Features.Categorias
                         CategoriaPadreId = categoria.CategoriaPadreId
                     };
                     await _categoriaCommandService.AgregarCategoriaAsync(dto);
+                    _logger.LogInformation("Categoría creada: {Nombre} (padre {CategoriaPadreId}) por {Admin}",
+                        dto.Nombre, dto.CategoriaPadreId, User.FindFirstValue(ClaimTypes.Email));
                     TempData["MensajeExito"] = "La categoría se creó correctamente.";
                     return RedirectToAction(nameof(Listado));
                 }
@@ -107,6 +113,8 @@ namespace TiendaOnline.Features.Categorias
         public async Task<IActionResult> Eliminar(int id)
         {
             bool eliminado = await _categoriaCommandService.EliminarCategoriaAsync(id);
+            _logger.LogInformation("Eliminación de categoría {CategoriaId} por {Admin} (resultado: {Eliminado})",
+                id, User.FindFirstValue(ClaimTypes.Email), eliminado);
             if (!eliminado)
             {
                 TempData["Error"] = "No se puede eliminar: la categoría tiene productos o subcategorías.";

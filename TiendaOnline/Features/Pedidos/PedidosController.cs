@@ -393,6 +393,7 @@ namespace TiendaOnline.Features.Pedidos
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Fallo el checkout para el usuario {UsuarioId}", usuarioId);
                 TempData["MensajeError"] = ex.Message;
                 return RedirectToAction("Index", "Carritos");
             }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Application.MovimientosStock.Queries;
 using TiendaOnline.Features.Shared.ViewModels;
@@ -12,11 +13,13 @@ namespace TiendaOnline.Features.MovimientosStock
     {
         private readonly IMovimientoStockQueryService _movimientoStockQueryService;
         private readonly IMovimientoStockCommandService _movimientoStockCommandService;
+        private readonly ILogger<MovimientosStockController> _logger;
 
-        public MovimientosStockController(IMovimientoStockQueryService movimientoStockQueryService, IMovimientoStockCommandService movimientoStockCommandService)
+        public MovimientosStockController(IMovimientoStockQueryService movimientoStockQueryService, IMovimientoStockCommandService movimientoStockCommandService, ILogger<MovimientosStockController> logger)
         {
             _movimientoStockQueryService = movimientoStockQueryService;
             _movimientoStockCommandService = movimientoStockCommandService;
+            _logger = logger;
         }
 
         [HttpGet("[action]")]
@@ -77,8 +80,8 @@ namespace TiendaOnline.Features.MovimientosStock
             }
             catch (Exception ex)
             {
-                // En un entorno real, aquí iría un _logger.LogError(ex);
-                TempData["MensajeError"] = "Error al procesar la entrada: " + ex.Message;
+                _logger.LogError(ex, "Error registrando entrada de stock (producto {ProductoId}, cantidad {Cantidad})", dto.ProductoId, dto.Cantidad);
+                TempData["MensajeError"] = "Error al procesar la entrada. Intente nuevamente.";
             }
 
             return RedirectToAction(nameof(Movimientos));
@@ -102,7 +105,8 @@ namespace TiendaOnline.Features.MovimientosStock
             }
             catch (Exception ex)
             {
-                TempData["MensajeError"] = "No se pudo aplicar el ajuste: " + ex.Message;
+                _logger.LogError(ex, "Error aplicando ajuste manual de stock (producto {ProductoId}, cantidad {Cantidad})", dto.ProductoId, dto.Cantidad);
+                TempData["MensajeError"] = "No se pudo aplicar el ajuste. Intente nuevamente.";
             }
 
             return RedirectToAction(nameof(Movimientos));

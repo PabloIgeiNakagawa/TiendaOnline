@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 using TiendaOnline.Application.Categorias.Common;
 using TiendaOnline.Application.Categorias.Queries;
 using TiendaOnline.Application.Productos.Commands;
@@ -15,12 +17,14 @@ namespace TiendaOnline.Features.Productos.Admin
         private readonly IProductoCommandService _productoCommandService;
         private readonly IProductoQueryService _productoQueryService;
         private readonly ICategoriaQueryService _categoriaQueryService;
+        private readonly ILogger<AdminProductosController> _logger;
 
-        public AdminProductosController(IProductoCommandService productoCommandService, IProductoQueryService productoQueryService, ICategoriaQueryService categoriaQueryService)
+        public AdminProductosController(IProductoCommandService productoCommandService, IProductoQueryService productoQueryService, ICategoriaQueryService categoriaQueryService, ILogger<AdminProductosController> logger)
         {
             _productoCommandService = productoCommandService;
             _productoQueryService = productoQueryService;
             _categoriaQueryService = categoriaQueryService;
+            _logger = logger;
         }
 
         [HttpGet("[action]")]
@@ -91,6 +95,8 @@ namespace TiendaOnline.Features.Productos.Admin
             };
 
             await _productoCommandService.AgregarProductoAsync(dto);
+            _logger.LogInformation("Producto creado: {Nombre} (categoría {CategoriaId}, stock {Stock}, precio {Precio}) por {Admin}",
+                dto.Nombre, dto.CategoriaId, dto.Stock, dto.Precio, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Producto creado correctamente.";
             return RedirectToAction(nameof(Catalogo));
         }
@@ -138,6 +144,7 @@ namespace TiendaOnline.Features.Productos.Admin
             };
 
             await _productoCommandService.EditarProductoAsync(dto);
+            _logger.LogInformation("Producto {ProductoId} editado por {Admin}", dto.ProductoId, User.FindFirstValue(ClaimTypes.Email));
 
             TempData["MensajeExito"] = "Producto actualizado correctamente.";
             return RedirectToAction(nameof(Catalogo));
@@ -148,6 +155,7 @@ namespace TiendaOnline.Features.Productos.Admin
         public async Task<IActionResult> DarAlta(int id)
         {
             await _productoCommandService.DarAltaProductoAsync(id);
+            _logger.LogInformation("Producto {ProductoId} activado por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Producto activado.";
             return RedirectToAction(nameof(Catalogo));
         }
@@ -157,6 +165,7 @@ namespace TiendaOnline.Features.Productos.Admin
         public async Task<IActionResult> DarBaja(int id)
         {
             await _productoCommandService.DarBajaProductoAsync(id);
+            _logger.LogInformation("Producto {ProductoId} desactivado por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Producto desactivado.";
             return RedirectToAction(nameof(Catalogo));
         }

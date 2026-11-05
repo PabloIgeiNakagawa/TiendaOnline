@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using TiendaOnline.Application.Direcciones;
 using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Application.Usuarios.Common;
@@ -14,12 +15,14 @@ namespace TiendaOnline.Features.Usuarios
         private readonly IUsuarioQueryService _usuarioQueryService;
         private readonly IUsuarioCommandService _usuarioCommandService;
         private readonly IDireccionService _direccionService;
+        private readonly ILogger<UsuariosController> _logger;
 
-        public UsuariosController(IUsuarioQueryService usuarioQueryService, IUsuarioCommandService usuarioCommandService, IDireccionService direccionService)
+        public UsuariosController(IUsuarioQueryService usuarioQueryService, IUsuarioCommandService usuarioCommandService, IDireccionService direccionService, ILogger<UsuariosController> logger)
         {
             _usuarioQueryService = usuarioQueryService;
             _usuarioCommandService = usuarioCommandService;
             _direccionService = direccionService;
+            _logger = logger;
         }
 
         [HttpGet("Perfil/{id}")]
@@ -99,6 +102,7 @@ namespace TiendaOnline.Features.Usuarios
             };
 
             await _usuarioCommandService.EditarUsuarioAsync(dto);
+            _logger.LogInformation("Perfil del usuario {UsuarioId} editado", dto.UsuarioId);
             TempData["MensajeExito"] = "Tu información se actualizó correctamente.";
             return RedirectToAction("PerfilUsuario", "Usuarios", new { id = dto.UsuarioId });
         }

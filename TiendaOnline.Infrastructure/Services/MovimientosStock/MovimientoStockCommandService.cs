@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
@@ -8,10 +9,12 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
     public class MovimientoStockCommandService : IMovimientoStockCommandService
     {
         private readonly TiendaContext _context;
+        private readonly ILogger<MovimientoStockCommandService> _logger;
 
-        public MovimientoStockCommandService(TiendaContext context)
+        public MovimientoStockCommandService(TiendaContext context, ILogger<MovimientoStockCommandService> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // ENTRADA DE STOCK (Compras a proveedores)
@@ -25,6 +28,7 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
             GenerarMovimiento(producto, dto.Cantidad, TipoMovimiento.EntradaStock, null, dto.Observaciones ?? "Entrada de mercadería");
 
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Entrada de stock: {Cantidad:+0;-0;0} para producto {ProductoId} (stock final {StockFinal})", dto.Cantidad, dto.ProductoId, producto.Stock);
         }
 
         // AJUSTE MANUAL (Roturas, pérdidas, hallazgos)
@@ -39,6 +43,7 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
             GenerarMovimiento(producto, dto.Cantidad, TipoMovimiento.AjusteManual, null, dto.Observaciones);
 
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Ajuste manual de stock: {Cantidad:+0;-0;0} para producto {ProductoId} (stock final {StockFinal})", dto.Cantidad, dto.ProductoId, producto.Stock);
         }
 
         // DEVOLUCIÓN (Cliente devuelve producto de un pedido)
@@ -69,6 +74,7 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+                _logger.LogInformation("Devolución de stock: {Cantidad:+0;-0;0} del producto {ProductoId} (pedido {PedidoId}, stock final {StockFinal})", dto.Cantidad, dto.ProductoId, dto.PedidoId, producto.Stock);
             }
             catch (Exception)
             {

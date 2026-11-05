@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Threading.RateLimiting;
 
 namespace TiendaOnline.Extensions
@@ -45,7 +47,17 @@ namespace TiendaOnline.Extensions
                 options.RejectionStatusCode = 429;
                 options.OnRejected = (context, token) =>
                 {
-                    context.HttpContext.Response.Redirect("/Home/Error429");
+                    var httpContext = context.HttpContext;
+                    // Cada rechazo queda registrado: es la señal visible de fuerza bruta
+                    // contra login/registro, hoy solo haría un redirect que nadie ve.
+                    var logger = httpContext.RequestServices
+                        .GetRequiredService<ILoggerFactory>()
+                        .CreateLogger("TiendaOnline.RateLimit");
+                    logger.LogWarning("Rate limit excedido: {Path} desde {IP}",
+                        httpContext.Request.Path,
+                        httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+
+                    httpContext.Response.Redirect("/Home/Error429");
                     return new ValueTask();
                 };
 

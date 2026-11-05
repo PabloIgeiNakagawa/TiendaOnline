@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using QRCoder;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -13,11 +14,13 @@ namespace TiendaOnline.Infrastructure.Services.ComprobantePdf
     {
         private readonly IAppSettingsService _appSettings;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<ComprobantePdfService> _logger;
 
-        public ComprobantePdfService(IAppSettingsService appSettings, IHttpClientFactory httpClientFactory)
+        public ComprobantePdfService(IAppSettingsService appSettings, IHttpClientFactory httpClientFactory, ILogger<ComprobantePdfService> logger)
         {
             _appSettings = appSettings;
             _httpClientFactory = httpClientFactory;
+            _logger = logger;
         }
 
         public async Task<byte[]> GenerarComprobanteAsync(ComprobantePedidoDto datos)
@@ -68,8 +71,10 @@ namespace TiendaOnline.Infrastructure.Services.ComprobantePdf
                         logoImage = Image.FromFile(logoUrl);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    // El comprobante sale sin logo: la falla al cargar el logo no puede romper la factura.
+                    _logger.LogDebug(ex, "No se pudo cargar el logo del comprobante desde {LogoUrl}", logoUrl);
                     logoImage = null;
                 }
             }
@@ -95,7 +100,9 @@ namespace TiendaOnline.Infrastructure.Services.ComprobantePdf
                 });
             });
 
-            return document.GeneratePdf();
+            var pdf = document.GeneratePdf();
+            _logger.LogInformation("Comprobante generado para pedido {PedidoId} ({NumeroComprobante})", datos.PedidoId, datos.NumeroComprobante);
+            return pdf;
 
             void Encabezado(IContainer container)
             {

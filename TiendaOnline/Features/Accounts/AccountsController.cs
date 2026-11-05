@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using TiendaOnline.Application.Auth;
 using TiendaOnline.Application.Usuarios.Queries;
@@ -17,11 +18,13 @@ namespace TiendaOnline.Features.Accounts
     {
         private readonly IAuthService _authService;
         private readonly IRolQueryService _rolService;
+        private readonly ILogger<AccountsController> _logger;
 
-        public AccountsController(IAuthService authService, IRolQueryService rolQueryService)
+        public AccountsController(IAuthService authService, IRolQueryService rolQueryService, ILogger<AccountsController> logger)
         {
             _authService = authService;
             _rolService = rolQueryService;
+            _logger = logger;
         }
 
         [HttpGet("[action]")]
@@ -83,6 +86,8 @@ namespace TiendaOnline.Features.Accounts
             };
 
             await _authService.RegisterAsync(dto, permitirRolPersonalizado: esAdmin);
+            _logger.LogInformation("Usuario registrado: {Email} (rol {RolId})", dto.Email, dto.RolId);
+
             if (esAdmin)    
             {
                 TempData["MensajeExito"] = "¡Usuario registrado!";
@@ -112,6 +117,9 @@ namespace TiendaOnline.Features.Accounts
 
             if (usuarioDto == null)
             {
+                // El email intentado es la señal para detectar fuerza bruta / credential stuffing
+                // (ValidarCredenciales no distingue email inexistente de contraseña incorrecta).
+                _logger.LogWarning("Login fallido para {Email}", model.Email);
                 ModelState.AddModelError("", "Email o contraseña incorrectas.");
                 return View(model);
             }
@@ -156,6 +164,7 @@ namespace TiendaOnline.Features.Accounts
             var result = await HttpContext.AuthenticateAsync("ExternalCookie");
             if (!result.Succeeded)
             {
+                _logger.LogWarning("Login con Google falló durante la autenticación externa");
                 TempData["MensajeError"] = "Hubo un error al continuar con Google.";
                 return RedirectToAction(nameof(Login));
             }
@@ -192,6 +201,7 @@ namespace TiendaOnline.Features.Accounts
             // cortamos acá con mensaje genérico en vez de tirar un NRE como 500.
             if (usuarioDto == null)
             {
+                _logger.LogWarning("Login con Google: no se pudo resolver el usuario con email {Email}", email);
                 TempData["MensajeError"] = "No pudimos iniciar sesión con Google. Intentá de nuevo.";
                 return RedirectToAction(nameof(Login));
             }
@@ -200,6 +210,7 @@ namespace TiendaOnline.Features.Accounts
             // (AuthService ya lo bloquea en Password; acá cubrimos la ruta OAuth)
             if (!usuarioDto.Activo)
             {
+                _logger.LogWarning("Login con Google bloqueado: cuenta desactivada {Email}", email);
                 TempData["MensajeError"] = "Tu cuenta fue deshabilitada. Contactate con soporte.";
                 return RedirectToAction(nameof(Login));
             }

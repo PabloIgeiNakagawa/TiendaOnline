@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Application.Usuarios.Queries;
 
@@ -12,12 +14,14 @@ namespace TiendaOnline.Features.Usuarios.Admin
         private readonly IUsuarioQueryService _usuarioQueryService;
         private readonly IUsuarioCommandService _usuarioCommandService;
         private readonly IRolQueryService _rolService;
+        private readonly ILogger<AdminUsuariosController> _logger;
 
-        public AdminUsuariosController(IUsuarioQueryService usuarioQueryService, IUsuarioCommandService usuarioCommandService, IRolQueryService rolService)
+        public AdminUsuariosController(IUsuarioQueryService usuarioQueryService, IUsuarioCommandService usuarioCommandService, IRolQueryService rolService, ILogger<AdminUsuariosController> logger)
         {
             _usuarioQueryService = usuarioQueryService;
             _usuarioCommandService = usuarioCommandService;
             _rolService = rolService;
+            _logger = logger;
         }
 
         [HttpGet("[action]")]
@@ -51,6 +55,7 @@ namespace TiendaOnline.Features.Usuarios.Admin
         public async Task<IActionResult> DarAlta(int id)
         {
             await _usuarioCommandService.DarAltaUsuarioAsync(id);
+            _logger.LogInformation("Usuario {UsuarioId} re-activado por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Usuario activado.";
             return RedirectToAction(nameof(Listado));
         }
@@ -60,6 +65,7 @@ namespace TiendaOnline.Features.Usuarios.Admin
         public async Task<IActionResult> DarBaja(int id)
         {
             await _usuarioCommandService.DarBajaUsuarioAsync(id);
+            _logger.LogInformation("Usuario {UsuarioId} deshabilitado (baja) por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Usuario dado de baja.";
             return RedirectToAction(nameof(Listado));
         }

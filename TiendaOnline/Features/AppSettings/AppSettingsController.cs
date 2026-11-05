@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Application.Common.Interfaces;
 
@@ -11,11 +13,13 @@ namespace TiendaOnline.Features.AppSettings
     {
         private readonly IAppSettingsService _appSettingsService;
         private readonly IImagenService _imagenService;
+        private readonly ILogger<AppSettingsController> _logger;
 
-        public AppSettingsController(IAppSettingsService appSettingsService, IImagenService imagenService)
+        public AppSettingsController(IAppSettingsService appSettingsService, IImagenService imagenService, ILogger<AppSettingsController> logger)
         {
             _appSettingsService = appSettingsService;
             _imagenService = imagenService;
+            _logger = logger;
         }
 
         [HttpGet("{groupName}")]
@@ -55,6 +59,8 @@ namespace TiendaOnline.Features.AppSettings
             });
 
             await _appSettingsService.SaveMultipleSettingsAsync(dtos);
+            _logger.LogInformation("Configuración actualizada: grupo {Grupo} ({Cantidad} claves) por {Admin}",
+                model.GroupName, model.Settings.Count, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Cambios guardados correctamente.";
             return RedirectToAction("Index", new { groupName = model.GroupName });
         }
@@ -115,6 +121,7 @@ namespace TiendaOnline.Features.AppSettings
 
             await _appSettingsService.RefreshCache();
 
+            _logger.LogInformation("Estética del sitio actualizada por {Admin}", User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Apariencia actualizada correctamente.";
             return RedirectToAction(nameof(Estetica));
         }

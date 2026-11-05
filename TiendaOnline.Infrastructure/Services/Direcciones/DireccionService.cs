@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TiendaOnline.Application.Direcciones;
 using TiendaOnline.Application.Usuarios.Common;
 using TiendaOnline.Domain.Entities;
@@ -9,10 +10,12 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
     public class DireccionService : IDireccionService
     {
         private readonly TiendaContext _context;
+        private readonly ILogger<DireccionService> _logger;
 
-        public DireccionService(TiendaContext context)
+        public DireccionService(TiendaContext context, ILogger<DireccionService> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<List<DireccionDto>> ObtenerDireccionesAsync(int usuarioId)
@@ -96,6 +99,8 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
 
             _context.Direcciones.Add(nuevaDireccion);
             await _context.SaveChangesAsync();
+            // Solo ids: el contenido (calle, CP) es PII que la auditoría del pedido ya conserva.
+            _logger.LogInformation("Nueva dirección {DireccionId} para usuario {UsuarioId}", nuevaDireccion.DireccionId, usuarioId);
 
             return nuevaDireccion.DireccionId;
         }
@@ -129,6 +134,7 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
             direccionExistente.EsPrincipal = direccion.EsPrincipal;
 
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Dirección {DireccionId} (usuario {UsuarioId}) actualizada", direccionId, direccionExistente.UsuarioId);
         }
 
         public async Task EliminarDireccionAsync(int direccionId)
@@ -139,6 +145,7 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
 
             direccion.Activo = false;
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Dirección {DireccionId} (usuario {UsuarioId}) eliminada", direccionId, direccion.UsuarioId);
         }
     }
 }

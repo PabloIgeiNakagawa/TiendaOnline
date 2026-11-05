@@ -1,6 +1,7 @@
 ﻿using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
 using TiendaOnline.Application.Common.Interfaces;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TiendaOnline.Application.Common.Settings;
 
@@ -9,9 +10,11 @@ namespace TiendaOnline.Infrastructure.ExternalServices
     public class CloudinaryService : IImagenService
     {
         private readonly Cloudinary _cloudinary;
+        private readonly ILogger<CloudinaryService> _logger;
 
-        public CloudinaryService(IOptions<CloudinarySettings> config)
+        public CloudinaryService(IOptions<CloudinarySettings> config, ILogger<CloudinaryService> logger)
         {
+            _logger = logger;
             var settings = config.Value;
             var acc = new Account(
                 settings.CloudName,
@@ -23,7 +26,11 @@ namespace TiendaOnline.Infrastructure.ExternalServices
 
         public async Task<string> SubirImagenAsync(Stream archivoStream, string nombreArchivo, string subCarpeta = "General", int width = 800, int height = 800)
         {
-            if (archivoStream == null || archivoStream.Length == 0) return null;
+            if (archivoStream == null || archivoStream.Length == 0)
+            {
+                _logger.LogDebug("SubirImagenAsync recibió un stream vacío para {NombreArchivo}", nombreArchivo);
+                return null;
+            }
 
             var uploadParams = new ImageUploadParams()
             {
@@ -50,6 +57,7 @@ namespace TiendaOnline.Infrastructure.ExternalServices
 
             if (uploadResult.Error != null)
             {
+                _logger.LogError("Cloudinary rechazó la subida de {NombreArchivo}: {Error}", nombreArchivo, uploadResult.Error.Message);
                 throw new Exception(uploadResult.Error.Message);
             }
 
@@ -62,6 +70,11 @@ namespace TiendaOnline.Infrastructure.ExternalServices
 
             var deletionParams = new DeletionParams(publicId);
             var result = await _cloudinary.DestroyAsync(deletionParams);
+
+            if (result.Result != "ok")
+            {
+                _logger.LogWarning("Cloudinary no pudo borrar la imagen {PublicId} (resultado: {Resultado})", publicId, result.Result);
+            }
 
             return result.Result == "ok";
         }

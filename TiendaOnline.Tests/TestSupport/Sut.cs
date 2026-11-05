@@ -12,7 +12,7 @@ namespace TiendaOnline.Tests.TestSupport
     internal static class Sut
     {
         public static PedidoCommandService PedidoCommand(TiendaContext ctx)
-            => new(ctx, new MovimientoStockCommandService(ctx), NullLogger<PedidoCommandService>.Instance);
+            => new(ctx, new MovimientoStockCommandService(ctx, NullLogger<MovimientoStockCommandService>.Instance), NullLogger<PedidoCommandService>.Instance);
 
         public static PedidoVencimientoService PedidoVencimiento(TiendaContext ctx)
             => new(ctx, NullLogger<PedidoVencimientoService>.Instance);
