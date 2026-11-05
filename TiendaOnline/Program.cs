@@ -5,8 +5,31 @@ using TiendaOnline.Infrastructure.Persistence;
 using Hangfire;
 using TiendaOnline.Application.Pedidos.Command;
 using Microsoft.AspNetCore.DataProtection;
+using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Logging a archivo: la consola en shared hosting es un agujero negro.
+// App_Data está bloqueada para HTTP: los logs solo se leen por FTP del sitio.
+// Los niveles viven en código a propósito: el appsettings.Production.json del server no es controlado por el repo.
+var carpetaLogs = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "logs");
+Directory.CreateDirectory(carpetaLogs);
+
+builder.Host.UseSerilog((context, loggerConfiguration) => loggerConfiguration
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning) // apaga el ruido por-request de ASP.NET/EF (incluye SQL con parámetros)
+    // El webhook de MercadoPago registra la consulta cruda (payload, firma) solo en Debug:
+    // nunca datos sensibles de terceros en el archivo de producción.
+    .MinimumLevel.Override("TiendaOnline.Features.Pagos.PagosWebhookController", LogEventLevel.Debug)
+    .Enrich.FromLogContext()
+    .WriteTo.File(
+        Path.Combine(carpetaLogs, "app-.log"),
+        rollingInterval: RollingInterval.Day,        // un archivo por día: app-20261104.log
+        retainedFileCountLimit: 30,                  // ~1 mes de retención, limpieza automática
+        fileSizeLimitBytes: 50_000_000,              // cap duro por archivo para no llenar la cuota del hosting
+        rollOnFileSizeLimit: true,
+        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {SourceContext}: {Message:lj} {Properties:j}{NewLine}{Exception}"));
 
 // Busca las vistas en Features
 builder.Services.AddControllersWithViews().AddFeatureFolders();
@@ -93,6 +116,10 @@ app.Use(async (context, next) =>
     await next();
 });
 app.UseStaticFiles();
+
+// Access log: una línea por request con status y duración. Va después de UseStaticFiles
+// para que los assets estáticos (css/js/img) no llenen el log.
+app.UseSerilogRequestLogging();
 
 app.UseRouting();
 
