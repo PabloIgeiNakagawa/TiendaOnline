@@ -69,6 +69,14 @@ namespace TiendaOnline.Extensions
                     opt.QueueLimit = 0;
                 });
 
+                // Subida de comprobante de transferencia: 5 por minuto por IP (la subida dispara email al admin)
+                options.AddFixedWindowLimiter("subir-comprobante", opt =>
+                {
+                    opt.PermitLimit = 5;
+                    opt.Window = TimeSpan.FromMinutes(1);
+                    opt.QueueLimit = 0;
+                });
+
                 // Usar IP como clave de rate limiting
                 options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                     RateLimitPartition.GetFixedWindowLimiter(

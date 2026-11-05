@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using TiendaOnline.Application.Carritos;
+using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Application.Direcciones;
 using TiendaOnline.Application.Payment;
@@ -23,9 +24,10 @@ namespace TiendaOnline.Features.Pedidos
         private readonly IDireccionService _direccionService;
         private readonly IPaymentService _paymentService;
         private readonly IComprobantePdfService _comprobantePdfService;
+        private readonly IAppSettingsService _appSettingsService;
         private readonly ILogger<PedidosController> _logger;
 
-        public PedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService, ICarritoService carritoService, IDireccionService direccionService, IPaymentService paymentService, IComprobantePdfService comprobantePdfService, ILogger<PedidosController> logger)
+        public PedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService, ICarritoService carritoService, IDireccionService direccionService, IPaymentService paymentService, IComprobantePdfService comprobantePdfService, IAppSettingsService appSettingsService, ILogger<PedidosController> logger)
         {
             _pedidoQueryService = pedidoQueryService;
             _pedidoCommandService = pedidoCommandService;
@@ -33,6 +35,7 @@ namespace TiendaOnline.Features.Pedidos
             _direccionService = direccionService;
             _paymentService = paymentService;
             _comprobantePdfService = comprobantePdfService;
+            _appSettingsService = appSettingsService;
             _logger = logger;
         }
 
@@ -111,6 +114,8 @@ namespace TiendaOnline.Features.Pedidos
                 CostoEnvio = pedido.CostoEnvio,
 
                 TransaccionPagoId = pedido.TransaccionPagoId,
+                ComprobanteUrl = pedido.ComprobanteUrl,
+                FechaComprobante = pedido.FechaComprobante,
 
                 EsAdmin = User.IsInRole("Administrador"),
                 EsRepartidor = User.IsInRole("Repartidor"),
@@ -119,6 +124,73 @@ namespace TiendaOnline.Features.Pedidos
             };
 
             return View(viewModel);
+        }
+
+        [Authorize(Policy = "EsDuenioDelPedido")]
+        [HttpGet("[action]")]
+        public async Task<IActionResult> Instrucciones(int id)
+        {
+            var datos = await _pedidoQueryService.ObtenerInstruccionesTransferenciaAsync(id);
+            if (datos == null) return NotFound();
+
+            var viewModel = new InstruccionesTransferenciaViewModel
+            {
+                PedidoId = datos.PedidoId,
+                Total = datos.Total,
+                ComprobanteUrl = datos.ComprobanteUrl,
+                PuedeSubirComprobante = datos.PuedeSubirComprobante,
+                Vencido = datos.Vencido,
+                Cbu = _appSettingsService.GetValue("Transferencia:Cbu") ?? string.Empty,
+                Alias = _appSettingsService.GetValue("Transferencia:Alias") ?? string.Empty,
+                Titular = _appSettingsService.GetValue("Transferencia:Titular") ?? string.Empty
+            };
+
+            return View(viewModel);
+        }
+
+        [Authorize(Policy = "EsDuenioDelPedido")]
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        [EnableRateLimiting("subir-comprobante")]
+        public async Task<IActionResult> SubirComprobante(int id, IFormFile archivo)
+        {
+            const int TamanoMaximoComprobante = 5 * 1024 * 1024; // 5 MB
+            string[] extensionesValidas = [".jpg", ".jpeg", ".png", ".pdf"];
+
+            if (archivo == null || archivo.Length == 0)
+            {
+                TempData["MensajeError"] = "Adjuntá el comprobante para poder verificarlo.";
+                return RedirectToAction("Instrucciones", new { id });
+            }
+
+            var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
+            if (!extensionesValidas.Contains(extension))
+            {
+                TempData["MensajeError"] = "Formato no admitido. Usá JPG, PNG o PDF.";
+                return RedirectToAction("Instrucciones", new { id });
+            }
+
+            if (archivo.Length > TamanoMaximoComprobante)
+            {
+                TempData["MensajeError"] = "El archivo supera el máximo de 5 MB.";
+                return RedirectToAction("Instrucciones", new { id });
+            }
+
+            try
+            {
+                await using var stream = archivo.OpenReadStream();
+                await _pedidoCommandService.GuardarComprobanteAsync(id, stream, $"Pedido-{id:D6}{extension}");
+                _logger.LogInformation("Comprobante subido para el pedido {PedidoId}", id);
+                TempData["MensajeExito"] = "Comprobante recibido. Te avisamos cuando verifiquemos el pago.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fallo la subida del comprobante del pedido {PedidoId}", id);
+                TempData["MensajeError"] = ex.Message;
+                return RedirectToAction("Instrucciones", new { id });
+            }
+
+            return RedirectToAction("Detalles", new { id });
         }
 
         [HttpGet("[action]")]
@@ -379,17 +451,17 @@ namespace TiendaOnline.Features.Pedidos
                     });
                 }
 
-                // Si el método es Mercado Pago (ID 1 por ejemplo), generamos link
+                // Si el método es Mercado Pago (ID 1), generamos link y salimos
                 if (metodoDePagoId == MetodoPagoId.MercadoPago)
                 {
                     var urlPago = await _paymentService.GenerarPreferenciaPagoAsync(pedido);
                     return Redirect(urlPago);
                 }
 
-                // Si es otro método (ej. Efectivo), vamos directo a detalles
+                // Transferencia: directo a la página con CBU/alias y la subida del comprobante
                 await _carritoService.VaciarAsync();
                 TempData["MensajeExito"] = "¡Pedido realizado con éxito!";
-                return RedirectToAction("Detalles", new { id = pedido.PedidoId });
+                return RedirectToAction("Instrucciones", new { id = pedido.PedidoId });
             }
             catch (Exception ex)
             {

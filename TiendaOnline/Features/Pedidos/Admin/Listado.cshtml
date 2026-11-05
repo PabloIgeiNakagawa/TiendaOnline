@@ -246,6 +246,17 @@
                                                 <i class="bi @icono me-1"></i>
                                                 @texto
                                             </span>
+                                            @if (pedido.MetodoPagoId == (int)MetodoPagoId.Transferencia && pedido.EstadoId == (int)EstadoPedidoUI.Nuevo)
+                                            {
+                                                @if (pedido.TieneComprobante)
+                                                {
+                                                    <small class="d-block text-muted mt-1"><i class="bi bi-paperclip me-1"></i>Comprobante adjunto</small>
+                                                }
+                                                else
+                                                {
+                                                    <small class="d-block text-warning mt-1"><i class="bi bi-hourglass-split me-1"></i>Sin comprobante</small>
+                                                }
+                                            }
                                         </td>
                                         <td class="py-3">
                                             @{
@@ -279,6 +290,29 @@
                                                 </a>
                                                 @if (pedido.EstadoId == (int)EstadoPedidoUI.Nuevo)
                                                 {
+                                                    @if (pedido.MetodoPagoId == (int)MetodoPagoId.Transferencia && pedido.TieneComprobante)
+                                                    {
+                                                        <button type="button"
+                                                                class="btn btn-outline-primary btn-sm rounded-2 shadow-sm btn-cambio-estado"
+                                                                data-id="@pedido.PedidoId"
+                                                                data-accion="aprobarPago"
+                                                                data-bs-toggle="tooltip"
+                                                                data-bs-placement="top"
+                                                                title="Aprobar pago (transferencia)">
+                                                            <i class="bi bi-cash-coin"></i>
+                                                        </button>
+
+                                                        <button type="button"
+                                                                class="btn btn-outline-danger btn-sm rounded-2 shadow-sm btn-cambio-estado"
+                                                                data-id="@pedido.PedidoId"
+                                                                data-accion="rechazarComprobante"
+                                                                data-bs-toggle="tooltip"
+                                                                data-bs-placement="top"
+                                                                title="Rechazar comprobante y cancelar pedido">
+                                                            <i class="bi bi-file-x"></i>
+                                                        </button>
+                                                    }
+
                                                     <button type="button"
                                                             class="btn btn-outline-success btn-sm rounded-2 shadow-sm btn-cambio-estado"
                                                             data-id="@pedido.PedidoId"
@@ -349,6 +383,16 @@
         </form>
 
         <form id="cancelarPedido@(pedido.PedidoId)" asp-action="Cancelar" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
+        </form>
+
+        <form id="aprobarPago@(pedido.PedidoId)" asp-action="AprobarPago" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
+        </form>
+
+        <form id="rechazarComprobante@(pedido.PedidoId)" asp-action="RechazarComprobante" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="pedidoId" value="@pedido.PedidoId" />
         </form>

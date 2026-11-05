@@ -43,6 +43,20 @@ function mostrarModalCambioEstado(pedidoId, accion) {
             botonClase: "btn btn-danger",
             texto: "Cancelar Pedido",
             formId: `cancelarPedido${pedidoId}`
+        },
+        aprobarPago: {
+            mensaje: `¿Confirmás el pago por transferencia del pedido #${numeroFormateado}? Reserva el stock y pasa el pedido a preparación.`,
+            icono: "bi bi-cash-coin text-primary display-4",
+            botonClase: "btn btn-primary",
+            texto: "Aprobar Pago",
+            formId: `aprobarPago${pedidoId}`
+        },
+        rechazarComprobante: {
+            mensaje: `¿Rechazás el comprobante del pedido #${numeroFormateado}? El pedido se cancela, se libera el stock y se le avisa al cliente por email.`,
+            icono: "bi bi-file-x text-danger display-4",
+            botonClase: "btn btn-danger",
+            texto: "Rechazar Comprobante",
+            formId: `rechazarComprobante${pedidoId}`
         }
     };
 

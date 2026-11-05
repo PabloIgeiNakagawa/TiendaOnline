@@ -1,0 +1,136 @@
+@using TiendaOnline.Features.Pedidos
+@model InstruccionesTransferenciaViewModel
+@{
+    ViewData["Title"] = $"Transferencia - Pedido #{Model.NumeroPedido}";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="text-center mb-4">
+                <div class="display-1 text-info mb-3">
+                    <i class="bi bi-bank"></i>
+                </div>
+                <h1 class="fw-bold">Transferencia bancaria</h1>
+                <p class="lead text-muted mb-0">
+                    Pedido <strong class="text-body">#@Model.NumeroPedido</strong> ·
+                    Total a transferir: <strong class="text-body">@Model.Total.ToString("C")</strong>
+                </p>
+            </div>
+
+            @if (Model.Vencido)
+            {
+                <div class="alert alert-warning d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Este pedido venció por falta de pago. Vuelve a armar tu carrito para generar uno nuevo.
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.ComprobanteUrl))
+            {
+                <div class="alert alert-success d-flex align-items-center gap-2">
+                    <i class="bi bi-paperclip"></i>
+                    <div>
+                        Comprobante enviado.
+                        <a href="@Model.ComprobanteUrl" target="_blank" rel="noopener" class="fw-semibold">Ver el archivo</a>
+                    </div>
+                </div>
+                <p class="text-center small text-muted">
+                    Recién confirmamos el pago cuando lo verifiquemos. Te avisamos por email.
+                </p>
+            }
+
+            <div class="card my-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3">1. Hacé la transferencia por el monto exacto</h5>
+                    <ul class="list-group list-group-flush bg-transparent mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                            Titular:
+                            <span class="fw-semibold">@Model.Titular</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                            CBU:
+                            <div class="d-flex align-items-center gap-2">
+                                <code>@Model.Cbu</code>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-copiar" data-valor="@Model.Cbu" title="Copiar">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                            Alias:
+                            <div class="d-flex align-items-center gap-2">
+                                <code>@Model.Alias</code>
+                                <button type="button" class="btn btn-sm btn-outline-primary btn-copiar" data-valor="@Model.Alias" title="Copiar">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                        </li>
+                    </ul>
+                    <p class="small text-muted mb-0">
+                        Pon&eacute; el n&uacute;mero de pedido <strong>#@Model.NumeroPedido</strong> en el concepto de la transferencia: nos ayuda a identificarla m&aacute;s r&aacute;pido.
+                    </p>
+                </div>
+            </div>
+
+            @if (Model.PuedeSubirComprobante)
+            {
+                <div class="card my-4">
+                    <div class="card-body p-4">
+                        <h5 class="card-title mb-3">2. Adjuntá el comprobante</h5>
+                        <form asp-action="SubirComprobante" asp-route-id="@Model.PedidoId" method="post" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <div class="mb-3">
+                                <input type="file"
+                                       name="archivo"
+                                       accept=".jpg,.jpeg,.png,.pdf"
+                                       class="form-control"
+                                       required />
+                                <div class="form-text">
+                                    JPG, PNG o PDF · hasta 5 MB
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                                <i class="bi bi-upload me-2"></i>
+                                Enviar comprobante
+                            </button>
+                        </form>
+                        <p class="small text-muted text-center mt-3 mb-0">
+                            Te confirmamos el pago por email cuando lo verifiquemos.
+                        </p>
+                    </div>
+                </div>
+            }
+            else if (string.IsNullOrEmpty(Model.ComprobanteUrl) && !Model.Vencido)
+            {
+                <div class="alert alert-secondary d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-history"></i>
+                    La subida del comprobante ya no está disponible para este pedido.
+                </div>
+            }
+
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+                <a asp-action="Detalles" asp-route-id="@Model.PedidoId" class="btn btn-outline-primary px-4">
+                    <i class="bi bi-box-seam"></i> Ver mi pedido
+                </a>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary px-4">
+                    Seguir comprando
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll(".btn-copiar").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                navigator.clipboard.writeText(btn.dataset.valor).then(function () {
+                    const icono = btn.querySelector("i");
+                    icono.classList.replace("bi-clipboard", "bi-clipboard-check");
+                    setTimeout(function () { icono.classList.replace("bi-clipboard-check", "bi-clipboard"); }, 1500);
+                });
+            });
+        });
+    </script>
+}

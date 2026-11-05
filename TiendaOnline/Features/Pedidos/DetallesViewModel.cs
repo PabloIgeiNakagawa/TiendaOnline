@@ -39,6 +39,8 @@ namespace TiendaOnline.Features.Pedidos
 
         // Comprobante de pago
         public string? TransaccionPagoId { get; set; }
+        public string? ComprobanteUrl { get; set; }
+        public DateTime? FechaComprobante { get; set; }
 
         // Permisos (la vista NO debería calcular esto)
         public bool EsAdmin { get; set; }

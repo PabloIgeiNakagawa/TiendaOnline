@@ -219,6 +219,33 @@
                                     @Model.EstadoPago.GetDisplayName()
                                 </div>
                             </div>
+                            @if (Model.MetodoPagoId == MetodoPagoId.Transferencia)
+                            {
+                                <div class="mb-3">
+                                    <div class="small text-secondary mb-1">Comprobante de Pago</div>
+                                    @if (!string.IsNullOrEmpty(Model.ComprobanteUrl))
+                                    {
+                                        <div class="fw-medium">
+                                            <i class="bi bi-paperclip me-1"></i>
+                                            <a href="@Model.ComprobanteUrl" target="_blank" rel="noopener">Ver comprobante</a>
+                                            @if (Model.FechaComprobante != null)
+                                            {
+                                                <small class="d-block text-muted">Enviado el @Model.FechaComprobante.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                                            }
+                                        </div>
+                                    }
+                                    else if (Model.EstadoPago == EstadoPagoUI.Pendiente && (Model.EsPropioPedido || Model.EsAdmin))
+                                    {
+                                        <a asp-action="Instrucciones" asp-route-id="@Model.PedidoId" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-upload me-1"></i> Subir comprobante
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin comprobante</span>
+                                    }
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>

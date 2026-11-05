@@ -102,5 +102,53 @@ namespace TiendaOnline.Features.Pedidos.Admin
             TempData["MensajeExito"] = "Estado del pedido actualizado a Cancelado";
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
+
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AprobarPago(int pedidoId)
+        {
+            if (pedidoId <= 0)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                await _pedidoCommandService.AprobarPagoTransferenciaAsync(pedidoId);
+                _logger.LogInformation("Pago por transferencia aprobado para el pedido {PedidoId} por {Admin}", pedidoId, User.FindFirstValue(ClaimTypes.Email));
+                TempData["MensajeExito"] = "Pago aprobado: el pedido pasó a preparación";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo aprobar el pago por transferencia del pedido {PedidoId}", pedidoId);
+                TempData["MensajeError"] = ex.Message;
+            }
+
+            return RedirectToAction("Listado");
+        }
+
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RechazarComprobante(int pedidoId)
+        {
+            if (pedidoId <= 0)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                await _pedidoCommandService.RechazarComprobanteTransferenciaAsync(pedidoId);
+                _logger.LogInformation("Comprobante rechazado del pedido {PedidoId} por {Admin} (pedido cancelado y cliente notificado)", pedidoId, User.FindFirstValue(ClaimTypes.Email));
+                TempData["MensajeExito"] = "Comprobante rechazado: pedido cancelado y cliente notificado";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo rechazar el comprobante del pedido {PedidoId}", pedidoId);
+                TempData["MensajeError"] = ex.Message;
+            }
+
+            return RedirectToAction("Listado");
+        }
     }
 }
