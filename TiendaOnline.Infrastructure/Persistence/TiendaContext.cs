@@ -1,7 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage;
 using Newtonsoft.Json;
 using TiendaOnline.Domain.Entities;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using TiendaOnline.Application.Common.Interfaces;
 
 namespace TiendaOnline.Infrastructure.Persistence
@@ -16,69 +17,152 @@ namespace TiendaOnline.Infrastructure.Persistence
             _userSession = userSession;
         }
 
+        // Columnas que jamás viajan al JSON de auditoría: un hash de contraseña no es un dato de negocio.
+        private static readonly HashSet<string> PropiedadesExcluidas = new(StringComparer.Ordinal)
+        {
+            nameof(Usuario.Contrasena)
+        };
+
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            int? currentUserId = _userSession.GetUserId();
-
-            // Identificar las entradas para auditar (excluyendo la propia tabla Auditoria)
-            var entradasParaAuditar = ChangeTracker.Entries()
-                .Where(e => e.Entity is not Auditoria &&
-                            e.State != EntityState.Detached &&
-                            e.State != EntityState.Unchanged)
-                .ToList();
-
-            var listaTemporal = new List<(EntityEntry Entry, Auditoria Auditoria)>();
-
-            foreach (var entry in entradasParaAuditar)
+            // Captura ANTES del primer save: OriginalValues se pierden cuando la entidad pasa a Unchanged
+            // y las entidades Added recién entonces reciben su id real.
+            var auditoriasPendientes = CapturarAuditorias();
+            if (auditoriasPendientes.Count == 0)
             {
-                var nombreTabla = entry.Entity.GetType().Name;
-
-                var auditoria = new Auditoria
-                {
-                    UsuarioId = currentUserId,
-                    TablaAfectada = nombreTabla,
-                    Fecha = DateTime.Now,
-                    Accion = entry.State switch
-                    {
-                        EntityState.Added => $"Creó {nombreTabla}",
-                        EntityState.Modified => $"Actualizó {nombreTabla}",
-                        EntityState.Deleted => $"Eliminó {nombreTabla}",
-                        _ => entry.State.ToString()
-                    },
-                    // Capturamos valores anteriores antes de que se pierdan
-                    DatosAnteriores = entry.State == EntityState.Modified || entry.State == EntityState.Deleted
-                        ? JsonConvert.SerializeObject(entry.OriginalValues.ToObject())
-                        : "{}"
-                };
-
-                listaTemporal.Add((entry, auditoria));
+                return await base.SaveChangesAsync(cancellationToken);
             }
 
-            // Aquí se generan los IDs reales en la DB
-            var resultado = await base.SaveChangesAsync(cancellationToken);
+            // Negocio y auditoría comparten commit: si la inserción de auditoría falla,
+            // el cambio de negocio también se revierte (no quedan cambios sin registro).
+            // Si el caller ya abrió transacción (pedidos, stock), la auditoría se suma a la misma.
+            var transaccionPropia = Database.CurrentTransaction is null;
+            var transaccion = transaccionPropia ? await Database.BeginTransactionAsync(cancellationToken) : null;
 
-            // Ahora que tenemos IDs reales, completamos los campos
-            if (listaTemporal.Any())
+            try
             {
-                foreach (var item in listaTemporal)
+                var resultado = await base.SaveChangesAsync(cancellationToken);
+
+                foreach (var (entry, auditoria) in auditoriasPendientes)
                 {
-                    // Datos nuevos con el ID ya asignado por SQL
-                    item.Auditoria.DatosNuevos = item.Entry.State != EntityState.Deleted
-                        ? JsonConvert.SerializeObject(item.Entry.CurrentValues.ToObject())
-                        : "{}";
+                    // Solo las altas dependen del save: recién ahí la DB asigna el id real.
+                    // Las bajas ya se completaron al capturar (tras el save su fila queda Detached).
+                    if (auditoria.DatosNuevos is null)
+                    {
+                        auditoria.EntidadId = entry.Properties
+                            .First(p => p.Metadata.IsPrimaryKey())
+                            .CurrentValue?.ToString() ?? "0";
+                        auditoria.DatosNuevos = Serializar(entry, valoresActuales: true, soloModificadas: false);
+                    }
 
-                    // Obtener el ID de la entidad dinámicamente (sea CategoriaId, ProductoId, etc.)
-                    var primaryKey = item.Entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
-                    item.Auditoria.EntidadId = primaryKey?.CurrentValue?.ToString() ?? "0";
-
-                    Auditorias.Add(item.Auditoria);
+                    Auditorias.Add(auditoria);
                 }
 
-                // Insertamos las filas de auditoría
                 await base.SaveChangesAsync(cancellationToken);
+
+                if (transaccionPropia && transaccion != null)
+                {
+                    await transaccion.CommitAsync(cancellationToken);
+                }
+
+                return resultado;
+            }
+            catch
+            {
+                if (transaccionPropia && transaccion != null)
+                {
+                    await transaccion.RollbackAsync(cancellationToken);
+                }
+                throw;
+            }
+            finally
+            {
+                if (transaccion != null)
+                {
+                    await transaccion.DisposeAsync();
+                }
+            }
+        }
+
+        private List<(EntityEntry Entry, Auditoria Auditoria)> CapturarAuditorias()
+        {
+            var usuarioId = _userSession.GetUserId();
+            var pendientes = new List<(EntityEntry, Auditoria)>();
+
+            foreach (var entry in ChangeTracker.Entries())
+            {
+                // La propia tabla de auditoría no se audita (recursión infinita);
+                // un Modified sin columnas marcadas es ruido de fix-up de navegaciones, no un cambio real.
+                if (entry.Entity is Auditoria ||
+                    entry.State is EntityState.Detached or EntityState.Unchanged)
+                    continue;
+                if (entry.State == EntityState.Modified && !entry.Properties.Any(p => p.IsModified))
+                    continue;
+
+                var nombreTabla = entry.Entity.GetType().Name;
+                var accionBase = entry.State switch
+                {
+                    EntityState.Added => $"Creó {nombreTabla}",
+                    EntityState.Deleted => $"Eliminó {nombreTabla}",
+                    _ => $"Actualizó {nombreTabla}"
+                };
+
+                var esAlta = entry.State == EntityState.Added;
+                var esBaja = entry.State == EntityState.Deleted;
+                // Solo los updates muestran delta de columnas; altas y bajas describen la fila entera.
+                var soloModificadas = entry.State == EntityState.Modified;
+
+                string? datosNuevos;
+                string? entidadId;
+                if (esAlta)
+                {
+                    // El id real lo asigna la DB en el save: DatosNuevos y EntidadId se completan después.
+                    datosNuevos = null;
+                    entidadId = null;
+                }
+                else
+                {
+                    datosNuevos = esBaja ? "{}" : Serializar(entry, valoresActuales: true, soloModificadas);
+                    entidadId = entry.Properties
+                        .First(p => p.Metadata.IsPrimaryKey())
+                        .CurrentValue?.ToString() ?? "0";
+                }
+
+                pendientes.Add((entry, new Auditoria
+                {
+                    UsuarioId = usuarioId,
+                    TablaAfectada = nombreTabla,
+                    // Sin usuario de sesión (jobs de Hangfire, webhooks): la acción queda marcada Sistema.
+                    Accion = usuarioId is null ? $"Sistema: {accionBase}" : accionBase,
+                    Fecha = DateTime.Now,
+                    DatosAnteriores = esAlta ? "{}" : Serializar(entry, valoresActuales: false, soloModificadas),
+                    // En altas quedan null acá y se llenan después del primer save, cuando ya existe el id.
+                    DatosNuevos = datosNuevos!,
+                    EntidadId = entidadId!
+                }));
             }
 
-            return resultado;
+            return pendientes;
+        }
+
+        // Updates: solo las columnas que EF marcó como modificadas; altas y bajas: fila completa.
+        private static string Serializar(EntityEntry entry, bool valoresActuales, bool soloModificadas)
+        {
+            var propiedades = new Dictionary<string, object?>(StringComparer.Ordinal);
+
+            foreach (var propiedad in entry.Properties)
+            {
+                if (PropiedadesExcluidas.Contains(propiedad.Metadata.Name))
+                    continue;
+                if (soloModificadas && !propiedad.IsModified)
+                    continue;
+
+                propiedades[propiedad.Metadata.Name] = valoresActuales
+                    ? propiedad.CurrentValue
+                    : propiedad.OriginalValue;
+            }
+
+            return JsonConvert.SerializeObject(propiedades);
         }
 
         public DbSet<Auditoria> Auditorias { get; set; }

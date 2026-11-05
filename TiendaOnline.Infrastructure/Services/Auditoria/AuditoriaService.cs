@@ -26,8 +26,9 @@ namespace TiendaOnline.Infrastructure.Services.Auditoria
             {
                 var busqueda = request.Busqueda.Trim().ToLower();
                 query = query.Where(a =>
-                    a.Usuario.Nombre.ToLower().Contains(busqueda) ||
-                    a.Usuario.Apellido.ToLower().Contains(busqueda) ||
+                    (a.Usuario != null &&
+                        (a.Usuario.Nombre.ToLower().Contains(busqueda) ||
+                         a.Usuario.Apellido.ToLower().Contains(busqueda))) ||
                     a.TablaAfectada.ToLower().Contains(busqueda) ||
                     a.Accion.ToLower().Contains(busqueda));
             }
@@ -54,8 +55,9 @@ namespace TiendaOnline.Infrastructure.Services.Auditoria
                 {
                     AuditoriaId = a.AuditoriaId,
                     Fecha = a.Fecha,
-                    UsuarioNombreCompleto = $"{a.Usuario.Nombre} {a.Usuario.Apellido}",
-                    UsuarioEmail = a.Usuario.Email,
+                    // Las filas de sistema no tienen usuario asociado: se muestran como Sistema en el panel.
+                    UsuarioNombreCompleto = a.Usuario == null ? "Sistema" : $"{a.Usuario.Nombre} {a.Usuario.Apellido}",
+                    UsuarioEmail = a.Usuario == null ? null : a.Usuario.Email,
                     Accion = a.Accion,
                     TablaAfectada = a.TablaAfectada
                 })

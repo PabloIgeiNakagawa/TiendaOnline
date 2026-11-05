@@ -7,6 +7,6 @@
         public string Accion { get; set; }
         public string TablaAfectada { get; set; }
         public string UsuarioNombreCompleto { get; set; }
-        public string UsuarioEmail { get; set; }
+        public string? UsuarioEmail { get; set; }
     }
 }
