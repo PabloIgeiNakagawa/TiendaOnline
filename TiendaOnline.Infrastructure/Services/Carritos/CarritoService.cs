@@ -26,10 +26,10 @@ namespace TiendaOnline.Infrastructure.Services.Carritos
             return carrito.Sum(x => x.Cantidad);
         }
 
-        public async Task<Result> AgregarAsync(int productoId)
+        public async Task<Result> AgregarAsync(int productoId, CancellationToken ct = default)
         {
             var carrito = await _storage.ObtenerAsync();
-            var producto = await _productoQueryService.ObtenerProductoAsync(productoId);
+            var producto = await _productoQueryService.ObtenerProductoAsync(productoId, ct);
 
             if (producto == null)
                 return Result.Failure("Producto no encontrado.");
@@ -92,14 +92,14 @@ namespace TiendaOnline.Infrastructure.Services.Carritos
             return Result.Success();
         }
 
-        public async Task<Result<ValidacionStockDto>> ValidarStockAsync()
+        public async Task<Result<ValidacionStockDto>> ValidarStockAsync(CancellationToken ct = default)
         {
             var carrito = await _storage.ObtenerAsync();
             var itemsSinStock = new List<StockInsuficienteDto>();
 
             foreach (var item in carrito)
             {
-                var producto = await _productoQueryService.ObtenerProductoAsync(item.ProductoId);
+                var producto = await _productoQueryService.ObtenerProductoAsync(item.ProductoId, ct);
                 if (producto == null)
                 {
                     itemsSinStock.Add(new StockInsuficienteDto

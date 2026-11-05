@@ -81,13 +81,13 @@ namespace TiendaOnline.Features.Pagos
             if (finalType == "payment" || string.IsNullOrEmpty(finalType))
             {
                 // Le pedimos al servicio de MP que traiga la data real usando el ID unificado
-                var infoPago = await _paymentService.ObtenerDetallesPagoAsync(finalId);
+                var infoPago = await _paymentService.ObtenerDetallesPagoAsync(finalId, HttpContext.RequestAborted);
 
                 if (infoPago != null)
                 {
                     // Delegamos todo el procesamiento al servicio, que ya maneja los estados:
                     // approved, rejected, cancelled, refunded, etc.
-                    var procesado = await _pedidoCommandService.ConfirmarPagoAsync(infoPago);
+                    var procesado = await _pedidoCommandService.ConfirmarPagoAsync(infoPago, HttpContext.RequestAborted);
                     _logger.LogInformation("Webhook procesado para Pago {Id} con estado {Estado}. Resultado efectivo: {Procesado}.", finalId, infoPago.Estado, procesado);
                 }
             }

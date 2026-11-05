@@ -2,6 +2,6 @@
 {
     public interface IRolQueryService
     {
-        Task<List<RolDto>> ObtenerTodosAsync();
+        Task<List<RolDto>> ObtenerTodosAsync(CancellationToken ct = default);
     }
 }

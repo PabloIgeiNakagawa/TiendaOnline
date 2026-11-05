@@ -31,10 +31,10 @@ namespace TiendaOnline.Features.Productos.Admin
         public async Task<IActionResult> Catalogo([FromQuery] ObtenerProductosAdminRequest request)
         {
             // Obtenemos los productos paginados y filtrados
-            var pagedResult = await _productoQueryService.ObtenerProductosAdminAsync(request);
+            var pagedResult = await _productoQueryService.ObtenerProductosAdminAsync(request, HttpContext.RequestAborted);
 
             // Obtenemos las categorías para el select (usando DTO)
-            var categoriasEntidad = await _categoriaQueryService.ObtenerCategoriasHojaAsync();
+            var categoriasEntidad = await _categoriaQueryService.ObtenerCategoriasHojaAsync(HttpContext.RequestAborted);
             var categoriasDto = categoriasEntidad.Select(c => new CategoriaDto
             {
                 CategoriaId = c.CategoriaId,
@@ -71,7 +71,7 @@ namespace TiendaOnline.Features.Productos.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Agregar(AgregarProductoViewModel model)
         {
-            if (!await _categoriaQueryService.EsCategoriaHojaAsync(model.CategoriaId))
+            if (!await _categoriaQueryService.EsCategoriaHojaAsync(model.CategoriaId, HttpContext.RequestAborted))
             {
                 ModelState.AddModelError("CategoriaId", "Debe seleccionar una subcategoría final.");
             }
@@ -94,7 +94,7 @@ namespace TiendaOnline.Features.Productos.Admin
                 NombreArchivo = model.ImagenArchivo?.FileName
             };
 
-            await _productoCommandService.AgregarProductoAsync(dto);
+            await _productoCommandService.AgregarProductoAsync(dto, HttpContext.RequestAborted);
             _logger.LogInformation("Producto creado: {Nombre} (categoría {CategoriaId}, stock {Stock}, precio {Precio}) por {Admin}",
                 dto.Nombre, dto.CategoriaId, dto.Stock, dto.Precio, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Producto creado correctamente.";
@@ -104,7 +104,7 @@ namespace TiendaOnline.Features.Productos.Admin
         [HttpGet("[action]/{id}")]
         public async Task<IActionResult> EditarProducto(int id)
         {
-            var producto = await _productoQueryService.ObtenerProductoAsync(id);
+            var producto = await _productoQueryService.ObtenerProductoAsync(id, HttpContext.RequestAborted);
             if (producto == null) return NotFound();
 
             var model = new EditarProductoViewModel
@@ -143,7 +143,7 @@ namespace TiendaOnline.Features.Productos.Admin
                 NombreArchivo = model.ImagenArchivo?.FileName
             };
 
-            await _productoCommandService.EditarProductoAsync(dto);
+            await _productoCommandService.EditarProductoAsync(dto, HttpContext.RequestAborted);
             _logger.LogInformation("Producto {ProductoId} editado por {Admin}", dto.ProductoId, User.FindFirstValue(ClaimTypes.Email));
 
             TempData["MensajeExito"] = "Producto actualizado correctamente.";
@@ -154,7 +154,7 @@ namespace TiendaOnline.Features.Productos.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarAlta(int id)
         {
-            await _productoCommandService.DarAltaProductoAsync(id);
+            await _productoCommandService.DarAltaProductoAsync(id, HttpContext.RequestAborted);
             _logger.LogInformation("Producto {ProductoId} activado por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Producto activado.";
             return RedirectToAction(nameof(Catalogo));
@@ -164,14 +164,14 @@ namespace TiendaOnline.Features.Productos.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarBaja(int id)
         {
-            await _productoCommandService.DarBajaProductoAsync(id);
+            await _productoCommandService.DarBajaProductoAsync(id, HttpContext.RequestAborted);
             _logger.LogInformation("Producto {ProductoId} desactivado por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Producto desactivado.";
             return RedirectToAction(nameof(Catalogo));
         }
         private async Task<IEnumerable<SelectListItem>> ObtenerListaCategoriasAsync()
         {
-            var categoriasHoja = await _categoriaQueryService.ObtenerCategoriasHojaAsync();
+            var categoriasHoja = await _categoriaQueryService.ObtenerCategoriasHojaAsync(HttpContext.RequestAborted);
 
             return categoriasHoja.Select(c => new SelectListItem
             {

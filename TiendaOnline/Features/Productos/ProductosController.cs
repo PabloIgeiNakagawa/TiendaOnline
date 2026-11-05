@@ -19,9 +19,9 @@ namespace TiendaOnline.Features.Productos
         [HttpGet]
         public async Task<IActionResult> Index([FromQuery] ObtenerProductosCatalogoRequest request)
         {
-            var productosPaginados = await _productoQueryService.ObtenerProductosCatalogoAsync(request);
+            var productosPaginados = await _productoQueryService.ObtenerProductosCatalogoAsync(request, HttpContext.RequestAborted);
 
-            var categoriasRaiz = await _categoriaQueryService.ObtenerCategoriasRaizAsync();
+            var categoriasRaiz = await _categoriaQueryService.ObtenerCategoriasRaizAsync(HttpContext.RequestAborted);
 
             var viewModel = new ProductoIndexViewModel
             {
@@ -43,7 +43,7 @@ namespace TiendaOnline.Features.Productos
             if (id <= 0)
                 return BadRequest();
 
-            var producto = await _productoQueryService.ObtenerProductoAsync(id);
+            var producto = await _productoQueryService.ObtenerProductoAsync(id, HttpContext.RequestAborted);
 
             if (producto is null)
                 return NotFound();

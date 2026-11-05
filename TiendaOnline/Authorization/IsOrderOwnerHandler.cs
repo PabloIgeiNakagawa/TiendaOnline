@@ -53,7 +53,7 @@ namespace TiendaOnline.Authorization
             if (string.IsNullOrEmpty(userIdLogueado)) return;
 
             // Consultar el pedido en la base de datos
-            var pedido = await _pedidoQueryService.ObtenerPedidoConDetallesAsync(orderId);
+            var pedido = await _pedidoQueryService.ObtenerPedidoConDetallesAsync(orderId, httpContext.RequestAborted);
 
             // Validar propiedad: El pedido existe y el UsuarioId coincide
             if (pedido != null && pedido.UsuarioId.ToString() == userIdLogueado)

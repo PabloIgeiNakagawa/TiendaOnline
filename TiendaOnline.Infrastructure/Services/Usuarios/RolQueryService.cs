@@ -6,7 +6,7 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
     public class RolQueryService : IRolQueryService
     {
         // Aquí puedes usar el Enum que está en TiendaOnline.Domain.Entities
-        public Task<List<RolDto>> ObtenerTodosAsync()
+        public Task<List<RolDto>> ObtenerTodosAsync(CancellationToken ct = default)
         {
             return Task.FromResult(Enum.GetValues(typeof(Rol))
                 .Cast<Rol>()

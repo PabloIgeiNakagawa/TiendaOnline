@@ -34,7 +34,7 @@ namespace TiendaOnline.Features.Accounts
 
             if (User.IsInRole("Administrador"))
             {
-                var roles = await _rolService.ObtenerTodosAsync();
+                var roles = await _rolService.ObtenerTodosAsync(HttpContext.RequestAborted);
                 model.RolesDisponibles = roles.Select(r => new SelectListItem
                 {
                     Value = r.Id.ToString(),
@@ -58,7 +58,7 @@ namespace TiendaOnline.Features.Accounts
             if (!ModelState.IsValid)
             {
                 // Recargar roles si el modelo no es válido
-                var roles = await _rolService.ObtenerTodosAsync();
+                var roles = await _rolService.ObtenerTodosAsync(HttpContext.RequestAborted);
                 model.RolesDisponibles = roles.Select(r => new SelectListItem
                 {
                     Value = r.Id.ToString(),
@@ -85,7 +85,7 @@ namespace TiendaOnline.Features.Accounts
                 RolId = model.RolId
             };
 
-            await _authService.RegisterAsync(dto, permitirRolPersonalizado: esAdmin);
+            await _authService.RegisterAsync(dto, permitirRolPersonalizado: esAdmin, HttpContext.RequestAborted);
             _logger.LogInformation("Usuario registrado: {Email} (rol {RolId})", dto.Email, dto.RolId);
 
             if (esAdmin)    
@@ -113,7 +113,7 @@ namespace TiendaOnline.Features.Accounts
         {
             if (!ModelState.IsValid) return View(model);
 
-            var usuarioDto = await _authService.ValidarCredencialesAsync(model.Email, model.Contrasena);
+            var usuarioDto = await _authService.ValidarCredencialesAsync(model.Email, model.Contrasena, HttpContext.RequestAborted);
 
             if (usuarioDto == null)
             {
@@ -172,7 +172,7 @@ namespace TiendaOnline.Features.Accounts
             var email = result.Principal.FindFirstValue(ClaimTypes.Email);  
                 
             // Buscamos si ya existe en la DB
-            var usuarioDto = await _authService.ObtenerUsuarioPorEmailAsync(email);
+            var usuarioDto = await _authService.ObtenerUsuarioPorEmailAsync(email, HttpContext.RequestAborted);
 
             // SI NO EXISTE: Lo registramos automáticamente
             if (usuarioDto == null)
@@ -191,10 +191,10 @@ namespace TiendaOnline.Features.Accounts
                     Contrasena = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32))
                 };
 
-                await _authService.RegisterAsync(nuevoUsuario);
+                await _authService.RegisterAsync(nuevoUsuario, ct: HttpContext.RequestAborted);
 
                 // Lo volvemos a buscar ahora que ya se guardó en la DB y tiene un UsuarioId asignado
-                usuarioDto = await _authService.ObtenerUsuarioPorEmailAsync(email);
+                usuarioDto = await _authService.ObtenerUsuarioPorEmailAsync(email, HttpContext.RequestAborted);
             }
 
             // Defensa: si el re-fetch no devuelve nada (email vacío, carrera de datos),

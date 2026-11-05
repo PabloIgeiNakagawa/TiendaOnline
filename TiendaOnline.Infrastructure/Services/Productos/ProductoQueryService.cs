@@ -14,7 +14,7 @@ namespace TiendaOnline.Infrastructure.Services.Productos
             _context = context;
         }
 
-        public async Task<ProductoDto?> ObtenerProductoAsync(int id)
+        public async Task<ProductoDto?> ObtenerProductoAsync(int id, CancellationToken ct)
         {
             if (id <= 0)
                 throw new ArgumentException("El id del producto debe ser mayor a 0.");
@@ -23,7 +23,7 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 .AsNoTracking()
                 .Include(p => p.Categoria)
                 .Where(p => p.Activo)
-                .FirstOrDefaultAsync(p => p.ProductoId == id);
+                .FirstOrDefaultAsync(p => p.ProductoId == id, ct);
 
             if (producto is null)
                 return null;
@@ -41,7 +41,7 @@ namespace TiendaOnline.Infrastructure.Services.Productos
             };
         }
         
-        public async Task<PagedResult<ProductoListaDto>> ObtenerProductosAdminAsync(ObtenerProductosAdminRequest request)
+        public async Task<PagedResult<ProductoListaDto>> ObtenerProductosAdminAsync(ObtenerProductosAdminRequest request, CancellationToken ct)
         {
             if (request.Pagina <= 0)
                 throw new ArgumentException("La página debe ser mayor a 0.");
@@ -85,7 +85,7 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 };
             }
 
-            int totalElementos = await query.CountAsync();
+            int totalElementos = await query.CountAsync(ct);
 
             var items = await query
                 .OrderByDescending(p => p.ProductoId)
@@ -104,7 +104,7 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                         : "Sin categoría",
                     CategoriaId = p.CategoriaId
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return new PagedResult<ProductoListaDto>(
                 items,
@@ -113,7 +113,7 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 request.TamanoPagina);
         }
 
-        public async Task<PagedResult<ProductoDto>> ObtenerProductosCatalogoAsync(ObtenerProductosCatalogoRequest request)
+        public async Task<PagedResult<ProductoDto>> ObtenerProductosCatalogoAsync(ObtenerProductosCatalogoRequest request, CancellationToken ct)
         {
             var query = _context.Productos
                 .AsNoTracking()
@@ -149,7 +149,7 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 _ => query.OrderBy(p => p.Nombre)
             };
 
-            var total = await query.CountAsync();
+            var total = await query.CountAsync(ct);
 
             var items = await query
                 .Skip((request.Pagina - 1) * request.Cantidad)
@@ -165,7 +165,7 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                     CategoriaNombre = p.Categoria.Nombre,
                     CategoriaId = p.CategoriaId
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return new PagedResult<ProductoDto>(
                 items,

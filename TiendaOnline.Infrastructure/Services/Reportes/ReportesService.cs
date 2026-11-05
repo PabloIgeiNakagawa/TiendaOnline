@@ -14,25 +14,25 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             _context = context;
         }
 
-        public async Task<DashboardDTO> ObtenerDatosAsync()
+        public async Task<DashboardDTO> ObtenerDatosAsync(CancellationToken ct = default)
         {
             var dashboard = new DashboardDTO
             {
-                MetricasGenerales = await ObtenerMetricasGeneralesAsync(),
-                TopProductos = await ObtenerTopProductosAsync(10),
-                TopClientes = await ObtenerTopClientesAsync(10),
-                VentasPorCategoria = await ObtenerVentasPorCategoriaAsync(),
-                VentasPorMes = await ObtenerVentasPorMesAsync(12),
-                EstadisticasPedidos = await ObtenerEstadisticasPedidosAsync(),
-                VentasPorMetodoDePago = await ObtenerVentasPorMetodoDePagoAsync(),
-                VentasPorDiaHora = await ObtenerVentasPorDiaHoraAsync(),
-                StockInmovilizado = await ObtenerStockInmovilizadoAsync()
+                MetricasGenerales = await ObtenerMetricasGeneralesAsync(ct),
+                TopProductos = await ObtenerTopProductosAsync(10, ct),
+                TopClientes = await ObtenerTopClientesAsync(10, ct),
+                VentasPorCategoria = await ObtenerVentasPorCategoriaAsync(ct),
+                VentasPorMes = await ObtenerVentasPorMesAsync(12, ct),
+                EstadisticasPedidos = await ObtenerEstadisticasPedidosAsync(ct),
+                VentasPorMetodoDePago = await ObtenerVentasPorMetodoDePagoAsync(ct),
+                VentasPorDiaHora = await ObtenerVentasPorDiaHoraAsync(ct),
+                StockInmovilizado = await ObtenerStockInmovilizadoAsync(ct)
             };
 
             return dashboard;
         }
 
-        private async Task<MetricasGeneralesDto> ObtenerMetricasGeneralesAsync()
+        private async Task<MetricasGeneralesDto> ObtenerMetricasGeneralesAsync(CancellationToken ct)
         {
             var fechaActual = DateTime.Now;
             var inicioMesActual = new DateTime(fechaActual.Year, fechaActual.Month, 1);
@@ -43,54 +43,54 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             var ventasTotales = await _context.DetallesPedido
                 .AsNoTracking()
                 .Where(dp => dp.Pedido.Estado != EstadoPedido.Cancelado)
-                .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario);
+                .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario, ct);
 
             var ventasMesActual = await _context.DetallesPedido
                 .AsNoTracking()
                 .Where(dp => dp.Pedido.FechaPedido >= inicioMesActual
                           && dp.Pedido.FechaPedido <= finMesActual
                           && dp.Pedido.Estado != EstadoPedido.Cancelado)
-                .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario);
+                .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario, ct);
 
             var ventasMesAnterior = await _context.DetallesPedido
                 .AsNoTracking()
                 .Where(dp => dp.Pedido.FechaPedido >= inicioMesAnterior
                           && dp.Pedido.FechaPedido <= finMesAnterior
                           && dp.Pedido.Estado != EstadoPedido.Cancelado)
-                .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario);
+                .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario, ct);
 
-            var totalPedidos = await _context.Pedidos.CountAsync();
+            var totalPedidos = await _context.Pedidos.CountAsync(ct);
             var pedidosMesActual = await _context.Pedidos
                 .AsNoTracking()
                 .Where(p => p.FechaPedido >= inicioMesActual && p.FechaPedido <= finMesActual)
-                .CountAsync();
+                .CountAsync(ct);
             var pedidosMesAnterior = await _context.Pedidos
                 .AsNoTracking()
                 .Where(p => p.FechaPedido >= inicioMesAnterior && p.FechaPedido <= finMesAnterior)
-                .CountAsync();
+                .CountAsync(ct);
 
-            var totalClientes = await _context.Usuarios.Where(u => u.Rol == 0 && u.Activo).CountAsync();
+            var totalClientes = await _context.Usuarios.Where(u => u.Rol == 0 && u.Activo).CountAsync(ct);
             var clientesMesActual = await _context.Usuarios
                 .AsNoTracking()
                 .Where(u => u.Rol == 0 && u.Activo
                          && u.FechaCreacion >= inicioMesActual
                          && u.FechaCreacion <= finMesActual)
-                .CountAsync();
+                .CountAsync(ct);
             var clientesMesAnterior = await _context.Usuarios
                 .AsNoTracking()
                 .Where(u => u.Rol == 0 && u.Activo
                          && u.FechaCreacion >= inicioMesAnterior
                          && u.FechaCreacion <= finMesAnterior)
-                .CountAsync();
+                .CountAsync(ct);
 
             var productosBajoStock = await _context.Productos
                 .AsNoTracking()
                 .Where(p => p.Stock < 10 && p.Activo)
-                .CountAsync();
+                .CountAsync(ct);
 
             var promedioVentaPorPedido = totalPedidos > 0 ? ventasTotales / totalPedidos : 0;
 
-            var tiempoPromedioPreparacionHoras = await CalcularTiempoPromedioPreparacionAsync();
+            var tiempoPromedioPreparacionHoras = await CalcularTiempoPromedioPreparacionAsync(ct);
 
             return new MetricasGeneralesDto
             {
@@ -109,12 +109,12 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             };
         }
 
-        private async Task<double> CalcularTiempoPromedioPreparacionAsync()
+        private async Task<double> CalcularTiempoPromedioPreparacionAsync(CancellationToken ct)
         {
             var todosPedidos = await _context.Pedidos
                 .AsNoTracking()
                 .Select(p => new { p.FechaEnPreparacion, p.FechaEnvio })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var conAmbasFechas = todosPedidos
                 .Where(p => p.FechaEnPreparacion.HasValue && p.FechaEnvio.HasValue)
@@ -125,13 +125,13 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             return conAmbasFechas.Any() ? conAmbasFechas.Average() : 0;
         }
 
-        private async Task<List<VentasPorDiaHoraDto>> ObtenerVentasPorDiaHoraAsync()
+        private async Task<List<VentasPorDiaHoraDto>> ObtenerVentasPorDiaHoraAsync(CancellationToken ct)
         {
             var pedidos = await _context.Pedidos
                 .AsNoTracking()
                 .Where(p => p.Estado != EstadoPedido.Cancelado)
                 .Select(p => new { p.FechaPedido })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var diasSemana = new Dictionary<DayOfWeek, string>
             {
@@ -192,14 +192,14 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             }).ToList();
         }
 
-        private async Task<List<StockInmovilizadoDto>> ObtenerStockInmovilizadoAsync()
+        private async Task<List<StockInmovilizadoDto>> ObtenerStockInmovilizadoAsync(CancellationToken ct)
         {
             var fechaLimite = DateTime.Now.AddDays(-90);
 
             var productosConStock = await _context.Productos
                 .AsNoTracking()
                 .Where(p => p.Stock > 0 && p.Activo)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var productosVendidosRecientemente = await _context.DetallesPedido
                 .AsNoTracking()
@@ -207,14 +207,14 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                           && dp.Pedido.FechaPedido >= fechaLimite)
                 .Select(dp => dp.ProductoId)
                 .Distinct()
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var ultimaVentaTodos = await _context.DetallesPedido
                 .AsNoTracking()
                 .Where(dp => dp.Pedido.Estado != EstadoPedido.Cancelado)
                 .GroupBy(dp => dp.ProductoId)
                 .Select(g => new { ProductoId = g.Key, UltimaVenta = g.Max(dp => dp.Pedido.FechaPedido) })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var ultimaVentaMap = ultimaVentaTodos.ToDictionary(p => p.ProductoId, p => p.UltimaVenta);
 
@@ -246,7 +246,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             return stockInmovilizado;
         }
 
-        private async Task<List<ProductoMasVendidoDto>> ObtenerTopProductosAsync(int cantidad)
+        private async Task<List<ProductoMasVendidoDto>> ObtenerTopProductosAsync(int cantidad, CancellationToken ct)
         {
             return await _context.DetallesPedido
                 .AsNoTracking()
@@ -263,10 +263,10 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                 })
                 .OrderByDescending(p => p.CantidadVendida)
                 .Take(cantidad)
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        private async Task<List<ClienteTopDto>> ObtenerTopClientesAsync(int cantidad)
+        private async Task<List<ClienteTopDto>> ObtenerTopClientesAsync(int cantidad, CancellationToken ct)
         {
             var clientes = await _context.Pedidos
                 .AsNoTracking()
@@ -283,7 +283,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                 })
                 .OrderByDescending(c => c.TotalGastado)
                 .Take(cantidad)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return clientes.Select(c => new ClienteTopDto
             {
@@ -296,7 +296,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             }).ToList();
         }
 
-        private async Task<List<VentaPorCategoriaDto>> ObtenerVentasPorCategoriaAsync()
+        private async Task<List<VentaPorCategoriaDto>> ObtenerVentasPorCategoriaAsync(CancellationToken ct)
         {
             var ventas = await _context.DetallesPedido
                 .AsNoTracking()
@@ -309,7 +309,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                     TotalVentas = g.Sum(dp => dp.Cantidad * dp.PrecioUnitario)
                 })
                 .OrderByDescending(v => v.TotalVentas)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var totalVentas = ventas.Sum(v => v.TotalVentas);
             foreach (var venta in ventas)
@@ -320,7 +320,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             return ventas;
         }
 
-        private async Task<List<VentaPorMesDto>> ObtenerVentasPorMesAsync(int meses)
+        private async Task<List<VentaPorMesDto>> ObtenerVentasPorMesAsync(int meses, CancellationToken ct)
         {
             var fechaInicio = DateTime.Now.AddMonths(-meses);
 
@@ -336,7 +336,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                     CantidadPedidos = g.Count()
                 })
                 .OrderBy(v => v.Year).ThenBy(v => v.Month)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return ventasPorMes.Select(v => new VentaPorMesDto
             {
@@ -348,13 +348,13 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             }).ToList();
         }
 
-        private async Task<EstadisticasPedidosDto> ObtenerEstadisticasPedidosAsync()
+        private async Task<EstadisticasPedidosDto> ObtenerEstadisticasPedidosAsync(CancellationToken ct)
         {
             var estados = await _context.Pedidos
                 .AsNoTracking()
                 .GroupBy(p => p.Estado)
                 .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var totalPedidos = estados.Sum(e => e.Cantidad);
 
@@ -379,7 +379,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             };
         }
 
-        private async Task<List<VentaPorMetodoDePagoDto>> ObtenerVentasPorMetodoDePagoAsync()
+        private async Task<List<VentaPorMetodoDePagoDto>> ObtenerVentasPorMetodoDePagoAsync(CancellationToken ct)
         {
             var ventas = await _context.Pedidos
                 .AsNoTracking()
@@ -392,7 +392,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                     TotalVentas = g.SelectMany(p => p.DetallesPedido).Sum(dp => dp.Cantidad * dp.PrecioUnitario)
                 })
                 .OrderByDescending(v => v.TotalVentas)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var totalVentas = ventas.Sum(v => v.TotalVentas);
             foreach (var venta in ventas)

@@ -5,13 +5,13 @@ namespace TiendaOnline.Application.Categorias.Commands
     public interface ICategoriaCommandService
     {
         // Escritura
-        Task AgregarCategoriaAsync(CategoriaDto categoria);
-        Task EditarCategoriaAsync(int categoriaId, string nombre);
-        Task CambiarCategoriaPadre(int categoriaId, int? nuevaCategoriaPadreId);
+        Task AgregarCategoriaAsync(CategoriaDto categoria, CancellationToken ct = default);
+        Task EditarCategoriaAsync(int categoriaId, string nombre, CancellationToken ct = default);
+        Task CambiarCategoriaPadre(int categoriaId, int? nuevaCategoriaPadreId, CancellationToken ct = default);
 
         // Estado y Borrado
-        Task ActivarCategoriaAsync(int categoriaId);
-        Task DesactivarCategoriaAsync(int categoriaId);
-        Task<bool> EliminarCategoriaAsync(int categoriaId); // Solo si no tiene dependencias
+        Task ActivarCategoriaAsync(int categoriaId, CancellationToken ct = default);
+        Task DesactivarCategoriaAsync(int categoriaId, CancellationToken ct = default);
+        Task<bool> EliminarCategoriaAsync(int categoriaId, CancellationToken ct = default); // Solo si no tiene dependencias
     }
 }

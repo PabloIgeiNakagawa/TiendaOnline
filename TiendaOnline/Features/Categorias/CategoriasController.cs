@@ -27,7 +27,7 @@ namespace TiendaOnline.Features.Categorias
         [HttpGet("[action]")]
         public async Task<IActionResult> Listado(FiltrosListadoViewModel filtros)
         {
-            var pagedResult = await _categoriaQueryService.ObtenerCategoriasPaginadasAsync(filtros.Pagina, filtros.TamanoPagina, filtros.Busqueda, filtros.Nivel);
+            var pagedResult = await _categoriaQueryService.ObtenerCategoriasPaginadasAsync(filtros.Pagina, filtros.TamanoPagina, filtros.Busqueda, filtros.Nivel, HttpContext.RequestAborted);
 
             var viewModel = new CategoriaListadoViewModel
             {
@@ -42,7 +42,7 @@ namespace TiendaOnline.Features.Categorias
         [HttpGet("[action]")]
         public async Task<IActionResult> AgregarCategoria()
         {
-            ViewBag.Categorias = new SelectList(await _categoriaQueryService.ObtenerCategoriasAsync(), "CategoriaId", "Nombre");
+            ViewBag.Categorias = new SelectList(await _categoriaQueryService.ObtenerCategoriasAsync(HttpContext.RequestAborted), "CategoriaId", "Nombre");
             return View();
         }
 
@@ -52,7 +52,7 @@ namespace TiendaOnline.Features.Categorias
         {
             if (ModelState.IsValid)
             {
-                if (await _categoriaQueryService.ExisteNombreAsync(categoria.Nombre))
+                if (await _categoriaQueryService.ExisteNombreAsync(categoria.Nombre, HttpContext.RequestAborted))
                 {
                     ModelState.AddModelError("Nombre", "Ya existe una categoría con este nombre.");
                 }
@@ -63,14 +63,14 @@ namespace TiendaOnline.Features.Categorias
                         Nombre = categoria.Nombre,
                         CategoriaPadreId = categoria.CategoriaPadreId
                     };
-                    await _categoriaCommandService.AgregarCategoriaAsync(dto);
+                    await _categoriaCommandService.AgregarCategoriaAsync(dto, HttpContext.RequestAborted);
                     _logger.LogInformation("Categoría creada: {Nombre} (padre {CategoriaPadreId}) por {Admin}",
                         dto.Nombre, dto.CategoriaPadreId, User.FindFirstValue(ClaimTypes.Email));
                     TempData["MensajeExito"] = "La categoría se creó correctamente.";
                     return RedirectToAction(nameof(Listado));
                 }
             }
-            ViewBag.Categorias = new SelectList(await _categoriaQueryService.ObtenerCategoriasAsync(), "CategoriaId", "Nombre");
+            ViewBag.Categorias = new SelectList(await _categoriaQueryService.ObtenerCategoriasAsync(HttpContext.RequestAborted), "CategoriaId", "Nombre");
             return View(categoria);
         }
 
@@ -112,7 +112,7 @@ namespace TiendaOnline.Features.Categorias
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Eliminar(int id)
         {
-            bool eliminado = await _categoriaCommandService.EliminarCategoriaAsync(id);
+            bool eliminado = await _categoriaCommandService.EliminarCategoriaAsync(id, HttpContext.RequestAborted);
             _logger.LogInformation("Eliminación de categoría {CategoriaId} por {Admin} (resultado: {Eliminado})",
                 id, User.FindFirstValue(ClaimTypes.Email), eliminado);
             if (!eliminado)

@@ -2,8 +2,8 @@
 {
     public interface IUsuarioCommandService
     {
-        Task DarAltaUsuarioAsync(int usuarioId);
-        Task DarBajaUsuarioAsync(int usuarioId);
-        Task EditarUsuarioAsync(UsuarioUpdateDto dto);
+        Task DarAltaUsuarioAsync(int usuarioId, CancellationToken ct = default);
+        Task DarBajaUsuarioAsync(int usuarioId, CancellationToken ct = default);
+        Task EditarUsuarioAsync(UsuarioUpdateDto dto, CancellationToken ct = default);
     }
 }

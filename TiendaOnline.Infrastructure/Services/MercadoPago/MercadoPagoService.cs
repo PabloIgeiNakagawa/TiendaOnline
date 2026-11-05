@@ -24,7 +24,7 @@ public class MercadoPagoService : IPaymentService
         _logger = logger;
     }
 
-    public async Task<string> GenerarPreferenciaPagoAsync(PedidoPagoDto pedidoDto)
+    public async Task<string> GenerarPreferenciaPagoAsync(PedidoPagoDto pedidoDto, CancellationToken ct = default)
     {
         var client = new PreferenceClient();
         var notificationUrl = _settings.NotificationUrl;
@@ -70,7 +70,7 @@ public class MercadoPagoService : IPaymentService
         return preference.InitPoint;
     }
 
-    public async Task<InfoPagoDto?> ObtenerDetallesPagoAsync(string paymentId)
+    public async Task<InfoPagoDto?> ObtenerDetallesPagoAsync(string paymentId, CancellationToken ct = default)
     {
         try
         {

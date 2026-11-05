@@ -19,7 +19,7 @@ namespace TiendaOnline.Features.Reportes
         [HttpGet("[action]")]
         public async Task<IActionResult> Dashboard()
         {
-            var datosDto = await _reportesService.ObtenerDatosAsync();
+            var datosDto = await _reportesService.ObtenerDatosAsync(HttpContext.RequestAborted);
 
             var viewModel = new DashboardViewModel
             {

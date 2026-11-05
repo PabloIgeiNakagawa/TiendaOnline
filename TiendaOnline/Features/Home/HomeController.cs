@@ -36,7 +36,7 @@ namespace TiendaOnline.Features.Home
         [HttpGet]
         public async Task<IActionResult> IndexAdmin()
         {
-            var datosHome = await _adminOverviewService.ObtenerResumenHomeAsync();
+            var datosHome = await _adminOverviewService.ObtenerResumenHomeAsync(HttpContext.RequestAborted);
 
             var viewModel = new HomeAdminViewModel
             {
@@ -102,7 +102,7 @@ namespace TiendaOnline.Features.Home
         [HttpGet]
         public async Task<IActionResult> ObtenerPedidosEstancados(int pagina = 1)
         {
-            var resultado = await _adminOverviewService.ObtenerPedidosEstancadosPaginadoAsync(pagina);
+            var resultado = await _adminOverviewService.ObtenerPedidosEstancadosPaginadoAsync(pagina, ct: HttpContext.RequestAborted);
 
             var pedidos = resultado.Pedidos.Select(p => new PedidoEstancadoViewModel
             {

@@ -14,7 +14,7 @@ namespace TiendaOnline.Infrastructure.Services.Auditoria
             _context = context;
         }
 
-        public async Task<PagedResult<AuditoriaListaDto>> ObtenerAuditoriasPaginadasAsync(ObtenerLogsRequest request)
+        public async Task<PagedResult<AuditoriaListaDto>> ObtenerAuditoriasPaginadasAsync(ObtenerLogsRequest request, CancellationToken ct = default)
         {
             var query = _context.Auditorias
                 .AsNoTracking()
@@ -44,7 +44,7 @@ namespace TiendaOnline.Infrastructure.Services.Auditoria
             }
 
             // Conteo total
-            var totalRegistros = await query.CountAsync();
+            var totalRegistros = await query.CountAsync(ct);
 
             // Proyección al DTO
             var items = await query
@@ -61,12 +61,12 @@ namespace TiendaOnline.Infrastructure.Services.Auditoria
                     Accion = a.Accion,
                     TablaAfectada = a.TablaAfectada
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return new PagedResult<AuditoriaListaDto>(items, totalRegistros, request.Pagina, request.TamanoPagina);
         }
 
-        public async Task<AuditoriaDetalleDto?> ObtenerDetalleAuditoriaAsync(int id)
+        public async Task<AuditoriaDetalleDto?> ObtenerDetalleAuditoriaAsync(int id, CancellationToken ct = default)
         {
             return await _context.Auditorias
                 .AsNoTracking()
@@ -77,7 +77,7 @@ namespace TiendaOnline.Infrastructure.Services.Auditoria
                     DatosNuevos = a.DatosNuevos,
                     EntidadId = a.EntidadId
                 })
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(ct);
         }
 
     }

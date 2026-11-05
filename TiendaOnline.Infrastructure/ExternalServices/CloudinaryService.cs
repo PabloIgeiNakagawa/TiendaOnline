@@ -24,7 +24,7 @@ namespace TiendaOnline.Infrastructure.ExternalServices
             _cloudinary = new Cloudinary(acc);
         }
 
-        public async Task<string> SubirImagenAsync(Stream archivoStream, string nombreArchivo, string subCarpeta = "General", int width = 800, int height = 800)
+        public async Task<string> SubirImagenAsync(Stream archivoStream, string nombreArchivo, string subCarpeta = "General", int width = 800, int height = 800, CancellationToken ct = default)
         {
             if (archivoStream == null || archivoStream.Length == 0)
             {
@@ -65,7 +65,7 @@ namespace TiendaOnline.Infrastructure.ExternalServices
         }
 
         // Los comprobantes se suben sin transformación: la resolución original es la evidencia del pago.
-        public async Task<string> SubirComprobanteAsync(Stream archivoStream, string nombreArchivo)
+        public async Task<string> SubirComprobanteAsync(Stream archivoStream, string nombreArchivo, CancellationToken ct = default)
         {
             if (archivoStream == null || archivoStream.Length == 0)
             {
@@ -90,7 +90,7 @@ namespace TiendaOnline.Infrastructure.ExternalServices
             return uploadResult.SecureUrl.ToString();
         }
 
-        public async Task<bool> BorrarImagenAsync(string publicId)
+        public async Task<bool> BorrarImagenAsync(string publicId, CancellationToken ct = default)
         {
             if (string.IsNullOrEmpty(publicId)) return false;
 

@@ -15,13 +15,13 @@ namespace TiendaOnline.Infrastructure.Services.Geo
             _logger = logger;
         }
 
-        public async Task<IEnumerable<LocationDto>> GetProvinciasAsync()
+        public async Task<IEnumerable<LocationDto>> GetProvinciasAsync(CancellationToken ct = default)
         {
-            var response = await _httpClient.GetFromJsonAsync<GeorefResponse>("https://apis.datos.gob.ar/georef/api/provincias?campos=id,nombre");
+            var response = await _httpClient.GetFromJsonAsync<GeorefResponse>("https://apis.datos.gob.ar/georef/api/provincias?campos=id,nombre", ct);
             return response?.Provincias.OrderBy(p => p.Nombre) ?? Enumerable.Empty<LocationDto>();
         }
 
-        public async Task<IEnumerable<LocationDto>> GetLocalidadesAsync(string provinciaNombre)
+        public async Task<IEnumerable<LocationDto>> GetLocalidadesAsync(string provinciaNombre, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(provinciaNombre))
                 return Enumerable.Empty<LocationDto>();
@@ -32,7 +32,7 @@ namespace TiendaOnline.Infrastructure.Services.Geo
 
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<GeorefResponse>(url);
+                var response = await _httpClient.GetFromJsonAsync<GeorefResponse>(url, ct);
 
                 return response?.Localidades?.OrderBy(l => l.Nombre)
                        ?? Enumerable.Empty<LocationDto>();

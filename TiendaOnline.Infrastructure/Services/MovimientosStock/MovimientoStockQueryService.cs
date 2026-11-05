@@ -15,7 +15,7 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
             _context = context;
         }
 
-        public async Task<PagedResult<MovimientosDto>> ObtenerMovimientosPaginadosAsync(MovimientoFiltrosDto filtros)
+        public async Task<PagedResult<MovimientosDto>> ObtenerMovimientosPaginadosAsync(MovimientoFiltrosDto filtros, CancellationToken ct = default)
         {
             var query = _context.MovimientosStock
                 .AsNoTracking()
@@ -51,13 +51,13 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
             }
 
             // --- Paginación ---
-            int totalElementos = await query.CountAsync();
+            int totalElementos = await query.CountAsync(ct);
 
             var items = await query
                 .OrderByDescending(m => m.Fecha)
                 .Skip((filtros.Pagina - 1) * filtros.RegistrosPorPagina)
                 .Take(filtros.RegistrosPorPagina)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             var resultado = items.Select(m => new MovimientosDto
             {
@@ -74,7 +74,7 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
             return new PagedResult<MovimientosDto>(resultado, totalElementos, filtros.Pagina, filtros.RegistrosPorPagina);
         }
 
-        public async Task<IEnumerable<TipoMovimientoDto>> ObtenerTiposMovimientoAsync()
+        public async Task<IEnumerable<TipoMovimientoDto>> ObtenerTiposMovimientoAsync(CancellationToken ct = default)
         {
             // Obtenemos todos los valores del Enum 'TipoMovimiento'
             var tipos = Enum.GetValues(typeof(Domain.Entities.TipoMovimiento))
@@ -90,14 +90,14 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
         }
 
         // OBTENER HISTORIAL (Para reportes del Admin)
-        public async Task<List<MovimientosDto>> ObtenerHistorialPorProductoAsync(int productoId)
+        public async Task<List<MovimientosDto>> ObtenerHistorialPorProductoAsync(int productoId, CancellationToken ct = default)
         {
             var movimientos = await _context.MovimientosStock
                 .AsNoTracking()
                 .Include(m => m.Pedido)
                 .Where(m => m.ProductoId == productoId)
                 .OrderByDescending(m => m.Fecha)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return movimientos
                 .Select(m => new MovimientosDto

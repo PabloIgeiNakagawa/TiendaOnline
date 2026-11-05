@@ -15,7 +15,7 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
             _context = context;
         }
 
-        public async Task AgregarCategoriaAsync(CategoriaDto categoria)
+        public async Task AgregarCategoriaAsync(CategoriaDto categoria, CancellationToken ct = default)
         {
             Categoria nuevaCategoria = new Categoria
             {
@@ -25,64 +25,64 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
             };
 
             _context.Categorias.Add(nuevaCategoria);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
 
-        public async Task EditarCategoriaAsync(int categoriaId, string nombre)
+        public async Task EditarCategoriaAsync(int categoriaId, string nombre, CancellationToken ct = default)
         {
-            var categoria = await _context.Categorias.FindAsync(categoriaId);
+            var categoria = await _context.Categorias.FindAsync(categoriaId, ct);
             if (categoria != null)
             {
                 categoria.Nombre = nombre;
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(ct);
             }
         }
 
-        public async Task CambiarCategoriaPadre(int categoriaId, int? nuevaCategoriaPadreId)
+        public async Task CambiarCategoriaPadre(int categoriaId, int? nuevaCategoriaPadreId, CancellationToken ct = default)
         {
             // Validación de seguridad básica
-            if (await VerificarSiCausaBucleAsync(categoriaId, nuevaCategoriaPadreId))
+            if (await VerificarSiCausaBucleAsync(categoriaId, nuevaCategoriaPadreId, ct))
             {
                 throw new InvalidOperationException("No se puede asignar este padre porque generaría una referencia circular (bucle infinito).");
             }
 
-            var categoria = await _context.Categorias.FindAsync(categoriaId);
+            var categoria = await _context.Categorias.FindAsync(categoriaId, ct);
             if (categoria != null)
             {
                 categoria.CategoriaPadreId = nuevaCategoriaPadreId;
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(ct);
             }
         }
 
         // Activar
-        public async Task ActivarCategoriaAsync(int categoriaId)
+        public async Task ActivarCategoriaAsync(int categoriaId, CancellationToken ct = default)
         {
-            var categoria = await _context.Categorias.FindAsync(categoriaId);
+            var categoria = await _context.Categorias.FindAsync(categoriaId, ct);
             if (categoria != null)
             {
                 categoria.Activa = true;
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(ct);
             }
         }
 
         // Desactivar
-        public async Task DesactivarCategoriaAsync(int categoriaId)
+        public async Task DesactivarCategoriaAsync(int categoriaId, CancellationToken ct = default)
         {
-            var categoria = await _context.Categorias.FindAsync(categoriaId);
+            var categoria = await _context.Categorias.FindAsync(categoriaId, ct);
             if (categoria != null)
             {
                 categoria.Activa = false;
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(ct);
             }
         }
 
         // Eliminar (Solo si está vacía)
-        public async Task<bool> EliminarCategoriaAsync(int categoriaId)
+        public async Task<bool> EliminarCategoriaAsync(int categoriaId, CancellationToken ct = default)
         {
             var categoria = await _context.Categorias
                 .Include(c => c.Subcategorias)
                 .Include(c => c.Productos)
-                .FirstOrDefaultAsync(c => c.CategoriaId == categoriaId);
+                .FirstOrDefaultAsync(c => c.CategoriaId == categoriaId, ct);
 
             if (categoria == null) return false;
 
@@ -91,11 +91,11 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
                 return false;
 
             _context.Categorias.Remove(categoria);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
             return true;
         }
 
-        private async Task<bool> VerificarSiCausaBucleAsync(int categoriaId, int? nuevoPadreId)
+        private async Task<bool> VerificarSiCausaBucleAsync(int categoriaId, int? nuevoPadreId, CancellationToken ct)
         {
             // 1. Si no tiene padre, no hay bucle posible.
             if (nuevoPadreId == null) return false;
@@ -112,7 +112,7 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
                 var padre = await _context.Categorias
                     .AsNoTracking() // Importante para rendimiento
                     .Select(c => new { c.CategoriaId, c.CategoriaPadreId })
-                    .FirstOrDefaultAsync(c => c.CategoriaId == idActual);
+                    .FirstOrDefaultAsync(c => c.CategoriaId == idActual, ct);
 
                 if (padre == null) break;
 

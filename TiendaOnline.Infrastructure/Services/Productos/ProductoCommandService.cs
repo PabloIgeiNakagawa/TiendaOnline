@@ -16,13 +16,13 @@ namespace TiendaOnline.Infrastructure.Services.Productos
             _imagenService = imagenService;
         }
 
-        public async Task AgregarProductoAsync(AgregarProductoDto dto)
+        public async Task AgregarProductoAsync(AgregarProductoDto dto, CancellationToken ct = default)
         {
             string urlImagen = "/img/no-image.png";
 
             if (dto.ImagenStream != null)
             {
-                urlImagen = await _imagenService.SubirImagenAsync(dto.ImagenStream, dto.NombreArchivo, "Productos");
+                urlImagen = await _imagenService.SubirImagenAsync(dto.ImagenStream, dto.NombreArchivo, "Productos", 800, 800, ct);
             }
 
             var nuevoProducto = new Producto
@@ -37,12 +37,12 @@ namespace TiendaOnline.Infrastructure.Services.Productos
             };
 
             _context.Productos.Add(nuevoProducto);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
 
-        public async Task EditarProductoAsync(EditarProductoDto dto)
+        public async Task EditarProductoAsync(EditarProductoDto dto, CancellationToken ct = default)
         {
-            var producto = await _context.Productos.FindAsync(dto.ProductoId);
+            var producto = await _context.Productos.FindAsync(dto.ProductoId, ct);
             if (producto == null) throw new KeyNotFoundException("Producto no encontrado.");
 
             if (dto.ImagenStream != null)
@@ -51,11 +51,11 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 if (!string.IsNullOrEmpty(producto.ImagenUrl) && !producto.ImagenUrl.Contains("no-image.png"))
                 {
                     string publicIdViejo = _imagenService.ExtraerPublicIdDesdeUrl(producto.ImagenUrl);
-                    await _imagenService.BorrarImagenAsync(publicIdViejo);
+                    await _imagenService.BorrarImagenAsync(publicIdViejo, ct);
                 }
 
                 // Subir la nueva
-                producto.ImagenUrl = await _imagenService.SubirImagenAsync(dto.ImagenStream, dto.NombreArchivo ?? "producto", "Productos");
+                producto.ImagenUrl = await _imagenService.SubirImagenAsync(dto.ImagenStream, dto.NombreArchivo ?? "producto", "Productos", 800, 800, ct);
             }
 
             // Actualización de campos
@@ -64,31 +64,31 @@ namespace TiendaOnline.Infrastructure.Services.Productos
             producto.Precio = dto.Precio;
             producto.CategoriaId = dto.CategoriaId;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
 
-        public async Task DarAltaProductoAsync(int productoId)
+        public async Task DarAltaProductoAsync(int productoId, CancellationToken ct = default)
         {
-            var producto = await _context.Productos.FindAsync(productoId);
+            var producto = await _context.Productos.FindAsync(productoId, ct);
             if (producto == null) throw new Exception("Producto no encontrado.");
 
             var estadoAnterior = new { producto.ProductoId, producto.Nombre, producto.Activo };
 
             producto.Activo = true;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
 
-        public async Task DarBajaProductoAsync(int productoId)
+        public async Task DarBajaProductoAsync(int productoId, CancellationToken ct = default)
         {
-            var producto = await _context.Productos.FindAsync(productoId);
+            var producto = await _context.Productos.FindAsync(productoId, ct);
             if (producto == null) throw new Exception("Producto no encontrado.");
 
             var estadoAnterior = new { producto.ProductoId, producto.Nombre, producto.Activo };
 
             producto.Activo = false;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
     }
 }

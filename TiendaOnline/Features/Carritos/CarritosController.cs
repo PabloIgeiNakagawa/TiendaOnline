@@ -17,7 +17,7 @@ namespace TiendaOnline.Features.Carritos
         [HttpGet("[action]")]
         public async Task<IActionResult> Index()
         {
-            var validacion = await _carritoService.ValidarStockAsync();
+            var validacion = await _carritoService.ValidarStockAsync(HttpContext.RequestAborted);
             if (validacion.IsFailure)
             {
                 TempData["MensajeError"] = validacion.Error;
@@ -43,7 +43,7 @@ namespace TiendaOnline.Features.Carritos
             if (id <= 0)
                 return BadRequest();
 
-            var resultado = await _carritoService.AgregarAsync(id);
+            var resultado = await _carritoService.AgregarAsync(id, HttpContext.RequestAborted);
 
             if (resultado.IsFailure)
             {

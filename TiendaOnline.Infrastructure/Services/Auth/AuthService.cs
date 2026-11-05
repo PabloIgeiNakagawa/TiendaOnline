@@ -18,9 +18,9 @@ namespace TiendaOnline.Infrastructure.Services.Auth
             _passwordHasher = passwordHasher;
         }
 
-        public async Task<UsuarioDto?> ValidarCredencialesAsync(string email, string password)
+        public async Task<UsuarioDto?> ValidarCredencialesAsync(string email, string password, CancellationToken ct = default)
         {
-            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email && u.Activo);
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email && u.Activo, ct);
             if (usuario == null) return null;
 
             var resultado = _passwordHasher.VerifyHashedPassword(usuario, usuario.Contrasena, password);
@@ -38,11 +38,11 @@ namespace TiendaOnline.Infrastructure.Services.Auth
             };
         }
 
-        public async Task RegisterAsync(RegisterDto model, bool permitirRolPersonalizado = false)
+        public async Task RegisterAsync(RegisterDto model, bool permitirRolPersonalizado = false, CancellationToken ct = default)
         {
             model.Email = model.Email.Trim().ToLower();
 
-            if (await _context.Usuarios.AnyAsync(u => u.Email == model.Email))
+            if (await _context.Usuarios.AnyAsync(u => u.Email == model.Email, ct))
                 throw new EmailDuplicadoException(model.Email);
 
             var nuevoUsuario = new Usuario
@@ -61,12 +61,12 @@ namespace TiendaOnline.Infrastructure.Services.Auth
             nuevoUsuario.Contrasena = _passwordHasher.HashPassword(nuevoUsuario, model.Contrasena);
 
             _context.Usuarios.Add(nuevoUsuario);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
 
-        public async Task<UsuarioDto?> ObtenerUsuarioPorEmailAsync(string email)
+        public async Task<UsuarioDto?> ObtenerUsuarioPorEmailAsync(string email, CancellationToken ct = default)
         {
-            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email);
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == email, ct);
             if (usuario == null) return null;
 
             return new UsuarioDto

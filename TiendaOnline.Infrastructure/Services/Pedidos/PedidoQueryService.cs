@@ -25,7 +25,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             return $"{p.EnvioCalle ?? ""} {p.EnvioNumero ?? ""}, Piso: {p.EnvioPiso ?? "N/A"}, Depto: {p.EnvioDepartamento ?? "N/A"}, {p.EnvioLocalidad ?? ""}, {p.EnvioProvincia ?? ""}";
         }
 
-        public async Task<List<PedidoListadoUsuarioDto>> ObtenerPedidosDeUsuarioAsync(int id)
+        public async Task<List<PedidoListadoUsuarioDto>> ObtenerPedidosDeUsuarioAsync(int id, CancellationToken ct)
         {
             return await _context.Pedidos
                 .AsNoTracking()
@@ -44,10 +44,10 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                                 .Select(d => d.Producto.Nombre)
                                 .ToList()
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public async Task<PedidoDetallesDto?> ObtenerPedidoConDetallesAsync(int id)
+        public async Task<PedidoDetallesDto?> ObtenerPedidoConDetallesAsync(int id, CancellationToken ct)
         {
             return await _context.Pedidos
                 .AsNoTracking()
@@ -85,10 +85,10 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     FechaComprobante = p.FechaComprobante,
                     CostoEnvio = p.CostoEnvio
                 })
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(ct);
         }
 
-        public async Task<ComprobantePedidoDto?> ObtenerComprobanteDtoAsync(int pedidoId)
+        public async Task<ComprobantePedidoDto?> ObtenerComprobanteDtoAsync(int pedidoId, CancellationToken ct)
         {
             var pedido = await _context.Pedidos
                 .AsNoTracking()
@@ -114,7 +114,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     }).ToList(),
                     Subtotal = p.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario)
                 })
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(ct);
 
             if (pedido == null) return null;
 
@@ -139,7 +139,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             );
         }
 
-        public async Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(PedidosFiltroDto filtros)
+        public async Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(PedidosFiltroDto filtros, CancellationToken ct)
         {
             var query = _context.Pedidos
                 .AsNoTracking()
@@ -177,7 +177,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             }
 
             // Conteo Total
-            var total = await query.CountAsync();
+            var total = await query.CountAsync(ct);
 
             // Paginación y Mapeo a DTO
             var items = await query
@@ -197,12 +197,12 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     TieneComprobante = p.ComprobanteUrl != null,
                     Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
                 })
-            .ToListAsync();
+            .ToListAsync(ct);
 
             return new PagedResult<PedidoListadoDto>(items, total, filtros.Pagina, filtros.Cantidad);
         }
 
-        public async Task<InstruccionesTransferenciaDto?> ObtenerInstruccionesTransferenciaAsync(int pedidoId)
+        public async Task<InstruccionesTransferenciaDto?> ObtenerInstruccionesTransferenciaAsync(int pedidoId, CancellationToken ct)
         {
             // AsNoTracking + anon-type: EstaVencido() es lógica en memoria, se evalúa acá abajo
             var pedido = await _context.Pedidos
@@ -218,7 +218,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     p.ComprobanteUrl,
                     Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
                 })
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(ct);
 
             if (pedido == null) return null;
 

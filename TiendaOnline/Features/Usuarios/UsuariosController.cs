@@ -28,10 +28,10 @@ namespace TiendaOnline.Features.Usuarios
         [HttpGet("Perfil/{id}")]
         public async Task<IActionResult> PerfilUsuario(int id)
         {
-            var usuario = await _usuarioQueryService.ObtenerPerfil(id);
+            var usuario = await _usuarioQueryService.ObtenerPerfil(id, HttpContext.RequestAborted);
             if (usuario == null) return NotFound();
             
-            var direccionesDto = await _direccionService.ObtenerDireccionesAsync(id);
+            var direccionesDto = await _direccionService.ObtenerDireccionesAsync(id, HttpContext.RequestAborted);
             var direcciones = direccionesDto.Select(d => new DireccionViewModel
             {
                 DireccionId = d.DireccionId,
@@ -72,7 +72,7 @@ namespace TiendaOnline.Features.Usuarios
         [HttpGet("Editar/{id}")]
         public async Task<IActionResult> EditarUsuario(int id)
         {
-            var usuario = await _usuarioQueryService.ObtenerUsuarioAsync(id);
+            var usuario = await _usuarioQueryService.ObtenerUsuarioAsync(id, HttpContext.RequestAborted);
             if (usuario == null) return NotFound();
             var model = new UsuarioUpdateViewModel
             {
@@ -101,7 +101,7 @@ namespace TiendaOnline.Features.Usuarios
                 Telefono = model.Telefono
             };
 
-            await _usuarioCommandService.EditarUsuarioAsync(dto);
+            await _usuarioCommandService.EditarUsuarioAsync(dto, HttpContext.RequestAborted);
             _logger.LogInformation("Perfil del usuario {UsuarioId} editado", dto.UsuarioId);
             TempData["MensajeExito"] = "Tu información se actualizó correctamente.";
             return RedirectToAction("PerfilUsuario", "Usuarios", new { id = dto.UsuarioId });
@@ -138,7 +138,7 @@ namespace TiendaOnline.Features.Usuarios
                 Activo = true
             };
 
-            await _direccionService.GuardarDireccionAsync(usuarioId, dto);
+            await _direccionService.GuardarDireccionAsync(usuarioId, dto, HttpContext.RequestAborted);
             TempData["MensajeExito"] = "Dirección agregada correctamente.";
             return RedirectToAction("PerfilUsuario", "Usuarios", new { id = usuarioId });
         }
@@ -146,7 +146,7 @@ namespace TiendaOnline.Features.Usuarios
         [HttpGet("EditarDireccion/{direccionId}")]
         public async Task<IActionResult> EditarDireccion(int direccionId)
         {
-            var direccion = await _direccionService.ObtenerPorIdAsync(direccionId);
+            var direccion = await _direccionService.ObtenerPorIdAsync(direccionId, HttpContext.RequestAborted);
             if (direccion == null) return NotFound();
 
             var model = new DireccionViewModel
@@ -193,7 +193,7 @@ namespace TiendaOnline.Features.Usuarios
                 Activo = model.Activo
             };
 
-            await _direccionService.ActualizarDireccionAsync(direccionId, dto);
+            await _direccionService.ActualizarDireccionAsync(direccionId, dto, HttpContext.RequestAborted);
             TempData["MensajeExito"] = "Dirección actualizada correctamente.";
             return RedirectToAction("PerfilUsuario", "Usuarios", new { id = model.UsuarioId });
         }
@@ -202,10 +202,10 @@ namespace TiendaOnline.Features.Usuarios
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EliminarDireccion(int direccionId, int usuarioId)
         {
-            var direccion = await _direccionService.ObtenerPorIdAsync(direccionId);
+            var direccion = await _direccionService.ObtenerPorIdAsync(direccionId, HttpContext.RequestAborted);
             if (direccion == null) return NotFound();
 
-            await _direccionService.EliminarDireccionAsync(direccionId);
+            await _direccionService.EliminarDireccionAsync(direccionId, HttpContext.RequestAborted);
             TempData["MensajeExito"] = "Dirección eliminada correctamente.";
             return RedirectToAction("PerfilUsuario", "Usuarios", new { id = usuarioId });
         }

@@ -25,7 +25,7 @@ namespace TiendaOnline.Features.AppSettings
         [HttpGet("{groupName}")]
         public async Task<IActionResult> Index(string groupName)
         {
-            var settingsDto = await _appSettingsService.GetGroupSettingsAsync(groupName);
+            var settingsDto = await _appSettingsService.GetGroupSettingsAsync(groupName, HttpContext.RequestAborted);
 
             var model = new IndexViewModel
             {
@@ -58,7 +58,7 @@ namespace TiendaOnline.Features.AppSettings
                 Group = s.Group,
             });
 
-            await _appSettingsService.SaveMultipleSettingsAsync(dtos);
+            await _appSettingsService.SaveMultipleSettingsAsync(dtos, HttpContext.RequestAborted);
             _logger.LogInformation("Configuración actualizada: grupo {Grupo} ({Cantidad} claves) por {Admin}",
                 model.GroupName, model.Settings.Count, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Cambios guardados correctamente.";
@@ -93,7 +93,7 @@ namespace TiendaOnline.Features.AppSettings
             {
                 using (var stream = model.LogoFile.OpenReadStream())
                 {
-                    logoUrl = await _imagenService.SubirImagenAsync(stream, model.LogoFile.FileName, model.LogoFile.ContentType);
+                    logoUrl = await _imagenService.SubirImagenAsync(stream, model.LogoFile.FileName, model.LogoFile.ContentType, ct: HttpContext.RequestAborted);
                 }
             }
 
@@ -103,7 +103,7 @@ namespace TiendaOnline.Features.AppSettings
             {
                 using (var stream = model.FavIconFile.OpenReadStream())
                 {
-                    favIconUrl = await _imagenService.SubirImagenAsync(stream, model.FavIconFile.FileName, model.FavIconFile.ContentType);
+                    favIconUrl = await _imagenService.SubirImagenAsync(stream, model.FavIconFile.FileName, model.FavIconFile.ContentType, ct: HttpContext.RequestAborted);
                 }
             }
 
@@ -117,7 +117,7 @@ namespace TiendaOnline.Features.AppSettings
                 new() { Key = "Diseno:FuenteBody", Value = model.FuenteBody, Group = "Estetica" }
             };
 
-            await _appSettingsService.SaveMultipleSettingsAsync(settingsToUpdate);
+            await _appSettingsService.SaveMultipleSettingsAsync(settingsToUpdate, HttpContext.RequestAborted);
 
             await _appSettingsService.RefreshCache();
 

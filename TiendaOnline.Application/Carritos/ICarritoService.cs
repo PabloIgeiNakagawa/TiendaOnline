@@ -6,10 +6,10 @@ namespace TiendaOnline.Application.Carritos
     {
         Task<List<ItemCarrito>> ObtenerAsync();
         Task<int> ObtenerCantidadTotalAsync();
-        Task<Result> AgregarAsync(int productoId);
+        Task<Result> AgregarAsync(int productoId, CancellationToken ct = default);
         Task<Result> EliminarAsync(int productoId);
         Task<Result> ActualizarCantidadAsync(int productoId, int cantidad);
-        Task<Result<ValidacionStockDto>> ValidarStockAsync();
+        Task<Result<ValidacionStockDto>> ValidarStockAsync(CancellationToken ct = default);
         Task VaciarAsync();
     }
 

@@ -16,11 +16,11 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
             _context = context;
         }
 
-        public async Task<UsuarioPerfilDto> ObtenerPerfil(int usuarioId)
+        public async Task<UsuarioPerfilDto> ObtenerPerfil(int usuarioId, CancellationToken ct = default)
         {
             var usuario = await _context.Usuarios
                 .Include(u => u.Direcciones)
-                .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
+                .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId, ct);
 
             if (usuario == null) throw new Exception("Usuario no encontrado.");
 
@@ -46,11 +46,11 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
             };
         }
 
-        public async Task<UsuarioUpdateDto> ObtenerUsuarioParaEdicionAsync(int usuarioId)
+        public async Task<UsuarioUpdateDto> ObtenerUsuarioParaEdicionAsync(int usuarioId, CancellationToken ct = default)
         {
             var usuario = await _context.Usuarios
                 .Include(u => u.Direcciones)
-                .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
+                .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId, ct);
 
             if (usuario == null) throw new Exception("Usuario no encontrado.");
 
@@ -64,14 +64,14 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
             };
         }
 
-        public async Task<Usuario?> ObtenerUsuarioAsync(int usuarioId)
+        public async Task<Usuario?> ObtenerUsuarioAsync(int usuarioId, CancellationToken ct = default)
         {
             return await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
         }
-        public async Task EditarUsuarioAsync(UsuarioUpdateDto dto)
+        public async Task EditarUsuarioAsync(UsuarioUpdateDto dto, CancellationToken ct = default)
         {
             var usuario = await _context.Usuarios
-                        .FirstOrDefaultAsync(u => u.UsuarioId == dto.UsuarioId);
+                        .FirstOrDefaultAsync(u => u.UsuarioId == dto.UsuarioId, ct);
 
             if (usuario == null) throw new KeyNotFoundException($"No se encontró el usuario con ID {dto.UsuarioId}");
 
@@ -79,10 +79,10 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
             usuario.Apellido = dto.Apellido;
             usuario.Telefono = dto.Telefono;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
 
-        public async Task<PagedResult<UsuarioListadoDto>> ObtenerUsuariosPaginadosAsync(int pagina, int cantidad, string? buscar, string? rol, bool? activo)
+        public async Task<PagedResult<UsuarioListadoDto>> ObtenerUsuariosPaginadosAsync(int pagina, int cantidad, string? buscar, string? rol, bool? activo, CancellationToken ct = default)
         {
             var query = _context.Usuarios.AsQueryable();
 
@@ -97,7 +97,7 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
             if (activo.HasValue)
                 query = query.Where(u => u.Activo == activo.Value);
 
-            var total = await query.CountAsync();
+            var total = await query.CountAsync(ct);
 
             var items = await query
                 .OrderBy(u => u.Apellido)
@@ -111,7 +111,7 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
                     RolNombre = u.Rol.ToString(),
                     Activo = u.Activo
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return new PagedResult<UsuarioListadoDto>(items, total, pagina, cantidad);
         }

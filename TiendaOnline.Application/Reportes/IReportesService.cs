@@ -2,6 +2,6 @@
 {
     public interface IReportesService
     {
-        Task<DashboardDTO> ObtenerDatosAsync();
+        Task<DashboardDTO> ObtenerDatosAsync(CancellationToken ct = default);
     }
 }

@@ -15,7 +15,7 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
             _context = context;
         }
 
-        public async Task<IEnumerable<CategoriaDto>> ObtenerCategoriasAsync()
+        public async Task<IEnumerable<CategoriaDto>> ObtenerCategoriasAsync(CancellationToken ct = default)
         {
             return await _context.Categorias
                 .AsNoTracking()
@@ -25,10 +25,10 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
                     Nombre = c.Nombre,
                     CategoriaPadreId = c.CategoriaPadreId
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public async Task<IEnumerable<CategoriaDto>> ObtenerCategoriasRaizAsync()
+        public async Task<IEnumerable<CategoriaDto>> ObtenerCategoriasRaizAsync(CancellationToken ct = default)
         {
             return await _context.Categorias
                 .AsNoTracking()
@@ -45,10 +45,10 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
                         CategoriaPadreId = s.CategoriaPadreId
                     }).ToList()
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public async Task<IEnumerable<CategoriaDto>> ObtenerCategoriasHojaAsync()
+        public async Task<IEnumerable<CategoriaDto>> ObtenerCategoriasHojaAsync(CancellationToken ct = default)
         {
             return await _context.Categorias
                 .AsNoTracking()
@@ -66,15 +66,15 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
                         Nombre = c.CategoriaPadre.Nombre
                     } : null
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
         }
 
-        public async Task<bool> EsCategoriaHojaAsync(int id)
+        public async Task<bool> EsCategoriaHojaAsync(int id, CancellationToken ct = default)
         {
             // Buscamos la categoría específica
             var categoria = await _context.Categorias
                 .Include(c => c.Subcategorias)
-                .FirstOrDefaultAsync(c => c.CategoriaId == id);
+                .FirstOrDefaultAsync(c => c.CategoriaId == id, ct);
 
             if (categoria == null) return false;
 
@@ -82,7 +82,7 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
             return categoria.CategoriaPadreId != null && categoria.Subcategorias.Count == 0;
         }
 
-        public async Task<PagedResult<CategoriaListadoDto>> ObtenerCategoriasPaginadasAsync(int pagina, int cantidad, string? buscar, string? nivel)
+        public async Task<PagedResult<CategoriaListadoDto>> ObtenerCategoriasPaginadasAsync(int pagina, int cantidad, string? buscar, string? nivel, CancellationToken ct = default)
         {
             var query = _context.Categorias
                 .AsNoTracking()
@@ -99,7 +99,7 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
             else if (nivel == "Subcategoría")
                 query = query.Where(c => c.CategoriaPadreId != null);
 
-            var total = await query.CountAsync();
+            var total = await query.CountAsync(ct);
 
             var items = await query
                 .OrderBy(c => c.CategoriaPadreId)
@@ -116,15 +116,15 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
                     CantidadSubcategorias = c.Subcategorias.Count,
                     Activa = true
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return new PagedResult<CategoriaListadoDto>(items, total, pagina, cantidad);
         }
 
-        public async Task<bool> ExisteNombreAsync(string nombre)
+        public async Task<bool> ExisteNombreAsync(string nombre, CancellationToken ct = default)
         {
             return await _context.Categorias
-                .AnyAsync(c => c.Nombre.ToLower() == nombre.ToLower());
+                .AnyAsync(c => c.Nombre.ToLower() == nombre.ToLower(), ct);
         }
     }
 }

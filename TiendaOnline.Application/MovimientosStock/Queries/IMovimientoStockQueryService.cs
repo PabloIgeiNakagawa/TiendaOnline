@@ -4,8 +4,8 @@ namespace TiendaOnline.Application.MovimientosStock.Queries
 {
     public interface IMovimientoStockQueryService
     {
-        Task<PagedResult<MovimientosDto>> ObtenerMovimientosPaginadosAsync(MovimientoFiltrosDto filtros);
-        Task<IEnumerable<TipoMovimientoDto>> ObtenerTiposMovimientoAsync();
-        Task<List<MovimientosDto>> ObtenerHistorialPorProductoAsync(int productoId);
+        Task<PagedResult<MovimientosDto>> ObtenerMovimientosPaginadosAsync(MovimientoFiltrosDto filtros, CancellationToken ct = default);
+        Task<IEnumerable<TipoMovimientoDto>> ObtenerTiposMovimientoAsync(CancellationToken ct = default);
+        Task<List<MovimientosDto>> ObtenerHistorialPorProductoAsync(int productoId, CancellationToken ct = default);
     }
 }

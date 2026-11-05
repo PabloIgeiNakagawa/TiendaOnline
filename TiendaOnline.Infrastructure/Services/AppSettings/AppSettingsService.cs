@@ -26,9 +26,9 @@ namespace TiendaOnline.Infrastructure.Services.AppSettings
             return settings.TryGetValue(key, out var value) ? value : defaultValue;
         }
 
-        public async Task<List<SettingDto>> GetGroupSettingsAsync(string groupName)
+        public async Task<List<SettingDto>> GetGroupSettingsAsync(string groupName, CancellationToken ct = default)
         {
-            var settings = await _context.AppSettings.AsNoTracking().Where(x => x.Group == groupName).ToListAsync();
+            var settings = await _context.AppSettings.AsNoTracking().Where(x => x.Group == groupName).ToListAsync(ct);
             return settings.Select(s => new SettingDto
             {
                 Key = s.Key,
@@ -40,12 +40,12 @@ namespace TiendaOnline.Infrastructure.Services.AppSettings
             }).ToList();
         }
 
-        public async Task SaveMultipleSettingsAsync(IEnumerable<SettingDto> dtos)
+        public async Task SaveMultipleSettingsAsync(IEnumerable<SettingDto> dtos, CancellationToken ct = default)
         {
             var keys = dtos.Select(d => d.Key).ToList();
             var settingsExistentes = await _context.AppSettings
                 .Where(s => keys.Contains(s.Key))
-                .ToListAsync();
+                .ToListAsync(ct);
 
             foreach (var dto in dtos)
             {
@@ -64,7 +64,7 @@ namespace TiendaOnline.Infrastructure.Services.AppSettings
                 }
             }
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
             await RefreshCache();
         }
 

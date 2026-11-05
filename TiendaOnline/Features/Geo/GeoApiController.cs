@@ -17,14 +17,14 @@ namespace TiendaOnline.Features.Geo
         [HttpGet("provincias")]
         public async Task<IActionResult> GetProvincias()
         {
-            var data = await _geoService.GetProvinciasAsync();
+            var data = await _geoService.GetProvinciasAsync(HttpContext.RequestAborted);
             return Ok(data);
         }
 
         [HttpGet("localidades")]
         public async Task<IActionResult> GetLocalidades([FromQuery] string provincia)
         {
-            var data = await _geoService.GetLocalidadesAsync(provincia);
+            var data = await _geoService.GetLocalidadesAsync(provincia, HttpContext.RequestAborted);
             return Ok(data);
         }
     }

@@ -23,7 +23,8 @@ namespace TiendaOnline.Authorization
                 return;
             }
 
-            var routeData = _httpContextAccessor.HttpContext?.GetRouteData();
+            var httpContext = _httpContextAccessor.HttpContext;
+            var routeData = httpContext?.GetRouteData();
             var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (userId == null) return;
@@ -42,7 +43,7 @@ namespace TiendaOnline.Authorization
             {
                 try
                 {
-                    var direccion = await _direccionService.ObtenerPorIdAsync(direccionId);
+                    var direccion = await _direccionService.ObtenerPorIdAsync(direccionId, httpContext?.RequestAborted ?? default);
                     if (direccion.UsuarioId.ToString() == userId)
                     {
                         context.Succeed(requirement);

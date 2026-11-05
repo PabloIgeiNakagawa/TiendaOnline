@@ -15,11 +15,11 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
             _context = context;
         }
 
-        public async Task<AdminOverviewDto> ObtenerResumenHomeAsync()
+        public async Task<AdminOverviewDto> ObtenerResumenHomeAsync(CancellationToken ct = default)
         {
             var dto = new AdminOverviewDto
             {
-                DbOnline = await VerificarEstadoBaseDatosAsync(),
+                DbOnline = await VerificarEstadoBaseDatosAsync(ct),
                 AppVersion = ObtenerVersionApp()
             };
 
@@ -33,7 +33,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                     UsuarioNombre = $"{a.Usuario.Nombre} {a.Usuario.Apellido}",
                     Accion = a.Accion,
                     Fecha = a.Fecha
-                }).ToListAsync();
+                }).ToListAsync(ct);
 
             // Pedidos Estancados (Estado 0: Pendiente y más de 48hs)
             var limiteFecha = DateTime.Now.AddHours(-48);
@@ -46,7 +46,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                     ClienteNombre = $"{p.Usuario.Nombre} {p.Usuario.Apellido}",
                     Fecha = p.FechaPedido,
                     HorasTranscurridas = (DateTime.Now - p.FechaPedido).TotalHours
-                }).ToListAsync();
+                }).ToListAsync(ct);
 
             // Últimos 10 Movimientos de Stock
             var movimientos = await _context.MovimientosStock
@@ -54,7 +54,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                 .Include(m => m.Producto)
                 .OrderByDescending(m => m.Fecha)
                 .Take(10)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             dto.UltimosMovimientosStock = movimientos.Select(m => new MovimientoStockDTO
             {
@@ -74,37 +74,37 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
             var pedidosVentasHoy = await _context.Pedidos
                 .Include(p => p.DetallesPedido)
                 .Where(p => p.EstadoPago == EstadoPago.Aprobado && p.FechaPedido >= hoy && p.FechaPedido < manana)
-                .ToListAsync();
+                .ToListAsync(ct);
             var ventasHoy = pedidosVentasHoy.Sum(p => p.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario));
 
             var pedidosVentasAyer = await _context.Pedidos
                 .Include(p => p.DetallesPedido)
                 .Where(p => p.EstadoPago == EstadoPago.Aprobado && p.FechaPedido >= ayer && p.FechaPedido < hoy)
-                .ToListAsync();
+                .ToListAsync(ct);
             var ventasAyer = pedidosVentasAyer.Sum(p => p.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario));
 
             // Pedidos hoy (con pago aprobado)
             var pedidosHoy = await _context.Pedidos
                 .Where(p => p.EstadoPago == EstadoPago.Aprobado && p.FechaPedido >= hoy && p.FechaPedido < manana)
-                .CountAsync();
+                .CountAsync(ct);
 
             var pedidosAyer = await _context.Pedidos
                 .Where(p => p.EstadoPago == EstadoPago.Aprobado && p.FechaPedido >= ayer && p.FechaPedido < hoy)
-                .CountAsync();
+                .CountAsync(ct);
 
             // Pedidos enviados hoy - usar FechaEnvio
             var enviadosHoy = await _context.Pedidos
                 .Where(p => p.Estado == EstadoPedido.Enviado && p.FechaEnvio >= hoy && p.FechaEnvio < manana)
-                .CountAsync();
+                .CountAsync(ct);
 
             var enviadosAyer = await _context.Pedidos
                 .Where(p => p.Estado == EstadoPedido.Enviado && p.FechaEnvio >= ayer && p.FechaEnvio < hoy)
-                .CountAsync();
+                .CountAsync(ct);
 
             // Stock bajo (productos con stock < 5)
             var stockBajo = await _context.Productos
                 .Where(p => p.Activo && p.Stock < 5)
-                .CountAsync();
+                .CountAsync(ct);
 
             dto.ResumenDiario = new ResumenDiarioDTO
             {
@@ -137,7 +137,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                     ImagenUrl = p.ImagenUrl,
                     Categoria = p.Categoria.Nombre,
                     Stock = p.Stock
-                }).ToListAsync();
+                }).ToListAsync(ct);
 
             // Pedidos recientes
             var pedidosRecientesQuery = await _context.Pedidos
@@ -146,7 +146,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                 .Include(p => p.DetallesPedido)
                 .OrderByDescending(p => p.FechaPedido)
                 .Take(10)
-                .ToListAsync();
+                .ToListAsync(ct);
 
             dto.PedidosRecientes = pedidosRecientesQuery.Select(p => new PedidoRecienteDTO
             {
@@ -161,14 +161,14 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
             return dto;
         }
 
-        public async Task<PedidosEstancadosPaginadoDto> ObtenerPedidosEstancadosPaginadoAsync(int pagina, int tamanoPagina = 5)
+        public async Task<PedidosEstancadosPaginadoDto> ObtenerPedidosEstancadosPaginadoAsync(int pagina, int tamanoPagina = 5, CancellationToken ct = default)
         {
             var limiteFecha = DateTime.Now.AddHours(-48);
             var query = _context.Pedidos
                 .AsNoTracking()
                 .Where(p => p.Estado == 0 && p.FechaPedido <= limiteFecha);
 
-            var totalRegistros = await query.CountAsync();
+            var totalRegistros = await query.CountAsync(ct);
             var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)tamanoPagina);
 
             var pedidos = await query
@@ -181,7 +181,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                     ClienteNombre = $"{p.Usuario.Nombre} {p.Usuario.Apellido}",
                     Fecha = p.FechaPedido,
                     HorasTranscurridas = (DateTime.Now - p.FechaPedido).TotalHours
-                }).ToListAsync();
+                }).ToListAsync(ct);
 
             return new PedidosEstancadosPaginadoDto
             {
@@ -192,11 +192,11 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
             };
         }
 
-        private async Task<bool> VerificarEstadoBaseDatosAsync()
+        private async Task<bool> VerificarEstadoBaseDatosAsync(CancellationToken ct)
         {
             try
             {
-                return await _context.Database.CanConnectAsync();
+                return await _context.Database.CanConnectAsync(ct);
             }
             catch
             {

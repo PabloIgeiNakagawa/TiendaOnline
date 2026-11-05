@@ -27,7 +27,7 @@ namespace TiendaOnline.Features.Auditorias
                 TamanoPagina = filtro.TamanoPagina
             };
 
-            var resultado = await _auditoriaService.ObtenerAuditoriasPaginadasAsync(request);
+            var resultado = await _auditoriaService.ObtenerAuditoriasPaginadasAsync(request, HttpContext.RequestAborted);
 
             var model = new LogsViewModel
             {
@@ -45,7 +45,7 @@ namespace TiendaOnline.Features.Auditorias
         [HttpGet("[action]/{id}")]
         public async Task<IActionResult> ObtenerDetalle(int id)
         {
-            var detalle = await _auditoriaService.ObtenerDetalleAuditoriaAsync(id);
+            var detalle = await _auditoriaService.ObtenerDetalleAuditoriaAsync(id, HttpContext.RequestAborted);
             if (detalle == null) return NotFound();
 
             return Json(detalle);

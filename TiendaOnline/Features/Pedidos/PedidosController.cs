@@ -50,7 +50,7 @@ namespace TiendaOnline.Features.Pedidos
 
             int usuarioId = int.Parse(claim.Value);
 
-            var pedidos = await _pedidoQueryService.ObtenerPedidosDeUsuarioAsync(usuarioId);
+            var pedidos = await _pedidoQueryService.ObtenerPedidosDeUsuarioAsync(usuarioId, HttpContext.RequestAborted);
 
             var viewmodel = new MisPedidosViewModel
             {
@@ -77,7 +77,7 @@ namespace TiendaOnline.Features.Pedidos
         [HttpGet("Detalles/{id}")]
         public async Task<IActionResult> Detalles(int id)
         {
-            var pedido = await _pedidoQueryService.ObtenerPedidoConDetallesAsync(id);
+            var pedido = await _pedidoQueryService.ObtenerPedidoConDetallesAsync(id, HttpContext.RequestAborted);
             if (pedido == null)
                 return NotFound();
 
@@ -130,7 +130,7 @@ namespace TiendaOnline.Features.Pedidos
         [HttpGet("[action]")]
         public async Task<IActionResult> Instrucciones(int id)
         {
-            var datos = await _pedidoQueryService.ObtenerInstruccionesTransferenciaAsync(id);
+            var datos = await _pedidoQueryService.ObtenerInstruccionesTransferenciaAsync(id, HttpContext.RequestAborted);
             if (datos == null) return NotFound();
 
             var viewModel = new InstruccionesTransferenciaViewModel
@@ -179,7 +179,7 @@ namespace TiendaOnline.Features.Pedidos
             try
             {
                 await using var stream = archivo.OpenReadStream();
-                await _pedidoCommandService.GuardarComprobanteAsync(id, stream, $"Pedido-{id:D6}{extension}");
+                await _pedidoCommandService.GuardarComprobanteAsync(id, stream, $"Pedido-{id:D6}{extension}", HttpContext.RequestAborted);
                 _logger.LogInformation("Comprobante subido para el pedido {PedidoId}", id);
                 TempData["MensajeExito"] = "Comprobante recibido. Te avisamos cuando verifiquemos el pago.";
             }
@@ -206,7 +206,7 @@ namespace TiendaOnline.Features.Pedidos
 
             var subtotal = items.Sum(i => i.Precio * i.Cantidad);
 
-            var direcciones = await _direccionService.ObtenerDireccionesAsync(ObtenerUsuarioId());
+            var direcciones = await _direccionService.ObtenerDireccionesAsync(ObtenerUsuarioId(), HttpContext.RequestAborted);
 
             var viewModel = new CheckOutViewModel
             {
@@ -295,7 +295,7 @@ namespace TiendaOnline.Features.Pedidos
             if (!ModelState.IsValid)
             {
                 // Si hay errores, las direcciones guardadas también se pierden, hay que recargarlas
-                var dir = await _direccionService.ObtenerDireccionesAsync(ObtenerUsuarioId());
+                var dir = await _direccionService.ObtenerDireccionesAsync(ObtenerUsuarioId(), HttpContext.RequestAborted);
                 model.DireccionesGuardadas = dir.Select(d => new DireccionGuardadaViewModel
                 {
                     DireccionId = d.DireccionId,
@@ -346,7 +346,7 @@ namespace TiendaOnline.Features.Pedidos
             {
                 if (model.DireccionSeleccionadaId != null)
                 {
-                    var dir = await _direccionService.ObtenerPorIdAsync(model.DireccionSeleccionadaId);
+                    var dir = await _direccionService.ObtenerPorIdAsync(model.DireccionSeleccionadaId, HttpContext.RequestAborted);
                     viewModel.Direccion = new DireccionCheckOut
                     {
                         EsNueva = false,
@@ -432,7 +432,7 @@ namespace TiendaOnline.Features.Pedidos
             try
             {
                 // Crear el pedido en BD
-                var pedido = await _pedidoCommandService.CrearPedidoYPrepararPagoAsync(dto);
+                var pedido = await _pedidoCommandService.CrearPedidoYPrepararPagoAsync(dto, HttpContext.RequestAborted);
 
                 if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio && model.Direccion?.EsNueva == true)
                 {
@@ -448,13 +448,13 @@ namespace TiendaOnline.Features.Pedidos
                         Provincia = model.Direccion.Provincia,
                         CodigoPostal = model.Direccion.CodigoPostal,
                         Observaciones = model.Direccion.Observaciones
-                    });
+                    }, HttpContext.RequestAborted);
                 }
 
                 // Si el método es Mercado Pago (ID 1), generamos link y salimos
                 if (metodoDePagoId == MetodoPagoId.MercadoPago)
                 {
-                    var urlPago = await _paymentService.GenerarPreferenciaPagoAsync(pedido);
+                    var urlPago = await _paymentService.GenerarPreferenciaPagoAsync(pedido, HttpContext.RequestAborted);
                     return Redirect(urlPago);
                 }
 
@@ -478,10 +478,10 @@ namespace TiendaOnline.Features.Pedidos
             // Confirmar el pago manualmente si el webhook no llegó
             if (!string.IsNullOrEmpty(payment_id))
             {
-                var infoPago = await _paymentService.ObtenerDetallesPagoAsync(payment_id);
+                var infoPago = await _paymentService.ObtenerDetallesPagoAsync(payment_id, HttpContext.RequestAborted);
                 if (infoPago != null && infoPago.Estado == "approved")
                 {
-                    var pagoConfirmado = await _pedidoCommandService.ConfirmarPagoAsync(infoPago);
+                    var pagoConfirmado = await _pedidoCommandService.ConfirmarPagoAsync(infoPago, HttpContext.RequestAborted);
                     if (pagoConfirmado)
                     {
                         await _carritoService.VaciarAsync();
@@ -514,12 +514,12 @@ namespace TiendaOnline.Features.Pedidos
         public async Task<IActionResult> ReintentarPago(int pedidoId)
         {
             // Buscamos el pedido existente con sus datos
-            var pedidoDto = await _pedidoCommandService.ObtenerDatosParaPagoAsync(pedidoId);
+            var pedidoDto = await _pedidoCommandService.ObtenerDatosParaPagoAsync(pedidoId, HttpContext.RequestAborted);
 
             if (pedidoDto == null) return NotFound();
 
             // Generamos un nuevo link de Mercado Pago
-            var urlPago = await _paymentService.GenerarPreferenciaPagoAsync(pedidoDto);
+            var urlPago = await _paymentService.GenerarPreferenciaPagoAsync(pedidoDto, HttpContext.RequestAborted);
 
             // Mandamos al usuario a pagar otra vez
             return Redirect(urlPago);
@@ -530,7 +530,7 @@ namespace TiendaOnline.Features.Pedidos
         [HttpGet("[action]")]
         public async Task<IActionResult> ComprobantePDF(int id)
         {
-            var comprobanteDto = await _pedidoQueryService.ObtenerComprobanteDtoAsync(id);
+            var comprobanteDto = await _pedidoQueryService.ObtenerComprobanteDtoAsync(id, HttpContext.RequestAborted);
             if (comprobanteDto == null)
             {
                 return NotFound();

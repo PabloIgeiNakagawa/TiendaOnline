@@ -27,7 +27,7 @@ namespace TiendaOnline.Features.Usuarios.Admin
         [HttpGet("[action]")]
         public async Task<IActionResult> Listado(FiltrosListadoViewModel model)
         {
-            var roles = await _rolService.ObtenerTodosAsync();
+            var roles = await _rolService.ObtenerTodosAsync(HttpContext.RequestAborted);
 
             bool? estadoBool = model.Estado switch
             {
@@ -36,7 +36,7 @@ namespace TiendaOnline.Features.Usuarios.Admin
                 _ => null
             };
 
-            var pagedResult = await _usuarioQueryService.ObtenerUsuariosPaginadosAsync(model.Pagina, model.TamanoPagina, model.Busqueda, model.Rol, estadoBool);
+            var pagedResult = await _usuarioQueryService.ObtenerUsuariosPaginadosAsync(model.Pagina, model.TamanoPagina, model.Busqueda, model.Rol, estadoBool, HttpContext.RequestAborted);
 
             var viewModel = new UsuarioListadoViewModel
             {
@@ -54,7 +54,7 @@ namespace TiendaOnline.Features.Usuarios.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarAlta(int id)
         {
-            await _usuarioCommandService.DarAltaUsuarioAsync(id);
+            await _usuarioCommandService.DarAltaUsuarioAsync(id, HttpContext.RequestAborted);
             _logger.LogInformation("Usuario {UsuarioId} re-activado por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Usuario activado.";
             return RedirectToAction(nameof(Listado));
@@ -64,7 +64,7 @@ namespace TiendaOnline.Features.Usuarios.Admin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DarBaja(int id)
         {
-            await _usuarioCommandService.DarBajaUsuarioAsync(id);
+            await _usuarioCommandService.DarBajaUsuarioAsync(id, HttpContext.RequestAborted);
             _logger.LogInformation("Usuario {UsuarioId} deshabilitado (baja) por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
             TempData["MensajeExito"] = "Usuario dado de baja.";
             return RedirectToAction(nameof(Listado));

@@ -35,9 +35,9 @@ namespace TiendaOnline.Features.MovimientosStock
                 RegistrosPorPagina = filtros.RegistrosPorPagina
             };
 
-            var resultadoPaginado = await _movimientoStockQueryService.ObtenerMovimientosPaginadosAsync(dto);
+            var resultadoPaginado = await _movimientoStockQueryService.ObtenerMovimientosPaginadosAsync(dto, HttpContext.RequestAborted);
 
-            var tipos = await _movimientoStockQueryService.ObtenerTiposMovimientoAsync();
+            var tipos = await _movimientoStockQueryService.ObtenerTiposMovimientoAsync(HttpContext.RequestAborted);
 
             var model = new MovimientosViewModel
             {
@@ -58,7 +58,7 @@ namespace TiendaOnline.Features.MovimientosStock
         public async Task<IActionResult> Historial(int id)
         {
             ViewData["Title"] = "Historial";
-            var historial = await _movimientoStockQueryService.ObtenerHistorialPorProductoAsync(id);
+            var historial = await _movimientoStockQueryService.ObtenerHistorialPorProductoAsync(id, HttpContext.RequestAborted);
             return View(historial);
         }
 
@@ -75,7 +75,7 @@ namespace TiendaOnline.Features.MovimientosStock
 
             try
             {
-                await _movimientoStockCommandService.RegistrarEntradaAsync(dto);
+                await _movimientoStockCommandService.RegistrarEntradaAsync(dto, HttpContext.RequestAborted);
                 TempData["MensajeExito"] = "¡Entrada de mercadería registrada!";
             }
             catch (Exception ex)
@@ -100,7 +100,7 @@ namespace TiendaOnline.Features.MovimientosStock
 
             try
             {
-                await _movimientoStockCommandService.RegistrarAjusteManualAsync(dto);
+                await _movimientoStockCommandService.RegistrarAjusteManualAsync(dto, HttpContext.RequestAborted);
                 TempData["MensajeExito"] = "Ajuste de inventario aplicado correctamente.";
             }
             catch (Exception ex)

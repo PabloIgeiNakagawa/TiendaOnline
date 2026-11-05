@@ -32,12 +32,12 @@ public class PedidoCommandService : IPedidoCommandService
             _logger = logger;
         }
 
-        public async Task<PedidoPagoDto> CrearPedidoYPrepararPagoAsync(CrearPedidoDto dto)
+        public async Task<PedidoPagoDto> CrearPedidoYPrepararPagoAsync(CrearPedidoDto dto, CancellationToken ct = default)
         {
             if (dto.Items == null || !dto.Items.Any())
                 throw new Exception("El pedido no tiene ítems.");
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
             try
             {
@@ -75,7 +75,7 @@ public class PedidoCommandService : IPedidoCommandService
                 foreach (var itemDto in itemsAgrupados)
                 {
                     // Guardamos el snapshot del pedido, pero el stock se reservará recién cuando el pago sea aprobado.
-                    var producto = await _context.Productos.FindAsync(itemDto.ProductoId);
+                    var producto = await _context.Productos.FindAsync(itemDto.ProductoId, ct);
                     if (producto == null)
                         throw new Exception($"No se encontró el producto con ID {itemDto.ProductoId}.");
 
@@ -89,15 +89,15 @@ public class PedidoCommandService : IPedidoCommandService
                 }
 
                 _context.Pedidos.Add(pedido);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _context.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
 
                 // RECARGAMOS EL PEDIDO CON SUS INCLUDES
                 var pedidoCompleto = await _context.Pedidos
                     .Include(p => p.Usuario) // Traemos los datos del usuario (Email)
                     .Include(p => p.DetallesPedido)
                         .ThenInclude(d => d.Producto) // Traemos los datos del producto (Nombre)
-                    .FirstOrDefaultAsync(p => p.PedidoId == pedido.PedidoId);
+                    .FirstOrDefaultAsync(p => p.PedidoId == pedido.PedidoId, ct);
 
                 if (pedidoCompleto == null) throw new Exception("Error al recuperar el pedido creado.");
 
@@ -127,14 +127,14 @@ public class PedidoCommandService : IPedidoCommandService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear el pedido.");
-                await transaction.RollbackAsync();
+                await transaction.RollbackAsync(ct);
                 throw;
             }
         }
 
-        public async Task<bool> ConfirmarPagoAsync(InfoPagoDto infoPago)
+        public async Task<bool> ConfirmarPagoAsync(InfoPagoDto infoPago, CancellationToken ct = default)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
             try
             {
@@ -142,7 +142,7 @@ public class PedidoCommandService : IPedidoCommandService
                     .Include(p => p.Usuario)
                     .Include(p => p.DetallesPedido)
                         .ThenInclude(d => d.Producto)
-                    .FirstOrDefaultAsync(p => p.PedidoId == infoPago.PedidoId);
+                    .FirstOrDefaultAsync(p => p.PedidoId == infoPago.PedidoId, ct);
 
                 // Idempotencia y existencia: Si no existe o ya está pagado, cortamos acá
                 if (pedido == null)
@@ -198,10 +198,10 @@ public class PedidoCommandService : IPedidoCommandService
                             return false;
                         }
 
-                        var reservaStockExitosa = await IntentarReservarStockAsync(pedido);
+                        var reservaStockExitosa = await IntentarReservarStockAsync(pedido, ct);
                         if (!reservaStockExitosa)
                         {
-                            await transaction.RollbackAsync();
+                            await transaction.RollbackAsync(ct);
                             return false;
                         }
 
@@ -309,8 +309,8 @@ public class PedidoCommandService : IPedidoCommandService
                     return false;
                 }
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _context.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
 
                 // Emails: se encolan recién DESPUÉS del commit.
                 // Si el commit falla, el cliente no debe recibir "pago aprobado"
@@ -348,7 +348,7 @@ public class PedidoCommandService : IPedidoCommandService
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                await transaction.RollbackAsync(ct);
                 _logger.LogError(ex, "Error al procesar el pago del pedido {PedidoId}", infoPago.PedidoId);
                 throw;
             }
@@ -356,9 +356,9 @@ public class PedidoCommandService : IPedidoCommandService
 
         // ----- Comprobante de pago por transferencia bancaria -----
 
-        public async Task<string> GuardarComprobanteAsync(int pedidoId, Stream archivo, string nombreArchivo)
+        public async Task<string> GuardarComprobanteAsync(int pedidoId, Stream archivo, string nombreArchivo, CancellationToken ct = default)
         {
-            var pedido = await _context.Pedidos.FindAsync(pedidoId);
+            var pedido = await _context.Pedidos.FindAsync(pedidoId, ct);
             if (pedido == null) throw new Exception("No se encontró el pedido.");
 
             if (pedido.MetodoDePagoId != MetodoPagoTransferenciaId)
@@ -371,13 +371,13 @@ public class PedidoCommandService : IPedidoCommandService
                 throw new Exception("Ya se subió un comprobante para este pedido.");
 
             // Primero Cloudinary: si la subida falla no queda ningún cambio en la base.
-            var url = await _imagenService.SubirComprobanteAsync(archivo, nombreArchivo);
+            var url = await _imagenService.SubirComprobanteAsync(archivo, nombreArchivo, ct);
             if (string.IsNullOrEmpty(url))
                 throw new Exception("No se pudo subir el comprobante. Verificá el archivo e intentá de nuevo.");
 
             pedido.ComprobanteUrl = url;
             pedido.FechaComprobante = DateTime.Now;
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
 
             _logger.LogInformation("Comprobante subido para el pedido {PedidoId}", pedidoId);
 
@@ -395,9 +395,9 @@ public class PedidoCommandService : IPedidoCommandService
             return url;
         }
 
-        public async Task AprobarPagoTransferenciaAsync(int pedidoId)
+        public async Task AprobarPagoTransferenciaAsync(int pedidoId, CancellationToken ct = default)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
             try
             {
@@ -405,7 +405,7 @@ public class PedidoCommandService : IPedidoCommandService
                     .Include(p => p.Usuario)
                     .Include(p => p.DetallesPedido)
                         .ThenInclude(d => d.Producto)
-                    .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
+                    .FirstOrDefaultAsync(p => p.PedidoId == pedidoId, ct);
 
                 if (pedido == null) throw new Exception("No se encontró el pedido.");
 
@@ -425,7 +425,7 @@ public class PedidoCommandService : IPedidoCommandService
                     throw new Exception("El pedido no tiene comprobante adjuntado todavía.");
 
                 // Misma maquinaria que la aprobación de Mercado Pago: reserva + movimientos de salida.
-                var reservaStockExitosa = await IntentarReservarStockAsync(pedido);
+                var reservaStockExitosa = await IntentarReservarStockAsync(pedido, ct);
                 if (!reservaStockExitosa)
                     throw new Exception("Stock insuficiente para aprobar el pedido. Revisá el stock y avisale al cliente.");
 
@@ -448,8 +448,8 @@ public class PedidoCommandService : IPedidoCommandService
                 var nombreCompletoUsuario = string.Join(" ", new[] { pedido.Usuario!.Nombre, pedido.Usuario.Apellido }
                     .Where(x => !string.IsNullOrWhiteSpace(x)));
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _context.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
 
                 // Email recién después del commit, igual que en Mercado Pago.
                 BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoExitosoAsync(
@@ -462,18 +462,18 @@ public class PedidoCommandService : IPedidoCommandService
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                await transaction.RollbackAsync(ct);
                 _logger.LogWarning(ex, "No se pudo aprobar el pago por transferencia del pedido {PedidoId}", pedidoId);
                 throw;
             }
         }
 
-        public async Task RechazarComprobanteTransferenciaAsync(int pedidoId)
+        public async Task RechazarComprobanteTransferenciaAsync(int pedidoId, CancellationToken ct = default)
         {
             var pedido = await _context.Pedidos
                 .Include(p => p.Usuario)
                 .Include(p => p.DetallesPedido)
-                .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
+                .FirstOrDefaultAsync(p => p.PedidoId == pedidoId, ct);
 
             if (pedido == null) throw new Exception("No se encontró el pedido.");
 
@@ -494,7 +494,7 @@ public class PedidoCommandService : IPedidoCommandService
             pedido.FechaCancelado = DateTime.Now;
 
             var urlComprobante = pedido.ComprobanteUrl;
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
 
             // Borro el archivo de Cloudinary al salir: el rechazo es el fin de la vida del comprobante.
             // La baja fallida no cancela la notificación al cliente.
@@ -503,7 +503,7 @@ public class PedidoCommandService : IPedidoCommandService
             {
                 try
                 {
-                    await _imagenService.BorrarImagenAsync(publicId);
+                    await _imagenService.BorrarImagenAsync(publicId, ct);
                 }
                 catch (Exception ex)
                 {
@@ -524,13 +524,13 @@ public class PedidoCommandService : IPedidoCommandService
             _logger.LogInformation("Comprobante rechazado y pedido {PedidoId} cancelado: el cliente fue notificado.", pedidoId);
         }
 
-        public async Task<PedidoPagoDto?> ObtenerDatosParaPagoAsync(int pedidoId)
+        public async Task<PedidoPagoDto?> ObtenerDatosParaPagoAsync(int pedidoId, CancellationToken ct = default)
         {
             var pedido = await _context.Pedidos
                 .Include(p => p.Usuario)
                 .Include(p => p.DetallesPedido)
                     .ThenInclude(d => d.Producto)
-                .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
+                .FirstOrDefaultAsync(p => p.PedidoId == pedidoId, ct);
 
             if (pedido == null) return null;
 
@@ -554,9 +554,9 @@ public class PedidoCommandService : IPedidoCommandService
             };
         }
 
-        public async Task PedidoEnviadoAsync(int pedidoId)
+        public async Task PedidoEnviadoAsync(int pedidoId, CancellationToken ct = default)
         {
-            var pedido = await _context.Pedidos.FindAsync(pedidoId);
+            var pedido = await _context.Pedidos.FindAsync(pedidoId, ct);
             if (pedido == null) throw new Exception("Pedido no encontrado.");
 
             if (pedido.Estado != EstadoPedido.EnPreparacion)
@@ -565,12 +565,12 @@ public class PedidoCommandService : IPedidoCommandService
             pedido.Estado = EstadoPedido.Enviado;
             pedido.FechaEnvio = DateTime.Now;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
 
-        public async Task PedidoEntregadoAsync(int pedidoId)
+        public async Task PedidoEntregadoAsync(int pedidoId, CancellationToken ct = default)
         {
-            var pedido = await _context.Pedidos.FindAsync(pedidoId);
+            var pedido = await _context.Pedidos.FindAsync(pedidoId, ct);
             if (pedido == null) throw new Exception("Pedido no encontrado.");
 
             if (pedido.Estado != EstadoPedido.Enviado)
@@ -579,12 +579,12 @@ public class PedidoCommandService : IPedidoCommandService
             pedido.Estado = EstadoPedido.Entregado;
             pedido.FechaEntrega = DateTime.Now;
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
 
-        public async Task PedidoCanceladoAsync(int pedidoId)
+        public async Task PedidoCanceladoAsync(int pedidoId, CancellationToken ct = default)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
             try
             {
@@ -592,7 +592,7 @@ public class PedidoCommandService : IPedidoCommandService
                 var pedido = await _context.Pedidos
                     .Include(p => p.DetallesPedido)
                         .ThenInclude(dp => dp.Producto) // Traemos el producto para devolverle el stock
-                    .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
+                    .FirstOrDefaultAsync(p => p.PedidoId == pedidoId, ct);
 
                 if (pedido == null) throw new Exception("Pedido no encontrado.");
 
@@ -616,7 +616,7 @@ if (debeDevolverStock)
                     {
                         var filasAfectadas = await _context.Productos
                             .Where(p => p.ProductoId == detalle.ProductoId)
-                            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Stock, p => p.Stock + detalle.Cantidad));
+                            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Stock, p => p.Stock + detalle.Cantidad), ct);
 
                         if (filasAfectadas == 0)
                         {
@@ -629,7 +629,7 @@ if (debeDevolverStock)
 
                     foreach (var mov in movimientosARegistrar)
                     {
-                        var producto = await _context.Productos.FindAsync(mov.ProductoId);
+                        var producto = await _context.Productos.FindAsync(mov.ProductoId, ct);
                         if (producto != null)
                         {
                             _movimientoStockCommandService.GenerarMovimiento(
@@ -647,23 +647,23 @@ if (debeDevolverStock)
                 pedido.EstadoPago = EstadoPago.Rechazado;
                 pedido.FechaCancelado = DateTime.Now;
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _context.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
             }
             catch (Exception)
             {
-                await transaction.RollbackAsync();
+                await transaction.RollbackAsync(ct);
                 throw;
             }
 }
 
-        private async Task<bool> IntentarReservarStockAsync(Pedido pedido)
+        private async Task<bool> IntentarReservarStockAsync(Pedido pedido, CancellationToken ct)
         {
             foreach (var detalle in pedido.DetallesPedido)
             {
                 var filasAfectadas = await _context.Productos
                     .Where(p => p.ProductoId == detalle.ProductoId && p.Stock >= detalle.Cantidad)
-                    .ExecuteUpdateAsync(s => s.SetProperty(p => p.Stock, p => p.Stock - detalle.Cantidad));
+                    .ExecuteUpdateAsync(s => s.SetProperty(p => p.Stock, p => p.Stock - detalle.Cantidad), ct);
 
                 if (filasAfectadas == 0)
                 {
