@@ -40,37 +40,35 @@ namespace TiendaOnline.Features.Pagos
         [AllowAnonymous]
         public async Task<IActionResult> MercadoPagoWebhook([FromQuery] string? topic, [FromQuery(Name = "id")] string? resourceId, [FromBody] MercadoPagoWebhookDto? body)
         {
-            // Log raw request data for debugging - NIVEL INFO para que se vea siempre
-            _logger.LogInformation("=== Webhook de MercadoPago recibido ===");
-            _logger.LogInformation("Query params - topic: {Topic}, id: {ResourceId}", topic, resourceId);
-            _logger.LogInformation("Headers - x-signature: {Signature}", Request.Headers["x-signature"].ToString());
-            _logger.LogInformation("Headers - x-request-id: {RequestId}", Request.Headers["x-request-id"].ToString());
-            _logger.LogInformation("Body: {Body}", body != null ? JsonSerializer.Serialize(body) : "null");
+            // La petición cruda (payload, headers, firma) se registra en Debug:
+            // vale para reproducir un webhook de MP, no es contenido de Info y de Info expone datos de terceros.
+            _logger.LogDebug("Webhook MP crudo - topic: {Topic}, id: {ResourceId}, x-signature: {Signature}, x-request-id: {RequestId}, body: {Body}",
+                topic, resourceId,
+                Request.Headers["x-signature"].ToString(),
+                Request.Headers["x-request-id"].ToString(),
+                body != null ? JsonSerializer.Serialize(body) : "null");
+
             // Unificamos el ID: Puede venir por Query String (id) o por el Body (data.id)
             var finalId = resourceId ?? body?.Data?.Id;
 
             // Unificamos el Tipo: Puede venir como 'topic' (v1) o como 'type' (v2/JSON body)
             var finalType = topic ?? body?.Type;
 
-            _logger.LogInformation("Datos unificados - Tipo: {Type}, ResourceId: {Id}", finalType, finalId);
+            _logger.LogInformation("Notificación de MP recibida - Tipo: {Type}, ResourceId: {Id}", finalType, finalId);
 
             // --- VALIDACIÓN DE SEGURIDAD (Firma de Mercado Pago) ---
             // Obtenemos los encabezados necesarios para validar que la petición sea auténtica
             var signature = Request.Headers["x-signature"].ToString();
             var requestId = Request.Headers["x-request-id"].ToString();
 
-            _logger.LogInformation("Iniciando validación de firma...");
-
             // Validamos la firma usando el servicio (importante tener cargado el WebhookSecret en appsettings)
             // Usamos string.Empty para los valores nulos - la validación fallará gracefully
             if (!_paymentService.ValidarFirma(signature, requestId, finalId ?? string.Empty, finalType ?? string.Empty))
             {
-                _logger.LogWarning("✗ Firma de Webhook INVÁLIDA - Rechazando petición para el recurso {Id}", finalId);
+                _logger.LogWarning("Firma de webhook inválida - Rechazando petición para el recurso {Id}", finalId);
                 // Devolvemos Unauthorized para que quede registro de que la firma falló
                 return Unauthorized();
             }
-
-            _logger.LogInformation("✓ Firma validada correctamente - Procesando webhook para recurso {Id}", finalId);
 
             // Validamos que tengamos un ID para trabajar
             if (string.IsNullOrEmpty(finalId))

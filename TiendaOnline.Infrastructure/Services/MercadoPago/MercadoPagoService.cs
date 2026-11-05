@@ -66,6 +66,7 @@ public class MercadoPagoService : IPaymentService
         };
 
         var preference = await client.CreateAsync(request);
+        _logger.LogInformation("Preferencia de pago creada para pedido {PedidoId}", pedidoDto.PedidoId);
         return preference.InitPoint;
     }
 
@@ -89,9 +90,9 @@ public class MercadoPagoService : IPaymentService
                 TransaccionId = payment.Id.ToString()
             };
         }
-        catch
+        catch (Exception ex)
         {
-            // _logger.LogError(ex, "Error al consultar la API de MP para el pago {PaymentId}", paymentId);
+            _logger.LogError(ex, "Error al consultar la API de MP para el pago {PaymentId}", paymentId);
             return null;
         }
     }
@@ -103,7 +104,7 @@ public class MercadoPagoService : IPaymentService
             // En desarrollo, permitir bypass de la firma si está configurado explícitamente
             if (_settings.BypassSignatureValidation)
             {
-                _logger.LogWarning("⚠ VALIDACIÓN DE FIRMA BYPASSEADA - Esto solo debería estar habilitado en desarrollo");
+                _logger.LogWarning("Validación de firma BYPASSEADA por configuración - solo debería estar habilitado en desarrollo");
                 return true;
             }
 
@@ -114,8 +115,8 @@ public class MercadoPagoService : IPaymentService
                 return false;
             }
 
-            _logger.LogInformation("Validando firma - Header x-signature: {SignatureHeader}", signatureHeader);
-            _logger.LogInformation("ResourceId: {ResourceId}, RequestId: {RequestId}, Topic: {Topic}", resourceId, requestId, topic);
+            _logger.LogDebug("Validando firma - Header x-signature: {SignatureHeader}, ResourceId: {ResourceId}, RequestId: {RequestId}, Topic: {Topic}",
+                signatureHeader, resourceId, requestId, topic);
 
             if (string.IsNullOrEmpty(signatureHeader))
             {
@@ -130,20 +131,20 @@ public class MercadoPagoService : IPaymentService
 
             if (!v1Match.Success || !tsMatch.Success)
             {
-                _logger.LogWarning("Formato de firma inválido. No se pudieron extraer v1 y/o ts. Header: {SignatureHeader}", signatureHeader);
+                // El header crudo (incluye hash y timestamp) queda en Debug, no en Warning.
+                _logger.LogWarning("Formato de firma inválido: no se pudieron extraer v1 y/o ts del header x-signature");
                 return false;
             }
 
             var v1 = v1Match.Groups[1].Value.ToLower();
             var ts = tsMatch.Groups[1].Value;
 
-            _logger.LogInformation("Valores extraídos - v1: {V1}, ts: {Ts}", v1, ts);
-
             // Armamos el manifiesto según la documentación de MP
             // template: id:[resourceId];request-id:[requestId];ts:[ts];
             var manifest = $"id:{resourceId};request-id:{requestId};ts:{ts};";
 
-            _logger.LogInformation("Manifiesto generado: {Manifest}", manifest);
+            // El manifiesto y los valores crudos valen para reproducir una firma, van en Debug.
+            _logger.LogDebug("Manifiesto generado: {Manifest}", manifest);
 
             // Generamos el hash HMAC-SHA256
             using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret)))
@@ -151,17 +152,17 @@ public class MercadoPagoService : IPaymentService
                 var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(manifest));
                 var hashString = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
 
-                _logger.LogDebug("Hash calculado: {HashCalculado}, Hash recibido: {HashRecibido}", hashString, v1);
-
                 var isValid = hashString == v1;
 
                 if (isValid)
                 {
-                    _logger.LogInformation("✓ Firma de webhook valida correctamente");
+                    _logger.LogDebug("Firma de webhook validada correctamente");
                 }
                 else
                 {
-                    _logger.LogWarning("✗ Firma de webhook NO coincide. Esperado: {HashCalculado}, Recibido: {HashRecibido}", hashString, v1);
+                    // Sin hashes en el mensaje de Warning: el hash calculado es material para
+                    // validar intentos de forjar la firma contra el secret.
+                    _logger.LogWarning("Firma de webhook NO coincide para el recurso {ResourceId} (ts: {Ts})", resourceId, ts);
                 }
 
                 return isValid;
