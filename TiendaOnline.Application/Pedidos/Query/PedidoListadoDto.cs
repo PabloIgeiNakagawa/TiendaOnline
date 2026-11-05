@@ -10,5 +10,7 @@
         public decimal Total { get; set; }
         public int EstadoId { get; set; }
         public int EstadoPagoId { get; set; }
+        public int MetodoPagoId { get; set; }
+        public bool TieneComprobante { get; set; }
     }
 }

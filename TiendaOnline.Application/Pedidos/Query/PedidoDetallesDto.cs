@@ -27,6 +27,8 @@
 
         // Pago
         public string? TransaccionPagoId { get; set; }
+        public string? ComprobanteUrl { get; set; }
+        public DateTime? FechaComprobante { get; set; }
 
         public decimal CostoEnvio { get; set; }
     }

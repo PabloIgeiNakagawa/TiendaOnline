@@ -8,5 +8,6 @@ namespace TiendaOnline.Application.Common.Interfaces
         Task EnviarEmailPagoRechazadoAsync(string destinoEmail, string nombreUsuario, int pedidoId, decimal total);
         Task EnviarEmailPagoReembolsadoAsync(string destinoEmail, string nombreUsuario, int pedidoId, decimal total);
         Task EnviarEmailPedidoVencidoAsync(string destinoEmail, string nombreUsuario, int pedidoId, decimal total);
+        Task EnviarEmailComprobanteRecibidoAsync(string destinoEmail, int pedidoId);
     }
 }

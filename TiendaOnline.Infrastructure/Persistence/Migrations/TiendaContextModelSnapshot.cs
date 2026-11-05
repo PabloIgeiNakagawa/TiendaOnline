@@ -17,7 +17,7 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.24")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -323,6 +323,10 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PedidoId"));
 
+                    b.Property<string>("ComprobanteUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<decimal>("CostoEnvio")
                         .HasColumnType("decimal(18,2)");
 
@@ -368,6 +372,9 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("FechaCancelado")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaComprobante")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("FechaEnPreparacion")

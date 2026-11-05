@@ -10,6 +10,9 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
     {
         private readonly TiendaContext _context;
 
+        // Id de "Transferencia Bancaria" en la tabla MetodoDePago (ver migration MetodoDePagoYCambiosPedido)
+        private const int MetodoPagoTransferenciaId = 2;
+
         public PedidoQueryService(TiendaContext context)
         {
             _context = context;
@@ -78,6 +81,8 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     }).ToList(),
 
                     TransaccionPagoId = p.TransaccionPagoId,
+                    ComprobanteUrl = p.ComprobanteUrl,
+                    FechaComprobante = p.FechaComprobante,
                     CostoEnvio = p.CostoEnvio
                 })
                 .FirstOrDefaultAsync();
@@ -188,11 +193,50 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     FechaEntrega = p.FechaEntrega,
                     EstadoId = (int)p.Estado,
                     EstadoPagoId = (int)p.EstadoPago,
+                    MetodoPagoId = p.MetodoDePagoId,
+                    TieneComprobante = p.ComprobanteUrl != null,
                     Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
                 })
             .ToListAsync();
 
             return new PagedResult<PedidoListadoDto>(items, total, filtros.Pagina, filtros.Cantidad);
+        }
+
+        public async Task<InstruccionesTransferenciaDto?> ObtenerInstruccionesTransferenciaAsync(int pedidoId)
+        {
+            // AsNoTracking + anon-type: EstaVencido() es lógica en memoria, se evalúa acá abajo
+            var pedido = await _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.PedidoId == pedidoId)
+                .Select(p => new
+                {
+                    p.PedidoId,
+                    p.FechaPedido,
+                    p.Estado,
+                    p.EstadoPago,
+                    p.MetodoDePagoId,
+                    p.ComprobanteUrl,
+                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
+                })
+                .FirstOrDefaultAsync();
+
+            if (pedido == null) return null;
+
+            var vencido = pedido.EstadoPago != Domain.Entities.EstadoPago.Aprobado
+                && pedido.FechaPedido.Add(Domain.Entities.Pedido.TiempoMaximoPagoPendiente) <= DateTime.Now;
+
+            return new InstruccionesTransferenciaDto
+            {
+                PedidoId = pedido.PedidoId,
+                Total = pedido.Total,
+                ComprobanteUrl = pedido.ComprobanteUrl,
+                Vencido = vencido,
+                PuedeSubirComprobante = pedido.Estado == Domain.Entities.EstadoPedido.Nuevo
+                    && pedido.EstadoPago == Domain.Entities.EstadoPago.Pendiente
+                    && pedido.MetodoDePagoId == MetodoPagoTransferenciaId
+                    && pedido.ComprobanteUrl == null
+                    && !vencido
+            };
         }
     }
 }

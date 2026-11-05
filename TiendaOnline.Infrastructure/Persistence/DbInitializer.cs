@@ -13,6 +13,7 @@ namespace TiendaOnline.Infrastructure.Persistence
                 new AppSetting { Key = "Transferencia:Cbu", Group = "Pagos", IsSensitive = false, Description = "Número de CBU para transferencias bancarias.", Type = "text", LastModified = null },
                 new AppSetting { Key = "Transferencia:Alias", Group = "Pagos", IsSensitive = false, Description = "Alias del CBU para recibir pagos.", Type = "text", LastModified = null },
                 new AppSetting { Key = "Transferencia:Titular", Group = "Pagos", IsSensitive = false, Description = "Nombre del titular de la cuenta para transferencias.", Type = "text", LastModified = null },
+                new AppSetting { Key = "Pagos:EmailNotificaciones", Group = "Pagos", IsSensitive = true, Description = "Email interno que recibe el aviso cuando un cliente sube el comprobante de transferencia.", Type = "text", LastModified = null },
                 
                 // === SEO ===
                 new AppSetting { Key = "Seo:Titulo", Group = "Seo", IsSensitive = false, Description = "Título por defecto para SEO del sitio.", Type = "text", LastModified = null },

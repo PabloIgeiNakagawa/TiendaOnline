@@ -1,6 +1,7 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Application.MovimientosStock.Commands;
@@ -15,12 +16,19 @@ public class PedidoCommandService : IPedidoCommandService
     {
         private readonly TiendaContext _context;
         private readonly IMovimientoStockCommandService _movimientoStockCommandService;
+        private readonly IImagenService _imagenService;
+        private readonly IAppSettingsService _appSettings;
         private readonly ILogger<PedidoCommandService> _logger;
 
-        public PedidoCommandService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, ILogger<PedidoCommandService> logger)
+        // Id de "Transferencia Bancaria" en la tabla MetodoDePago (ver migration MetodoDePagoYCambiosPedido)
+        private const int MetodoPagoTransferenciaId = 2;
+
+        public PedidoCommandService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, IImagenService imagenService, IAppSettingsService appSettings, ILogger<PedidoCommandService> logger)
         {
             _context = context;
             _movimientoStockCommandService = movimientoStockCommandService;
+            _imagenService = imagenService;
+            _appSettings = appSettings;
             _logger = logger;
         }
 
@@ -344,6 +352,176 @@ public class PedidoCommandService : IPedidoCommandService
                 _logger.LogError(ex, "Error al procesar el pago del pedido {PedidoId}", infoPago.PedidoId);
                 throw;
             }
+        }
+
+        // ----- Comprobante de pago por transferencia bancaria -----
+
+        public async Task<string> GuardarComprobanteAsync(int pedidoId, Stream archivo, string nombreArchivo)
+        {
+            var pedido = await _context.Pedidos.FindAsync(pedidoId);
+            if (pedido == null) throw new Exception("No se encontró el pedido.");
+
+            if (pedido.MetodoDePagoId != MetodoPagoTransferenciaId)
+                throw new Exception("Este pedido no paga por transferencia bancaria.");
+
+            if (pedido.Estado != EstadoPedido.Nuevo || pedido.EstadoPago != EstadoPago.Pendiente)
+                throw new Exception("El pedido ya no está esperando el comprobante.");
+
+            if (!string.IsNullOrEmpty(pedido.ComprobanteUrl))
+                throw new Exception("Ya se subió un comprobante para este pedido.");
+
+            // Primero Cloudinary: si la subida falla no queda ningún cambio en la base.
+            var url = await _imagenService.SubirComprobanteAsync(archivo, nombreArchivo);
+            if (string.IsNullOrEmpty(url))
+                throw new Exception("No se pudo subir el comprobante. Verificá el archivo e intentá de nuevo.");
+
+            pedido.ComprobanteUrl = url;
+            pedido.FechaComprobante = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Comprobante subido para el pedido {PedidoId}", pedidoId);
+
+            // Aviso al dueño después del save; la dirección vive en AppSettings (Pagos:EmailNotificaciones).
+            var emailNotificaciones = _appSettings.GetValue("Pagos:EmailNotificaciones");
+            if (!string.IsNullOrWhiteSpace(emailNotificaciones))
+            {
+                BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailComprobanteRecibidoAsync(emailNotificaciones, pedidoId));
+            }
+            else
+            {
+                _logger.LogWarning("Comprobante del pedido {PedidoId} recibido pero Pagos:EmailNotificaciones no está configurada: no se envió aviso.", pedidoId);
+            }
+
+            return url;
+        }
+
+        public async Task AprobarPagoTransferenciaAsync(int pedidoId)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var pedido = await _context.Pedidos
+                    .Include(p => p.Usuario)
+                    .Include(p => p.DetallesPedido)
+                        .ThenInclude(d => d.Producto)
+                    .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
+
+                if (pedido == null) throw new Exception("No se encontró el pedido.");
+
+                if (pedido.MetodoDePagoId != MetodoPagoTransferenciaId)
+                    throw new Exception("Este pedido no paga por transferencia bancaria.");
+
+                if (pedido.EstadoPago == EstadoPago.Aprobado)
+                    throw new Exception("El pago de este pedido ya está aprobado.");
+
+                if (pedido.Estado == EstadoPedido.Cancelado)
+                    throw new Exception("El pedido está cancelado: no se puede aprobar el pago.");
+
+                if (pedido.EstaVencido())
+                    throw new Exception("El pedido venció por falta de pago. Cancelalo pedile que vuelva a comprar.");
+
+                if (string.IsNullOrEmpty(pedido.ComprobanteUrl))
+                    throw new Exception("El pedido no tiene comprobante adjuntado todavía.");
+
+                // Misma maquinaria que la aprobación de Mercado Pago: reserva + movimientos de salida.
+                var reservaStockExitosa = await IntentarReservarStockAsync(pedido);
+                if (!reservaStockExitosa)
+                    throw new Exception("Stock insuficiente para aprobar el pedido. Revisá el stock y avisale al cliente.");
+
+                foreach (var detalle in pedido.DetallesPedido.Where(d => d.Producto != null))
+                {
+                    _movimientoStockCommandService.GenerarMovimiento(
+                        detalle.Producto!,
+                        -detalle.Cantidad,
+                        TipoMovimiento.SalidaVenta,
+                        pedido.PedidoId,
+                        $"Venta confirmada por transferencia bancaria en Pedido #{pedido.PedidoId}"
+                    );
+                }
+
+                pedido.EstadoPago = EstadoPago.Aprobado;
+                pedido.Estado = EstadoPedido.EnPreparacion;
+                pedido.FechaEnPreparacion = DateTime.Now;
+
+                decimal totalCalculado = pedido.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario) + pedido.CostoEnvio;
+                var nombreCompletoUsuario = string.Join(" ", new[] { pedido.Usuario!.Nombre, pedido.Usuario.Apellido }
+                    .Where(x => !string.IsNullOrWhiteSpace(x)));
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                // Email recién después del commit, igual que en Mercado Pago.
+                BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoExitosoAsync(
+                    pedido.Usuario!.Email,
+                    nombreCompletoUsuario,
+                    pedido.PedidoId,
+                    totalCalculado));
+
+                _logger.LogInformation("Pago por transferencia aprobado para el pedido {PedidoId}: stock reservado y pedido en preparación.", pedidoId);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogWarning(ex, "No se pudo aprobar el pago por transferencia del pedido {PedidoId}", pedidoId);
+                throw;
+            }
+        }
+
+        public async Task RechazarComprobanteTransferenciaAsync(int pedidoId)
+        {
+            var pedido = await _context.Pedidos
+                .Include(p => p.Usuario)
+                .Include(p => p.DetallesPedido)
+                .FirstOrDefaultAsync(p => p.PedidoId == pedidoId);
+
+            if (pedido == null) throw new Exception("No se encontró el pedido.");
+
+            if (pedido.MetodoDePagoId != MetodoPagoTransferenciaId)
+                throw new Exception("Este pedido no paga por transferencia bancaria.");
+
+            if (pedido.Estado == EstadoPedido.Cancelado)
+                throw new Exception("El pedido ya está cancelado.");
+
+            if (pedido.EstadoPago != EstadoPago.Pendiente)
+                throw new Exception("El pedido ya no está esperando verificación de comprobante.");
+
+            if (string.IsNullOrEmpty(pedido.ComprobanteUrl))
+                throw new Exception("El pedido no tiene comprobante. Para darlo de baja sin comprobante usá el botón Cancelar.");
+
+            pedido.EstadoPago = EstadoPago.Rechazado;
+            pedido.Estado = EstadoPedido.Cancelado;
+            pedido.FechaCancelado = DateTime.Now;
+
+            var urlComprobante = pedido.ComprobanteUrl;
+            await _context.SaveChangesAsync();
+
+            // Borro el archivo de Cloudinary al salir: el rechazo es el fin de la vida del comprobante.
+            // La baja fallida no cancela la notificación al cliente.
+            var publicId = _imagenService.ExtraerPublicIdDesdeUrl(urlComprobante);
+            if (!string.IsNullOrEmpty(publicId))
+            {
+                try
+                {
+                    await _imagenService.BorrarImagenAsync(publicId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "No se pudo borrar el comprobante de Cloudinary para el pedido {PedidoId}", pedidoId);
+                }
+            }
+
+            var nombreCompletoUsuario = string.Join(" ", new[] { pedido.Usuario!.Nombre, pedido.Usuario.Apellido }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
+            decimal totalCalculado = pedido.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario) + pedido.CostoEnvio;
+
+            BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoRechazadoAsync(
+                pedido.Usuario!.Email,
+                nombreCompletoUsuario,
+                pedido.PedidoId,
+                totalCalculado));
+
+            _logger.LogInformation("Comprobante rechazado y pedido {PedidoId} cancelado: el cliente fue notificado.", pedidoId);
         }
 
         public async Task<PedidoPagoDto?> ObtenerDatosParaPagoAsync(int pedidoId)

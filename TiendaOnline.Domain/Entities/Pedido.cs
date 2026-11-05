@@ -53,6 +53,12 @@ namespace TiendaOnline.Domain.Entities
         [MaxLength(100)]
         public string? TransaccionPagoId { get; set; } // Acá guardás el ID que te devuelve MP o Stripe
 
+        // --- Comprobante de pago por transferencia ---
+        [MaxLength(500)]
+        public string? ComprobanteUrl { get; set; }
+
+        public DateTime? FechaComprobante { get; set; }
+
         [Required]
         public bool EsEnvioADomicilio { get; set; }
 

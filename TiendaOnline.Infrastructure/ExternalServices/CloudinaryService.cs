@@ -64,6 +64,32 @@ namespace TiendaOnline.Infrastructure.ExternalServices
             return uploadResult.SecureUrl.ToString();
         }
 
+        // Los comprobantes se suben sin transformación: la resolución original es la evidencia del pago.
+        public async Task<string> SubirComprobanteAsync(Stream archivoStream, string nombreArchivo)
+        {
+            if (archivoStream == null || archivoStream.Length == 0)
+            {
+                _logger.LogDebug("SubirComprobanteAsync recibió un stream vacío para {NombreArchivo}", nombreArchivo);
+                return null;
+            }
+
+            var uploadParams = new ImageUploadParams()
+            {
+                File = new FileDescription(nombreArchivo, archivoStream),
+                Folder = "TechStore/Comprobantes"
+            };
+
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+            if (uploadResult.Error != null)
+            {
+                _logger.LogError("Cloudinary rechazó el comprobante {NombreArchivo}: {Error}", nombreArchivo, uploadResult.Error.Message);
+                throw new Exception("No se pudo subir el comprobante. Intentá de nuevo en unos minutos.");
+            }
+
+            return uploadResult.SecureUrl.ToString();
+        }
+
         public async Task<bool> BorrarImagenAsync(string publicId)
         {
             if (string.IsNullOrEmpty(publicId)) return false;
