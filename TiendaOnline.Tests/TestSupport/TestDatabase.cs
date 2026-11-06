@@ -75,6 +75,9 @@ namespace TiendaOnline.Tests.TestSupport
             return new TestTiendaContext(options, session.Object);
         }
 
+        /// <summary>Conexión viva compartida: los hosts de integración registran la DB sobre ella.</summary>
+        public SqliteConnection Connection => _connection;
+
         public void Dispose()
         {
             _connection.Dispose();
