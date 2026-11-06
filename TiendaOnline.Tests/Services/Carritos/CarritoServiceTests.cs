@@ -10,8 +10,8 @@ namespace TiendaOnline.Tests.Services.Carritos
     /// IProductoQueryService (sin DB ni HTTP/session).
     /// Comportamientos documentados acá: agregar inicia en 1 y valida stock contra la
     /// BD; los caminos de fallo no persisten cambios (Times.Never sobre GuardarAsync);
-    /// ValidarStock refresca StockDisponible desde la BD y persiste (stock sí,
-    /// precio no — ver TECH_DEBT #6 precio stale). ActualizarCantidad es distinto:
+    /// ValidarStock refresca StockDisponible y Precio desde la BD y persiste (ver
+    /// TECH_DEBT #6 precio stale). ActualizarCantidad es distinto:
     /// usa el StockDisponible de la sesión, no consulta BD.
     /// </summary>
     public class CarritoServiceTests
@@ -264,6 +264,23 @@ namespace TiendaOnline.Tests.Services.Carritos
 
             Assert.True(resultado.Value.TodoOK);
             Assert.Equal(2, Assert.Single(guardado).StockDisponible); // 99 stale → 2 real
+        }
+
+        [Fact]
+        public async Task ValidarStock_RefrescaPrecioDesdeBD_Persiste()
+        {
+            // TECH_DEBT #6: el precio del carrito es un snapshot; si cambió en la BD
+            // (aumento, oferta futura), ValidarStock deja el vigente en el item.
+            var enCarrito = new ItemCarrito { ProductoId = 1, Nombre = "Prod", Precio = 100m, Cantidad = 2, StockDisponible = 5 };
+            var (storage, guardado) = StorageConCaptura(enCarrito);
+            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, precio: 89.9m, stock: 5)).Object);
+
+            var resultado = await sut.ValidarStockAsync();
+
+            Assert.True(resultado.Value.TodoOK);
+            var item = Assert.Single(guardado);
+            Assert.Equal(89.9m, item.Precio); // 100 stale → 89.9 vigente en BD
+            Assert.Equal(2, item.Cantidad);   // el refresco no toca la cantidad elegida
         }
 
         [Fact]

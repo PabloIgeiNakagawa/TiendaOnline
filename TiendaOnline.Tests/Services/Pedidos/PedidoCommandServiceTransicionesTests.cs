@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Tests.TestSupport;
 
 namespace TiendaOnline.Tests.Services.Pedidos
@@ -21,7 +22,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
                 estado: EstadoPedido.Nuevo); // solo se puede enviar desde EnPreparacion
             var sut = Sut.PedidoCommand(ctx);
 
-            await Assert.ThrowsAsync<Exception>(() => sut.PedidoEnviadoAsync(pedido.PedidoId));
+            await Assert.ThrowsAsync<PedidoNoCancelableException>(() => sut.PedidoEnviadoAsync(pedido.PedidoId));
 
             using var verify = db.CreateContext();
             var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
@@ -39,7 +40,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
                 estado: EstadoPedido.EnPreparacion); // solo se puede entregar desde Enviado
             var sut = Sut.PedidoCommand(ctx);
 
-            await Assert.ThrowsAsync<Exception>(() => sut.PedidoEntregadoAsync(pedido.PedidoId));
+            await Assert.ThrowsAsync<PedidoNoCancelableException>(() => sut.PedidoEntregadoAsync(pedido.PedidoId));
         }
 
         [Fact]
@@ -105,7 +106,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
                 estado: EstadoPedido.Cancelado);
             var sut = Sut.PedidoCommand(ctx);
 
-            await Assert.ThrowsAsync<Exception>(() => sut.PedidoCanceladoAsync(pedido.PedidoId));
+            await Assert.ThrowsAsync<PedidoNoCancelableException>(() => sut.PedidoCanceladoAsync(pedido.PedidoId));
         }
     }
 }
