@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Common;
+using TiendaOnline.Application.Ofertas;
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Infrastructure.Persistence;
 
@@ -8,10 +9,12 @@ namespace TiendaOnline.Infrastructure.Services.Productos
     public class ProductoQueryService : IProductoQueryService
     {
         private readonly TiendaContext _context;
+        private readonly IOfertaQueryService _ofertaQueryService;
 
-        public ProductoQueryService(TiendaContext context)
+        public ProductoQueryService(TiendaContext context, IOfertaQueryService ofertaQueryService)
         {
             _context = context;
+            _ofertaQueryService = ofertaQueryService;
         }
 
         public async Task<ProductoDto?> ObtenerProductoAsync(int id, CancellationToken ct)
@@ -28,12 +31,18 @@ namespace TiendaOnline.Infrastructure.Services.Productos
             if (producto is null)
                 return null;
 
+            // Precio efectivo para la ficha del producto:
+            // si hay oferta vigente, el front muestra el tachado + "vigente hasta".
+            var oferta = await _ofertaQueryService.ObtenerOfertaVigenteAsync(producto.ProductoId, ct);
+
             return new ProductoDto
             {
                 ProductoId = producto.ProductoId,
                 Nombre = producto.Nombre,
                 Descripcion = producto.Descripcion,
                 Precio = producto.Precio,
+                PrecioOferta = oferta?.PrecioOferta,
+                FechaFinOferta = oferta?.FechaFin,
                 Stock = producto.Stock,
                 ImagenUrl = producto.ImagenUrl,
                 CategoriaId = producto.CategoriaId,
@@ -166,6 +175,17 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                     CategoriaId = p.CategoriaId
                 })
                 .ToListAsync(ct);
+
+            // Precio efectivo por tarjeta: una sola query para todo el lote.
+            var ofertas = await _ofertaQueryService.ObtenerOfertasVigentesAsync(items.Select(i => i.ProductoId), ct);
+            foreach (var item in items)
+            {
+                if (ofertas.TryGetValue(item.ProductoId, out var oferta))
+                {
+                    item.PrecioOferta = oferta.PrecioOferta;
+                    item.FechaFinOferta = oferta.FechaFin;
+                }
+            }
 
             return new PagedResult<ProductoDto>(
                 items,

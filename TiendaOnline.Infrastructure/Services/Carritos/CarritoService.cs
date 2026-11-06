@@ -1,5 +1,6 @@
 using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.Common;
+using TiendaOnline.Application.Ofertas;
 using TiendaOnline.Application.Productos.Queries;
 
 namespace TiendaOnline.Infrastructure.Services.Carritos
@@ -8,11 +9,13 @@ namespace TiendaOnline.Infrastructure.Services.Carritos
     {
         private readonly ICarritoStorage _storage;
         private readonly IProductoQueryService _productoQueryService;
+        private readonly IOfertaQueryService _ofertaQueryService;
 
-        public CarritoService(ICarritoStorage storage, IProductoQueryService productoQueryService)
+        public CarritoService(ICarritoStorage storage, IProductoQueryService productoQueryService, IOfertaQueryService ofertaQueryService)
         {
             _storage = storage;
             _productoQueryService = productoQueryService;
+            _ofertaQueryService = ofertaQueryService;
         }
 
         public async Task<List<ItemCarrito>> ObtenerAsync()
@@ -39,6 +42,11 @@ namespace TiendaOnline.Infrastructure.Services.Carritos
 
             var existente = carrito.FirstOrDefault(x => x.ProductoId == productoId);
 
+            // Precio efectivo: mejor oferta vigente ?? precio de lista.
+            // Si el item ya estaba, ValidarStockAsync lo refresca contra BD en cada GET.
+            var oferta = await _ofertaQueryService.ObtenerOfertaVigenteAsync(productoId, ct);
+            var precioEfectivo = oferta?.PrecioOferta ?? producto.Precio;
+
             if (existente != null)
             {
                 if (existente.Cantidad >= producto.Stock)
@@ -52,7 +60,8 @@ namespace TiendaOnline.Infrastructure.Services.Carritos
                 {
                     ProductoId = producto.ProductoId,
                     Nombre = producto.Nombre,
-                    Precio = producto.Precio,
+                    Precio = precioEfectivo,
+                    PrecioLista = producto.Precio,
                     ImagenUrl = producto.ImagenUrl,
                     Cantidad = 1,
                     StockDisponible = producto.Stock
@@ -97,6 +106,11 @@ namespace TiendaOnline.Infrastructure.Services.Carritos
             var carrito = await _storage.ObtenerAsync();
             var itemsSinStock = new List<StockInsuficienteDto>();
 
+            // Una única query de ofertas para todo el carrito (evita N+1:
+            // el refresco corre en el GET del carrito, del checkout y pre-crear pedido).
+            var ofertasVigentes = await _ofertaQueryService.ObtenerOfertasVigentesAsync(
+                carrito.Select(x => x.ProductoId), ct);
+
             foreach (var item in carrito)
             {
                 var producto = await _productoQueryService.ObtenerProductoAsync(item.ProductoId, ct);
@@ -125,9 +139,12 @@ namespace TiendaOnline.Infrastructure.Services.Carritos
 
                 item.StockDisponible = producto.Stock;
                 // El precio del carrito es un snapshot del momento en que se agregó:
-                // lo refrescamos contra BD para que el subtotal que ve el cliente sea el
-                // vigente (el cobro real lo recalcula igual CrearPedidoYPrepararPagoAsync).
-                item.Precio = producto.Precio;
+                // lo refrescamos contra BD con el precio efectivo (mejor oferta vigente ?? lista)
+                // para que el subtotal que ve el cliente sea el vigente
+                // (el cobro real lo recalcula igual CrearPedidoYPrepararPagoAsync).
+                var tieneOferta = ofertasVigentes.TryGetValue(item.ProductoId, out var oferta);
+                item.PrecioLista = producto.Precio;
+                item.Precio = tieneOferta ? oferta!.PrecioOferta : producto.Precio;
             }
 
             await _storage.GuardarAsync(carrito);

@@ -5,6 +5,7 @@ using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Application.MovimientosStock.Commands;
+using TiendaOnline.Application.Ofertas;
 using TiendaOnline.Application.Payment;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Domain.Entities;
@@ -19,17 +20,19 @@ public class PedidoCommandService : IPedidoCommandService
         private readonly IMovimientoStockCommandService _movimientoStockCommandService;
         private readonly IImagenService _imagenService;
         private readonly IAppSettingsService _appSettings;
+        private readonly IOfertaQueryService _ofertaQueryService;
         private readonly ILogger<PedidoCommandService> _logger;
 
         // Id de "Transferencia Bancaria" en la tabla MetodoDePago (ver migration MetodoDePagoYCambiosPedido)
         private const int MetodoPagoTransferenciaId = 2;
 
-        public PedidoCommandService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, IImagenService imagenService, IAppSettingsService appSettings, ILogger<PedidoCommandService> logger)
+        public PedidoCommandService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, IImagenService imagenService, IAppSettingsService appSettings, IOfertaQueryService ofertaQueryService, ILogger<PedidoCommandService> logger)
         {
             _context = context;
             _movimientoStockCommandService = movimientoStockCommandService;
             _imagenService = imagenService;
             _appSettings = appSettings;
+            _ofertaQueryService = ofertaQueryService;
             _logger = logger;
         }
 
@@ -80,11 +83,15 @@ public class PedidoCommandService : IPedidoCommandService
                     if (producto == null)
                         throw new Exception($"No se encontró el producto con ID {itemDto.ProductoId}.");
 
+                    // Precio efectivo del cobro: misma regla que vio el cliente
+                    // en carrito/checkout — mejor oferta vigente ?? precio de lista.
+                    var oferta = await _ofertaQueryService.ObtenerOfertaVigenteAsync(producto.ProductoId, ct);
+
                     pedido.DetallesPedido.Add(new DetallePedido
                     {
                         ProductoId = producto.ProductoId,
                         Cantidad = itemDto.Cantidad,
-                        PrecioUnitario = producto.Precio,
+                        PrecioUnitario = oferta?.PrecioOferta ?? producto.Precio,
                         Producto = producto // Importante para que el PaymentService tenga el nombre
                     });
                 }
