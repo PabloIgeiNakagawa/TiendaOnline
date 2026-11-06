@@ -215,7 +215,7 @@ namespace TiendaOnline.Infrastructure.Persistence
                 entity.HasOne(m => m.Producto)
                     .WithMany(p => p.Movimientos)
                     .HasForeignKey(m => m.ProductoId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.Restrict); // El historial de stock sobrevive a la baja del producto (trazabilidad, como DetallePedido.Producto)
 
                 entity.HasOne(m => m.Pedido)
                     .WithMany(p => p.Movimientos)
