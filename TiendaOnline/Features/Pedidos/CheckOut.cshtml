@@ -175,9 +175,17 @@
                                     <span class="fw-bold text-nowrap" style="font-size: 1rem; display: block;">
                                         @((item.Precio * item.Cantidad).ToString("C0"))
                                     </span>
-                                    <small class="text-muted text-nowrap" style="font-size: 0.75rem; display: block;">
+                                    <small class="text-nowrap" style="font-size: 0.75rem; display: block;">
                                         @item.Precio.ToString("C0") c/u
                                     </small>
+                                    @if (item.PrecioLista > item.Precio)
+                                    {
+                                        var descuento = Math.Round(100m - (item.Precio / item.PrecioLista) * 100m, 0, MidpointRounding.AwayFromZero);
+                                        var promo = descuento > 0 ? $"{descuento:0}% OFF" : "EN OFERTA";
+                                        <small class="text-danger text-nowrap fw-bold" style="font-size: 0.75rem; display: block;">
+                                            <i class="bi bi-tag-fill me-1"></i>@promo (antes @item.PrecioLista.ToString("C0"))
+                                        </small>
+                                    }
                                 </div>
                             </div>
                         }

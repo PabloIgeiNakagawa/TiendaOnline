@@ -54,6 +54,8 @@ namespace TiendaOnline.Features.Productos
                 Nombre = producto.Nombre,
                 Descripcion = producto.Descripcion,
                 Precio = producto.Precio,
+                PrecioOferta = producto.PrecioOferta,
+                FechaFinOferta = producto.FechaFinOferta,
                 Stock = producto.Stock,
                 ImagenUrl = producto.ImagenUrl,
                 CategoriaNombre = producto.CategoriaNombre,

@@ -251,6 +251,7 @@ namespace TiendaOnline.Features.Pedidos
                     ProductoId = i.ProductoId,
                     Nombre = i.Nombre,
                     Precio = i.Precio,
+                    PrecioLista = i.PrecioLista,
                     Cantidad = i.Cantidad,
                     ImagenUrl = i.ImagenUrl
                 }).ToList(),
@@ -276,6 +277,7 @@ namespace TiendaOnline.Features.Pedidos
                 ProductoId = i.ProductoId,
                 Nombre = i.Nombre,
                 Precio = i.Precio,
+                PrecioLista = i.PrecioLista,
                 Cantidad = i.Cantidad,
                 ImagenUrl = i.ImagenUrl
             }).ToList();

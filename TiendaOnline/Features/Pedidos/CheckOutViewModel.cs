@@ -42,7 +42,8 @@ namespace TiendaOnline.Features.Pedidos
     {
         public int ProductoId { get; set; }
         public string Nombre { get; set; } = string.Empty;
-        public decimal Precio { get; set; }
+        public decimal Precio { get; set; } // precio efectivo
+        public decimal PrecioLista { get; set; } // precio de lista para tachar en la UI; 0 = sin dato (ej. sesión guardada antes de este dato)
         public int Cantidad { get; set; }
         public string? ImagenUrl { get; set; }
     }

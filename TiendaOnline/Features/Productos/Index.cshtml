@@ -224,7 +224,23 @@
                                     <h6 class="card-title fw-bold text-truncate" title="@producto.Nombre">@producto.Nombre</h6>
                                     <div class="mt-auto pt-3">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <span class="fs-5 fw-bold">$@producto.Precio.ToString("N0")</span>
+                                            <div>
+                                                @if (producto.PrecioOferta.HasValue)
+                                                {
+                                                    var descuento = producto.Precio > 0
+                                                        ? Math.Round(100m - (producto.PrecioOferta.Value / producto.Precio) * 100m, 0, MidpointRounding.AwayFromZero)
+                                                        : -1m;
+                                                    <span class="badge bg-danger mb-1">@(descuento > 0 ? $"{descuento:0}% OFF" : "EN OFERTA")</span>
+                                                    <div class="d-flex align-items-baseline gap-2">
+                                                        <span class="fs-5 fw-bold text-danger">$@producto.PrecioOferta.Value.ToString("N0")</span>
+                                                        <span class="small text-muted text-decoration-line-through">$@producto.Precio.ToString("N0")</span>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <span class="fs-5 fw-bold">$@producto.Precio.ToString("N0")</span>
+                                                }
+                                            </div>
                                             <small class="@(producto.Stock > 0 ? "text-success" : "text-danger") fw-semibold">
                                                 @(producto.Stock > 0 ? "Disponible" : "Sin Stock")
                                             </small>

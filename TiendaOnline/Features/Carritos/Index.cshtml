@@ -74,7 +74,19 @@
                             <div class="flex-grow-1 d-flex flex-column">
                                 <div class="text-center text-md-start">
                                     <a asp-controller="Productos" asp-action="Detalles" asp-route-id="@item.ProductoId" class="h5 fw-semibold mb-1 text-decoration-none">@item.Nombre</a>
-                                    <div class="fs-5 fw-bold mb-2">@item.Precio.ToString("C0")</div>
+                                    <div class="fs-5 fw-bold mb-2">
+                                        @if (item.PrecioLista > item.Precio)
+                                        {
+                                            var descuento = Math.Round(100m - (item.Precio / item.PrecioLista) * 100m, 0, MidpointRounding.AwayFromZero);
+                                            <span class="badge bg-danger fs-6 align-middle me-1">@(descuento > 0 ? $"{descuento:0}% OFF" : "EN OFERTA")</span>
+                                            <span class="text-danger">@item.Precio.ToString("C0")</span>
+                                            <span class="small text-muted fw-normal text-decoration-line-through">@item.PrecioLista.ToString("C0")</span>
+                                        }
+                                        else
+                                        {
+                                            @item.Precio.ToString("C0")
+                                        }
+                                    </div>
 
                                     @if (item.SinStock)
                                     {

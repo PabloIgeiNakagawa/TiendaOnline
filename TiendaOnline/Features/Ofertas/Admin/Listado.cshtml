@@ -1,0 +1,120 @@
+@model TiendaOnline.Features.Ofertas.OfertaListadoViewModel
+@{
+    ViewData["Title"] = "Ofertas";
+
+    string ClaseEstado(string estado) => estado switch
+    {
+        "Vigente" => "success",
+        "Futura" => "info",
+        "Expirada" => "secondary",
+        _ => "warning" // Inactiva
+    };
+}
+
+<div class="container-fluid py-4">
+    <!-- Sección de Encabezado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-md-flex justify-content-md-between align-items-md-center">
+                <partial name="_TituloSeccion" model='("Ofertas", "Promociones de los productos: vigentes, futuras y expiradas")' />
+                <a asp-action="Crear" class="btn btn-primary btn-lg shadow-sm rounded-3 mt-3 mt-md-0">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Nueva Oferta
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contadores por estado -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card rounded-3 border-success border-2 h-100">
+                <div class="card-body text-center">
+                    <div class="fs-3 fw-bold text-success">@Model.TotalVigentes</div>
+                    <small class="text-muted fw-semibold"><i class="bi bi-check-circle me-1"></i>Vigentes</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card rounded-3 border-1 h-100">
+                <div class="card-body text-center">
+                    <div class="fs-3 fw-bold text-info">@Model.TotalFuturas</div>
+                    <small class="text-muted fw-semibold"><i class="bi bi-hourglass-split me-1"></i>Futuras</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card rounded-3 border-1 h-100">
+                <div class="card-body text-center">
+                    <div class="fs-3 fw-bold text-secondary">@Model.TotalExpiradas</div>
+                    <small class="text-muted fw-semibold"><i class="bi bi-hourglass-bottom me-1"></i>Expiradas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card rounded-3 border-1 h-100">
+                <div class="card-body text-center">
+                    <div class="fs-3 fw-bold text-warning">@Model.TotalInactivas</div>
+                    <small class="text-muted fw-semibold"><i class="bi bi-toggle-off me-1"></i>Inactivas</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listado -->
+    <div class="card rounded-3 border border-1">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Lista</th>
+                            <th>Oferta</th>
+                            <th>Vigencia</th>
+                            <th>Estado</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Ofertas.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="bi bi-percent me-1"></i>Todavía no hay ofertas cargadas.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var oferta in Model.Ofertas)
+                        {
+                            <tr class="@(!oferta.Activa ? "table-light text-muted" : "")">
+                                <td class="fw-semibold">@oferta.NombreProducto</td>
+                                <td>@oferta.PrecioLista.ToString("C0")</td>
+                                <td class="fw-bold text-danger">@oferta.PrecioOferta.ToString("C0")</td>
+                                <td class="small">
+                                    <i class="bi bi-calendar-range me-1"></i>
+                                    @oferta.FechaInicio.ToString("dd/MM/yyyy HH:mm") → @oferta.FechaFin.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+                                <td>
+                                    <span class="badge bg-@ClaseEstado(oferta.Estado)">@oferta.Estado</span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Editar" asp-route-id="@oferta.OfertaId" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                    <form asp-action="AlternarActiva" asp-route-id="@oferta.OfertaId" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm @(oferta.Activa ? "btn-outline-warning" : "btn-outline-success")">
+                                            <i class="bi @(oferta.Activa ? "bi-toggle-on" : "bi-toggle-off")"></i>
+                                            @(oferta.Activa ? "Desactivar" : "Activar")
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
