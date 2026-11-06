@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Infrastructure.Services.Ofertas;
 using TiendaOnline.Tests.TestSupport;
 
 namespace TiendaOnline.Tests.Services.Pedidos
@@ -85,6 +86,47 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var verify = db.CreateContext();
             var detalle = await verify.DetallesPedido.FirstAsync(dp => dp.PedidoId == pago.PedidoId);
             Assert.Equal(100m, detalle.PrecioUnitario); // el sistema recalcula desde Producto en BD
+        }
+
+        [Fact]
+        public async Task CrearPedido_ConOfertaVigente_SnapshotConPrecioOferta()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var metodo = TestDatabase.SeedMetodoDePago(ctx);
+            var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 10);
+            TestDatabase.SeedOferta(ctx, producto, precioOferta: 79.9m);
+            var sut = Sut.PedidoCommand(ctx, ofertas: new OfertaQueryService(ctx)); // resolver real sobre la DB de test
+
+            var pago = await sut.CrearPedidoYPrepararPagoAsync(Dto(
+                usuario.UsuarioId, metodo.MetodoDePagoId,
+                new CrearPedidoDetalleDto { ProductoId = producto.ProductoId, Cantidad = 2, PrecioUnitario = 0.01m }));
+
+            using var verify = db.CreateContext();
+            var detalle = await verify.DetallesPedido.FirstAsync(dp => dp.PedidoId == pago.PedidoId);
+            Assert.Equal(79.9m, detalle.PrecioUnitario); // efectivo = oferta vigente (ni lista ni precio del cliente)
+        }
+
+        [Fact]
+        public async Task CrearPedido_ConOfertaExpirada_SnapshotConPrecioLista()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var metodo = TestDatabase.SeedMetodoDePago(ctx);
+            var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 10);
+            TestDatabase.SeedOferta(ctx, producto, precioOferta: 40m,
+                inicio: DateTime.Now.AddDays(-5), fin: DateTime.Now.AddDays(-1)); // expirada: no aplica
+            var sut = Sut.PedidoCommand(ctx, ofertas: new OfertaQueryService(ctx));
+
+            var pago = await sut.CrearPedidoYPrepararPagoAsync(Dto(
+                usuario.UsuarioId, metodo.MetodoDePagoId,
+                new CrearPedidoDetalleDto { ProductoId = producto.ProductoId, Cantidad = 1, PrecioUnitario = 0.01m }));
+
+            using var verify = db.CreateContext();
+            var detalle = await verify.DetallesPedido.FirstAsync(dp => dp.PedidoId == pago.PedidoId);
+            Assert.Equal(100m, detalle.PrecioUnitario); // oferta expirada → precio de lista
         }
     }
 }

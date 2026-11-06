@@ -133,6 +133,27 @@ namespace TiendaOnline.Tests.TestSupport
             return producto;
         }
 
+        public static OfertaProducto SeedOferta(
+            TiendaContext ctx,
+            Producto producto,
+            decimal precioOferta,
+            DateTime? inicio = null,
+            DateTime? fin = null,
+            bool activa = true)
+        {
+            var oferta = new OfertaProducto
+            {
+                ProductoId = producto.ProductoId,
+                PrecioOferta = precioOferta,
+                FechaInicio = inicio ?? DateTime.Now.AddHours(-1),
+                FechaFin = fin ?? DateTime.Now.AddDays(7),
+                Activa = activa
+            };
+            ctx.OfertasProducto.Add(oferta);
+            ctx.SaveChanges();
+            return oferta;
+        }
+
         public static Pedido SeedPedido(
             TiendaContext ctx,
             Usuario usuario,

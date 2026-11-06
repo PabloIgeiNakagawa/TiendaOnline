@@ -1,5 +1,6 @@
 using Moq;
 using TiendaOnline.Application.Carritos;
+using TiendaOnline.Application.Ofertas;
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Infrastructure.Services.Carritos;
 
@@ -10,8 +11,9 @@ namespace TiendaOnline.Tests.Services.Carritos
     /// IProductoQueryService (sin DB ni HTTP/session).
     /// Comportamientos documentados acá: agregar inicia en 1 y valida stock contra la
     /// BD; los caminos de fallo no persisten cambios (Times.Never sobre GuardarAsync);
-    /// ValidarStock refresca StockDisponible y Precio desde la BD y persiste (ver
-    /// TECH_DEBT #6 precio stale). ActualizarCantidad es distinto:
+    /// ValidarStock refresca StockDisponible y el precio efectivo desde la BD
+    /// (mejor oferta vigente ?? precio de lista; PrecioLista queda snapshot para
+    /// tachar en la UI). ActualizarCantidad es distinto:
     /// usa el StockDisponible de la sesión, no consulta BD.
     /// </summary>
     public class CarritoServiceTests
@@ -41,10 +43,39 @@ namespace TiendaOnline.Tests.Services.Carritos
             return mock;
         }
 
+        /// <summary>Mock de oferta vigente para un producto (mockea single y batch; sin setup otros ids quedan null → sin oferta).</summary>
+        private static Mock<IOfertaQueryService> MockOferta(int productoId, decimal precioOferta)
+        {
+            var dto = new OfertaVigenteDto
+            {
+                OfertaId = 1,
+                ProductoId = productoId,
+                PrecioOferta = precioOferta,
+                FechaFin = DateTime.Now.AddDays(7)
+            };
+            var mock = new Mock<IOfertaQueryService>();
+            mock.Setup(x => x.ObtenerOfertaVigenteAsync(productoId))
+                .ReturnsAsync(dto);
+            mock.Setup(x => x.ObtenerOfertasVigentesAsync(It.Is<IEnumerable<int>>(ids => ids.Contains(productoId))))
+                .ReturnsAsync(new Dictionary<int, OfertaVigenteDto> { [productoId] = dto });
+            return mock;
+        }
+
         private static Mock<ICarritoStorage> MockStorage(params ItemCarrito[] items)
         {
             var mock = new Mock<ICarritoStorage>();
             mock.Setup(x => x.ObtenerAsync()).ReturnsAsync(items.ToList());
+            return mock;
+        }
+
+        /// <summary>Mock sin ofertas con contrato explícito: el batch devuelve dict vacío y el single null (null crudo de Moq rompería ValidarStock).</summary>
+        private static Mock<IOfertaQueryService> MockOfertasVacias()
+        {
+            var mock = new Mock<IOfertaQueryService>();
+            mock.Setup(x => x.ObtenerOfertaVigenteAsync(It.IsAny<int>()))
+                .ReturnsAsync((OfertaVigenteDto?)null);
+            mock.Setup(x => x.ObtenerOfertasVigentesAsync(It.IsAny<IEnumerable<int>>()))
+                .ReturnsAsync(new Dictionary<int, OfertaVigenteDto>());
             return mock;
         }
 
@@ -68,7 +99,7 @@ namespace TiendaOnline.Tests.Services.Carritos
         public async Task Agregar_ProductoInexistente_RetornaFailureYNoGuarda()
         {
             var storage = MockStorage();
-            var sut = new CarritoService(storage.Object, MockProducto(1, null).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, null).Object, Mock.Of<IOfertaQueryService>());
 
             var resultado = await sut.AgregarAsync(1);
 
@@ -81,7 +112,7 @@ namespace TiendaOnline.Tests.Services.Carritos
         public async Task Agregar_StockCero_RetornaFailureYNoGuarda()
         {
             var storage = MockStorage();
-            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 0)).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 0)).Object, Mock.Of<IOfertaQueryService>());
 
             var resultado = await sut.AgregarAsync(1);
 
@@ -94,7 +125,7 @@ namespace TiendaOnline.Tests.Services.Carritos
         public async Task Agregar_ProductoNuevo_RetornaSuccess_EmpiezaEnUnaConDatosDelProducto()
         {
             var (storage, guardado) = StorageConCaptura();
-            var sut = new CarritoService(storage.Object, MockProducto(7, Producto(7, precio: 99.5m, stock: 4)).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(7, Producto(7, precio: 99.5m, stock: 4)).Object, Mock.Of<IOfertaQueryService>());
 
             var resultado = await sut.AgregarAsync(7);
 
@@ -112,7 +143,7 @@ namespace TiendaOnline.Tests.Services.Carritos
         {
             var existente = new ItemCarrito { ProductoId = 1, Nombre = "Prod", Precio = 100m, Cantidad = 1, StockDisponible = 5 };
             var (storage, guardado) = StorageConCaptura(existente);
-            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 5)).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 5)).Object, Mock.Of<IOfertaQueryService>());
 
             var resultado = await sut.AgregarAsync(1);
 
@@ -125,7 +156,7 @@ namespace TiendaOnline.Tests.Services.Carritos
         {
             var existente = new ItemCarrito { ProductoId = 1, Nombre = "Prod", Precio = 100m, Cantidad = 5, StockDisponible = 5 };
             var storage = MockStorage(existente);
-            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 5)).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 5)).Object, Mock.Of<IOfertaQueryService>());
 
             var resultado = await sut.AgregarAsync(1);
 
@@ -143,7 +174,7 @@ namespace TiendaOnline.Tests.Services.Carritos
         {
             var storage = MockStorage();
             // Tampoco consulta la BD: el producto ya no está en el carrito de sesión.
-            var sut = new CarritoService(storage.Object, new Mock<IProductoQueryService>().Object);
+            var sut = new CarritoService(storage.Object, new Mock<IProductoQueryService>().Object, Mock.Of<IOfertaQueryService>());
 
             var resultado = await sut.ActualizarCantidadAsync(1, 2);
 
@@ -159,7 +190,7 @@ namespace TiendaOnline.Tests.Services.Carritos
             var storage = MockStorage(item);
             // Nota (comportamiento de hoy): ActualizarCantidad usa el StockDisponible
             // del item de sesión, no consulta la BD (a diferencia de Agregar).
-            var sut = new CarritoService(storage.Object, new Mock<IProductoQueryService>().Object);
+            var sut = new CarritoService(storage.Object, new Mock<IProductoQueryService>().Object, Mock.Of<IOfertaQueryService>());
 
             var resultado = await sut.ActualizarCantidadAsync(1, 6);
 
@@ -173,7 +204,7 @@ namespace TiendaOnline.Tests.Services.Carritos
         {
             var item = new ItemCarrito { ProductoId = 1, Nombre = "Prod", Precio = 100m, Cantidad = 1, StockDisponible = 5 };
             var (storage, guardado) = StorageConCaptura(item);
-            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 5)).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 5)).Object, Mock.Of<IOfertaQueryService>());
 
             var resultado = await sut.ActualizarCantidadAsync(1, 3);
 
@@ -191,7 +222,7 @@ namespace TiendaOnline.Tests.Services.Carritos
             // Documentado: eliminar un producto ausente devuelve success y persiste
             // el carrito de todas formas (así está escrito CarritoService.EliminarAsync hoy).
             var (storage, _) = StorageConCaptura();
-            var sut = new CarritoService(storage.Object, MockProducto(1, null).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, null).Object, Mock.Of<IOfertaQueryService>());
 
             var resultado = await sut.EliminarAsync(1);
 
@@ -204,7 +235,7 @@ namespace TiendaOnline.Tests.Services.Carritos
         {
             var enCarrito = new ItemCarrito { ProductoId = 1, Nombre = "Prod", Precio = 100m, Cantidad = 2, StockDisponible = 5 };
             var (storage, guardado) = StorageConCaptura(enCarrito);
-            var sut = new CarritoService(storage.Object, MockProducto(1, null).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, null).Object, Mock.Of<IOfertaQueryService>());
 
             var resultado = await sut.EliminarAsync(1);
 
@@ -223,7 +254,7 @@ namespace TiendaOnline.Tests.Services.Carritos
             // de negocio (TodoOK) es el que indica si el carrito es comprable.
             var enCarrito = new ItemCarrito { ProductoId = 1, Nombre = "Prod muerto", Precio = 100m, Cantidad = 3 };
             var (storage, _) = StorageConCaptura(enCarrito);
-            var sut = new CarritoService(storage.Object, MockProducto(1, null).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, null).Object, Mock.Of<IOfertaQueryService>());
 
             var resultado = await sut.ValidarStockAsync();
 
@@ -240,7 +271,7 @@ namespace TiendaOnline.Tests.Services.Carritos
         {
             var enCarrito = new ItemCarrito { ProductoId = 1, Nombre = "Prod", Precio = 100m, Cantidad = 3, StockDisponible = 1 };
             var (storage, _) = StorageConCaptura(enCarrito);
-            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 1)).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 1)).Object, MockOfertasVacias().Object);
 
             var resultado = await sut.ValidarStockAsync();
 
@@ -258,7 +289,7 @@ namespace TiendaOnline.Tests.Services.Carritos
             // (session vieja); ValidarStock lo recalcula contra BD y persiste.
             var enCarrito = new ItemCarrito { ProductoId = 1, Nombre = "Prod", Precio = 100m, Cantidad = 1, StockDisponible = 99 };
             var (storage, guardado) = StorageConCaptura(enCarrito);
-            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 2)).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 2)).Object, MockOfertasVacias().Object);
 
             var resultado = await sut.ValidarStockAsync();
 
@@ -269,11 +300,11 @@ namespace TiendaOnline.Tests.Services.Carritos
         [Fact]
         public async Task ValidarStock_RefrescaPrecioDesdeBD_Persiste()
         {
-            // TECH_DEBT #6: el precio del carrito es un snapshot; si cambió en la BD
+            // El precio del carrito es un snapshot; si cambió en la BD
             // (aumento, oferta futura), ValidarStock deja el vigente en el item.
             var enCarrito = new ItemCarrito { ProductoId = 1, Nombre = "Prod", Precio = 100m, Cantidad = 2, StockDisponible = 5 };
             var (storage, guardado) = StorageConCaptura(enCarrito);
-            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, precio: 89.9m, stock: 5)).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, precio: 89.9m, stock: 5)).Object, MockOfertasVacias().Object);
 
             var resultado = await sut.ValidarStockAsync();
 
@@ -288,12 +319,64 @@ namespace TiendaOnline.Tests.Services.Carritos
         {
             var enCarrito = new ItemCarrito { ProductoId = 1, Nombre = "Prod", Precio = 100m, Cantidad = 3, StockDisponible = 5 };
             var (storage, _) = StorageConCaptura(enCarrito);
-            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 5)).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, stock: 5)).Object, MockOfertasVacias().Object);
 
             var resultado = await sut.ValidarStockAsync();
 
             Assert.True(resultado.Value.TodoOK);
             Assert.Empty(resultado.Value.ItemsSinStock);
+        }
+
+        // ------------------------------------------------------------------
+        // Ofertas: precio del carrito = precio efectivo
+        // (mejor oferta vigente ?? precio de lista); PrecioLista queda para tachar.
+        // ------------------------------------------------------------------
+
+        [Fact]
+        public async Task Agregar_ProductoConOfertaVigente_GuardaPrecioEfectivoYLista()
+        {
+            var (storage, guardado) = StorageConCaptura();
+            var ofertas = MockOferta(1, precioOferta: 79.9m);
+            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, precio: 100m, stock: 5)).Object, ofertas.Object);
+
+            var resultado = await sut.AgregarAsync(1);
+
+            Assert.True(resultado.IsSuccess);
+            var item = Assert.Single(guardado);
+            Assert.Equal(79.9m, item.Precio);     // efectivo = oferta
+            Assert.Equal(100m, item.PrecioLista); // lista queda para tachar
+        }
+
+        [Fact]
+        public async Task ValidarStock_ProductoConOfertaVigente_RefrescaPrecioEfectivo()
+        {
+            var enCarrito = new ItemCarrito { ProductoId = 1, Nombre = "Prod", Precio = 100m, Cantidad = 2, StockDisponible = 5 };
+            var (storage, guardado) = StorageConCaptura(enCarrito);
+            var ofertas = MockOferta(1, precioOferta: 59.5m);
+            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, precio: 100m, stock: 5)).Object, ofertas.Object);
+
+            var resultado = await sut.ValidarStockAsync();
+
+            Assert.True(resultado.Value.TodoOK);
+            var item = Assert.Single(guardado);
+            Assert.Equal(59.5m, item.Precio);     // oferta vigente gana a la lista stale
+            Assert.Equal(100m, item.PrecioLista);
+        }
+
+        [Fact]
+        public async Task ValidarStock_SinOferta_UsaPrecioListaComoEfectivo()
+        {
+            var enCarrito = new ItemCarrito { ProductoId = 1, Nombre = "Prod", Precio = 100m, Cantidad = 1, StockDisponible = 5 };
+            var (storage, guardado) = StorageConCaptura(enCarrito);
+            var ofertas = MockOfertasVacias(); // dict vacío explícito: "sin oferta"
+            var sut = new CarritoService(storage.Object, MockProducto(1, Producto(1, precio: 89.9m, stock: 5)).Object, ofertas.Object);
+
+            var resultado = await sut.ValidarStockAsync();
+
+            Assert.True(resultado.Value.TodoOK);
+            var item = Assert.Single(guardado);
+            Assert.Equal(89.9m, item.Precio);      // sin oferta → efectivo = lista
+            Assert.Equal(89.9m, item.PrecioLista);
         }
 
         // ------------------------------------------------------------------
@@ -306,7 +389,7 @@ namespace TiendaOnline.Tests.Services.Carritos
             var storage = MockStorage(
                 new ItemCarrito { ProductoId = 1, Cantidad = 2 },
                 new ItemCarrito { ProductoId = 2, Cantidad = 3 });
-            var sut = new CarritoService(storage.Object, MockProducto(1, null).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, null).Object, Mock.Of<IOfertaQueryService>());
 
             var total = await sut.ObtenerCantidadTotalAsync();
 
@@ -317,7 +400,7 @@ namespace TiendaOnline.Tests.Services.Carritos
         public async Task Vaciar_LlamaALimpiarDelStorage()
         {
             var storage = MockStorage();
-            var sut = new CarritoService(storage.Object, MockProducto(1, null).Object);
+            var sut = new CarritoService(storage.Object, MockProducto(1, null).Object, Mock.Of<IOfertaQueryService>());
 
             await sut.VaciarAsync();
 

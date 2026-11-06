@@ -137,7 +137,7 @@ namespace TiendaOnline.Tests.Services.Auth
 
             var resultado = await sut.ValidarCredencialesAsync("inactivo@test.local", Password);
 
-            Assert.Null(resultado); // fix #14: el deshabilitado no loguea (ni por password, ni por Google)
+            Assert.Null(resultado); // el usuario deshabilitado no loguea (ni por password, ni por Google)
             hasher.Verify(
                 x => x.VerifyHashedPassword(It.IsAny<Usuario>(), It.IsAny<string>(), It.IsAny<string>()),
                 Times.Never);

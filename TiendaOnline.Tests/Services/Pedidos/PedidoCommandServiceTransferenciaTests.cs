@@ -13,8 +13,8 @@ namespace TiendaOnline.Tests.Services.Pedidos
     /// Tests del flujo de pago por transferencia bancaria: subida de comprobante,
     /// aprobación manual (misma maquinaria de reserva de stock que Mercado Pago)
     /// y rechazo del comprobante (cancelación + baja del archivo en Cloudinary).
-    /// Los guards de dominio lanzan excepciones tipadas (TECH_DEBT #7): se aserte el
-    /// tipo concreto, no Exception genérica (xUnit exige match exacto).
+    /// Los guards de dominio lanzan excepciones tipadas: se aserte el tipo
+    /// concreto, no Exception genérica (xUnit exige match exacto).
     /// </summary>
     public class PedidoCommandServiceTransferenciaTests
     {

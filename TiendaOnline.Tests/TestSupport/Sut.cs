@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Application.Common.Interfaces;
+using TiendaOnline.Application.Ofertas;
 using TiendaOnline.Infrastructure.Persistence;
 using TiendaOnline.Infrastructure.Services.MovimientosStock;
 using TiendaOnline.Infrastructure.Services.Pedidos;
@@ -17,11 +18,13 @@ namespace TiendaOnline.Tests.TestSupport
         public static PedidoCommandService PedidoCommand(
             TiendaContext ctx,
             Mock<IImagenService>? imagen = null,
-            Mock<IAppSettingsService>? settings = null)
+            Mock<IAppSettingsService>? settings = null,
+            IOfertaQueryService? ofertas = null)
             => new(ctx,
                 new MovimientoStockCommandService(ctx, NullLogger<MovimientoStockCommandService>.Instance),
                 imagen?.Object ?? Mock.Of<IImagenService>(),
                 settings?.Object ?? Mock.Of<IAppSettingsService>(),
+                ofertas ?? Mock.Of<IOfertaQueryService>(),
                 NullLogger<PedidoCommandService>.Instance);
 
         public static PedidoVencimientoService PedidoVencimiento(TiendaContext ctx)
