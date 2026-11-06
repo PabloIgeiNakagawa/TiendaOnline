@@ -84,18 +84,19 @@ if (!app.Environment.IsDevelopment())
     }
 }
 
-// Seed idempotente de AppSettings: inserta solo las keys que faltan.
+// Seed idempotente de AppSettings y de las zonas de envío (solo inserta lo que falta).
 try
 {
     using (var scope = app.Services.CreateScope())
     {
         var context = scope.ServiceProvider.GetRequiredService<TiendaContext>();
         DbInitializer.SeedSettings(context);
+        DbInitializer.SeedZonasEnvio(context);
     }
 }
 catch (Exception ex)
 {
-    app.Logger.LogError(ex, "Seed de AppSettings falló al arrancar (DB no disponible). Se reintenta en el próximo boot.");
+    app.Logger.LogError(ex, "Seed de configuración inicial falló al arrancar (DB no disponible). Se reintenta en el próximo boot.");
 }
 
 app.UseHttpsRedirection();

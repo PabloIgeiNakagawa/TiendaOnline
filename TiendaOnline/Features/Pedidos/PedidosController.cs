@@ -7,8 +7,10 @@ using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Application.Direcciones;
+using TiendaOnline.Application.Envios;
 using TiendaOnline.Application.Payment;
 using TiendaOnline.Application.Pedidos.Command;
+using TiendaOnline.Application.Pedidos.Common;
 using TiendaOnline.Application.Pedidos.Query;
 using TiendaOnline.Application.Usuarios.Common;
 using TiendaOnline.Domain.Exceptions;
@@ -26,9 +28,10 @@ namespace TiendaOnline.Features.Pedidos
         private readonly IPaymentService _paymentService;
         private readonly IComprobantePdfService _comprobantePdfService;
         private readonly IAppSettingsService _appSettingsService;
+        private readonly IEnvioQueryService _envioQueryService;
         private readonly ILogger<PedidosController> _logger;
 
-        public PedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService, ICarritoService carritoService, IDireccionService direccionService, IPaymentService paymentService, IComprobantePdfService comprobantePdfService, IAppSettingsService appSettingsService, ILogger<PedidosController> logger)
+        public PedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService, ICarritoService carritoService, IDireccionService direccionService, IPaymentService paymentService, IComprobantePdfService comprobantePdfService, IAppSettingsService appSettingsService, IEnvioQueryService envioQueryService, ILogger<PedidosController> logger)
         {
             _pedidoQueryService = pedidoQueryService;
             _pedidoCommandService = pedidoCommandService;
@@ -37,6 +40,7 @@ namespace TiendaOnline.Features.Pedidos
             _paymentService = paymentService;
             _comprobantePdfService = comprobantePdfService;
             _appSettingsService = appSettingsService;
+            _envioQueryService = envioQueryService;
             _logger = logger;
         }
 
@@ -201,6 +205,14 @@ namespace TiendaOnline.Features.Pedidos
             return RedirectToAction("Detalles", new { id });
         }
 
+        // Cotización en vivo para el front: el POST nunca define el precio, esto es solo display.
+        [HttpGet("[action]")]
+        public async Task<IActionResult> CotizarEnvio([FromQuery] string provincia)
+        {
+            var cotizacion = await _envioQueryService.CotizarEnvioAsync(provincia, HttpContext.RequestAborted);
+            return Ok(new { cotizacion.Costo, cotizacion.Permitida });
+        }
+
         [HttpGet("[action]")]
         public async Task<IActionResult> CheckOut()
         {
@@ -283,8 +295,27 @@ namespace TiendaOnline.Features.Pedidos
             }).ToList();
 
             model.SubTotal = model.Items.Sum(i => i.Precio * i.Cantidad);
-            // Falta asignar costo de envío según lógica de negocio
-            model.CostoEnvio = model.MetodoEntrega == MetodoEntrega.EnvioDomicilio ? 500 : 0;
+
+            // El costo de envío sale de la tabla de zonas (editable del panel); retiro local = $0.
+            model.CostoEnvio = 0;
+            if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio)
+            {
+                var provincia = await ObtenerProvinciaDeEntregaAsync(model);
+                if (!string.IsNullOrWhiteSpace(provincia))
+                {
+                    var cotizacion = await _envioQueryService.CotizarEnvioAsync(provincia, HttpContext.RequestAborted);
+                    if (cotizacion.Permitida)
+                    {
+                        model.CostoEnvio = cotizacion.Costo;
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("", $"No hacemos envíos a {provincia}. Elegí otra dirección o retirá en el local.");
+                    }
+                }
+                // Sin provincia aún (dirección incompleta): el costo queda en 0 y la
+                // validación de ModelState ya exige la dirección como antes.
+            }
 
             // Si es retiro en local, ignoramos la validación de la dirección
             if (model.MetodoEntrega == MetodoEntrega.RetiroLocal)
@@ -451,6 +482,20 @@ namespace TiendaOnline.Features.Pedidos
                 return RedirectToAction("CheckOut");
             }
 
+            // El precio nunca lo define el POST: el costo de envío se re-cotiza acá
+            // contra la zona y de este valor sale el Total del pedido que se cobra.
+            decimal costoEnvio = 0;
+            if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio)
+            {
+                var cotizacion = await _envioQueryService.CotizarEnvioAsync(model.Direccion?.Provincia, HttpContext.RequestAborted);
+                if (!cotizacion.Permitida)
+                {
+                    TempData["MensajeError"] = $"No hacemos envíos a {model.Direccion?.Provincia}. Vuelve al checkout y elegí retiro en el local u otra dirección.";
+                    return RedirectToAction("CheckOut");
+                }
+                costoEnvio = cotizacion.Costo;
+            }
+
             var dto = new CrearPedidoDto
             {
                 UsuarioId = usuarioId,
@@ -464,7 +509,7 @@ namespace TiendaOnline.Features.Pedidos
                 EnvioLocalidad = model.Direccion?.Localidad,
                 EnvioProvincia = model.Direccion?.Provincia,
                 EnvioCodigoPostal = model.Direccion?.CodigoPostal,
-                CostoEnvio = model.MetodoEntrega == MetodoEntrega.EnvioDomicilio ? 500 : 0,
+                CostoEnvio = costoEnvio,
                 Items = carritoItems.Select(i => new CrearPedidoDetalleDto
                 {
                     ProductoId = i.ProductoId,
@@ -532,6 +577,29 @@ namespace TiendaOnline.Features.Pedidos
                        : $"{i.Nombre} (quedan {i.StockDisponible})"))
                + ". Revisá tu carrito para ajustar cantidades.";
 
+        // Mensaje del front según el motivo con el que el pago no pudo confirmarse.
+        private static string MotivoPagoALegible(MotivoPago motivo) => motivo switch
+        {
+            MotivoPago.MontoNoCoincide => "Recibimos el pago con un monto distinto al del pedido. Contactanos para revisarlo.",
+            MotivoPago.StockInsuficiente => "El pago llegó, pero ya no hay stock del pedido. Contactanos para coordinar la solución.",
+            MotivoPago.PedidoNoEncontrado => "No encontramos el pedido asociado al pago. Contactanos para revisarlo.",
+            MotivoPago.PedidoVencido => "El pago llegó fuera del plazo del pedido. Contactanos para revisarlo.",
+            _ => "El pago llegó cuando el pedido ya estaba procesado. Si no coincide con lo que ves, contactanos."
+        };
+
+        // Provincia de la dirección de entrega: guardada (la leemos de la DB, no del POST)
+        // o nueva (la que el usuario completó en el formulario del checkout).
+        private async Task<string?> ObtenerProvinciaDeEntregaAsync(CheckOutViewModel model)
+        {
+            if (model.DireccionSeleccionadaId != null)
+            {
+                var dir = await _direccionService.ObtenerPorIdAsync(model.DireccionSeleccionadaId, HttpContext.RequestAborted);
+                return dir?.Provincia;
+            }
+
+            return model.NuevaDireccion?.Provincia;
+        }
+
         [Authorize(Policy = "EsDuenioDelPedido")]
         [HttpGet("[action]")]
         public async Task<IActionResult> PagoExitoso([FromQuery] string external_reference, [FromQuery] string payment_id)
@@ -542,15 +610,18 @@ namespace TiendaOnline.Features.Pedidos
                 var infoPago = await _paymentService.ObtenerDetallesPagoAsync(payment_id, HttpContext.RequestAborted);
                 if (infoPago != null && infoPago.Estado == "approved")
                 {
-                    var pagoConfirmado = await _pedidoCommandService.ConfirmarPagoAsync(infoPago, HttpContext.RequestAborted);
-                    if (pagoConfirmado)
+                    var resultadoPago = await _pedidoCommandService.ConfirmarPagoAsync(infoPago, HttpContext.RequestAborted);
+                    // Confirmado y YaConfirmado son las dos únicas salidas en las que el pago está aprobado acá.
+                    if (resultadoPago.Confirmado)
                     {
                         await _carritoService.VaciarAsync();
-                        TempData["MensajeExito"] = "¡Pago confirmado exitosamente!";
+                        TempData["MensajeExito"] = resultadoPago.Motivo == MotivoPago.YaConfirmado
+                            ? "Tu pago ya estaba confirmado."
+                            : "¡Pago confirmado exitosamente!";
                     }
                     else
                     {
-                        TempData["MensajeError"] = "El pago fue recibido, pero el pedido ya no pudo confirmarse automáticamente. Contactanos para revisarlo.";
+                        TempData["MensajeError"] = MotivoPagoALegible(resultadoPago.Motivo);
                     }
                 }
             }

@@ -88,7 +88,14 @@ namespace TiendaOnline.Features.Pagos
                     // Delegamos todo el procesamiento al servicio, que ya maneja los estados:
                     // approved, rejected, cancelled, refunded, etc.
                     var procesado = await _pedidoCommandService.ConfirmarPagoAsync(infoPago, HttpContext.RequestAborted);
-                    _logger.LogInformation("Webhook procesado para Pago {Id} con estado {Estado}. Resultado efectivo: {Procesado}.", finalId, infoPago.Estado, procesado);
+                    if (procesado.Confirmado)
+                    {
+                        _logger.LogInformation("Webhook efectivo para Pago {Id} con estado {Estado}. Motivo: {Motivo}.", finalId, infoPago.Estado, procesado.Motivo);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Webhook sin efecto para Pago {Id} con estado {Estado}. Motivo: {Motivo}.", finalId, infoPago.Estado, procesado.Motivo);
+                    }
                 }
             }
 

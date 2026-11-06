@@ -9,6 +9,7 @@ namespace TiendaOnline.Features.Shared
             new() { Controller = "AdminReportes", Action = "Dashboard", Icon = "bi-bar-chart-line", Text = "Reportes" },
             new() { Controller = "AdminProductos", Action = "Catalogo", Icon = "bi-box-seam", Text = "Productos" },
             new() { Controller = "AdminOfertas", Action = "Listado", Icon = "bi-percent", Text = "Ofertas" },
+            new() { Controller = "AdminEnvios", Action = "Listado", Icon = "bi-truck", Text = "Envíos" },
             new() { Controller = "Categorias", Action = "Listado", Icon = "bi-tags", Text = "Categorías" },            new() { Controller = "AdminUsuarios", Action = "Listado", Icon = "bi-people", Text = "Usuarios" }
         };
 

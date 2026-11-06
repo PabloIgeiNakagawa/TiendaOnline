@@ -7,6 +7,8 @@
 
     <form asp-action="ProcesarCheckout" method="post">
         @Html.AntiForgeryToken()
+        @* Errores de ModelState a nivel form: dirección faltante o zona de envío deshabilitada. *@
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0"></div>
         <div class="row">
             <div class="col-md-8">
                 <div class="card mb-4">
@@ -54,7 +56,7 @@
                                             <option value="">-- Cargar una nueva dirección --</option>
                                             @foreach (var dir in Model.DireccionesGuardadas)
                                             {
-                                                <option value="@dir.DireccionId">@dir.Etiqueta (@dir.Calle @dir.Numero)</option>
+                                                <option value="@dir.DireccionId" data-provincia="@dir.Provincia">@dir.Etiqueta (@dir.Calle @dir.Numero)</option>
                                             }
                                         }
                                     </select>

@@ -64,7 +64,14 @@
     function actualizarInterfaz() {
         if (radioEnvio && radioEnvio.checked) {
             seccionDir.classList.remove('d-none');
-            textoEnvio.innerText = "Calculando...";
+
+            // El costo lo cota el server contra la tabla de zonas: en vivo según la provincia.
+            const guardadaSeleccionada = selectDireccionGuardada?.selectedOptions[0];
+            if (guardadaSeleccionada?.dataset.provincia) {
+                cotizarEnvio(guardadaSeleccionada.dataset.provincia);
+            } else {
+                textoEnvio.innerText = "Elegí una provincia";
+            }
 
             if ($provincia && $provincia.options.length <= 1) {
                 cargarProvincias();
@@ -76,12 +83,33 @@
         validarEstadoBoton();
     }
 
+    // --- 2b. COTIZACIÓN EN VIVO (el precio real lo fija igual el server al finalizar) ---
+    async function cotizarEnvio(provincia) {
+        if (!textoEnvio) return;
+        textoEnvio.innerText = "Calculando...";
+        try {
+            const response = await fetch(`/Pedidos/CotizarEnvio?provincia=${encodeURIComponent(provincia)}`);
+            if (!response.ok) throw new Error("Error en servidor");
+
+            const data = await response.json();
+            textoEnvio.innerText = data.permitida
+                ? `$${data.costo.toFixed(2)}`
+                : "No llegamos a esta zona"; // Zona deshabilitada en el panel de envíos
+        } catch (error) {
+            console.error("Error al cotizar envío:", error);
+            textoEnvio.innerText = "A calcular";
+        }
+    }
+
     // --- 3. LÓGICA DE DIRECCIÓN GUARDADA ---
     if (selectDireccionGuardada) {
         selectDireccionGuardada.addEventListener('change', function () {
             if (this.value !== "") {
                 bloqueNuevaDireccion.classList.add('d-none');
-                limpiarCamposNuevaDireccion(); 
+                limpiarCamposNuevaDireccion();
+                if (radioEnvio && radioEnvio.checked) {
+                    cotizarEnvio(this.selectedOptions[0]?.dataset.provincia ?? "");
+                }
             } else {
                 bloqueNuevaDireccion.classList.remove('d-none');
             }
@@ -117,6 +145,10 @@
         $provincia.addEventListener("change", async function () {
             const valorElegido = this.value;
             if (!$localidad) return;
+
+            if (radioEnvio && radioEnvio.checked) {
+                cotizarEnvio(valorElegido);
+            }
 
             $localidad.innerHTML = '<option value="">Cargando localidades...</option>';
             $localidad.disabled = true;
