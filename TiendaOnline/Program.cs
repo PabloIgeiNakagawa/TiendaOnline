@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Extensions;
+using TiendaOnline.Filters;
 using TiendaOnline.Hangfire;
 using TiendaOnline.Infrastructure.Persistence;
 using Hangfire;
@@ -31,8 +32,9 @@ builder.Host.UseSerilog((context, loggerConfiguration) => loggerConfiguration
         rollOnFileSizeLimit: true,
         outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {SourceContext}: {Message:lj} {Properties:j}{NewLine}{Exception}"));
 
-// Busca las vistas en Features
-builder.Services.AddControllersWithViews().AddFeatureFolders();
+// Busca las vistas en Features. El filtro global traduce las DomainException no
+// manejadas a mensaje + redirect (ver Filters/DomainExceptionFilter).
+builder.Services.AddControllersWithViews(o => o.Filters.Add<DomainExceptionFilter>()).AddFeatureFolders();
 
 // HttpContext  
 builder.Services.AddHttpContextAccessor();

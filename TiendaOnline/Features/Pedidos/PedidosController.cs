@@ -11,6 +11,7 @@ using TiendaOnline.Application.Payment;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Application.Pedidos.Query;
 using TiendaOnline.Application.Usuarios.Common;
+using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Enums;
 
 namespace TiendaOnline.Features.Pedidos
@@ -183,10 +184,17 @@ namespace TiendaOnline.Features.Pedidos
                 _logger.LogInformation("Comprobante subido para el pedido {PedidoId}", id);
                 TempData["MensajeExito"] = "Comprobante recibido. Te avisamos cuando verifiquemos el pago.";
             }
+            catch (DomainException ex)
+            {
+                // Guard de dominio (pedido equivocado, comprobante repetido, etc.): mensaje curado del service.
+                _logger.LogWarning(ex, "No se pudo registrar el comprobante del pedido {PedidoId}: {Motivo}", id, ex.Message);
+                TempData["MensajeError"] = ex.Message;
+                return RedirectToAction("Instrucciones", new { id });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fallo la subida del comprobante del pedido {PedidoId}", id);
-                TempData["MensajeError"] = ex.Message;
+                TempData["MensajeError"] = "No pudimos subir el comprobante. Intentá de nuevo en unos minutos.";
                 return RedirectToAction("Instrucciones", new { id });
             }
 
@@ -196,6 +204,22 @@ namespace TiendaOnline.Features.Pedidos
         [HttpGet("[action]")]
         public async Task<IActionResult> CheckOut()
         {
+            // Validamos ANTES de leer el carrito: ValidarStock refresca precio y stock
+            // contra la BD; si algo cambió, avisamos y volvemos al carrito.
+            var validacion = await _carritoService.ValidarStockAsync(HttpContext.RequestAborted);
+            if (validacion.IsFailure)
+            {
+                TempData["MensajeError"] = "No pudimos validar tu carrito. Probá de nuevo.";
+                return RedirectToAction("Index", "Carritos");
+            }
+
+            if (!validacion.Value.TodoOK)
+            {
+                TempData["MensajeError"] = ArmarMensajeStockInsuficiente(validacion.Value.ItemsSinStock);
+                return RedirectToAction("Index", "Carritos");
+            }
+
+            // Recién acá leemos el carrito YA refrescado: subtotal con el precio vigente
             var items = await _carritoService.ObtenerAsync();
 
             if (items == null || items.Count == 0)
@@ -400,6 +424,24 @@ namespace TiendaOnline.Features.Pedidos
                 return RedirectToAction("CheckOut");
             }
 
+            // Última barrera antes de cobrar: stock y precio recién refrescados contra BD
+            // (el POST no confía en lo que le llegó). Si algo no aguanta, al carrito.
+            var validacion = await _carritoService.ValidarStockAsync(HttpContext.RequestAborted);
+            if (validacion.IsFailure)
+            {
+                TempData["MensajeError"] = "No pudimos validar tu carrito. Probá de nuevo.";
+                return RedirectToAction("Index", "Carritos");
+            }
+
+            if (!validacion.Value.TodoOK)
+            {
+                TempData["MensajeError"] = ArmarMensajeStockInsuficiente(validacion.Value.ItemsSinStock);
+                return RedirectToAction("Index", "Carritos");
+            }
+
+            // Releemos el carrito YA refrescado por la validación (precio vigente)
+            carritoItems = await _carritoService.ObtenerAsync();
+
             // Para envío a domicilio, la dirección es obligatoria
             if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio && model.Direccion == null)
             {
@@ -463,13 +505,30 @@ namespace TiendaOnline.Features.Pedidos
                 TempData["MensajeExito"] = "¡Pedido realizado con éxito!";
                 return RedirectToAction("Instrucciones", new { id = pedido.PedidoId });
             }
-            catch (Exception ex)
+            catch (DomainException ex)
             {
-                _logger.LogError(ex, "Fallo el checkout para el usuario {UsuarioId}", usuarioId);
+                // Guard de dominio (estado inválido, producto inexistente, etc.): mensaje curado del service.
+                _logger.LogWarning(ex, "Checkout rechazado por reglas de negocio (usuario {UsuarioId}): {Motivo}", usuarioId, ex.Message);
                 TempData["MensajeError"] = ex.Message;
                 return RedirectToAction("Index", "Carritos");
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fallo el checkout para el usuario {UsuarioId}", usuarioId);
+                TempData["MensajeError"] = "No pudimos generar el pedido. Revisá tu carrito e intentá de nuevo.";
+                return RedirectToAction("Index", "Carritos");
+            }
         }
+
+        // Mensaje único para TempData: lista los productos con stock insuficiente y cuánto quedó.
+        private static string ArmarMensajeStockInsuficiente(List<StockInsuficienteDto> itemsSinStock)
+            => "Hay productos con stock insuficiente: "
+               + string.Join(
+                   ", ",
+                   itemsSinStock.Select(i => i.StockDisponible == 0
+                       ? $"{i.Nombre} (sin stock)"
+                       : $"{i.Nombre} (quedan {i.StockDisponible})"))
+               + ". Revisá tu carrito para ajustar cantidades.";
 
         [Authorize(Policy = "EsDuenioDelPedido")]
         [HttpGet("[action]")]

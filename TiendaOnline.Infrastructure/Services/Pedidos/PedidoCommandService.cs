@@ -8,6 +8,7 @@ using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Application.Payment;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Infrastructure.Services.Pedidos
@@ -359,21 +360,21 @@ public class PedidoCommandService : IPedidoCommandService
         public async Task<string> GuardarComprobanteAsync(int pedidoId, Stream archivo, string nombreArchivo, CancellationToken ct = default)
         {
             var pedido = await _context.Pedidos.FindAsync(pedidoId, ct);
-            if (pedido == null) throw new Exception("No se encontró el pedido.");
+            if (pedido == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
 
             if (pedido.MetodoDePagoId != MetodoPagoTransferenciaId)
-                throw new Exception("Este pedido no paga por transferencia bancaria.");
+                throw new ComprobanteNoValidoException("Este pedido no paga por transferencia bancaria.");
 
             if (pedido.Estado != EstadoPedido.Nuevo || pedido.EstadoPago != EstadoPago.Pendiente)
-                throw new Exception("El pedido ya no está esperando el comprobante.");
+                throw new ComprobanteNoValidoException("El pedido ya no está esperando el comprobante.");
 
             if (!string.IsNullOrEmpty(pedido.ComprobanteUrl))
-                throw new Exception("Ya se subió un comprobante para este pedido.");
+                throw new ComprobanteNoValidoException("Ya se subió un comprobante para este pedido.");
 
             // Primero Cloudinary: si la subida falla no queda ningún cambio en la base.
             var url = await _imagenService.SubirComprobanteAsync(archivo, nombreArchivo, ct);
             if (string.IsNullOrEmpty(url))
-                throw new Exception("No se pudo subir el comprobante. Verificá el archivo e intentá de nuevo.");
+                throw new ComprobanteNoValidoException("No se pudo subir el comprobante. Verificá el archivo e intentá de nuevo.");
 
             pedido.ComprobanteUrl = url;
             pedido.FechaComprobante = DateTime.Now;
@@ -407,27 +408,27 @@ public class PedidoCommandService : IPedidoCommandService
                         .ThenInclude(d => d.Producto)
                     .FirstOrDefaultAsync(p => p.PedidoId == pedidoId, ct);
 
-                if (pedido == null) throw new Exception("No se encontró el pedido.");
+                if (pedido == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
 
                 if (pedido.MetodoDePagoId != MetodoPagoTransferenciaId)
-                    throw new Exception("Este pedido no paga por transferencia bancaria.");
+                    throw new ComprobanteNoValidoException("Este pedido no paga por transferencia bancaria.");
 
                 if (pedido.EstadoPago == EstadoPago.Aprobado)
-                    throw new Exception("El pago de este pedido ya está aprobado.");
+                    throw new PedidoNoCancelableException("El pago de este pedido ya está aprobado.");
 
                 if (pedido.Estado == EstadoPedido.Cancelado)
-                    throw new Exception("El pedido está cancelado: no se puede aprobar el pago.");
+                    throw new PedidoNoCancelableException("El pedido está cancelado: no se puede aprobar el pago.");
 
                 if (pedido.EstaVencido())
-                    throw new Exception("El pedido venció por falta de pago. Cancelalo pedile que vuelva a comprar.");
+                    throw new PedidoNoCancelableException("El pedido venció por falta de pago. Cancelalo pedile que vuelva a comprar.");
 
                 if (string.IsNullOrEmpty(pedido.ComprobanteUrl))
-                    throw new Exception("El pedido no tiene comprobante adjuntado todavía.");
+                    throw new ComprobanteNoValidoException("El pedido no tiene comprobante adjuntado todavía.");
 
                 // Misma maquinaria que la aprobación de Mercado Pago: reserva + movimientos de salida.
                 var reservaStockExitosa = await IntentarReservarStockAsync(pedido, ct);
                 if (!reservaStockExitosa)
-                    throw new Exception("Stock insuficiente para aprobar el pedido. Revisá el stock y avisale al cliente.");
+                    throw new StockInsuficienteException("Stock insuficiente para aprobar el pedido. Revisá el stock y avisale al cliente.");
 
                 foreach (var detalle in pedido.DetallesPedido.Where(d => d.Producto != null))
                 {
@@ -475,19 +476,19 @@ public class PedidoCommandService : IPedidoCommandService
                 .Include(p => p.DetallesPedido)
                 .FirstOrDefaultAsync(p => p.PedidoId == pedidoId, ct);
 
-            if (pedido == null) throw new Exception("No se encontró el pedido.");
+            if (pedido == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
 
             if (pedido.MetodoDePagoId != MetodoPagoTransferenciaId)
-                throw new Exception("Este pedido no paga por transferencia bancaria.");
+                throw new ComprobanteNoValidoException("Este pedido no paga por transferencia bancaria.");
 
             if (pedido.Estado == EstadoPedido.Cancelado)
-                throw new Exception("El pedido ya está cancelado.");
+                throw new PedidoNoCancelableException("El pedido ya está cancelado.");
 
             if (pedido.EstadoPago != EstadoPago.Pendiente)
-                throw new Exception("El pedido ya no está esperando verificación de comprobante.");
+                throw new PedidoNoCancelableException("El pedido ya no está esperando verificación de comprobante.");
 
             if (string.IsNullOrEmpty(pedido.ComprobanteUrl))
-                throw new Exception("El pedido no tiene comprobante. Para darlo de baja sin comprobante usá el botón Cancelar.");
+                throw new ComprobanteNoValidoException("El pedido no tiene comprobante. Para darlo de baja sin comprobante usá el botón Cancelar.");
 
             pedido.EstadoPago = EstadoPago.Rechazado;
             pedido.Estado = EstadoPedido.Cancelado;
@@ -536,10 +537,10 @@ public class PedidoCommandService : IPedidoCommandService
 
             // Solo permitimos reintentar si el pedido sigue pendiente
             if (pedido.EstadoPago == EstadoPago.Aprobado)
-                throw new Exception("Este pedido ya ha sido pagado.");
+                throw new PedidoNoCancelableException("Este pedido ya ha sido pagado.");
 
             if (pedido.Estado == EstadoPedido.Cancelado || pedido.EstaVencido())
-                throw new Exception("Este pedido ya no admite nuevos intentos de pago.");
+                throw new PedidoNoCancelableException("Este pedido ya no admite nuevos intentos de pago.");
 
             return new PedidoPagoDto
             {
@@ -557,10 +558,10 @@ public class PedidoCommandService : IPedidoCommandService
         public async Task PedidoEnviadoAsync(int pedidoId, CancellationToken ct = default)
         {
             var pedido = await _context.Pedidos.FindAsync(pedidoId, ct);
-            if (pedido == null) throw new Exception("Pedido no encontrado.");
+            if (pedido == null) throw new PedidoNoEncontradoException("Pedido no encontrado.");
 
             if (pedido.Estado != EstadoPedido.EnPreparacion)
-                throw new Exception("El pedido no se puede enviar porque no está en estado Pendiente (Estado actual: " + pedido.Estado + ")");
+                throw new PedidoNoCancelableException("El pedido no se puede enviar porque no está en preparación (Estado actual: " + pedido.Estado + ").");
 
             pedido.Estado = EstadoPedido.Enviado;
             pedido.FechaEnvio = DateTime.Now;
@@ -571,10 +572,10 @@ public class PedidoCommandService : IPedidoCommandService
         public async Task PedidoEntregadoAsync(int pedidoId, CancellationToken ct = default)
         {
             var pedido = await _context.Pedidos.FindAsync(pedidoId, ct);
-            if (pedido == null) throw new Exception("Pedido no encontrado.");
+            if (pedido == null) throw new PedidoNoEncontradoException("Pedido no encontrado.");
 
             if (pedido.Estado != EstadoPedido.Enviado)
-                throw new Exception($"No se puede entregar: el pedido aún figura como {pedido.Estado}.");
+                throw new PedidoNoCancelableException($"No se puede entregar: el pedido aún figura como {pedido.Estado}.");
 
             pedido.Estado = EstadoPedido.Entregado;
             pedido.FechaEntrega = DateTime.Now;
@@ -594,17 +595,17 @@ public class PedidoCommandService : IPedidoCommandService
                         .ThenInclude(dp => dp.Producto) // Traemos el producto para devolverle el stock
                     .FirstOrDefaultAsync(p => p.PedidoId == pedidoId, ct);
 
-                if (pedido == null) throw new Exception("Pedido no encontrado.");
+                if (pedido == null) throw new PedidoNoEncontradoException("Pedido no encontrado.");
 
                 // Validaciones de negocio
                 if (pedido.Estado == EstadoPedido.Cancelado)
-                    throw new Exception("El pedido ya estaba cancelado.");
+                    throw new PedidoNoCancelableException("El pedido ya estaba cancelado.");
 
                 if (pedido.Estado == EstadoPedido.Entregado)
-                    throw new Exception("No se puede cancelar un pedido que ya ha sido entregado.");
+                    throw new PedidoNoCancelableException("No se puede cancelar un pedido que ya ha sido entregado.");
 
                 if (pedido.Estado == EstadoPedido.Enviado)
-                    throw new Exception("El pedido ya fue enviado, debe procesarse como devolución.");
+                    throw new PedidoNoCancelableException("El pedido ya fue enviado, debe procesarse como devolución.");
 
                 var debeDevolverStock = pedido.EstadoPago == EstadoPago.Aprobado || pedido.EstadoPago == EstadoPago.Reembolsado;
 

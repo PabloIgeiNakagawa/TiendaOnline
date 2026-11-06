@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using TiendaOnline.Application.Pedidos.Command;
 using TiendaOnline.Application.Pedidos.Query;
+using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Enums;
 using TiendaOnline.Extensions;
 
@@ -118,10 +119,16 @@ namespace TiendaOnline.Features.Pedidos.Admin
                 _logger.LogInformation("Pago por transferencia aprobado para el pedido {PedidoId} por {Admin}", pedidoId, User.FindFirstValue(ClaimTypes.Email));
                 TempData["MensajeExito"] = "Pago aprobado: el pedido pasó a preparación";
             }
+            catch (DomainException ex)
+            {
+                // Guard de dominio: mensaje curado para el admin (sin comprobante, ya aprobado, vencido...).
+                _logger.LogWarning("No se pudo aprobar el pago por transferencia del pedido {PedidoId}: {Motivo}", pedidoId, ex.Message);
+                TempData["MensajeError"] = ex.Message;
+            }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "No se pudo aprobar el pago por transferencia del pedido {PedidoId}", pedidoId);
-                TempData["MensajeError"] = ex.Message;
+                _logger.LogError(ex, "Fallo inesperado al aprobar el pago por transferencia del pedido {PedidoId}", pedidoId);
+                TempData["MensajeError"] = "No se pudo aprobar el pago. Revisá el detalle del pedido e intentá de nuevo.";
             }
 
             return RedirectToAction("Listado");
@@ -142,10 +149,16 @@ namespace TiendaOnline.Features.Pedidos.Admin
                 _logger.LogInformation("Comprobante rechazado del pedido {PedidoId} por {Admin} (pedido cancelado y cliente notificado)", pedidoId, User.FindFirstValue(ClaimTypes.Email));
                 TempData["MensajeExito"] = "Comprobante rechazado: pedido cancelado y cliente notificado";
             }
+            catch (DomainException ex)
+            {
+                // Guard de dominio: mensaje curado para el admin (ya cancelado, sin comprobante...).
+                _logger.LogWarning("No se pudo rechazar el comprobante del pedido {PedidoId}: {Motivo}", pedidoId, ex.Message);
+                TempData["MensajeError"] = ex.Message;
+            }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "No se pudo rechazar el comprobante del pedido {PedidoId}", pedidoId);
-                TempData["MensajeError"] = ex.Message;
+                _logger.LogError(ex, "Fallo inesperado al rechazar el comprobante del pedido {PedidoId}", pedidoId);
+                TempData["MensajeError"] = "No se pudo rechazar el comprobante. Revisá el detalle del pedido e intentá de nuevo.";
             }
 
             return RedirectToAction("Listado");

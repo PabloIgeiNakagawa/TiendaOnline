@@ -124,6 +124,10 @@ namespace TiendaOnline.Infrastructure.Services.Carritos
                 }
 
                 item.StockDisponible = producto.Stock;
+                // El precio del carrito es un snapshot del momento en que se agregó:
+                // lo refrescamos contra BD para que el subtotal que ve el cliente sea el
+                // vigente (el cobro real lo recalcula igual CrearPedidoYPrepararPagoAsync).
+                item.Precio = producto.Precio;
             }
 
             await _storage.GuardarAsync(carrito);
