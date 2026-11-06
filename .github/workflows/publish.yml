@@ -46,19 +46,26 @@ jobs:
       - name: 3. Restaurar paquetes NuGet
         run: dotnet restore
 
+      # libman: wwwroot/lib ya no va al repo; se baja bootstrap/jQuery del CDN
+      # antes de publicar (sin restore el sitio queda sin CSS/JS).
+      - name: 4. Restaurar librerías del front (libman)
+        working-directory: TiendaOnline
+        shell: pwsh
+        run: dotnet tool install -g Microsoft.Web.LibraryManager.Cli; libman restore
+
       # Gate: si los tests no pasan, no se publica ni se sube nada al servidor.
       # En Release: valida además que el código compila con la misma config del publish.
-      - name: 4. Ejecutar tests
+      - name: 5. Ejecutar tests
         run: dotnet test --no-restore --configuration Release --verbosity minimal
 
       # Solo el proyecto web, no la sln (las DLLs de tests no van a producción).
       # Framework-dependent (self-contained false): el runtime lo provee el server.
       # Si algún día devuelve HTTP 500.30 por falta de runtime .NET 10, cambiar a
       # --self-contained true y el paquete lleva el runtime adentro.
-      - name: 5. Publicar la app web
+      - name: 6. Publicar la app web
         run: dotnet publish TiendaOnline/TiendaOnline.csproj --configuration Release --self-contained false --output ./publish --runtime win-x86
 
-      - name: 6. Deploy a MonsterASP.NET vía Web Deploy
+      - name: 7. Deploy a MonsterASP.NET vía Web Deploy
         uses: rasmusbuchholdt/simply-web-deploy@2.1.0
         with:
           website-name: ${{ secrets.WEBSITE_NAME }}

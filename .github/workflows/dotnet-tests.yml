@@ -26,11 +26,15 @@ jobs:
     - name: 3. Restaurar paquetes NuGet
       run: dotnet restore
 
-    - name: 4. Formato (dotnet format)
+    - name: 4. Restaurar librerías del front (libman)
+      working-directory: TiendaOnline
+      run: dotnet tool install -g Microsoft.Web.LibraryManager.Cli > /dev/null && libman restore
+
+    - name: 5. Formato (dotnet format)
       run: dotnet format --verify-no-changes
 
-    - name: 5. Compilar proyecto
+    - name: 6. Compilar proyecto
       run: dotnet build --no-restore
 
-    - name: 6. Ejecutar Tests
+    - name: 7. Ejecutar Tests
       run: dotnet test --no-build --verbosity normal

@@ -17,3 +17,6 @@ obj/
 # Docs internos (notas del proyecto; no se publican)
 *.md
 !README.md
+
+# Librerías client-side: se restauran con libman (TiendaOnline/libman.json), no van al repo
+TiendaOnline/wwwroot/lib/
