@@ -26,8 +26,11 @@ jobs:
     - name: 3. Restaurar paquetes NuGet
       run: dotnet restore
 
-    - name: 4. Compilar proyecto
+    - name: 4. Formato (dotnet format)
+      run: dotnet format --verify-no-changes
+
+    - name: 5. Compilar proyecto
       run: dotnet build --no-restore
 
-    - name: 5. Ejecutar Tests
+    - name: 6. Ejecutar Tests
       run: dotnet test --no-build --verbosity normal

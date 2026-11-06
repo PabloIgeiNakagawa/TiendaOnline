@@ -47,8 +47,9 @@ jobs:
         run: dotnet restore
 
       # Gate: si los tests no pasan, no se publica ni se sube nada al servidor.
+      # En Release: valida además que el código compila con la misma config del publish.
       - name: 4. Ejecutar tests
-        run: dotnet test --no-restore --verbosity minimal
+        run: dotnet test --no-restore --configuration Release --verbosity minimal
 
       # Solo el proyecto web, no la sln (las DLLs de tests no van a producción).
       # Framework-dependent (self-contained false): el runtime lo provee el server.
