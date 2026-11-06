@@ -144,17 +144,37 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                     p.Categoria.CategoriaPadreId == request.CategoriaId);
             }
 
+            // El orden "precio asc/desc" y los filtros de precio corren sobre el PRECIO
+            // EFECTIVO (mejor oferta vigente ?? lista): la misma regla con la que se
+            // cobra y el número que ve el cliente en la tarjeta. La subquery correlacionada
+            // traduce igual en SQL Server y en SQLite (los tests corren contra la DB real).
+            var ahora = DateTime.Now;
+
             if (request.PrecioMin.HasValue)
-                query = query.Where(p => p.Precio >= request.PrecioMin.Value);
+                query = query.Where(p =>
+                    (_context.OfertasProducto
+                        .Where(o => o.ProductoId == p.ProductoId && o.Activa && o.FechaInicio <= ahora && o.FechaFin >= ahora)
+                        .Min(o => (decimal?)o.PrecioOferta) ?? p.Precio)
+                    >= request.PrecioMin.Value);
 
             if (request.PrecioMax.HasValue)
-                query = query.Where(p => p.Precio <= request.PrecioMax.Value);
+                query = query.Where(p =>
+                    (_context.OfertasProducto
+                        .Where(o => o.ProductoId == p.ProductoId && o.Activa && o.FechaInicio <= ahora && o.FechaFin >= ahora)
+                        .Min(o => (decimal?)o.PrecioOferta) ?? p.Precio)
+                    <= request.PrecioMax.Value);
 
             // Orden
             query = request.Orden switch
             {
-                "precio-asc" => query.OrderBy(p => p.Precio),
-                "precio-desc" => query.OrderByDescending(p => p.Precio),
+                "precio-asc" => query.OrderBy(p =>
+                    _context.OfertasProducto
+                        .Where(o => o.ProductoId == p.ProductoId && o.Activa && o.FechaInicio <= ahora && o.FechaFin >= ahora)
+                        .Min(o => (decimal?)o.PrecioOferta) ?? p.Precio),
+                "precio-desc" => query.OrderByDescending(p =>
+                    _context.OfertasProducto
+                        .Where(o => o.ProductoId == p.ProductoId && o.Activa && o.FechaInicio <= ahora && o.FechaFin >= ahora)
+                        .Min(o => (decimal?)o.PrecioOferta) ?? p.Precio),
                 _ => query.OrderBy(p => p.Nombre)
             };
 

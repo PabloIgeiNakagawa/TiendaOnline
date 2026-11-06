@@ -63,5 +63,57 @@ namespace TiendaOnline.Infrastructure.Persistence
             }
             context.SaveChanges();
         }
+
+        // Las 24 provincias con el mismo nombre que devuelve la API georef (getProvincias),
+        // que es la fuente del select del formulario de dirección: así la zona matchea con
+        // lo que el cliente eligió sin normalizaciones raras.
+        private static readonly List<string> ProvinciasArgentina = new()
+        {
+            "Buenos Aires",
+            "Ciudad Autónoma de Buenos Aires",
+            "Catamarca",
+            "Chaco",
+            "Chubut",
+            "Córdoba",
+            "Corrientes",
+            "Entre Ríos",
+            "Formosa",
+            "Jujuy",
+            "La Pampa",
+            "La Rioja",
+            "Mendoza",
+            "Misiones",
+            "Neuquén",
+            "Río Negro",
+            "Salta",
+            "San Juan",
+            "San Luis",
+            "Santa Cruz",
+            "Santa Fe",
+            "Santiago del Estero",
+            "Tierra del Fuego, Antártida e Islas del Atlántico Sur",
+            "Tucumán"
+        };
+
+        // Arranca coincidiendo con el costo que acababa hardcodeado en el checkout,
+        // así que el deploy no cambia nada hasta que el admin toque los precios.
+        public const decimal CostoEnvioInicial = 500m;
+
+        public static void SeedZonasEnvio(TiendaContext context)
+        {
+            if (context.ZonasEnvio.Any())
+                return;
+
+            foreach (var provincia in ProvinciasArgentina)
+            {
+                context.ZonasEnvio.Add(new ZonaEnvio
+                {
+                    Provincia = provincia,
+                    Costo = CostoEnvioInicial,
+                    Activa = true
+                });
+            }
+            context.SaveChanges();
+        }
     }
 }

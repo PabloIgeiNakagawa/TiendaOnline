@@ -508,6 +508,34 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                     b.ToTable("Usuarios");
                 });
 
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.ZonaEnvio", b =>
+                {
+                    b.Property<int>("ZonaEnvioId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ZonaEnvioId"));
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("Costo")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Provincia")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.HasKey("ZonaEnvioId");
+
+                    b.HasIndex("Provincia")
+                        .IsUnique();
+
+                    b.ToTable("ZonasEnvio", (string)null);
+                });
+
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Auditoria", b =>
                 {
                     b.HasOne("TiendaOnline.Domain.Entities.Usuario", "Usuario")

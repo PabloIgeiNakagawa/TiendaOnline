@@ -174,6 +174,7 @@ namespace TiendaOnline.Infrastructure.Persistence
         public DbSet<Categoria> Categorias { get; set; }
         public DbSet<MovimientoStock> MovimientosStock { get; set; }
         public DbSet<OfertaProducto> OfertasProducto { get; set; }
+        public DbSet<ZonaEnvio> ZonasEnvio { get; set; }
         public DbSet<AppSetting> AppSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -272,6 +273,18 @@ namespace TiendaOnline.Infrastructure.Persistence
                       .WithMany(p => p.Ofertas)
                       .HasForeignKey(d => d.ProductoId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configuración de ZonaEnvio: una tarifa por provincia (el seed la completa con las 24).
+            modelBuilder.Entity<ZonaEnvio>(entity =>
+            {
+                entity.ToTable("ZonasEnvio");
+
+                entity.Property(z => z.Costo)
+                      .HasPrecision(18, 2);
+
+                entity.HasIndex(z => z.Provincia)
+                      .IsUnique();
             });
 
             base.OnModelCreating(modelBuilder);

@@ -8,6 +8,7 @@ using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Application.Ofertas;
 using TiendaOnline.Application.Payment;
 using TiendaOnline.Application.Pedidos.Command;
+using TiendaOnline.Application.Pedidos.Common;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Infrastructure.Persistence;
@@ -140,7 +141,7 @@ public class PedidoCommandService : IPedidoCommandService
             }
         }
 
-        public async Task<bool> ConfirmarPagoAsync(InfoPagoDto infoPago, CancellationToken ct = default)
+        public async Task<ResultadoPago> ConfirmarPagoAsync(InfoPagoDto infoPago, CancellationToken ct = default)
         {
             using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
@@ -156,7 +157,7 @@ public class PedidoCommandService : IPedidoCommandService
                 if (pedido == null)
                 {
                     _logger.LogWarning("No se encontró el pedido {PedidoId} para confirmar pago.", infoPago.PedidoId);
-                    return false;
+                    return ResultadoPago.Fallo(MotivoPago.PedidoNoEncontrado);
                 }
 
                 // Calculamos el total real (Subtotal + Envío) con precisión decimal
@@ -170,7 +171,7 @@ public class PedidoCommandService : IPedidoCommandService
                 {
                     _logger.LogWarning("Mismatch de montos en pedido {PedidoId}. MP: {MontoMP}, Sistema: {MontoSistema} (Subtotal: {Subtotal}, Envío: {Envio}), TransaccionId: {TransaccionId}",
                         infoPago.PedidoId, infoPago.MontoPagado, totalCalculado, subtotal, pedido.CostoEnvio, infoPago.TransaccionId);
-                    return false;
+                    return ResultadoPago.Fallo(MotivoPago.MontoNoCoincide);
                 }
 
                 bool resultadoEfectivo = false;
@@ -184,33 +185,32 @@ public class PedidoCommandService : IPedidoCommandService
                         if (pedido.EstadoPago == EstadoPago.Aprobado)
                         {
                             _logger.LogInformation("El pedido {PedidoId} ya estaba aprobado. Ignorando.", infoPago.PedidoId);
-                            return false;
+                            return ResultadoPago.ExitoYaConfirmado();
                         }
-
                         if (pedidoVencido)
                         {
                             _logger.LogWarning("El pedido {PedidoId} ya venció. Ignorando aprobación tardía. Transacción: {TransaccionId}",
                                 infoPago.PedidoId, infoPago.TransaccionId);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.PedidoVencido);
                         }
 
                         if (pedido.Estado == EstadoPedido.Cancelado)
                         {
                             _logger.LogInformation("El pedido {PedidoId} ya estaba cancelado. Ignorando aprobación tardía.", infoPago.PedidoId);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
                         }
 
                         if (pedido.EstadoPago == EstadoPago.Reembolsado)
                         {
                             _logger.LogInformation("El pedido {PedidoId} ya estaba reembolsado. Ignorando aprobación tardía.", infoPago.PedidoId);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
                         }
 
                         var reservaStockExitosa = await IntentarReservarStockAsync(pedido, ct);
                         if (!reservaStockExitosa)
                         {
                             await transaction.RollbackAsync(ct);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.StockInsuficiente);
                         }
 
                         foreach (var detalle in pedido.DetallesPedido.Where(d => d.Producto != null))
@@ -237,25 +237,25 @@ public class PedidoCommandService : IPedidoCommandService
                         if (pedido.Estado == EstadoPedido.Cancelado)
                         {
                             _logger.LogInformation("El pedido {PedidoId} ya estaba cancelado. Ignorando rechazo posterior.", infoPago.PedidoId);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
                         }
 
                         if (pedido.EstadoPago == EstadoPago.Rechazado)
                         {
                             _logger.LogInformation("El pedido {PedidoId} ya estaba rechazado. Ignorando.", infoPago.PedidoId);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
                         }
 
                         if (pedido.EstadoPago == EstadoPago.Reembolsado)
                         {
                             _logger.LogInformation("El pedido {PedidoId} ya estaba reembolsado. Ignorando rechazo posterior.", infoPago.PedidoId);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
                         }
 
                         if (pedido.EstadoPago == EstadoPago.Aprobado)
                         {
                             _logger.LogInformation("El pedido {PedidoId} ya estaba aprobado. Ignorando rechazo posterior.", infoPago.PedidoId);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
                         }
 
                         pedido.EstadoPago = EstadoPago.Rechazado;
@@ -268,19 +268,19 @@ public class PedidoCommandService : IPedidoCommandService
                         if (pedido.Estado == EstadoPedido.Cancelado)
                         {
                             _logger.LogInformation("El pedido {PedidoId} ya estaba cancelado. Ignorando.", infoPago.PedidoId);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
                         }
 
                         if (pedido.EstadoPago == EstadoPago.Reembolsado)
                         {
                             _logger.LogInformation("El pedido {PedidoId} ya estaba reembolsado. Ignorando cancelación posterior.", infoPago.PedidoId);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
                         }
 
                         if (pedido.EstadoPago == EstadoPago.Aprobado)
                         {
                             _logger.LogInformation("El pedido {PedidoId} ya estaba aprobado. Ignorando cancelación posterior.", infoPago.PedidoId);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
                         }
 
                         pedido.EstadoPago = EstadoPago.Rechazado;
@@ -296,13 +296,13 @@ public class PedidoCommandService : IPedidoCommandService
                         if (pedido.EstadoPago == EstadoPago.Reembolsado)
                         {
                             _logger.LogInformation("El pedido {PedidoId} ya estaba reembolsado. Ignorando.", infoPago.PedidoId);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
                         }
 
                         if (pedido.EstadoPago != EstadoPago.Aprobado)
                         {
                             _logger.LogInformation("El pedido {PedidoId} no estaba aprobado. Ignorando reembolso para estado {EstadoPago}.", infoPago.PedidoId, pedido.EstadoPago);
-                            return false;
+                            return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
                         }
 
                         pedido.EstadoPago = EstadoPago.Reembolsado;
@@ -314,7 +314,8 @@ public class PedidoCommandService : IPedidoCommandService
 
                 if (!resultadoEfectivo)
                 {
-                    return false;
+                    // Estado de MP no mapeado a una transición (o señal vacía): no se toca nada.
+                    return ResultadoPago.Fallo(MotivoPago.EstadoNoManejado);
                 }
 
                 await _context.SaveChangesAsync(ct);
@@ -352,7 +353,7 @@ public class PedidoCommandService : IPedidoCommandService
 
                 _logger.LogInformation("Pedido {PedidoId} procesado con estado MP: {Estado}. Transacción: {TransaccionId}",
                     infoPago.PedidoId, estadoNormalizado, infoPago.TransaccionId);
-                return true;
+                return ResultadoPago.Exito();
             }
             catch (Exception ex)
             {
