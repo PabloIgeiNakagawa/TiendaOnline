@@ -20,8 +20,8 @@ Directory.CreateDirectory(carpetaLogs);
 builder.Host.UseSerilog((context, loggerConfiguration) => loggerConfiguration
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning) // apaga el ruido por-request de ASP.NET/EF (incluye SQL con parámetros)
-    // El webhook de MercadoPago registra la consulta cruda (payload, firma) solo en Debug:
-    // nunca datos sensibles de terceros en el archivo de producción.
+                                                               // El webhook de MercadoPago registra la consulta cruda (payload, firma) solo en Debug:
+                                                               // nunca datos sensibles de terceros en el archivo de producción.
     .MinimumLevel.Override("TiendaOnline.Features.Pagos.PagosWebhookController", LogEventLevel.Debug)
     .Enrich.FromLogContext()
     .WriteTo.File(
@@ -150,12 +150,7 @@ catch (Exception ex)
     app.Logger.LogError(ex, "No se pudo registrar el job 'cancelar-pedidos-vencidos' (DB no disponible al arrancar). Se re-registra en el próximo boot.");
 }
 
-// 1. Ruta para áreas (Primero)
-app.MapControllerRoute(
-    name: "MyAreas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-
-// 2. Ruta por defecto (Segundo)
+// Ruta por defecto
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

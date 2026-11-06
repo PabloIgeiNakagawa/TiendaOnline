@@ -68,19 +68,6 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
         {
             return await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
         }
-        public async Task EditarUsuarioAsync(UsuarioUpdateDto dto, CancellationToken ct = default)
-        {
-            var usuario = await _context.Usuarios
-                        .FirstOrDefaultAsync(u => u.UsuarioId == dto.UsuarioId, ct);
-
-            if (usuario == null) throw new KeyNotFoundException($"No se encontró el usuario con ID {dto.UsuarioId}");
-
-            usuario.Nombre = dto.Nombre;
-            usuario.Apellido = dto.Apellido;
-            usuario.Telefono = dto.Telefono;
-
-            await _context.SaveChangesAsync(ct);
-        }
 
         public async Task<PagedResult<UsuarioListadoDto>> ObtenerUsuariosPaginadosAsync(int pagina, int cantidad, string? buscar, string? rol, bool? activo, CancellationToken ct = default)
         {
