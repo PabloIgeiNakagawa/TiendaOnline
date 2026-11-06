@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Payment;
+using TiendaOnline.Application.Pedidos.Common;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Tests.TestSupport;
 
@@ -7,7 +8,8 @@ namespace TiendaOnline.Tests.Services.Pedidos
 {
     /// <summary>
     /// Tests de ConfirmarPagoAsync: el corazón del flujo de dinero.
-    /// Idempotencia, integridad de montos, reserva de stock y estados.
+    /// Idempotencia, integridad de montos, reserva de stock y estados,
+    /// siempre con el motivo tipado del resultado (no basta el bool).
     /// </summary>
     public class PedidoCommandServiceConfirmarPagoTests
     {
@@ -19,7 +21,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         // ------------------------------------------------------------------
 
         [Fact]
-        public async Task ConfirmarPago_PedidoInexistente_RetornaFalse()
+        public async Task ConfirmarPago_PedidoInexistente_FallaPedidoNoEncontrado()
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
@@ -27,11 +29,12 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             var resultado = await sut.ConfirmarPagoAsync(Info(99999, "approved", 100m));
 
-            Assert.False(resultado);
+            Assert.False(resultado.Confirmado);
+            Assert.Equal(MotivoPago.PedidoNoEncontrado, resultado.Motivo);
         }
 
         [Fact]
-        public async Task ConfirmarPago_YaAprobado_RetornaFalse_SinCambios()
+        public async Task ConfirmarPago_YaAprobado_RetornaYaConfirmado_SinCambios()
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
@@ -44,7 +47,9 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 200m));
 
-            Assert.False(resultado);
+            // Retry benigno: está en el bucket de éxito (el cliente puede avanzar) sin re-procesar.
+            Assert.True(resultado.Confirmado);
+            Assert.Equal(MotivoPago.YaConfirmado, resultado.Motivo);
 
             using var verify = db.CreateContext();
             var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
@@ -57,7 +62,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         }
 
         [Fact]
-        public async Task ConfirmarPago_MontoDivergente_RetornaFalse_NoConfirma()
+        public async Task ConfirmarPago_MontoDivergente_FallaMontoNoCoincide_NoConfirma()
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
@@ -69,7 +74,8 @@ namespace TiendaOnline.Tests.Services.Pedidos
             // MP reporta un monto mayor al que el sistema calculó (200 + 5 = 205)
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 210m));
 
-            Assert.False(resultado);
+            Assert.False(resultado.Confirmado);
+            Assert.Equal(MotivoPago.MontoNoCoincide, resultado.Motivo);
 
             using var verify = db.CreateContext();
             var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
@@ -81,7 +87,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         }
 
         [Fact]
-        public async Task ConfirmarPago_StockInsuficiente_RetornaFalse_YNoDescuenta()
+        public async Task ConfirmarPago_StockInsuficiente_FallaStockInsuficiente_YNoDescuenta()
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
@@ -92,7 +98,8 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 300m));
 
-            Assert.False(resultado);
+            Assert.False(resultado.Confirmado);
+            Assert.Equal(MotivoPago.StockInsuficiente, resultado.Motivo);
 
             using var verify = db.CreateContext();
             var stock = await verify.Productos.AsNoTracking()
@@ -104,7 +111,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         }
 
         [Fact]
-        public async Task ConfirmarPago_PedidoVencido_NoConfirma()
+        public async Task ConfirmarPago_PedidoVencido_FallaPedidoVencido()
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
@@ -116,7 +123,8 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 200m));
 
-            Assert.False(resultado);
+            Assert.False(resultado.Confirmado);
+            Assert.Equal(MotivoPago.PedidoVencido, resultado.Motivo);
 
             using var verify = db.CreateContext();
             var stock = await verify.Productos.AsNoTracking()
@@ -125,7 +133,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         }
 
         [Fact]
-        public async Task ConfirmarPago_PedidoCancelado_RetornaFalse_SinCambios()
+        public async Task ConfirmarPago_AprobacionSobrePedidoCancelado_FallaEstadoIncoherente()
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
@@ -137,12 +145,34 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 200m));
 
-            Assert.False(resultado);
+            Assert.False(resultado.Confirmado);
+            Assert.Equal(MotivoPago.EstadoIncoherente, resultado.Motivo);
 
             using var verify = db.CreateContext();
             var stock = await verify.Productos.AsNoTracking()
                 .Where(p => p.ProductoId == producto.ProductoId).Select(p => p.Stock).SingleAsync();
             Assert.Equal(5, stock);
+        }
+
+        [Fact]
+        public async Task ConfirmarPago_EstadoMpNoManejado_FallaEstadoNoManejado_SinCambios()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2);
+            var sut = Sut.PedidoCommand(ctx);
+
+            // MP manda "in_process" (pago a confirmar): sin acción definida, nada toca nada.
+            var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "in_process", 200m));
+
+            Assert.False(resultado.Confirmado);
+            Assert.Equal(MotivoPago.EstadoNoManejado, resultado.Motivo);
+
+            using var verify = db.CreateContext();
+            var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
+            Assert.Equal(EstadoPago.Pendiente, pedidoDb.EstadoPago);
         }
 
         // ------------------------------------------------------------------
@@ -162,7 +192,8 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var total = 2 * 100m + 5m;
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", total));
 
-            Assert.True(resultado);
+            Assert.True(resultado.Confirmado);
+            Assert.Equal(MotivoPago.Confirmado, resultado.Motivo);
 
             using var verify = db.CreateContext();
             var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
@@ -194,7 +225,9 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "rejected", 200m));
 
-            Assert.True(resultado);
+            // "Confirmado" para MP significa "señal aplicada", acá el pago quedó rechazado.
+            Assert.True(resultado.Confirmado);
+            Assert.Equal(MotivoPago.Confirmado, resultado.Motivo);
 
             using var verify = db.CreateContext();
             var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
@@ -218,7 +251,8 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "cancelled", 200m));
 
-            Assert.True(resultado);
+            Assert.True(resultado.Confirmado);
+            Assert.Equal(MotivoPago.Confirmado, resultado.Motivo);
 
             using var verify = db.CreateContext();
             var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
@@ -228,7 +262,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         }
 
         [Fact]
-        public async Task ConfirmarPago_Refunded_SobrePedidoNoAprobado_RetornaFalse()
+        public async Task ConfirmarPago_Refunded_SobrePedidoNoAprobado_FallaEstadoIncoherente()
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
@@ -239,7 +273,8 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "refunded", 200m));
 
-            Assert.False(resultado);
+            Assert.False(resultado.Confirmado);
+            Assert.Equal(MotivoPago.EstadoIncoherente, resultado.Motivo);
         }
 
         [Fact]
@@ -255,7 +290,8 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "refunded", 200m));
 
-            Assert.True(resultado);
+            Assert.True(resultado.Confirmado);
+            Assert.Equal(MotivoPago.Confirmado, resultado.Motivo);
 
             using var verify = db.CreateContext();
             var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);

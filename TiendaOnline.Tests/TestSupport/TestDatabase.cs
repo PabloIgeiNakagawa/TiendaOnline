@@ -154,6 +154,23 @@ namespace TiendaOnline.Tests.TestSupport
             return oferta;
         }
 
+        public static ZonaEnvio SeedZonaEnvio(
+            TiendaContext ctx,
+            string provincia,
+            decimal costo = 500m,
+            bool activa = true)
+        {
+            var zona = new ZonaEnvio
+            {
+                Provincia = provincia,
+                Costo = costo,
+                Activa = activa
+            };
+            ctx.ZonasEnvio.Add(zona);
+            ctx.SaveChanges();
+            return zona;
+        }
+
         public static Pedido SeedPedido(
             TiendaContext ctx,
             Usuario usuario,

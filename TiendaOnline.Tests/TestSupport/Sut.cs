@@ -29,5 +29,11 @@ namespace TiendaOnline.Tests.TestSupport
 
         public static PedidoVencimientoService PedidoVencimiento(TiendaContext ctx)
             => new(ctx, NullLogger<PedidoVencimientoService>.Instance);
+
+        public static Infrastructure.Services.Envios.EnvioQueryService EnvioQuery(TiendaContext ctx)
+            => new(ctx, NullLogger<Infrastructure.Services.Envios.EnvioQueryService>.Instance);
+
+        public static Infrastructure.Services.Envios.EnvioCommandService EnvioCommand(TiendaContext ctx)
+            => new(ctx, NullLogger<Infrastructure.Services.Envios.EnvioCommandService>.Instance);
     }
 }
