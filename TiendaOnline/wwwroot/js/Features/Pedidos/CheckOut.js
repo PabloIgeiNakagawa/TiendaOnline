@@ -88,7 +88,7 @@
         if (!textoEnvio) return;
         textoEnvio.innerText = "Calculando...";
         try {
-            const response = await fetch(`/Pedidos/CotizarEnvio?provincia=${encodeURIComponent(provincia)}`);
+            const response = await fetch(`/Checkout/CotizarEnvio?provincia=${encodeURIComponent(provincia)}`);
             if (!response.ok) throw new Error("Error en servidor");
 
             const data = await response.json();
