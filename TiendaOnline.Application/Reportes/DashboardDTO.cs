@@ -1,6 +1,6 @@
 ﻿namespace TiendaOnline.Application.Reportes
 {
-    public class DashboardDTO
+    public class DashboardDto
     {
         public MetricasGeneralesDto MetricasGenerales { get; set; }
         public List<ProductoMasVendidoDto> TopProductos { get; set; }

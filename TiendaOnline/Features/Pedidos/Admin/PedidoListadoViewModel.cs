@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using TiendaOnline.Application.Common;
-using TiendaOnline.Application.Pedidos.Query;
+using TiendaOnline.Application.Pedidos.Queries;
 
 namespace TiendaOnline.Features.Pedidos.Admin
 {

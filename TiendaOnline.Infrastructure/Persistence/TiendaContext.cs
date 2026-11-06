@@ -199,7 +199,7 @@ namespace TiendaOnline.Infrastructure.Persistence
                 .WithMany(c => c.Subcategorias)
                 .HasForeignKey(c => c.CategoriaPadreId)
                 .OnDelete(DeleteBehavior.Restrict);
-                
+
             //  Configuración de MovimientoStock
             modelBuilder.Entity<MovimientoStock>(entity =>
             {

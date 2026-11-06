@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Common;
-using TiendaOnline.Application.Pedidos.DTOs;
-using TiendaOnline.Application.Pedidos.Query;
+using TiendaOnline.Application.Pedidos.Queries;
 using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Infrastructure.Services.Pedidos
@@ -162,7 +161,8 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             if (filtros.MontoMin.HasValue || filtros.MontoMax.HasValue)
             {
                 // Proyectamos el total una sola vez para no repetir el cálculo del Sum
-                var qMonto = query.Select(p => new {
+                var qMonto = query.Select(p => new
+                {
                     p,
                     Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
                 });

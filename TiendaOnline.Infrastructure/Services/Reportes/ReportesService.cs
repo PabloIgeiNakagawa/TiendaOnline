@@ -14,9 +14,9 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             _context = context;
         }
 
-        public async Task<DashboardDTO> ObtenerDatosAsync(CancellationToken ct = default)
+        public async Task<DashboardDto> ObtenerDatosAsync(CancellationToken ct = default)
         {
-            var dashboard = new DashboardDTO
+            var dashboard = new DashboardDto
             {
                 MetricasGenerales = await ObtenerMetricasGeneralesAsync(ct),
                 TopProductos = await ObtenerTopProductosAsync(10, ct),

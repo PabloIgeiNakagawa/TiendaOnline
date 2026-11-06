@@ -16,7 +16,7 @@ namespace TiendaOnline.Features.Productos.Admin
         public string? Busqueda { get; set; }
         public int? CategoriaId { get; set; }
         public string? Estado { get; set; }
-        public string? Stock{ get; set; }
+        public string? Stock { get; set; }
 
         // Totales para los badges
         public int TotalActivos { get; set; }

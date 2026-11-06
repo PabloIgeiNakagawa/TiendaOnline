@@ -13,6 +13,6 @@
         public string Description { get; set; } = null!;
 
         public string Type { get; set; } = "string";
-         public DateTime? LastModified { get; set; }
+        public DateTime? LastModified { get; set; }
     }
 }

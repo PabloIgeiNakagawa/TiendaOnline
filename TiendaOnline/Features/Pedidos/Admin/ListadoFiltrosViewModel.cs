@@ -11,5 +11,5 @@
         public decimal? MontoMax { get; set; }
         public int Pagina { get; set; } = 1;
         public int TamanoPagina { get; set; } = 10;
-}
+    }
 }

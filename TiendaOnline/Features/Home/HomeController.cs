@@ -25,7 +25,7 @@ namespace TiendaOnline.Features.Home
         }
 
         [AllowAnonymous]
-        [HttpGet("Privacidad")] 
+        [HttpGet("Privacidad")]
         public IActionResult Privacy()
         {
             return View();

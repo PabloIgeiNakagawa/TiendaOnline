@@ -7,25 +7,25 @@
         public string AppVersion { get; set; }
 
         // Resumen Diario
-        public ResumenDiarioDTO ResumenDiario { get; set; }
+        public ResumenDiarioDto ResumenDiario { get; set; }
 
         // Timeline de Auditoría (Cambios)
-        public List<AuditoriaEntryDTO> UltimosCambios { get; set; } = new();
+        public List<AuditoriaEntryDto> UltimosCambios { get; set; } = new();
 
         // Pedidos Estancados
-        public List<PedidoEstancadoDTO> PedidosEstancados { get; set; } = new();
+        public List<PedidoEstancadoDto> PedidosEstancados { get; set; } = new();
 
         // Movimientos de Stock Recientes
-        public List<MovimientoStockDTO> UltimosMovimientosStock { get; set; } = new();
+        public List<MovimientoStockDto> UltimosMovimientosStock { get; set; } = new();
 
         // Productos Bajo Stock
-        public List<ProductoBajoStockDTO> ProductosBajoStock { get; set; } = new();
+        public List<ProductoBajoStockDto> ProductosBajoStock { get; set; } = new();
 
         // Pedidos Recientes
-        public List<PedidoRecienteDTO> PedidosRecientes { get; set; } = new();
+        public List<PedidoRecienteDto> PedidosRecientes { get; set; } = new();
     }
 
-    public class ResumenDiarioDTO
+    public class ResumenDiarioDto
     {
         public decimal VentasHoy { get; set; }
         public decimal VentasAyer { get; set; }
@@ -42,14 +42,14 @@
         public int StockBajo { get; set; }
     }
 
-    public class AuditoriaEntryDTO
+    public class AuditoriaEntryDto
     {
         public string UsuarioNombre { get; set; }
         public string Accion { get; set; }
         public DateTime Fecha { get; set; }
     }
 
-    public class PedidoEstancadoDTO
+    public class PedidoEstancadoDto
     {
         public int PedidoId { get; set; }
         public string ClienteNombre { get; set; }
@@ -59,13 +59,13 @@
 
     public class PedidosEstancadosPaginadoDto
     {
-        public List<PedidoEstancadoDTO> Pedidos { get; set; } = new();
+        public List<PedidoEstancadoDto> Pedidos { get; set; } = new();
         public int PaginaActual { get; set; }
         public int TotalPaginas { get; set; }
         public int TotalRegistros { get; set; }
     }
 
-    public class MovimientoStockDTO
+    public class MovimientoStockDto
     {
         public string ProductoNombre { get; set; }
         public int Cantidad { get; set; }
@@ -74,7 +74,7 @@
         public string Observaciones { get; set; }
     }
 
-    public class ProductoBajoStockDTO
+    public class ProductoBajoStockDto
     {
         public int ProductoId { get; set; }
         public string Nombre { get; set; }
@@ -83,7 +83,7 @@
         public int Stock { get; set; }
     }
 
-    public class PedidoRecienteDTO
+    public class PedidoRecienteDto
     {
         public int PedidoId { get; set; }
         public DateTime FechaPedido { get; set; }

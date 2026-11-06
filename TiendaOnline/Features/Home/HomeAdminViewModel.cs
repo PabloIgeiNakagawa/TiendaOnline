@@ -75,7 +75,7 @@ namespace TiendaOnline.Features.Home
         public int PedidoId { get; set; }
         public string Cliente { get; set; }
         public DateTime Fecha { get; set; }
-        public double HorasTranscurridas{ get; set; }
+        public double HorasTranscurridas { get; set; }
 
         // Para definir el color de la alerta en Bootstrap dinámicamente
         public string ClaseColor => HorasTranscurridas > 72 ? "danger" : "warning";

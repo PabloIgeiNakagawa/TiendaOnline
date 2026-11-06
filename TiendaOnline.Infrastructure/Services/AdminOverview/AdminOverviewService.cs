@@ -28,7 +28,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                 .AsNoTracking()
                 .OrderByDescending(a => a.Fecha)
                 .Take(5)
-                .Select(a => new AuditoriaEntryDTO
+                .Select(a => new AuditoriaEntryDto
                 {
                     UsuarioNombre = $"{a.Usuario.Nombre} {a.Usuario.Apellido}",
                     Accion = a.Accion,
@@ -40,7 +40,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
             dto.PedidosEstancados = await _context.Pedidos
                 .AsNoTracking()
                 .Where(p => p.Estado == 0 && p.FechaPedido <= limiteFecha)
-                .Select(p => new PedidoEstancadoDTO
+                .Select(p => new PedidoEstancadoDto
                 {
                     PedidoId = p.PedidoId,
                     ClienteNombre = $"{p.Usuario.Nombre} {p.Usuario.Apellido}",
@@ -56,7 +56,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                 .Take(10)
                 .ToListAsync(ct);
 
-            dto.UltimosMovimientosStock = movimientos.Select(m => new MovimientoStockDTO
+            dto.UltimosMovimientosStock = movimientos.Select(m => new MovimientoStockDto
             {
                 ProductoNombre = m.Producto.Nombre,
                 Cantidad = m.Cantidad,
@@ -106,7 +106,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                 .Where(p => p.Activo && p.Stock < 5)
                 .CountAsync(ct);
 
-            dto.ResumenDiario = new ResumenDiarioDTO
+            dto.ResumenDiario = new ResumenDiarioDto
             {
                 VentasHoy = ventasHoy,
                 VentasAyer = ventasAyer,
@@ -130,7 +130,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                 .Where(p => p.Activo && p.Stock < 5)
                 .OrderBy(p => p.Stock)
                 .Take(5)
-                .Select(p => new ProductoBajoStockDTO
+                .Select(p => new ProductoBajoStockDto
                 {
                     ProductoId = p.ProductoId,
                     Nombre = p.Nombre,
@@ -148,7 +148,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                 .Take(10)
                 .ToListAsync(ct);
 
-            dto.PedidosRecientes = pedidosRecientesQuery.Select(p => new PedidoRecienteDTO
+            dto.PedidosRecientes = pedidosRecientesQuery.Select(p => new PedidoRecienteDto
             {
                 PedidoId = p.PedidoId,
                 FechaPedido = p.FechaPedido,
@@ -175,7 +175,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                 .OrderBy(p => p.FechaPedido)
                 .Skip((pagina - 1) * tamanoPagina)
                 .Take(tamanoPagina)
-                .Select(p => new PedidoEstancadoDTO
+                .Select(p => new PedidoEstancadoDto
                 {
                     PedidoId = p.PedidoId,
                     ClienteNombre = $"{p.Usuario.Nombre} {p.Usuario.Apellido}",

@@ -5,7 +5,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Application.Common.Interfaces;
-using TiendaOnline.Application.Pedidos.DTOs;
+using TiendaOnline.Application.Pedidos.Queries;
 using TiendaOnline.Domain.Entities;
 
 namespace TiendaOnline.Infrastructure.Services.ComprobantePdf

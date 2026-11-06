@@ -1,7 +1,7 @@
 ﻿using TiendaOnline.Application.Pedidos.Common;
 using TiendaOnline.Application.Payment;
 
-namespace TiendaOnline.Application.Pedidos.Command
+namespace TiendaOnline.Application.Pedidos.Commands
 {
     public interface IPedidoCommandService
     {

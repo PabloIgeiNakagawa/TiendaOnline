@@ -16,8 +16,8 @@ namespace TiendaOnline.Infrastructure.Services.Email
         private readonly ILogger<ResendEmailService> _logger;
 
         public ResendEmailService(
-            IResend resend, 
-            IAppSettingsService appSettings, 
+            IResend resend,
+            IAppSettingsService appSettings,
             IOptions<ResendSettings> resendOptions,
             IOptions<GlobalSettings> globalOptions,
             ILogger<ResendEmailService> logger)
@@ -45,7 +45,7 @@ namespace TiendaOnline.Infrastructure.Services.Email
             try
             {
                 await _resend.EmailSendAsync(mensaje);
-                _logger.LogInformation("Email enviado a {Destino} con asunto: {Asunto}", destino, asunto);      
+                _logger.LogInformation("Email enviado a {Destino} con asunto: {Asunto}", destino, asunto);
             }
             catch (Exception ex)
             {
@@ -106,7 +106,7 @@ namespace TiendaOnline.Infrastructure.Services.Email
         </body>
         </html>";
 
-            await EnviarEmailAsync(destinoEmail, $"Confirmaci&oacute;n de pedido #{pedidoId:D6}", cuerpoHtml);        
+            await EnviarEmailAsync(destinoEmail, $"Confirmaci&oacute;n de pedido #{pedidoId:D6}", cuerpoHtml);
         }
 
         public async Task EnviarEmailPagoExitosoAsync(string destinoEmail, string nombreUsuario, int pedidoId, decimal total)

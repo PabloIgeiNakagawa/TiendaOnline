@@ -2,7 +2,7 @@ using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TiendaOnline.Application.Common.Interfaces;
-using TiendaOnline.Application.Pedidos.Command;
+using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
 

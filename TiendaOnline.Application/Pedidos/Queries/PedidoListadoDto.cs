@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Application.Pedidos.Query
+﻿namespace TiendaOnline.Application.Pedidos.Queries
 {
     public class PedidoListadoDto
     {

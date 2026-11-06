@@ -23,7 +23,8 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IAuthorizationHandler, OrderOwnerHandler>();
 
             // Sesión
-            services.AddSession(options => {
+            services.AddSession(options =>
+            {
                 options.IdleTimeout = TimeSpan.FromMinutes(120);
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
@@ -31,7 +32,8 @@ namespace TiendaOnline.Extensions
 
             // Cookies
             services.AddAuthentication("CookieAuth")
-                .AddCookie("CookieAuth", config => {
+                .AddCookie("CookieAuth", config =>
+                {
                     config.LoginPath = "/Accounts/Login";
                     config.LogoutPath = "/Accounts/Logout";
                     config.AccessDeniedPath = "/Home/AccesoDenegado";
@@ -39,11 +41,11 @@ namespace TiendaOnline.Extensions
                     config.Cookie.IsEssential = true;
                     config.SlidingExpiration = true;
                     config.ExpireTimeSpan = TimeSpan.FromHours(2);
-                    #if DEBUG
-                        config.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-                    #else
+#if DEBUG
+                    config.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+#else
                         config.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
-                    #endif
+#endif
                     config.Cookie.SameSite = SameSiteMode.Lax;
                 })
                 .AddCookie("ExternalCookie", options =>  // <-- Esquema temporal para Google

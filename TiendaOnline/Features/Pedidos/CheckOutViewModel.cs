@@ -13,7 +13,7 @@ namespace TiendaOnline.Features.Pedidos
 
         // Lógica de Entrega
         [Required(ErrorMessage = "Seleccioná un método de entrega")]
-        public MetodoEntrega MetodoEntrega { get; set; } 
+        public MetodoEntrega MetodoEntrega { get; set; }
 
         // Direcciones
         // Para mostrar un Dropdown con las direcciones que el usuario ya guardó antes

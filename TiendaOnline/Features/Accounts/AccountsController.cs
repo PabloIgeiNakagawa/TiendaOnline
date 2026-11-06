@@ -88,7 +88,7 @@ namespace TiendaOnline.Features.Accounts
             await _authService.RegisterAsync(dto, permitirRolPersonalizado: esAdmin, HttpContext.RequestAborted);
             _logger.LogInformation("Usuario registrado: {Email} (rol {RolId})", dto.Email, dto.RolId);
 
-            if (esAdmin)    
+            if (esAdmin)
             {
                 TempData["MensajeExito"] = "¡Usuario registrado!";
                 return RedirectToAction(nameof(AdminUsuariosController.Listado), "AdminUsuarios");
@@ -97,7 +97,7 @@ namespace TiendaOnline.Features.Accounts
             {
                 TempData["MensajeExito"] = "¡Te has registrado!";
                 return RedirectToAction(nameof(Login));
-            } 
+            }
         }
 
         [HttpGet("[action]")]
@@ -168,9 +168,9 @@ namespace TiendaOnline.Features.Accounts
                 TempData["MensajeError"] = "Hubo un error al continuar con Google.";
                 return RedirectToAction(nameof(Login));
             }
-                
-            var email = result.Principal.FindFirstValue(ClaimTypes.Email);  
-                
+
+            var email = result.Principal.FindFirstValue(ClaimTypes.Email);
+
             // Buscamos si ya existe en la DB
             var usuarioDto = await _authService.ObtenerUsuarioPorEmailAsync(email, HttpContext.RequestAborted);
 

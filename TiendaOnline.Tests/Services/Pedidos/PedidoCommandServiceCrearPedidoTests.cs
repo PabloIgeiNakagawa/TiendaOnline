@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using TiendaOnline.Application.Pedidos.Command;
+using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Services.Ofertas;
 using TiendaOnline.Tests.TestSupport;

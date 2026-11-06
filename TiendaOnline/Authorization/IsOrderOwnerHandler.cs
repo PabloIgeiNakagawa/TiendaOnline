@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using TiendaOnline.Application.Pedidos.Query;
+using TiendaOnline.Application.Pedidos.Queries;
 
 namespace TiendaOnline.Authorization
 {

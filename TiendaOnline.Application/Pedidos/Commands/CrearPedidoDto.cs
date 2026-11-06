@@ -1,4 +1,4 @@
-﻿namespace TiendaOnline.Application.Pedidos.Command
+﻿namespace TiendaOnline.Application.Pedidos.Commands
 {
     public class CrearPedidoDto
     {

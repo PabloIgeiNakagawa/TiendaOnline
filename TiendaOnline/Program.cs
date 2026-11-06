@@ -4,7 +4,7 @@ using TiendaOnline.Filters;
 using TiendaOnline.Hangfire;
 using TiendaOnline.Infrastructure.Persistence;
 using Hangfire;
-using TiendaOnline.Application.Pedidos.Command;
+using TiendaOnline.Application.Pedidos.Commands;
 using Microsoft.AspNetCore.DataProtection;
 using Serilog;
 using Serilog.Events;

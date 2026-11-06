@@ -7,7 +7,7 @@ using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Application.Ofertas;
 using TiendaOnline.Application.Payment;
-using TiendaOnline.Application.Pedidos.Command;
+using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Application.Pedidos.Common;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
@@ -15,7 +15,7 @@ using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Infrastructure.Services.Pedidos
 {
-public class PedidoCommandService : IPedidoCommandService
+    public class PedidoCommandService : IPedidoCommandService
     {
         private readonly TiendaContext _context;
         private readonly IMovimientoStockCommandService _movimientoStockCommandService;
@@ -617,7 +617,7 @@ public class PedidoCommandService : IPedidoCommandService
 
                 var debeDevolverStock = pedido.EstadoPago == EstadoPago.Aprobado || pedido.EstadoPago == EstadoPago.Reembolsado;
 
-if (debeDevolverStock)
+                if (debeDevolverStock)
                 {
                     var movimientosARegistrar = new List<(int ProductoId, int Cantidad, string NombreProducto)>();
 
@@ -664,7 +664,7 @@ if (debeDevolverStock)
                 await transaction.RollbackAsync(ct);
                 throw;
             }
-}
+        }
 
         private async Task<bool> IntentarReservarStockAsync(Pedido pedido, CancellationToken ct)
         {

@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
-using TiendaOnline.Application.Pedidos.Command;
-using TiendaOnline.Application.Pedidos.Query;
+using TiendaOnline.Application.Pedidos.Commands;
+using TiendaOnline.Application.Pedidos.Queries;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Enums;
 using TiendaOnline.Extensions;
@@ -28,7 +28,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
         [HttpGet("[action]")]
         public async Task<IActionResult> Listado(ListadoFiltrosViewModel model)
         {
-            var filtros = new PedidosFiltroDto 
+            var filtros = new PedidosFiltroDto
             {
                 Busqueda = model.Busqueda,
                 EstadoId = model.EstadoId,

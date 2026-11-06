@@ -49,7 +49,7 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 CategoriaNombre = producto.Categoria.Nombre
             };
         }
-        
+
         public async Task<PagedResult<ProductoListaDto>> ObtenerProductosAdminAsync(ObtenerProductosAdminRequest request, CancellationToken ct)
         {
             if (request.Pagina <= 0)

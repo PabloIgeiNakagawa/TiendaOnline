@@ -30,7 +30,7 @@ namespace TiendaOnline.Features.Usuarios
         {
             var usuario = await _usuarioQueryService.ObtenerPerfil(id, HttpContext.RequestAborted);
             if (usuario == null) return NotFound();
-            
+
             var direccionesDto = await _direccionService.ObtenerDireccionesAsync(id, HttpContext.RequestAborted);
             var direcciones = direccionesDto.Select(d => new DireccionViewModel
             {

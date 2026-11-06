@@ -11,6 +11,6 @@ namespace TiendaOnline.Features.Usuarios.Admin
         public bool? Estado { get; set; }
 
         // Listas para los combos (Dropdowns)
-        public List<string> RolesDisponibles { get; set; } = new ();
+        public List<string> RolesDisponibles { get; set; } = new();
     }
 }

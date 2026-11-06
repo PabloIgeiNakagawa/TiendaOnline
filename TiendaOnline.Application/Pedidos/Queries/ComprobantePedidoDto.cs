@@ -1,4 +1,4 @@
-namespace TiendaOnline.Application.Pedidos.DTOs
+namespace TiendaOnline.Application.Pedidos.Queries
 {
     public record ComprobantePedidoDto(
         int PedidoId,

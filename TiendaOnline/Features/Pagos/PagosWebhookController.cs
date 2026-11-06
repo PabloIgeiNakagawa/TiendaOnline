@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using TiendaOnline.Application.Payment;
-using TiendaOnline.Application.Pedidos.Command;
+using TiendaOnline.Application.Pedidos.Commands;
 
 #if DEBUG
 using Microsoft.AspNetCore.Hosting;

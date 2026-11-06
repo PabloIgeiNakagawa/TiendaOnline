@@ -1,4 +1,4 @@
-namespace TiendaOnline.Application.Pedidos.Query
+namespace TiendaOnline.Application.Pedidos.Queries
 {
     /// <summary>
     /// Datos que armamos del lado servidor para la página de instrucciones de transferencia.

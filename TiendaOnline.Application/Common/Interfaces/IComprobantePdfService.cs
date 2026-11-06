@@ -1,4 +1,4 @@
-using TiendaOnline.Application.Pedidos.DTOs;
+using TiendaOnline.Application.Pedidos.Queries;
 
 namespace TiendaOnline.Application.Common.Interfaces
 {

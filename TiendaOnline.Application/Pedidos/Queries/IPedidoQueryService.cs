@@ -1,7 +1,6 @@
 ﻿using TiendaOnline.Application.Common;
-using TiendaOnline.Application.Pedidos.DTOs;
 
-namespace TiendaOnline.Application.Pedidos.Query
+namespace TiendaOnline.Application.Pedidos.Queries
 {
     public interface IPedidoQueryService
     {
