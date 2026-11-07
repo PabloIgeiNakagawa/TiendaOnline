@@ -71,7 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
         var bsDelayAttr = toastEl.getAttribute('data-bs-delay');
         var delay = bsDelayAttr ? parseInt(bsDelayAttr, 10) : 5000; // ms fallback
 
-        var toast = new bootstrap.Toast(toastEl, { autohide: true, delay: delay });
+        var autohide = toastEl.getAttribute('data-bs-autohide') !== 'false';
+        var toast = new bootstrap.Toast(toastEl, { autohide: autohide, delay: delay });
         var progressBar = toastEl.querySelector('.progress-bar');
 
         // Animación de la barra: usa requestAnimationFrame para fluidez
