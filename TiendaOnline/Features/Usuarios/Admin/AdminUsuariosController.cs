@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Application.Usuarios.Queries;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Usuarios.Admin
 {
@@ -56,7 +57,7 @@ namespace TiendaOnline.Features.Usuarios.Admin
         {
             await _usuarioCommandService.DarAltaUsuarioAsync(id, HttpContext.RequestAborted);
             _logger.LogInformation("Usuario {UsuarioId} re-activado por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
-            TempData["MensajeExito"] = "Usuario activado.";
+            TempData.SetMensajeExito("Usuario activado.");
             return RedirectToAction(nameof(Listado));
         }
 
@@ -66,7 +67,7 @@ namespace TiendaOnline.Features.Usuarios.Admin
         {
             await _usuarioCommandService.DarBajaUsuarioAsync(id, HttpContext.RequestAborted);
             _logger.LogInformation("Usuario {UsuarioId} deshabilitado (baja) por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
-            TempData["MensajeExito"] = "Usuario dado de baja.";
+            TempData.SetMensajeExito("Usuario dado de baja.");
             return RedirectToAction(nameof(Listado));
         }
     }

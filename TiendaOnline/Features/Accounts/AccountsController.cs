@@ -12,6 +12,7 @@ using TiendaOnline.Domain.Entities;
 using TiendaOnline.Enums;
 using TiendaOnline.Features.Home;
 using TiendaOnline.Features.Usuarios.Admin;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Accounts
 {
@@ -94,12 +95,12 @@ namespace TiendaOnline.Features.Accounts
 
             if (esAdmin)
             {
-                TempData["MensajeExito"] = "¡Usuario registrado!";
+                TempData.SetMensajeExito("¡Usuario registrado!");
                 return RedirectToAction(nameof(AdminUsuariosController.Listado), "AdminUsuarios");
             }
             else
             {
-                TempData["MensajeExito"] = "¡Te has registrado!";
+                TempData.SetMensajeExito("¡Te has registrado!");
                 return RedirectToAction(nameof(Login));
             }
         }
@@ -171,7 +172,7 @@ namespace TiendaOnline.Features.Accounts
             if (!result.Succeeded)
             {
                 _logger.LogWarning("Login con Google falló durante la autenticación externa");
-                TempData["MensajeError"] = "Hubo un error al continuar con Google.";
+                TempData.SetMensajeError("Hubo un error al continuar con Google.");
                 return RedirectToAction(nameof(Login));
             }
 
@@ -208,7 +209,7 @@ namespace TiendaOnline.Features.Accounts
             if (usuarioDto == null)
             {
                 _logger.LogWarning("Login con Google: no se pudo resolver el usuario con email {Email}", email);
-                TempData["MensajeError"] = "No pudimos iniciar sesión con Google. Intentá de nuevo.";
+                TempData.SetMensajeError("No pudimos iniciar sesión con Google. Intentá de nuevo.");
                 return RedirectToAction(nameof(Login));
             }
 
@@ -217,7 +218,7 @@ namespace TiendaOnline.Features.Accounts
             if (!usuarioDto.Activo)
             {
                 _logger.LogWarning("Login con Google bloqueado: cuenta desactivada {Email}", email);
-                TempData["MensajeError"] = "Tu cuenta fue deshabilitada. Contactate con soporte.";
+                TempData.SetMensajeError("Tu cuenta fue deshabilitada. Contactate con soporte.");
                 return RedirectToAction(nameof(Login));
             }
 
@@ -270,7 +271,7 @@ namespace TiendaOnline.Features.Accounts
             {
                 if (await _migradorCarrito.FusionarConCarritoGuardadoAsync(usuarioId))
                 {
-                    TempData["MensajeExito"] = "¡Bienvenido! Sumamos al carrito guardado los productos que venías armando.";
+                    TempData.SetMensajeExito("¡Bienvenido! Sumamos al carrito guardado los productos que venías armando.");
                 }
             }
             catch (Exception ex)

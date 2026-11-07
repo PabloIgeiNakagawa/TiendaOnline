@@ -11,6 +11,7 @@ using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Application.Usuarios.Common;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Enums;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Pedidos
 {
@@ -50,13 +51,13 @@ namespace TiendaOnline.Features.Pedidos
             var validacion = await _carritoService.ValidarStockAsync(HttpContext.RequestAborted);
             if (validacion.IsFailure)
             {
-                TempData["MensajeError"] = "No pudimos validar tu carrito. Probá de nuevo.";
+                TempData.SetMensajeError("No pudimos validar tu carrito. Probá de nuevo.");
                 return RedirectToAction("Index", "Carritos");
             }
 
             if (!validacion.Value.TodoOK)
             {
-                TempData["MensajeError"] = ArmarMensajeStockInsuficiente(validacion.Value.ItemsSinStock);
+                TempData.SetMensajeError(ArmarMensajeStockInsuficiente(validacion.Value.ItemsSinStock));
                 return RedirectToAction("Index", "Carritos");
             }
 
@@ -65,7 +66,7 @@ namespace TiendaOnline.Features.Pedidos
 
             if (items == null || items.Count == 0)
             {
-                TempData["MensajeError"] = "Tu carrito está vacío.";
+                TempData.SetMensajeError("Tu carrito está vacío.");
                 return RedirectToAction("Index", "Carritos");
             }
 
@@ -194,14 +195,14 @@ namespace TiendaOnline.Features.Pedidos
             }
 
             var modelJson = System.Text.Json.JsonSerializer.Serialize(model);
-            TempData["CheckOutTemp"] = modelJson;
+            TempData[TempDataKeys.CheckOutTemp] = modelJson;
             return RedirectToAction("Confirmacion");
         }
 
         [HttpGet("[action]")]
         public async Task<IActionResult> Confirmacion()
         {
-            var modelJson = TempData["CheckOutTemp"] as string;
+            var modelJson = TempData[TempDataKeys.CheckOutTemp] as string;
             if (string.IsNullOrEmpty(modelJson))
                 return RedirectToAction("CheckOut");
 
@@ -282,7 +283,7 @@ namespace TiendaOnline.Features.Pedidos
 
             if (model == null || carritoItems == null || !carritoItems.Any())
             {
-                TempData["MensajeError"] = "La sesión de compra expiró o los datos son inválidos.";
+                TempData.SetMensajeError("La sesión de compra expiró o los datos son inválidos.");
                 return RedirectToAction("CheckOut");
             }
 
@@ -291,13 +292,13 @@ namespace TiendaOnline.Features.Pedidos
             var validacion = await _carritoService.ValidarStockAsync(HttpContext.RequestAborted);
             if (validacion.IsFailure)
             {
-                TempData["MensajeError"] = "No pudimos validar tu carrito. Probá de nuevo.";
+                TempData.SetMensajeError("No pudimos validar tu carrito. Probá de nuevo.");
                 return RedirectToAction("Index", "Carritos");
             }
 
             if (!validacion.Value.TodoOK)
             {
-                TempData["MensajeError"] = ArmarMensajeStockInsuficiente(validacion.Value.ItemsSinStock);
+                TempData.SetMensajeError(ArmarMensajeStockInsuficiente(validacion.Value.ItemsSinStock));
                 return RedirectToAction("Index", "Carritos");
             }
 
@@ -307,7 +308,7 @@ namespace TiendaOnline.Features.Pedidos
             // Para envío a domicilio, la dirección es obligatoria
             if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio && model.Direccion == null)
             {
-                TempData["MensajeError"] = "La dirección de envío es requerida.";
+                TempData.SetMensajeError("La dirección de envío es requerida.");
                 return RedirectToAction("CheckOut");
             }
 
@@ -319,7 +320,7 @@ namespace TiendaOnline.Features.Pedidos
                 var cotizacion = await _envioQueryService.CotizarEnvioAsync(model.Direccion?.Provincia, HttpContext.RequestAborted);
                 if (!cotizacion.Permitida)
                 {
-                    TempData["MensajeError"] = $"No hacemos envíos a {model.Direccion?.Provincia}. Vuelve al checkout y elegí retiro en el local u otra dirección.";
+                    TempData.SetMensajeError($"No hacemos envíos a {model.Direccion?.Provincia}. Vuelve al checkout y elegí retiro en el local u otra dirección.");
                     return RedirectToAction("CheckOut");
                 }
                 costoEnvio = cotizacion.Costo;
@@ -378,20 +379,20 @@ namespace TiendaOnline.Features.Pedidos
 
                 // Transferencia: directo a la página con CBU/alias y la subida del comprobante
                 await _carritoService.VaciarAsync();
-                TempData["MensajeExito"] = "¡Pedido realizado con éxito!";
+                TempData.SetMensajeExito("¡Pedido realizado con éxito!");
                 return RedirectToAction("Instrucciones", "Pedidos", new { id = pedido.PedidoId });
             }
             catch (DomainException ex)
             {
                 // Guard de dominio (estado inválido, producto inexistente, etc.): mensaje curado del service.
                 _logger.LogWarning(ex, "Checkout rechazado por reglas de negocio (usuario {UsuarioId}): {Motivo}", usuarioId, ex.Message);
-                TempData["MensajeError"] = ex.Message;
+                TempData.SetMensajeError(ex.Message);
                 return RedirectToAction("Index", "Carritos");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fallo el checkout para el usuario {UsuarioId}", usuarioId);
-                TempData["MensajeError"] = "No pudimos generar el pedido. Revisá tu carrito e intentá de nuevo.";
+                TempData.SetMensajeError("No pudimos generar el pedido. Revisá tu carrito e intentá de nuevo.");
                 return RedirectToAction("Index", "Carritos");
             }
         }

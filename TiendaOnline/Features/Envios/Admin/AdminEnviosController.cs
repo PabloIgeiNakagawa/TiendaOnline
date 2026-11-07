@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using TiendaOnline.Application.Envios;
 using TiendaOnline.Domain.Exceptions;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Envios.Admin
 {
@@ -63,7 +64,7 @@ namespace TiendaOnline.Features.Envios.Admin
 
             if (!ModelState.IsValid)
             {
-                TempData["MensajeError"] = "Revisá el costo: tiene que ser un número entre 0 y 1.000.000.";
+                TempData.SetMensajeError("Revisá el costo: tiene que ser un número entre 0 y 1.000.000.");
                 return View("Listado", await ArmarListado());
             }
 
@@ -74,19 +75,19 @@ namespace TiendaOnline.Features.Envios.Admin
                 _logger.LogInformation("Zona de envío {ZonaEnvioId} guardada por {Admin}",
                     model.ZonaEnvioId, User.FindFirstValue(ClaimTypes.Email));
 
-                TempData["MensajeExito"] = $"Costo de envío de {model.Provincia} actualizado.";
+                TempData.SetMensajeExito($"Costo de envío de {model.Provincia} actualizado.");
             }
             catch (DomainException ex)
             {
                 // Guard de dominio (zona inexistente, costo negativo): mensaje curado del service.
                 _logger.LogWarning(ex, "No se pudo guardar la zona de envío {ZonaEnvioId}: {Motivo}", model.ZonaEnvioId, ex.Message);
-                TempData["MensajeError"] = ex.Message;
+                TempData.SetMensajeError(ex.Message);
                 return View("Listado", await ArmarListado());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fallo al guardar la zona de envío {ZonaEnvioId}", model.ZonaEnvioId);
-                TempData["MensajeError"] = "No se pudo guardar la zona de envío. Intentá de nuevo en unos minutos.";
+                TempData.SetMensajeError("No se pudo guardar la zona de envío. Intentá de nuevo en unos minutos.");
                 return View("Listado", await ArmarListado());
             }
 

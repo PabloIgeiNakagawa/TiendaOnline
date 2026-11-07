@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Application.MovimientosStock.Queries;
 using TiendaOnline.Features.Shared.ViewModels;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.MovimientosStock
 {
@@ -69,19 +70,19 @@ namespace TiendaOnline.Features.MovimientosStock
             // Validación de Servidor
             if (!ModelState.IsValid)
             {
-                TempData["MensajeError"] = "Datos de entrada inválidos. Revisá la cantidad y observaciones.";
+                TempData.SetMensajeError("Datos de entrada inválidos. Revisá la cantidad y observaciones.");
                 return RedirectToAction(nameof(Movimientos));
             }
 
             try
             {
                 await _movimientoStockCommandService.RegistrarEntradaAsync(dto, HttpContext.RequestAborted);
-                TempData["MensajeExito"] = "¡Entrada de mercadería registrada!";
+                TempData.SetMensajeExito("¡Entrada de mercadería registrada!");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error registrando entrada de stock (producto {ProductoId}, cantidad {Cantidad})", dto.ProductoId, dto.Cantidad);
-                TempData["MensajeError"] = "Error al procesar la entrada. Intente nuevamente.";
+                TempData.SetMensajeError("Error al procesar la entrada. Intente nuevamente.");
             }
 
             return RedirectToAction(nameof(Movimientos));
@@ -94,19 +95,19 @@ namespace TiendaOnline.Features.MovimientosStock
             if (!ModelState.IsValid)
             {
                 var error = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage;
-                TempData["MensajeError"] = error ?? "Datos de ajuste inválidos.";
+                TempData.SetMensajeError(error ?? "Datos de ajuste inválidos.");
                 return RedirectToAction(nameof(Movimientos));
             }
 
             try
             {
                 await _movimientoStockCommandService.RegistrarAjusteManualAsync(dto, HttpContext.RequestAborted);
-                TempData["MensajeExito"] = "Ajuste de inventario aplicado correctamente.";
+                TempData.SetMensajeExito("Ajuste de inventario aplicado correctamente.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error aplicando ajuste manual de stock (producto {ProductoId}, cantidad {Cantidad})", dto.ProductoId, dto.Cantidad);
-                TempData["MensajeError"] = "No se pudo aplicar el ajuste. Intente nuevamente.";
+                TempData.SetMensajeError("No se pudo aplicar el ajuste. Intente nuevamente.");
             }
 
             return RedirectToAction(nameof(Movimientos));

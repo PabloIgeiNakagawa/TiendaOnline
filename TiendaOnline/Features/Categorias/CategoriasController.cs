@@ -6,6 +6,7 @@ using System.Security.Claims;
 using TiendaOnline.Application.Categorias.Commands;
 using TiendaOnline.Application.Categorias.Common;
 using TiendaOnline.Application.Categorias.Queries;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Categorias
 {
@@ -66,7 +67,7 @@ namespace TiendaOnline.Features.Categorias
                     await _categoriaCommandService.AgregarCategoriaAsync(dto, HttpContext.RequestAborted);
                     _logger.LogInformation("Categoría creada: {Nombre} (padre {CategoriaPadreId}) por {Admin}",
                         dto.Nombre, dto.CategoriaPadreId, User.FindFirstValue(ClaimTypes.Email));
-                    TempData["MensajeExito"] = "La categoría se creó correctamente.";
+                    TempData.SetMensajeExito("La categoría se creó correctamente.");
                     return RedirectToAction(nameof(Listado));
                 }
             }
@@ -117,7 +118,7 @@ namespace TiendaOnline.Features.Categorias
                 id, User.FindFirstValue(ClaimTypes.Email), eliminado);
             if (!eliminado)
             {
-                TempData["Error"] = "No se puede eliminar: la categoría tiene productos o subcategorías.";
+                TempData.SetMensajeError("No se puede eliminar: la categoría tiene productos o subcategorías.");
             }
             return RedirectToAction(nameof(Listado));
         }

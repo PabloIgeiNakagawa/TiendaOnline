@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using TiendaOnline.Application.Carritos;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Carritos
 {
@@ -20,14 +21,14 @@ namespace TiendaOnline.Features.Carritos
             var validacion = await _carritoService.ValidarStockAsync(HttpContext.RequestAborted);
             if (validacion.IsFailure)
             {
-                TempData["MensajeError"] = validacion.Error;
+                TempData.SetMensajeError(validacion.Error);
             }
 
             if (validacion.IsSuccess && !validacion.Value.TodoOK)
             {
                 foreach (var item in validacion.Value.ItemsSinStock)
                 {
-                    TempData["MensajeError"] = $"Stock insuficiente para {item.Nombre}: solicitaste {item.CantidadSolicitada} pero hay {item.StockDisponible} disponibles.";
+                    TempData.SetMensajeError($"Stock insuficiente para {item.Nombre}: solicitaste {item.CantidadSolicitada} pero hay {item.StockDisponible} disponibles.");
                 }
             }
 
@@ -47,11 +48,11 @@ namespace TiendaOnline.Features.Carritos
 
             if (resultado.IsFailure)
             {
-                TempData["MensajeError"] = resultado.Error;
+                TempData.SetMensajeError(resultado.Error);
             }
             else
             {
-                TempData["MensajeExito"] = "Producto agregado al carrito.";
+                TempData.SetMensajeExito("Producto agregado al carrito.");
             }
 
             return RedirectToAction(nameof(Index));
@@ -65,11 +66,11 @@ namespace TiendaOnline.Features.Carritos
 
             if (resultado.IsFailure)
             {
-                TempData["MensajeError"] = resultado.Error;
+                TempData.SetMensajeError(resultado.Error);
             }
             else
             {
-                TempData["MensajeExito"] = "Producto eliminado del carrito.";
+                TempData.SetMensajeExito("Producto eliminado del carrito.");
             }
 
             return RedirectToAction(nameof(Index));
@@ -82,7 +83,7 @@ namespace TiendaOnline.Features.Carritos
             if (cantidad <= 0)
             {
                 var resultado = await _carritoService.EliminarAsync(productoId);
-                TempData["MensajeExito"] = "Producto eliminado del carrito.";
+                TempData.SetMensajeExito("Producto eliminado del carrito.");
                 return RedirectToAction(nameof(Index));
             }
 
@@ -90,11 +91,11 @@ namespace TiendaOnline.Features.Carritos
 
             if (result.IsFailure)
             {
-                TempData["MensajeError"] = result.Error;
+                TempData.SetMensajeError(result.Error);
             }
             else
             {
-                TempData["MensajeExito"] = "Cantidad actualizada.";
+                TempData.SetMensajeExito("Cantidad actualizada.");
             }
 
             return RedirectToAction(nameof(Index));
@@ -105,7 +106,7 @@ namespace TiendaOnline.Features.Carritos
         public async Task<IActionResult> Vaciar()
         {
             await _carritoService.VaciarAsync();
-            TempData["MensajeExito"] = "Se ha vaciado el carrito.";
+            TempData.SetMensajeExito("Se ha vaciado el carrito.");
             return RedirectToAction(nameof(Index));
         }
     }

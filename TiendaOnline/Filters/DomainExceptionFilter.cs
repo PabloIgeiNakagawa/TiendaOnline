@@ -3,12 +3,13 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Extensions.DependencyInjection;
 using TiendaOnline.Domain.Exceptions;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Filters
 {
     /// <summary>
     /// Traduce las DomainException que no atrapó el controller a UX amable: el mensaje de
-    /// negocio (curado en el service) va a TempData["MensajeError"] y el usuario vuelve a
+    /// negocio (curado en el service) va al TempData por la API tipada (SetMensajeError) y el usuario vuelve a
     /// la página de donde vino. Las excepciones que NO son de dominio no se tocan: siguen
     /// al pipeline de errores estándar (y el log de Serilog queda con el detalle).
     /// Cobertura real: los endpoints sin try/catch propio que llaman al dominio
@@ -37,7 +38,7 @@ namespace TiendaOnline.Filters
             var tempData = context.HttpContext.RequestServices
                 .GetRequiredService<ITempDataDictionaryFactory>()
                 .GetTempData(context.HttpContext);
-            tempData["MensajeError"] = excepcion.Message;
+            tempData.SetMensajeError(excepcion.Message);
 
             context.Result = new RedirectResult(ObtenerUrlDeVuelta(context.HttpContext.Request));
             context.ExceptionHandled = true;

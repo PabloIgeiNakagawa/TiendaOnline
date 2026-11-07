@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using TiendaOnline.Application.Ofertas;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Ofertas.Admin
 {
@@ -60,7 +61,7 @@ namespace TiendaOnline.Features.Ofertas.Admin
             _logger.LogInformation("Oferta creada: producto {ProductoId} a {PrecioOferta} ({Inicio} - {Fin}) por {Admin}",
                 model.ProductoId, model.PrecioOferta, model.FechaInicio, model.FechaFin, User.FindFirstValue(ClaimTypes.Email));
 
-            TempData["MensajeExito"] = "Oferta creada correctamente.";
+            TempData.SetMensajeExito("Oferta creada correctamente.");
             return RedirectToAction(nameof(Listado));
         }
 
@@ -105,7 +106,7 @@ namespace TiendaOnline.Features.Ofertas.Admin
 
             _logger.LogInformation("Oferta {OfertaId} editada por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
 
-            TempData["MensajeExito"] = "Oferta actualizada correctamente.";
+            TempData.SetMensajeExito("Oferta actualizada correctamente.");
             return RedirectToAction(nameof(Listado));
         }
 
@@ -115,7 +116,7 @@ namespace TiendaOnline.Features.Ofertas.Admin
         {
             await _ofertaCommandService.AlternarActivaAsync(id, HttpContext.RequestAborted);
             _logger.LogInformation("Oferta {OfertaId} alternada por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
-            TempData["MensajeExito"] = "Estado de la oferta actualizado.";
+            TempData.SetMensajeExito("Estado de la oferta actualizado.");
             return RedirectToAction(nameof(Listado));
         }
 

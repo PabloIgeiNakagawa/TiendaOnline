@@ -7,6 +7,7 @@ using TiendaOnline.Application.Pedidos.Queries;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Extensions;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Pedidos.Admin
 {
@@ -71,7 +72,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
             }
             await _pedidoCommandService.PedidoEnviadoAsync(pedidoId, HttpContext.RequestAborted);
             _logger.LogInformation("Pedido {PedidoId} marcado Enviado por {Admin}", pedidoId, User.FindFirstValue(ClaimTypes.Email));
-            TempData["MensajeExito"] = "Estado del pedido actualizado a Enviado";
+            TempData.SetMensajeExito("Estado del pedido actualizado a Enviado");
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
 
@@ -86,7 +87,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
             }
             await _pedidoCommandService.PedidoEntregadoAsync(pedidoId, HttpContext.RequestAborted);
             _logger.LogInformation("Pedido {PedidoId} marcado Entregado por {Admin}", pedidoId, User.FindFirstValue(ClaimTypes.Email));
-            TempData["MensajeExito"] = "Estado del pedido actualizado a Entregado";
+            TempData.SetMensajeExito("Estado del pedido actualizado a Entregado");
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
 
@@ -100,7 +101,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
             }
             await _pedidoCommandService.PedidoCanceladoAsync(pedidoId, HttpContext.RequestAborted);
             _logger.LogInformation("Pedido {PedidoId} cancelado por {Admin} (con devolución de stock si estaba pagado)", pedidoId, User.FindFirstValue(ClaimTypes.Email));
-            TempData["MensajeExito"] = "Estado del pedido actualizado a Cancelado";
+            TempData.SetMensajeExito("Estado del pedido actualizado a Cancelado");
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
 
@@ -117,18 +118,18 @@ namespace TiendaOnline.Features.Pedidos.Admin
             {
                 await _pedidoCommandService.AprobarPagoTransferenciaAsync(pedidoId, HttpContext.RequestAborted);
                 _logger.LogInformation("Pago por transferencia aprobado para el pedido {PedidoId} por {Admin}", pedidoId, User.FindFirstValue(ClaimTypes.Email));
-                TempData["MensajeExito"] = "Pago aprobado: el pedido pasó a preparación";
+                TempData.SetMensajeExito("Pago aprobado: el pedido pasó a preparación");
             }
             catch (DomainException ex)
             {
                 // Guard de dominio: mensaje curado para el admin (sin comprobante, ya aprobado, vencido...).
                 _logger.LogWarning("No se pudo aprobar el pago por transferencia del pedido {PedidoId}: {Motivo}", pedidoId, ex.Message);
-                TempData["MensajeError"] = ex.Message;
+                TempData.SetMensajeError(ex.Message);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fallo inesperado al aprobar el pago por transferencia del pedido {PedidoId}", pedidoId);
-                TempData["MensajeError"] = "No se pudo aprobar el pago. Revisá el detalle del pedido e intentá de nuevo.";
+                TempData.SetMensajeError("No se pudo aprobar el pago. Revisá el detalle del pedido e intentá de nuevo.");
             }
 
             return RedirectToAction("Listado");
@@ -147,18 +148,18 @@ namespace TiendaOnline.Features.Pedidos.Admin
             {
                 await _pedidoCommandService.RechazarComprobanteTransferenciaAsync(pedidoId, HttpContext.RequestAborted);
                 _logger.LogInformation("Comprobante rechazado del pedido {PedidoId} por {Admin} (pedido cancelado y cliente notificado)", pedidoId, User.FindFirstValue(ClaimTypes.Email));
-                TempData["MensajeExito"] = "Comprobante rechazado: pedido cancelado y cliente notificado";
+                TempData.SetMensajeExito("Comprobante rechazado: pedido cancelado y cliente notificado");
             }
             catch (DomainException ex)
             {
                 // Guard de dominio: mensaje curado para el admin (ya cancelado, sin comprobante...).
                 _logger.LogWarning("No se pudo rechazar el comprobante del pedido {PedidoId}: {Motivo}", pedidoId, ex.Message);
-                TempData["MensajeError"] = ex.Message;
+                TempData.SetMensajeError(ex.Message);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fallo inesperado al rechazar el comprobante del pedido {PedidoId}", pedidoId);
-                TempData["MensajeError"] = "No se pudo rechazar el comprobante. Revisá el detalle del pedido e intentá de nuevo.";
+                TempData.SetMensajeError("No se pudo rechazar el comprobante. Revisá el detalle del pedido e intentá de nuevo.");
             }
 
             return RedirectToAction("Listado");

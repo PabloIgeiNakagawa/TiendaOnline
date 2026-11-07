@@ -7,6 +7,7 @@ using TiendaOnline.Application.Categorias.Common;
 using TiendaOnline.Application.Categorias.Queries;
 using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Application.Productos.Queries;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Productos.Admin
 {
@@ -97,7 +98,7 @@ namespace TiendaOnline.Features.Productos.Admin
             await _productoCommandService.AgregarProductoAsync(dto, HttpContext.RequestAborted);
             _logger.LogInformation("Producto creado: {Nombre} (categoría {CategoriaId}, stock {Stock}, precio {Precio}) por {Admin}",
                 dto.Nombre, dto.CategoriaId, dto.Stock, dto.Precio, User.FindFirstValue(ClaimTypes.Email));
-            TempData["MensajeExito"] = "Producto creado correctamente.";
+            TempData.SetMensajeExito("Producto creado correctamente.");
             return RedirectToAction(nameof(Catalogo));
         }
 
@@ -146,7 +147,7 @@ namespace TiendaOnline.Features.Productos.Admin
             await _productoCommandService.EditarProductoAsync(dto, HttpContext.RequestAborted);
             _logger.LogInformation("Producto {ProductoId} editado por {Admin}", dto.ProductoId, User.FindFirstValue(ClaimTypes.Email));
 
-            TempData["MensajeExito"] = "Producto actualizado correctamente.";
+            TempData.SetMensajeExito("Producto actualizado correctamente.");
             return RedirectToAction(nameof(Catalogo));
         }
 
@@ -156,7 +157,7 @@ namespace TiendaOnline.Features.Productos.Admin
         {
             await _productoCommandService.DarAltaProductoAsync(id, HttpContext.RequestAborted);
             _logger.LogInformation("Producto {ProductoId} activado por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
-            TempData["MensajeExito"] = "Producto activado.";
+            TempData.SetMensajeExito("Producto activado.");
             return RedirectToAction(nameof(Catalogo));
         }
 
@@ -166,7 +167,7 @@ namespace TiendaOnline.Features.Productos.Admin
         {
             await _productoCommandService.DarBajaProductoAsync(id, HttpContext.RequestAborted);
             _logger.LogInformation("Producto {ProductoId} desactivado por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
-            TempData["MensajeExito"] = "Producto desactivado.";
+            TempData.SetMensajeExito("Producto desactivado.");
             return RedirectToAction(nameof(Catalogo));
         }
         private async Task<IEnumerable<SelectListItem>> ObtenerListaCategoriasAsync()

@@ -5,6 +5,7 @@ using TiendaOnline.Application.Direcciones;
 using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Application.Usuarios.Common;
 using TiendaOnline.Application.Usuarios.Queries;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Usuarios
 {
@@ -103,7 +104,7 @@ namespace TiendaOnline.Features.Usuarios
 
             await _usuarioCommandService.EditarUsuarioAsync(dto, HttpContext.RequestAborted);
             _logger.LogInformation("Perfil del usuario {UsuarioId} editado", dto.UsuarioId);
-            TempData["MensajeExito"] = "Tu información se actualizó correctamente.";
+            TempData.SetMensajeExito("Tu información se actualizó correctamente.");
             return RedirectToAction("PerfilUsuario", "Usuarios", new { id = dto.UsuarioId });
         }
 
@@ -139,7 +140,7 @@ namespace TiendaOnline.Features.Usuarios
             };
 
             await _direccionService.GuardarDireccionAsync(usuarioId, dto, HttpContext.RequestAborted);
-            TempData["MensajeExito"] = "Dirección agregada correctamente.";
+            TempData.SetMensajeExito("Dirección agregada correctamente.");
             return RedirectToAction("PerfilUsuario", "Usuarios", new { id = usuarioId });
         }
 
@@ -194,7 +195,7 @@ namespace TiendaOnline.Features.Usuarios
             };
 
             await _direccionService.ActualizarDireccionAsync(direccionId, dto, HttpContext.RequestAborted);
-            TempData["MensajeExito"] = "Dirección actualizada correctamente.";
+            TempData.SetMensajeExito("Dirección actualizada correctamente.");
             return RedirectToAction("PerfilUsuario", "Usuarios", new { id = model.UsuarioId });
         }
 
@@ -206,7 +207,7 @@ namespace TiendaOnline.Features.Usuarios
             if (direccion == null) return NotFound();
 
             await _direccionService.EliminarDireccionAsync(direccionId, HttpContext.RequestAborted);
-            TempData["MensajeExito"] = "Dirección eliminada correctamente.";
+            TempData.SetMensajeExito("Dirección eliminada correctamente.");
             return RedirectToAction("PerfilUsuario", "Usuarios", new { id = usuarioId });
         }
     }

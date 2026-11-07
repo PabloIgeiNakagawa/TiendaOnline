@@ -13,6 +13,7 @@ using TiendaOnline.Application.Pedidos.Queries;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Enums;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Pedidos
 {
@@ -158,20 +159,20 @@ namespace TiendaOnline.Features.Pedidos
 
             if (archivo == null || archivo.Length == 0)
             {
-                TempData["MensajeError"] = "Adjuntá el comprobante para poder verificarlo.";
+                TempData.SetMensajeError("Adjuntá el comprobante para poder verificarlo.");
                 return RedirectToAction("Instrucciones", new { id });
             }
 
             var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
             if (!extensionesValidas.Contains(extension))
             {
-                TempData["MensajeError"] = "Formato no admitido. Usá JPG, PNG o PDF.";
+                TempData.SetMensajeError("Formato no admitido. Usá JPG, PNG o PDF.");
                 return RedirectToAction("Instrucciones", new { id });
             }
 
             if (archivo.Length > TamanoMaximoComprobante)
             {
-                TempData["MensajeError"] = "El archivo supera el máximo de 5 MB.";
+                TempData.SetMensajeError("El archivo supera el máximo de 5 MB.");
                 return RedirectToAction("Instrucciones", new { id });
             }
 
@@ -180,19 +181,19 @@ namespace TiendaOnline.Features.Pedidos
                 await using var stream = archivo.OpenReadStream();
                 await _pedidoCommandService.GuardarComprobanteAsync(id, stream, $"Pedido-{id:D6}{extension}", HttpContext.RequestAborted);
                 _logger.LogInformation("Comprobante subido para el pedido {PedidoId}", id);
-                TempData["MensajeExito"] = "Comprobante recibido. Te avisamos cuando verifiquemos el pago.";
+                TempData.SetMensajeExito("Comprobante recibido. Te avisamos cuando verifiquemos el pago.");
             }
             catch (DomainException ex)
             {
                 // Guard de dominio (pedido equivocado, comprobante repetido, etc.): mensaje curado del service.
                 _logger.LogWarning(ex, "No se pudo registrar el comprobante del pedido {PedidoId}: {Motivo}", id, ex.Message);
-                TempData["MensajeError"] = ex.Message;
+                TempData.SetMensajeError(ex.Message);
                 return RedirectToAction("Instrucciones", new { id });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fallo la subida del comprobante del pedido {PedidoId}", id);
-                TempData["MensajeError"] = "No pudimos subir el comprobante. Intentá de nuevo en unos minutos.";
+                TempData.SetMensajeError("No pudimos subir el comprobante. Intentá de nuevo en unos minutos.");
                 return RedirectToAction("Instrucciones", new { id });
             }
 
@@ -224,13 +225,13 @@ namespace TiendaOnline.Features.Pedidos
                     if (resultadoPago.Confirmado)
                     {
                         await _carritoService.VaciarAsync();
-                        TempData["MensajeExito"] = resultadoPago.Motivo == MotivoPago.YaConfirmado
+                        TempData.SetMensajeExito(resultadoPago.Motivo == MotivoPago.YaConfirmado
                             ? "Tu pago ya estaba confirmado."
-                            : "¡Pago confirmado exitosamente!";
+                            : "¡Pago confirmado exitosamente!");
                     }
                     else
                     {
-                        TempData["MensajeError"] = MotivoPagoALegible(resultadoPago.Motivo);
+                        TempData.SetMensajeError(MotivoPagoALegible(resultadoPago.Motivo));
                     }
                 }
             }
@@ -280,7 +281,7 @@ namespace TiendaOnline.Features.Pedidos
             // Solo generar PDF si el pago está aprobado
             if (comprobanteDto.EstadoPagoId != (int)EstadoPago.Aprobado)
             {
-                TempData["MensajeError"] = "El comprobante solo está disponible para pagos aprobados.";
+                TempData.SetMensajeError("El comprobante solo está disponible para pagos aprobados.");
                 return RedirectToAction("Detalles", new { id });
             }
 
@@ -293,7 +294,7 @@ namespace TiendaOnline.Features.Pedidos
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generando comprobante PDF para pedido {PedidoId}", id);
-                TempData["MensajeError"] = "No se pudo generar el comprobante. Intente nuevamente más tarde.";
+                TempData.SetMensajeError("No se pudo generar el comprobante. Intente nuevamente más tarde.");
                 return RedirectToAction("Detalles", new { id });
             }
         }
