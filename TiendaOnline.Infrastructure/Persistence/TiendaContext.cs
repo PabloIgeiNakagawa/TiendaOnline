@@ -203,6 +203,16 @@ namespace TiendaOnline.Infrastructure.Persistence
                 .HasForeignKey(c => c.CategoriaPadreId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // La FK Producto→Categoría es obligatoria y con Restrict: borrar físicamente
+            // una categoría no puede arrastrar sus productos (la convención de EF la
+            // dejaba en Cascade). Las bajas comerciales son lógicas (Activo/Activa);
+            // Restrict queda como guard de última línea en la base.
+            modelBuilder.Entity<Producto>()
+                .HasOne(p => p.Categoria)
+                .WithMany(c => c.Productos)
+                .HasForeignKey(p => p.CategoriaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             //  Configuración de MovimientoStock
             modelBuilder.Entity<MovimientoStock>(entity =>
             {

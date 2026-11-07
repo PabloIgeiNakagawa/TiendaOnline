@@ -664,7 +664,7 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                     b.HasOne("TiendaOnline.Domain.Entities.Categoria", "Categoria")
                         .WithMany("Productos")
                         .HasForeignKey("CategoriaId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Categoria");
