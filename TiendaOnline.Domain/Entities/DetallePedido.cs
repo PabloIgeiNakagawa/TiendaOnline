@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace TiendaOnline.Domain.Entities
 {
@@ -17,7 +16,6 @@ namespace TiendaOnline.Domain.Entities
         [Range(1, int.MaxValue)]
         public int Cantidad { get; set; }
 
-        [Precision(18, 2)]
         [Range(0, double.MaxValue)]
         public decimal PrecioUnitario { get; set; }
     }

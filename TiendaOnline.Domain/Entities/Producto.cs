@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace TiendaOnline.Domain.Entities
 {
@@ -20,7 +19,6 @@ namespace TiendaOnline.Domain.Entities
         public string Descripcion { get; set; }
 
         [Required]
-        [Precision(18, 2)]
         [Range(0, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0.")]
         public decimal Precio { get; set; }
 

@@ -213,6 +213,17 @@ namespace TiendaOnline.Infrastructure.Persistence
                 .HasForeignKey(p => p.CategoriaId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Precisión decimal del dinero: completa la config de tabla que en Domain
+            // iba como atributo propio de EF. EF ya mapea decimal a (18,2) por default;
+            // explicitarlo en un solo lugar (el contexto) deja al Domain sin dependencias.
+            modelBuilder.Entity<Producto>()
+                .Property(p => p.Precio)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<DetallePedido>()
+                .Property(d => d.PrecioUnitario)
+                .HasPrecision(18, 2);
+
             //  Configuración de MovimientoStock
             modelBuilder.Entity<MovimientoStock>(entity =>
             {
