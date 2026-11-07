@@ -11,6 +11,7 @@ using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Application.Pedidos.Common;
 using TiendaOnline.Application.Pedidos.Queries;
 using TiendaOnline.Domain.Exceptions;
+using TiendaOnline.Domain.Entities;
 using TiendaOnline.Enums;
 
 namespace TiendaOnline.Features.Pedidos
@@ -62,8 +63,8 @@ namespace TiendaOnline.Features.Pedidos
                         FechaEntrega = p.FechaEntrega,
                         FechaCancelado = p.FechaCancelado,
                         Productos = p.Productos,
-                        Estado = (EstadoPedidoUI)p.EstadoId,
-                        EstadoPago = (EstadoPagoUI)p.EstadoPagoId
+                        Estado = (EstadoPedido)p.EstadoId,
+                        EstadoPago = (EstadoPago)p.EstadoPagoId
                     })
                     .ToList()
             };
@@ -88,8 +89,8 @@ namespace TiendaOnline.Features.Pedidos
                 FechaEnvio = pedido.FechaEnvio,
                 FechaEntrega = pedido.FechaEntrega,
                 FechaCancelado = pedido.FechaCancelado,
-                Estado = (EstadoPedidoUI)pedido.EstadoId,
-                EstadoPago = (EstadoPagoUI)pedido.EstadoPagoId,
+                Estado = (EstadoPedido)pedido.EstadoId,
+                EstadoPago = (EstadoPago)pedido.EstadoPagoId,
                 MetodoPagoId = (MetodoPagoId)pedido.MetodoPagoId,
 
                 UsuarioNombre = pedido.UsuarioNombre,
@@ -277,7 +278,7 @@ namespace TiendaOnline.Features.Pedidos
             }
 
             // Solo generar PDF si el pago está aprobado
-            if (comprobanteDto.EstadoPagoId != (int)EstadoPagoUI.Aprobado)
+            if (comprobanteDto.EstadoPagoId != (int)EstadoPago.Aprobado)
             {
                 TempData["MensajeError"] = "El comprobante solo está disponible para pagos aprobados.";
                 return RedirectToAction("Detalles", new { id });

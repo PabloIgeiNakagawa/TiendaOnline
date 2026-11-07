@@ -1,4 +1,4 @@
-﻿using TiendaOnline.Enums;
+﻿using TiendaOnline.Domain.Entities;
 using TiendaOnline.Extensions;
 
 namespace TiendaOnline.Features.Home

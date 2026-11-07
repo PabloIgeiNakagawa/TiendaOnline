@@ -1,4 +1,4 @@
-﻿using TiendaOnline.Enums;
+﻿using TiendaOnline.Domain.Entities;
 
 namespace TiendaOnline.Features.Pedidos
 {
@@ -16,9 +16,9 @@ namespace TiendaOnline.Features.Pedidos
         public DateTime? FechaCancelado { get; set; }
         public List<string> Productos { get; set; } = new();
 
-        public EstadoPedidoUI Estado { get; set; }
+        public EstadoPedido Estado { get; set; }
 
-        public EstadoPagoUI EstadoPago { get; set; }
+        public EstadoPago EstadoPago { get; set; }
 
         public bool EstaEnviado => FechaEnvio.HasValue;
         public bool EstaEntregado => FechaEntrega.HasValue;

@@ -8,6 +8,7 @@ using System.Security.Claims;
 using TiendaOnline.Application.Auth;
 using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.Usuarios.Queries;
+using TiendaOnline.Domain.Entities;
 using TiendaOnline.Enums;
 using TiendaOnline.Features.Home;
 using TiendaOnline.Features.Usuarios.Admin;

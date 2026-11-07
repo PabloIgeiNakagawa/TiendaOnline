@@ -1,4 +1,5 @@
-﻿@using TiendaOnline.Enums
+﻿@using TiendaOnline.Domain.Entities
+@using TiendaOnline.Enums
 @using TiendaOnline.Extensions
 @using TiendaOnline.Features.Pedidos.Admin
 @using TiendaOnline.Features.Shared.ViewModels
@@ -13,14 +14,14 @@
 
     if (Model.EstadoId.HasValue) 
     {
-        var estadoEnum = (EstadoPedidoUI)Model.EstadoId.Value;
+        var estadoEnum = (EstadoPedido)Model.EstadoId.Value;
         string nombreEstado = estadoEnum.GetDisplayName();
         filtrosActivos.Add(new FiltroPill { Icono = "bi-app-indicator", Etiqueta = "Estado", Valor = nombreEstado, Propiedad = nameof(Model.EstadoId) });
     }
 
     if (Model.EstadoPagoId.HasValue) 
     {
-        string nombrePago = ((EstadoPagoUI)Model.EstadoPagoId.Value).GetDisplayName();
+        string nombrePago = ((EstadoPago)Model.EstadoPagoId.Value).GetDisplayName();
         filtrosActivos.Add(new FiltroPill { Icono = "bi-cash-stack", Etiqueta = "Pago", Valor = nombrePago, Propiedad = nameof(Model.EstadoPagoId) });
     }
 
@@ -227,16 +228,16 @@
                                         <td class="py-3">
                                             @{
                                                 // Extraemos solo lo que cambia (Color e Ícono)
-                                                var (color, icono) = (EstadoPagoUI)pedido.EstadoPagoId switch
+                                                var (color, icono) = (EstadoPago)pedido.EstadoPagoId switch
                                                 {
-                                                    EstadoPagoUI.Aprobado   => ("success", "bi-check-circle"),
-                                                    EstadoPagoUI.Rechazado  => ("danger",  "bi-x-circle"),
-                                                    EstadoPagoUI.Reembolsado => ("info",    "bi-arrow-left"),
+                                                    EstadoPago.Aprobado   => ("success", "bi-check-circle"),
+                                                    EstadoPago.Rechazado  => ("danger",  "bi-x-circle"),
+                                                    EstadoPago.Reembolsado => ("info",    "bi-arrow-left"),
                                                     _                       => ("warning", "bi-clock") // Pendiente por defecto
                                                 };
     
                                                 // Obtenemos el texto una sola vez
-                                                var texto = ((EstadoPagoUI)pedido.EstadoPagoId).GetDisplayName();
+                                                var texto = ((EstadoPago)pedido.EstadoPagoId).GetDisplayName();
                                             }
 
                                             <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 
@@ -246,7 +247,7 @@
                                                 <i class="bi @icono me-1"></i>
                                                 @texto
                                             </span>
-                                            @if (pedido.MetodoPagoId == (int)MetodoPagoId.Transferencia && pedido.EstadoId == (int)EstadoPedidoUI.Nuevo)
+                                            @if (pedido.MetodoPagoId == (int)MetodoPagoId.Transferencia && pedido.EstadoId == (int)EstadoPedido.Nuevo)
                                             {
                                                 @if (pedido.TieneComprobante)
                                                 {
@@ -261,17 +262,17 @@
                                         <td class="py-3">
                                             @{
                                                 // Definimos la configuración para cada Estado del Pedido
-                                                var conf = (EstadoPedidoUI)pedido.EstadoId switch
+                                                var conf = (EstadoPedido)pedido.EstadoId switch
                                                 {
-                                                    EstadoPedidoUI.Nuevo         => new { Bg = "info",    Txt = "warning", Icon = "bi-clock" },
-                                                    EstadoPedidoUI.EnPreparacion => new { Bg = "warning", Txt = "warning", Icon = "bi-clock" },
-                                                    EstadoPedidoUI.Enviado       => new { Bg = "success-subtle", Txt = "info", Icon = "bi-truck" },
-                                                    EstadoPedidoUI.Entregado     => new { Bg = "success", Txt = "success", Icon = "bi-check-circle" },
-                                                    EstadoPedidoUI.Cancelado     => new { Bg = "danger",  Txt = "danger",  Icon = "bi-x-circle" },
+                                                    EstadoPedido.Nuevo         => new { Bg = "info",    Txt = "warning", Icon = "bi-clock" },
+                                                    EstadoPedido.EnPreparacion => new { Bg = "warning", Txt = "warning", Icon = "bi-clock" },
+                                                    EstadoPedido.Enviado       => new { Bg = "success-subtle", Txt = "info", Icon = "bi-truck" },
+                                                    EstadoPedido.Entregado     => new { Bg = "success", Txt = "success", Icon = "bi-check-circle" },
+                                                    EstadoPedido.Cancelado     => new { Bg = "danger",  Txt = "danger",  Icon = "bi-x-circle" },
                                                     _                            => new { Bg = "secondary", Txt = "secondary", Icon = "bi-question" }
                                                 };
 
-                                                var nombreEstado = ((EstadoPedidoUI)pedido.EstadoId).GetDisplayName();
+                                                var nombreEstado = ((EstadoPedido)pedido.EstadoId).GetDisplayName();
                                             }
 
                                             <span class="badge rounded-2 fw-semibold text-uppercase px-3 py-2 
@@ -288,7 +289,7 @@
                                                    class="btn btn-outline-info btn-sm rounded-2 shadow-sm" data-bs-toggle="tooltip" data-bs-placement="top" title="Ver detalle">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                @if (pedido.EstadoId == (int)EstadoPedidoUI.Nuevo)
+                                                @if (pedido.EstadoId == (int)EstadoPedido.Nuevo)
                                                 {
                                                     @if (pedido.MetodoPagoId == (int)MetodoPagoId.Transferencia && pedido.TieneComprobante)
                                                     {
@@ -333,7 +334,7 @@
                                                         <i class="bi bi-x-circle"></i>
                                                     </button>
                                                 }
-                                                else if (pedido.EstadoId == (int)EstadoPedidoUI.Enviado)
+                                                else if (pedido.EstadoId == (int)EstadoPedido.Enviado)
                                                 {
                                                     <button type="button"
                                                             class="btn btn-outline-success btn-sm rounded-2 shadow-sm btn-cambio-estado"

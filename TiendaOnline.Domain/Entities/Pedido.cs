@@ -5,18 +5,34 @@ namespace TiendaOnline.Domain.Entities
 {
     public enum EstadoPago
     {
+        [Display(Name = "Pendiente")]
         Pendiente = 0,
+
+        [Display(Name = "Aprobado")]
         Aprobado = 1,
+
+        [Display(Name = "Rechazado")]
         Rechazado = 2,
+
+        [Display(Name = "Reembolsado")]
         Reembolsado = 3
     }
 
     public enum EstadoPedido
     {
+        [Display(Name = "Nuevo")]
         Nuevo = 0,
+
+        [Display(Name = "En preparación")]
         EnPreparacion = 1, // Ya se pagó, el admin está armando la caja
+
+        [Display(Name = "Enviado")]
         Enviado = 2,
+
+        [Display(Name = "Entregado")]
         Entregado = 3,
+
+        [Display(Name = "Cancelado")]
         Cancelado = 4
     }
 

@@ -4,10 +4,19 @@ namespace TiendaOnline.Domain.Entities
 {
     public enum TipoMovimiento
     {
+        [Display(Name = "Entrada")]
         EntradaStock = 1,    // Compras a proveedores
+
+        [Display(Name = "Salida")]
         SalidaVenta = 2,     // Ventas a clientes
+
+        [Display(Name = "Devolución")]
         Devolucion = 3,      // Cliente devuelve producto
+
+        [Display(Name = "Ajuste")]
         AjusteManual = 4,    // Corrección por rotura o error
+
+        [Display(Name = "Cancelación")]
         CancelacionPedido = 5 // El pedido se canceló y el stock vuelve
     }
 

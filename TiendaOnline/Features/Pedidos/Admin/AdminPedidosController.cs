@@ -5,7 +5,7 @@ using System.Security.Claims;
 using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Application.Pedidos.Queries;
 using TiendaOnline.Domain.Exceptions;
-using TiendaOnline.Enums;
+using TiendaOnline.Domain.Entities;
 using TiendaOnline.Extensions;
 
 namespace TiendaOnline.Features.Pedidos.Admin
@@ -54,8 +54,8 @@ namespace TiendaOnline.Features.Pedidos.Admin
                 FechaHasta = model.FechaHasta,
                 MontoMin = model.MontoMin,
                 MontoMax = model.MontoMax,
-                EstadosPedido = ((EstadoPedidoUI?)model.EstadoId).ToSelectList(),
-                EstadosPago = ((EstadoPagoUI?)model.EstadoPagoId).ToSelectList()
+                EstadosPedido = ((EstadoPedido?)model.EstadoId).ToSelectList(),
+                EstadosPago = ((EstadoPago?)model.EstadoPagoId).ToSelectList()
             };
 
             return View(viewModel);
