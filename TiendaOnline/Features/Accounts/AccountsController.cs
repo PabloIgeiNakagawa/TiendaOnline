@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using TiendaOnline.Application.Auth;
+using TiendaOnline.Application.Carritos;
 using TiendaOnline.Application.Usuarios.Queries;
 using TiendaOnline.Enums;
 using TiendaOnline.Features.Home;
@@ -18,13 +19,15 @@ namespace TiendaOnline.Features.Accounts
     {
         private readonly IAuthService _authService;
         private readonly IRolQueryService _rolService;
+        private readonly ICarritoSesionMigrador _migradorCarrito;
         private readonly ILogger<AccountsController> _logger;
 
-        public AccountsController(IAuthService authService, IRolQueryService rolQueryService, ILogger<AccountsController> logger)
+        public AccountsController(IAuthService authService, IRolQueryService rolQueryService, ILogger<AccountsController> logger, ICarritoSesionMigrador migradorCarrito)
         {
             _authService = authService;
             _rolService = rolQueryService;
             _logger = logger;
+            _migradorCarrito = migradorCarrito;
         }
 
         [HttpGet("[action]")]
@@ -144,6 +147,8 @@ namespace TiendaOnline.Features.Accounts
                 IsPersistent = true
             });
 
+            await FusionarCarritoDeSesionAsync(usuarioDto.UsuarioId);
+
             var role = principal.FindFirstValue(ClaimTypes.Role);
 
             return role == "Administrador"
@@ -238,6 +243,8 @@ namespace TiendaOnline.Features.Accounts
             });
             await HttpContext.SignOutAsync("ExternalCookie");
 
+            await FusionarCarritoDeSesionAsync(usuarioDto.UsuarioId);
+
             return usuarioDto.Rol == "Administrador"
                 ? RedirectToAction(nameof(HomeController.IndexAdmin), "Home")
                 : RedirectToAction(nameof(HomeController.Index), "Home");
@@ -249,6 +256,26 @@ namespace TiendaOnline.Features.Accounts
         {
             await HttpContext.SignOutAsync("CookieAuth");
             return RedirectToAction(nameof(Login));
+        }
+
+        /// <summary>
+        /// El carrito que el anónimo venía armando en la sesión pasa a su carrito
+        /// guardado en BD. Un fallo acá no puede romper el login: si algo sale mal
+        /// solo queda el carrito persistido que ya tenía la cuenta.
+        /// </summary>
+        private async Task FusionarCarritoDeSesionAsync(int usuarioId)
+        {
+            try
+            {
+                if (await _migradorCarrito.FusionarConCarritoGuardadoAsync(usuarioId))
+                {
+                    TempData["MensajeExito"] = "¡Bienvenido! Sumamos al carrito guardado los productos que venías armando.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo fusionar el carrito de sesión para el usuario {UsuarioId}", usuarioId);
+            }
         }
     }
 }

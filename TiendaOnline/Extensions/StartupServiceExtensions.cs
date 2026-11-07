@@ -82,7 +82,12 @@ namespace TiendaOnline.Extensions
             services.AddScoped<ICategoriaCommandService, CategoriaCommandService>();
             services.AddScoped<IOfertaQueryService, OfertaQueryService>();
             services.AddScoped<IOfertaCommandService, OfertaCommandService>();
-            services.AddScoped<ICarritoStorage, SessionCarritoStorage>();
+            // El carrito reside según quién mira: logueado → BD (sobrevive la sesión),
+            // anónimo → session. Al loguear, la fusión de sesión→BD la arma el migrador.
+            services.AddScoped<SessionCarritoStorage>();
+            services.AddScoped<DbCarritoStorage>();
+            services.AddScoped<ICarritoStorage, RoutingCarritoStorage>();
+            services.AddScoped<ICarritoSesionMigrador, CarritoSesionMigrador>();
             services.AddScoped<ICarritoService, CarritoService>();
             services.AddScoped<IPedidoQueryService, PedidoQueryService>();
             services.AddScoped<IPedidoCommandService, PedidoCommandService>();

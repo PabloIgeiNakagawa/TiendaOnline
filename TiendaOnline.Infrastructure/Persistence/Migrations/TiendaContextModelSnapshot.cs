@@ -98,6 +98,23 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                     b.ToTable("Auditorias");
                 });
 
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.CarritoUsuario", b =>
+                {
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Contenido")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaActualizacion")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UsuarioId");
+
+                    b.ToTable("CarritosUsuarios", (string)null);
+                });
+
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Categoria", b =>
                 {
                     b.Property<int>("CategoriaId")
@@ -543,6 +560,15 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UsuarioId");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.CarritoUsuario", b =>
+                {
+                    b.HasOne("TiendaOnline.Domain.Entities.Usuario", null)
+                        .WithOne()
+                        .HasForeignKey("TiendaOnline.Domain.Entities.CarritoUsuario", "UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Categoria", b =>

@@ -93,7 +93,9 @@ namespace TiendaOnline.Infrastructure.Persistence
             {
                 // La propia tabla de auditoría no se audita (recursión infinita);
                 // un Modified sin columnas marcadas es ruido de fix-up de navegaciones, no un cambio real.
-                if (entry.Entity is Auditoria ||
+                // El carrito del usuario se toca en cada interacción y refresh de vista
+                // (agregar/quitar/refrescar precios): auditarlo es ruido sin valor de negocio.
+                if (entry.Entity is Auditoria or CarritoUsuario ||
                     entry.State is EntityState.Detached or EntityState.Unchanged)
                     continue;
                 if (entry.State == EntityState.Modified && !entry.Properties.Any(p => p.IsModified))
@@ -176,6 +178,7 @@ namespace TiendaOnline.Infrastructure.Persistence
         public DbSet<OfertaProducto> OfertasProducto { get; set; }
         public DbSet<ZonaEnvio> ZonasEnvio { get; set; }
         public DbSet<AppSetting> AppSettings { get; set; }
+        public DbSet<CarritoUsuario> CarritosUsuarios { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -285,6 +288,21 @@ namespace TiendaOnline.Infrastructure.Persistence
 
                 entity.HasIndex(z => z.Provincia)
                       .IsUnique();
+            });
+
+            // Carrito persistido: una fila por usuario (snapshot JSON como session).
+            // El PK es el UsuarioId: no hay identidad porque el usuario ya existe.
+            modelBuilder.Entity<CarritoUsuario>(entity =>
+            {
+                entity.ToTable("CarritosUsuarios");
+
+                entity.Property(c => c.UsuarioId)
+                      .ValueGeneratedNever();
+
+                entity.HasOne<Usuario>()
+                      .WithOne()
+                      .HasForeignKey<CarritoUsuario>(c => c.UsuarioId)
+                      .OnDelete(DeleteBehavior.Cascade); // Sin dueño, el carrito guardado sobra
             });
 
             base.OnModelCreating(modelBuilder);

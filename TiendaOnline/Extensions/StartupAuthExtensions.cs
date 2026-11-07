@@ -25,7 +25,9 @@ namespace TiendaOnline.Extensions
             // Sesión
             services.AddSession(options =>
             {
-                options.IdleTimeout = TimeSpan.FromMinutes(120);
+                // Corto: es la sesión de un anónimo (carrito, mensajes). El carrito de los
+                // usuarios logueados vive en BD y no depende de este timeout.
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
