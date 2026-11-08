@@ -20,16 +20,16 @@ namespace TiendaOnline.Features.Pedidos
     {
         private readonly ICarritoService _carritoService;
         private readonly IDireccionService _direccionService;
-        private readonly IPedidoCommandService _pedidoCommandService;
+        private readonly ICreacionPedidoService _creacionPedidoService;
         private readonly IPaymentService _paymentService;
         private readonly IEnvioQueryService _envioQueryService;
         private readonly ILogger<CheckoutController> _logger;
 
-        public CheckoutController(ICarritoService carritoService, IDireccionService direccionService, IPedidoCommandService pedidoCommandService, IPaymentService paymentService, IEnvioQueryService envioQueryService, ILogger<CheckoutController> logger)
+        public CheckoutController(ICarritoService carritoService, IDireccionService direccionService, ICreacionPedidoService creacionPedidoService, IPaymentService paymentService, IEnvioQueryService envioQueryService, ILogger<CheckoutController> logger)
         {
             _carritoService = carritoService;
             _direccionService = direccionService;
-            _pedidoCommandService = pedidoCommandService;
+            _creacionPedidoService = creacionPedidoService;
             _paymentService = paymentService;
             _envioQueryService = envioQueryService;
             _logger = logger;
@@ -372,7 +372,7 @@ namespace TiendaOnline.Features.Pedidos
             try
             {
                 // Crear el pedido en BD
-                var pedido = await _pedidoCommandService.CrearPedidoYPrepararPagoAsync(dto, HttpContext.RequestAborted);
+                var pedido = await _creacionPedidoService.CrearPedidoYPrepararPagoAsync(dto, HttpContext.RequestAborted);
 
                 if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio && model.Direccion?.EsNueva == true)
                 {

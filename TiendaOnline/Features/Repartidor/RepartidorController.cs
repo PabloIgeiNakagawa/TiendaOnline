@@ -20,13 +20,13 @@ namespace TiendaOnline.Features.Repartidor
     public class RepartidorController : Controller
     {
         private readonly IPedidoQueryService _pedidoQueryService;
-        private readonly IPedidoCommandService _pedidoCommandService;
+        private readonly IEstadosPedidoService _estadosPedidoService;
         private readonly ILogger<RepartidorController> _logger;
 
-        public RepartidorController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService, ILogger<RepartidorController> logger)
+        public RepartidorController(IPedidoQueryService pedidoQueryService, IEstadosPedidoService estadosPedidoService, ILogger<RepartidorController> logger)
         {
             _pedidoQueryService = pedidoQueryService;
-            _pedidoCommandService = pedidoCommandService;
+            _estadosPedidoService = estadosPedidoService;
             _logger = logger;
         }
 
@@ -52,7 +52,7 @@ namespace TiendaOnline.Features.Repartidor
                 return NotFound();
             }
 
-            await _pedidoCommandService.PedidoEntregadoAsync(id, HttpContext.RequestAborted);
+            await _estadosPedidoService.PedidoEntregadoAsync(id, HttpContext.RequestAborted);
             _logger.LogInformation("Pedido {PedidoId} marcado Entregado por {Repartidor}", id, User.FindFirstValue(ClaimTypes.NameIdentifier));
             TempData.SetMensajeExito($"Pedido #{id.ToString("D6")} marcado como Entregado");
 

@@ -9,7 +9,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
     /// Tests de la máquina de estados de Pedido (Enviado / Entregado / Cancelado):
     /// transiciones inválidas y devolución de stock con movimiento CancelacionPedido.
     /// </summary>
-    public class PedidoCommandServiceTransicionesTests
+    public class EstadosPedidoServiceTests
     {
         [Fact]
         public async Task PedidoEnviado_DesdeNuevo_LanzaExcepcion()
@@ -20,7 +20,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var producto = TestDatabase.SeedProducto(ctx, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 1,
                 estado: EstadoPedido.Nuevo); // solo se puede enviar desde EnPreparacion
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.EstadosPedido(ctx);
 
             await Assert.ThrowsAsync<PedidoNoCancelableException>(() => sut.PedidoEnviadoAsync(pedido.PedidoId));
 
@@ -38,7 +38,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var producto = TestDatabase.SeedProducto(ctx, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 1,
                 estado: EstadoPedido.EnPreparacion); // solo se puede entregar desde Enviado
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.EstadosPedido(ctx);
 
             await Assert.ThrowsAsync<PedidoNoCancelableException>(() => sut.PedidoEntregadoAsync(pedido.PedidoId));
         }
@@ -52,7 +52,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var producto = TestDatabase.SeedProducto(ctx, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 1,
                 estado: EstadoPedido.Enviado);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.EstadosPedido(ctx);
 
             await sut.PedidoEntregadoAsync(pedido.PedidoId); // no debe lanzar
 
@@ -71,7 +71,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 10);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 3,
                 estado: EstadoPedido.EnPreparacion, estadoPago: EstadoPago.Aprobado);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.EstadosPedido(ctx);
 
             await sut.PedidoCanceladoAsync(pedido.PedidoId); // no debe lanzar
 
@@ -99,7 +99,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 10);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 3,
                 estado: EstadoPedido.Nuevo, estadoPago: EstadoPago.Pendiente);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.EstadosPedido(ctx);
 
             await sut.PedidoCanceladoAsync(pedido.PedidoId);
 
@@ -123,7 +123,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var producto = TestDatabase.SeedProducto(ctx, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 1,
                 estado: EstadoPedido.Cancelado);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.EstadosPedido(ctx);
 
             await Assert.ThrowsAsync<PedidoNoCancelableException>(() => sut.PedidoCanceladoAsync(pedido.PedidoId));
         }
@@ -137,7 +137,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 10);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 3,
                 estado: EstadoPedido.EnPreparacion, estadoPago: EstadoPago.Aprobado);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.EstadosPedido(ctx);
 
             await sut.PedidoCanceladoAsync(pedido.PedidoId);
 

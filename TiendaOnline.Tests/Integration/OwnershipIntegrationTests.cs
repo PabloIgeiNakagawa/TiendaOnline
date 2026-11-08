@@ -132,7 +132,7 @@ namespace TiendaOnline.Tests.Integration
                 return (PedidoId: pedido.PedidoId, UsuarioId: usuario.UsuarioId);
             });
 
-            _app.PedidoCommand
+            _app.ConfirmacionPago
                 .Setup(x => x.ObtenerDatosParaPagoAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PedidoPagoDto { PedidoId = ids.PedidoId });
             _app.Payment
@@ -154,7 +154,7 @@ namespace TiendaOnline.Tests.Integration
             // Assert: 302 a la preferencia generada con el pedido cargado una vez.
             Assert.Equal(HttpStatusCode.Found, response.StatusCode);
             Assert.Equal("https://sandbox.mercadopago.test/preferencia", response.Headers.Location?.ToString());
-            _app.PedidoCommand.Verify(
+            _app.ConfirmacionPago.Verify(
                 x => x.ObtenerDatosParaPagoAsync(ids.PedidoId, It.IsAny<CancellationToken>()), Times.Once);
             _app.Payment.Verify(
                 x => x.GenerarPreferenciaPagoAsync(It.IsAny<PedidoPagoDto>(), It.IsAny<CancellationToken>()), Times.Once);

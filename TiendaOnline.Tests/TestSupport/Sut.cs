@@ -15,17 +15,32 @@ namespace TiendaOnline.Tests.TestSupport
     /// </summary>
     internal static class Sut
     {
-        public static PedidoCommandService PedidoCommand(
+        public static CreacionPedidoService CreacionPedido(
+            TiendaContext ctx,
+            IOfertaQueryService? ofertas = null)
+            => new(ctx,
+                ofertas ?? Mock.Of<IOfertaQueryService>(),
+                NullLogger<CreacionPedidoService>.Instance);
+
+        public static ConfirmacionPagoService ConfirmacionPago(TiendaContext ctx)
+            => new(ctx,
+                new MovimientoStockCommandService(ctx, NullLogger<MovimientoStockCommandService>.Instance),
+                NullLogger<ConfirmacionPagoService>.Instance);
+
+        public static GestionTransferenciaService GestionTransferencia(
             TiendaContext ctx,
             Mock<IImagenService>? imagen = null,
-            Mock<IAppSettingsService>? settings = null,
-            IOfertaQueryService? ofertas = null)
+            Mock<IAppSettingsService>? settings = null)
             => new(ctx,
                 new MovimientoStockCommandService(ctx, NullLogger<MovimientoStockCommandService>.Instance),
                 imagen?.Object ?? Mock.Of<IImagenService>(),
                 settings?.Object ?? Mock.Of<IAppSettingsService>(),
-                ofertas ?? Mock.Of<IOfertaQueryService>(),
-                NullLogger<PedidoCommandService>.Instance);
+                NullLogger<GestionTransferenciaService>.Instance);
+
+        public static EstadosPedidoService EstadosPedido(TiendaContext ctx)
+            => new(ctx,
+                new MovimientoStockCommandService(ctx, NullLogger<MovimientoStockCommandService>.Instance),
+                NullLogger<EstadosPedidoService>.Instance);
 
         public static PedidoVencimientoService PedidoVencimiento(TiendaContext ctx)
             => new(ctx, NullLogger<PedidoVencimientoService>.Instance);

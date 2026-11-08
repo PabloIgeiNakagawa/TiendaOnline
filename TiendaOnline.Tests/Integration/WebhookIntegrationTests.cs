@@ -40,7 +40,7 @@ namespace TiendaOnline.Tests.Integration
 
             // Assert
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-            _app.PedidoCommand.Verify(
+            _app.ConfirmacionPago.Verify(
                 x => x.ConfirmarPagoAsync(It.IsAny<InfoPagoDto>(), It.IsAny<CancellationToken>()),
                 Times.Never);
         }
@@ -56,7 +56,7 @@ namespace TiendaOnline.Tests.Integration
                 .Returns(true);
             _app.Payment.Setup(x => x.ObtenerDetallesPagoAsync("99", It.IsAny<CancellationToken>()))
                 .ReturnsAsync(infoPago);
-            _app.PedidoCommand.Setup(x => x.ConfirmarPagoAsync(infoPago, It.IsAny<CancellationToken>()))
+            _app.ConfirmacionPago.Setup(x => x.ConfirmarPagoAsync(infoPago, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(ResultadoPago.Exito());
             var client = _app.CreateAnonymousClient();
 
@@ -65,7 +65,7 @@ namespace TiendaOnline.Tests.Integration
 
             // Assert: webhook efectivo (200) y la confirmación delegada usando el pago traído de MP.
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            _app.PedidoCommand.Verify(
+            _app.ConfirmacionPago.Verify(
                 x => x.ConfirmarPagoAsync(infoPago, It.IsAny<CancellationToken>()),
                 Times.Once);
         }
@@ -87,7 +87,7 @@ namespace TiendaOnline.Tests.Integration
             // y sin tocar nada: con el Reset del Arrange, "never" ahora es un conteo confiable.
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             _app.Payment.Verify(x => x.ObtenerDetallesPagoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
-            _app.PedidoCommand.Verify(
+            _app.ConfirmacionPago.Verify(
                 x => x.ConfirmarPagoAsync(It.IsAny<InfoPagoDto>(), It.IsAny<CancellationToken>()),
                 Times.Never);
         }

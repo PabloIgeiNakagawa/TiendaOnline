@@ -11,7 +11,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
     /// Idempotencia, integridad de montos, reserva de stock y estados,
     /// siempre con el motivo tipado del resultado (no basta el bool).
     /// </summary>
-    public class PedidoCommandServiceConfirmarPagoTests
+    public class ConfirmacionPagoServiceTests
     {
         private static InfoPagoDto Info(int pedidoId, string estado, decimal monto, string transaccion = "tx-1")
             => new() { PedidoId = pedidoId, Estado = estado, MontoPagado = monto, TransaccionId = transaccion };
@@ -25,7 +25,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             var resultado = await sut.ConfirmarPagoAsync(Info(99999, "approved", 100m));
 
@@ -43,7 +43,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2,
                 estado: EstadoPedido.EnPreparacion, estadoPago: EstadoPago.Aprobado,
                 transaccionId: "tx-orig");
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 200m));
 
@@ -69,7 +69,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var usuario = TestDatabase.SeedUsuario(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2, costoEnvio: 5m);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             // MP reporta un monto mayor al que el sistema calculó (200 + 5 = 205)
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 210m));
@@ -94,7 +94,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var usuario = TestDatabase.SeedUsuario(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 1);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 3);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 300m));
 
@@ -119,7 +119,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2,
                 fechaPedido: DateTime.Now.AddHours(-25)); // > TiempoMaximoPagoPendiente (24h)
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 200m));
 
@@ -141,7 +141,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2,
                 estado: EstadoPedido.Cancelado);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 200m));
 
@@ -162,7 +162,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var usuario = TestDatabase.SeedUsuario(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             // MP manda "in_process" (pago a confirmar): sin acción definida, nada toca nada.
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "in_process", 200m));
@@ -187,7 +187,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var usuario = TestDatabase.SeedUsuario(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2, costoEnvio: 5m);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             var total = 2 * 100m + 5m;
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", total));
@@ -221,7 +221,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var usuario = TestDatabase.SeedUsuario(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "rejected", 200m));
 
@@ -247,7 +247,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var usuario = TestDatabase.SeedUsuario(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "cancelled", 200m));
 
@@ -269,7 +269,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var usuario = TestDatabase.SeedUsuario(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "refunded", 200m));
 
@@ -286,7 +286,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2,
                 estado: EstadoPedido.EnPreparacion, estadoPago: EstadoPago.Aprobado);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             var resultado = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "refunded", 200m));
 
@@ -306,7 +306,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var usuario = TestDatabase.SeedUsuario(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.ConfirmacionPago(ctx);
 
             var primera = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 200m));
             var reintento = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 200m, transaccion: "tx-reintento"));

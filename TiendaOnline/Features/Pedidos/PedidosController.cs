@@ -21,17 +21,19 @@ namespace TiendaOnline.Features.Pedidos
     public class PedidosController : Controller
     {
         private readonly IPedidoQueryService _pedidoQueryService;
-        private readonly IPedidoCommandService _pedidoCommandService;
+        private readonly IConfirmacionPagoService _confirmacionPagoService;
+        private readonly IGestionTransferenciaService _gestionTransferenciaService;
         private readonly ICarritoService _carritoService;
         private readonly IPaymentService _paymentService;
         private readonly IComprobantePdfService _comprobantePdfService;
         private readonly IAppSettingsService _appSettingsService;
         private readonly ILogger<PedidosController> _logger;
 
-        public PedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService, ICarritoService carritoService, IPaymentService paymentService, IComprobantePdfService comprobantePdfService, IAppSettingsService appSettingsService, ILogger<PedidosController> logger)
+        public PedidosController(IPedidoQueryService pedidoQueryService, IConfirmacionPagoService confirmacionPagoService, IGestionTransferenciaService gestionTransferenciaService, ICarritoService carritoService, IPaymentService paymentService, IComprobantePdfService comprobantePdfService, IAppSettingsService appSettingsService, ILogger<PedidosController> logger)
         {
             _pedidoQueryService = pedidoQueryService;
-            _pedidoCommandService = pedidoCommandService;
+            _confirmacionPagoService = confirmacionPagoService;
+            _gestionTransferenciaService = gestionTransferenciaService;
             _carritoService = carritoService;
             _paymentService = paymentService;
             _comprobantePdfService = comprobantePdfService;
@@ -179,7 +181,7 @@ namespace TiendaOnline.Features.Pedidos
             try
             {
                 await using var stream = archivo.OpenReadStream();
-                await _pedidoCommandService.GuardarComprobanteAsync(id, stream, $"Pedido-{id:D6}{extension}", HttpContext.RequestAborted);
+                await _gestionTransferenciaService.GuardarComprobanteAsync(id, stream, $"Pedido-{id:D6}{extension}", HttpContext.RequestAborted);
                 _logger.LogInformation("Comprobante subido para el pedido {PedidoId}", id);
                 TempData.SetMensajeExito("Comprobante recibido. Te avisamos cuando verifiquemos el pago.");
             }
@@ -220,7 +222,7 @@ namespace TiendaOnline.Features.Pedidos
                 var infoPago = await _paymentService.ObtenerDetallesPagoAsync(payment_id, HttpContext.RequestAborted);
                 if (infoPago != null && infoPago.Estado == "approved")
                 {
-                    var resultadoPago = await _pedidoCommandService.ConfirmarPagoAsync(infoPago, HttpContext.RequestAborted);
+                    var resultadoPago = await _confirmacionPagoService.ConfirmarPagoAsync(infoPago, HttpContext.RequestAborted);
                     // Confirmado y YaConfirmado son las dos únicas salidas en las que el pago está aprobado acá.
                     if (resultadoPago.Confirmado)
                     {
@@ -257,7 +259,7 @@ namespace TiendaOnline.Features.Pedidos
         {
             // El id va por route: es el único valor que el policy handler resuelve
             // (vivo en el body del form, el endpoint respondía 403 siempre).
-            var pedidoDto = await _pedidoCommandService.ObtenerDatosParaPagoAsync(id, HttpContext.RequestAborted);
+            var pedidoDto = await _confirmacionPagoService.ObtenerDatosParaPagoAsync(id, HttpContext.RequestAborted);
 
             if (pedidoDto == null) return NotFound();
 

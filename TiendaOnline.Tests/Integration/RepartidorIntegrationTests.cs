@@ -68,7 +68,7 @@ namespace TiendaOnline.Tests.Integration
         {
             _app.ResetMocks();
             var s = SembrarPedido(_app, EstadoPedido.Enviado, "entrega");
-            _app.PedidoCommand
+            _app.EstadosPedido
                 .Setup(x => x.PedidoEntregadoAsync(s.PedidoId, It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
@@ -82,7 +82,7 @@ namespace TiendaOnline.Tests.Integration
 
             Assert.Equal(HttpStatusCode.Found, response.StatusCode);
             Assert.StartsWith("/Repartidor", response.Headers.Location?.ToString() ?? string.Empty);
-            _app.PedidoCommand.Verify(
+            _app.EstadosPedido.Verify(
                 x => x.PedidoEntregadoAsync(s.PedidoId, It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -94,7 +94,7 @@ namespace TiendaOnline.Tests.Integration
             // redirect — jamás un 500 bruto.
             _app.ResetMocks();
             var s = SembrarPedido(_app, EstadoPedido.EnPreparacion, "guard");
-            _app.PedidoCommand
+            _app.EstadosPedido
                 .Setup(x => x.PedidoEntregadoAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new PedidoNoCancelableException("No se puede entregar: el pedido aún figura como EnPreparacion."));
 
@@ -106,7 +106,7 @@ namespace TiendaOnline.Tests.Integration
             var response = await client.PostAsync($"/Repartidor/Entregar/{s.PedidoId}", new FormUrlEncodedContent(form));
 
             Assert.Equal(HttpStatusCode.Found, response.StatusCode);
-            _app.PedidoCommand.Verify(
+            _app.EstadosPedido.Verify(
                 x => x.PedidoEntregadoAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 

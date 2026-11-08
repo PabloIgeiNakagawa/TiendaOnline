@@ -16,7 +16,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
     /// Los guards de dominio lanzan excepciones tipadas: se aserte el tipo
     /// concreto, no Exception genérica (xUnit exige match exacto).
     /// </summary>
-    public class PedidoCommandServiceTransferenciaTests
+    public class GestionTransferenciaServiceTests
     {
         private const string UrlComprobante = "https://res.cloudinary.com/demo/Comprobantes/Pedido-000001.jpg";
         private const string PublicIdComprobante = "Comprobantes/Pedido-000001.jpg";
@@ -68,7 +68,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
                   .ReturnsAsync(UrlComprobante);
             var settings = new Mock<IAppSettingsService>();
             settings.Setup(x => x.GetValue("Pagos:EmailNotificaciones")).Returns("dueno@techstore.com");
-            var sut = Sut.PedidoCommand(ctx, imagen: imagen, settings: settings);
+            var sut = Sut.GestionTransferencia(ctx, imagen: imagen, settings: settings);
 
             var url = await sut.GuardarComprobanteAsync(pedido.PedidoId, Stream.Null, "Pedido-000001.jpg");
 
@@ -86,7 +86,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<PedidoNoEncontradoException>(
                 () => sut.GuardarComprobanteAsync(99999, Stream.Null, "Pedido-000001.jpg"));
@@ -102,7 +102,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var imagen = new Mock<IImagenService>();
             imagen.Setup(x => x.SubirComprobanteAsync(It.IsAny<Stream>(), It.IsAny<string>()))
                   .ReturnsAsync((string?)null);
-            var sut = Sut.PedidoCommand(ctx, imagen: imagen);
+            var sut = Sut.GestionTransferencia(ctx, imagen: imagen);
 
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
                 () => sut.GuardarComprobanteAsync(pedido.PedidoId, Stream.Null, "Pedido-000001.jpg"));
@@ -127,7 +127,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
                 metodoDePagoId: mp.MetodoDePagoId);
 
             var imagen = new Mock<IImagenService>();
-            var sut = Sut.PedidoCommand(ctx, imagen: imagen);
+            var sut = Sut.GestionTransferencia(ctx, imagen: imagen);
 
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
                 () => sut.GuardarComprobanteAsync(pedido.PedidoId, Stream.Null, "Pedido-000001.jpg"));
@@ -143,7 +143,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var (_, _, pedido, _, _) = SeedEscenario(ctx, comprobanteUrl: UrlComprobante);
 
             var imagen = new Mock<IImagenService>();
-            var sut = Sut.PedidoCommand(ctx, imagen: imagen);
+            var sut = Sut.GestionTransferencia(ctx, imagen: imagen);
 
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
                 () => sut.GuardarComprobanteAsync(pedido.PedidoId, Stream.Null, "Pedido-000001.jpg"));
@@ -161,7 +161,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
                 comprobanteUrl: null);
 
             var imagen = new Mock<IImagenService>();
-            var sut = Sut.PedidoCommand(ctx, imagen: imagen);
+            var sut = Sut.GestionTransferencia(ctx, imagen: imagen);
 
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
                 () => sut.GuardarComprobanteAsync(pedido.PedidoId, Stream.Null, "Pedido-000001.jpg"));
@@ -179,7 +179,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var (_, producto, pedido, _, _) = SeedEscenario(ctx, stock: 5, cantidad: 2, costoEnvio: 50m);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.GestionTransferencia(ctx);
 
             await sut.AprobarPagoTransferenciaAsync(pedido.PedidoId);
 
@@ -208,7 +208,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var (_, producto, pedido, _, _) = SeedEscenario(ctx, comprobanteUrl: null);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
                 () => sut.AprobarPagoTransferenciaAsync(pedido.PedidoId));
@@ -231,7 +231,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             await using var ctx = db.CreateContext();
             var (_, producto, pedido, _, _) = SeedEscenario(ctx,
                 estado: EstadoPedido.EnPreparacion, estadoPago: EstadoPago.Aprobado);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<PedidoNoCancelableException>(
                 () => sut.AprobarPagoTransferenciaAsync(pedido.PedidoId));
@@ -250,7 +250,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var (_, producto, pedido, _, _) = SeedEscenario(ctx, fechaPedido: DateTime.Now.AddHours(-25));
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<PedidoNoCancelableException>(
                 () => sut.AprobarPagoTransferenciaAsync(pedido.PedidoId));
@@ -270,7 +270,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var (_, producto, pedido, _, _) = SeedEscenario(ctx, stock: 1, cantidad: 2);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<StockInsuficienteException>(
                 () => sut.AprobarPagoTransferenciaAsync(pedido.PedidoId));
@@ -299,7 +299,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2,
                 metodoDePagoId: mp.MetodoDePagoId);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
                 () => sut.AprobarPagoTransferenciaAsync(pedido.PedidoId));
@@ -326,7 +326,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             var imagen = new Mock<IImagenService>();
             imagen.Setup(x => x.ExtraerPublicIdDesdeUrl(UrlComprobante)).Returns(PublicIdComprobante);
-            var sut = Sut.PedidoCommand(ctx, imagen: imagen);
+            var sut = Sut.GestionTransferencia(ctx, imagen: imagen);
 
             await sut.RechazarComprobanteTransferenciaAsync(pedido.PedidoId);
 
@@ -346,7 +346,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var (_, _, pedido, _, _) = SeedEscenario(ctx, comprobanteUrl: null);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
                 () => sut.RechazarComprobanteTransferenciaAsync(pedido.PedidoId));
@@ -365,7 +365,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var (_, _, pedido, _, _) = SeedEscenario(ctx, estado: EstadoPedido.Cancelado, estadoPago: EstadoPago.Rechazado);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<PedidoNoCancelableException>(
                 () => sut.RechazarComprobanteTransferenciaAsync(pedido.PedidoId));
@@ -383,7 +383,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2,
                 metodoDePagoId: mp.MetodoDePagoId);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
                 () => sut.RechazarComprobanteTransferenciaAsync(pedido.PedidoId));
@@ -395,7 +395,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var (_, producto, pedido, _, _) = SeedEscenario(ctx, stock: 5, cantidad: 2);
-            var sut = Sut.PedidoCommand(ctx);
+            var sut = Sut.GestionTransferencia(ctx);
 
             await sut.AprobarPagoTransferenciaAsync(pedido.PedidoId);
 
@@ -422,7 +422,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             var imagen = new Mock<IImagenService>();
             imagen.Setup(x => x.ExtraerPublicIdDesdeUrl(UrlComprobante)).Returns(PublicIdComprobante);
-            var sut = Sut.PedidoCommand(ctx, imagen: imagen);
+            var sut = Sut.GestionTransferencia(ctx, imagen: imagen);
 
             await Assert.ThrowsAsync<PedidoNoCancelableException>(
                 () => sut.RechazarComprobanteTransferenciaAsync(pedido.PedidoId));

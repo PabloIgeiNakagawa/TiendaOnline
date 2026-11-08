@@ -75,7 +75,7 @@ namespace TiendaOnline.Tests.Integration
 
         private void SetupCrearPedido(int pedidoIdDevuelto)
         {
-            _app.PedidoCommand
+            _app.CreacionPedido
                 .Setup(x => x.CrearPedidoYPrepararPagoAsync(It.IsAny<CrearPedidoDto>(), It.IsAny<CancellationToken>()))
                 .Callback<CrearPedidoDto, CancellationToken>((dto, _) => _dtoCapturado = dto)
                 .ReturnsAsync(new PedidoPagoDto { PedidoId = pedidoIdDevuelto });
@@ -225,7 +225,7 @@ namespace TiendaOnline.Tests.Integration
             // Assert: el filtro de antiforgery corta antes de tocar nada (400) y el
             // pedido jamás se crea ni el carrito se toca.
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            _app.PedidoCommand.Verify(
+            _app.CreacionPedido.Verify(
                 x => x.CrearPedidoYPrepararPagoAsync(It.IsAny<CrearPedidoDto>(), It.IsAny<CancellationToken>()),
                 Times.Never);
             _app.Carrito.Verify(x => x.VaciarAsync(), Times.Never);

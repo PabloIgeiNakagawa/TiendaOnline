@@ -16,13 +16,15 @@ namespace TiendaOnline.Features.Pedidos.Admin
     public class AdminPedidosController : Controller
     {
         private readonly IPedidoQueryService _pedidoQueryService;
-        private readonly IPedidoCommandService _pedidoCommandService;
+        private readonly IGestionTransferenciaService _gestionTransferenciaService;
+        private readonly IEstadosPedidoService _estadosPedidoService;
         private readonly ILogger<AdminPedidosController> _logger;
 
-        public AdminPedidosController(IPedidoQueryService pedidoQueryService, IPedidoCommandService pedidoCommandService, ILogger<AdminPedidosController> logger)
+        public AdminPedidosController(IPedidoQueryService pedidoQueryService, IGestionTransferenciaService gestionTransferenciaService, IEstadosPedidoService estadosPedidoService, ILogger<AdminPedidosController> logger)
         {
             _pedidoQueryService = pedidoQueryService;
-            _pedidoCommandService = pedidoCommandService;
+            _gestionTransferenciaService = gestionTransferenciaService;
+            _estadosPedidoService = estadosPedidoService;
             _logger = logger;
         }
 
@@ -70,7 +72,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
             {
                 return NotFound();
             }
-            await _pedidoCommandService.PedidoEnviadoAsync(pedidoId, HttpContext.RequestAborted);
+            await _estadosPedidoService.PedidoEnviadoAsync(pedidoId, HttpContext.RequestAborted);
             _logger.LogInformation("Pedido {PedidoId} marcado Enviado por {Admin}", pedidoId, User.FindFirstValue(ClaimTypes.NameIdentifier));
             TempData.SetMensajeExito("Estado del pedido actualizado a Enviado");
             return RedirectToAction("Detalles", new { id = pedidoId });
@@ -85,7 +87,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
             {
                 return NotFound();
             }
-            await _pedidoCommandService.PedidoEntregadoAsync(pedidoId, HttpContext.RequestAborted);
+            await _estadosPedidoService.PedidoEntregadoAsync(pedidoId, HttpContext.RequestAborted);
             _logger.LogInformation("Pedido {PedidoId} marcado Entregado por {Admin}", pedidoId, User.FindFirstValue(ClaimTypes.NameIdentifier));
             TempData.SetMensajeExito("Estado del pedido actualizado a Entregado");
             return RedirectToAction("Detalles", new { id = pedidoId });
@@ -99,7 +101,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
             {
                 return NotFound();
             }
-            await _pedidoCommandService.PedidoCanceladoAsync(pedidoId, HttpContext.RequestAborted);
+            await _estadosPedidoService.PedidoCanceladoAsync(pedidoId, HttpContext.RequestAborted);
             _logger.LogInformation("Pedido {PedidoId} cancelado por {Admin} (con devolución de stock si estaba pagado)", pedidoId, User.FindFirstValue(ClaimTypes.NameIdentifier));
             TempData.SetMensajeExito("Estado del pedido actualizado a Cancelado");
             return RedirectToAction("Detalles", new { id = pedidoId });
@@ -116,7 +118,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
 
             try
             {
-                await _pedidoCommandService.AprobarPagoTransferenciaAsync(pedidoId, HttpContext.RequestAborted);
+                await _gestionTransferenciaService.AprobarPagoTransferenciaAsync(pedidoId, HttpContext.RequestAborted);
                 _logger.LogInformation("Pago por transferencia aprobado para el pedido {PedidoId} por {Admin}", pedidoId, User.FindFirstValue(ClaimTypes.NameIdentifier));
                 TempData.SetMensajeExito("Pago aprobado: el pedido pasó a preparación");
             }
@@ -146,7 +148,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
 
             try
             {
-                await _pedidoCommandService.RechazarComprobanteTransferenciaAsync(pedidoId, HttpContext.RequestAborted);
+                await _gestionTransferenciaService.RechazarComprobanteTransferenciaAsync(pedidoId, HttpContext.RequestAborted);
                 _logger.LogInformation("Comprobante rechazado del pedido {PedidoId} por {Admin} (pedido cancelado y cliente notificado)", pedidoId, User.FindFirstValue(ClaimTypes.NameIdentifier));
                 TempData.SetMensajeExito("Comprobante rechazado: pedido cancelado y cliente notificado");
             }

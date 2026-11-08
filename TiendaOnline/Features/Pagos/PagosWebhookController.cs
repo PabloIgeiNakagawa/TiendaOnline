@@ -16,23 +16,23 @@ namespace TiendaOnline.Features.Pagos
     {
         private readonly IPaymentService _paymentService;
         private readonly ILogger<PagosWebhookController> _logger;
-        private readonly IPedidoCommandService _pedidoCommandService;
+        private readonly IConfirmacionPagoService _confirmacionPagoService;
 #if DEBUG
         private readonly IWebHostEnvironment _environment;
 
-        public PagosWebhookController(IPaymentService paymentService, ILogger<PagosWebhookController> logger, IPedidoCommandService pedidoCommandService, IWebHostEnvironment environment)
+        public PagosWebhookController(IPaymentService paymentService, ILogger<PagosWebhookController> logger, IConfirmacionPagoService confirmacionPagoService, IWebHostEnvironment environment)
         {
             _paymentService = paymentService;
             _logger = logger;
-            _pedidoCommandService = pedidoCommandService;
+            _confirmacionPagoService = confirmacionPagoService;
             _environment = environment;
         }
 #else
-        public PagosWebhookController(IPaymentService paymentService, ILogger<PagosWebhookController> logger, IPedidoCommandService pedidoCommandService)
+        public PagosWebhookController(IPaymentService paymentService, ILogger<PagosWebhookController> logger, IConfirmacionPagoService confirmacionPagoService)
         {
             _paymentService = paymentService;
             _logger = logger;
-            _pedidoCommandService = pedidoCommandService;
+            _confirmacionPagoService = confirmacionPagoService;
         }
 #endif
 
@@ -87,7 +87,7 @@ namespace TiendaOnline.Features.Pagos
                 {
                     // Delegamos todo el procesamiento al servicio, que ya maneja los estados:
                     // approved, rejected, cancelled, refunded, etc.
-                    var procesado = await _pedidoCommandService.ConfirmarPagoAsync(infoPago, HttpContext.RequestAborted);
+                    var procesado = await _confirmacionPagoService.ConfirmarPagoAsync(infoPago, HttpContext.RequestAborted);
                     if (procesado.Confirmado)
                     {
                         _logger.LogInformation("Webhook efectivo para Pago {Id} con estado {Estado}. Motivo: {Motivo}.", finalId, infoPago.Estado, procesado.Motivo);

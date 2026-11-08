@@ -90,7 +90,10 @@ namespace TiendaOnline.Extensions
             services.AddScoped<ICarritoSesionMigrador, CarritoSesionMigrador>();
             services.AddScoped<ICarritoService, CarritoService>();
             services.AddScoped<IPedidoQueryService, PedidoQueryService>();
-            services.AddScoped<IPedidoCommandService, PedidoCommandService>();
+            services.AddScoped<ICreacionPedidoService, CreacionPedidoService>();
+            services.AddScoped<IConfirmacionPagoService, ConfirmacionPagoService>();
+            services.AddScoped<IGestionTransferenciaService, GestionTransferenciaService>();
+            services.AddScoped<IEstadosPedidoService, EstadosPedidoService>();
             services.AddScoped<IPedidoVencimientoService, PedidoVencimientoService>();
             services.AddScoped<IEnvioQueryService, EnvioQueryService>();
             services.AddScoped<IEnvioCommandService, EnvioCommandService>();
