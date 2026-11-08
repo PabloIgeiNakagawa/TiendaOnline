@@ -140,7 +140,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear el pedido.");
-                await transaction.RollbackAsync(ct);
+                await TransaccionSegura.RevertirAsync(transaction, _logger, ct);
                 throw;
             }
         }
@@ -238,7 +238,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                         var reservaStockExitosa = await IntentarReservarStockAsync(pedido, ct);
                         if (!reservaStockExitosa)
                         {
-                            await transaction.RollbackAsync(ct);
+                            await TransaccionSegura.RevertirAsync(transaction, _logger, ct);
                             return ResultadoPago.Fallo(MotivoPago.StockInsuficiente);
                         }
 
@@ -386,7 +386,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(ct);
+                await TransaccionSegura.RevertirAsync(transaction, _logger, ct);
                 _logger.LogError(ex, "Error al procesar el pago del pedido {PedidoId}", infoPago.PedidoId);
                 throw;
             }
@@ -535,7 +535,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(ct);
+                await TransaccionSegura.RevertirAsync(transaction, _logger, ct);
                 _logger.LogWarning(ex, "No se pudo aprobar el pago por transferencia del pedido {PedidoId}", pedidoId);
                 throw;
             }
@@ -611,7 +611,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             }
             catch (Exception)
             {
-                await transaction.RollbackAsync(ct);
+                await TransaccionSegura.RevertirAsync(transaction, _logger, ct);
                 throw;
             }
 
@@ -811,7 +811,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             }
             catch (Exception)
             {
-                await transaction.RollbackAsync(ct);
+                await TransaccionSegura.RevertirAsync(transaction, _logger, ct);
                 throw;
             }
         }

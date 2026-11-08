@@ -97,7 +97,7 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
             }
             catch (Exception)
             {
-                await transaction.RollbackAsync(ct);
+                await TransaccionSegura.RevertirAsync(transaction, _logger, ct);
                 throw;
             }
         }
