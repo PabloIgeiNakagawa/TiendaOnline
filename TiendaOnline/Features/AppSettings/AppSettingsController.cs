@@ -94,7 +94,7 @@ namespace TiendaOnline.Features.AppSettings
             {
                 using (var stream = model.LogoFile.OpenReadStream())
                 {
-                    logoUrl = await _imagenService.SubirImagenAsync(stream, model.LogoFile.FileName, model.LogoFile.ContentType, ct: HttpContext.RequestAborted);
+                    logoUrl = await _imagenService.SubirImagenAsync(stream, model.LogoFile.FileName, "Branding", ct: HttpContext.RequestAborted);
                 }
             }
 
@@ -104,7 +104,7 @@ namespace TiendaOnline.Features.AppSettings
             {
                 using (var stream = model.FavIconFile.OpenReadStream())
                 {
-                    favIconUrl = await _imagenService.SubirImagenAsync(stream, model.FavIconFile.FileName, model.FavIconFile.ContentType, ct: HttpContext.RequestAborted);
+                    favIconUrl = await _imagenService.SubirImagenAsync(stream, model.FavIconFile.FileName, "Branding", ct: HttpContext.RequestAborted);
                 }
             }
 

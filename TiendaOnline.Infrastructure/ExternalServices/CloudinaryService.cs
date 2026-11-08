@@ -39,8 +39,8 @@ namespace TiendaOnline.Infrastructure.ExternalServices
                 Folder = $"TechStore/{subCarpeta}",
 
                 Transformation = new Transformation()
-                    .Width(width)
-                    .Height(height)
+                    .Width(LimitarDimension(width))
+                    .Height(LimitarDimension(height))
                     .Crop("limit")
                     .Quality("auto")
                     .FetchFormat("auto")
@@ -63,6 +63,14 @@ namespace TiendaOnline.Infrastructure.ExternalServices
 
             return uploadResult.SecureUrl.ToString();
         }
+
+        /// <summary>
+        /// La transformación de subida es una sola por archivo: ningún caller puede
+        /// pedir dimensiones fuera de rango (cada variante nueva de imagen consume
+        /// capacidad del plan de Cloudinary). Piso y techo fijos.
+        /// </summary>
+        public static int LimitarDimension(int dimension)
+            => Math.Clamp(dimension, 16, 2048);
 
         // Los comprobantes se suben sin transformación: la resolución original es la evidencia del pago.
         public async Task<string> SubirComprobanteAsync(Stream archivoStream, string nombreArchivo, CancellationToken ct = default)
