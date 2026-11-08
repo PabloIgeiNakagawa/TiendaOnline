@@ -78,10 +78,28 @@ namespace TiendaOnline.Tests.Integration
 
         public TestDatabase Database { get; } = new();
 
+        // AddHangfire pisa el JobStorage.Current global con el storage del host:
+        // al desbotear la app la DI lo dispone (su Dispatcher queda muerto) y todo
+        // encolado posterior desde tests unitarios revienta. Se captura el valor
+        // de entrada y se repone cuando el host muere.
+        private readonly JobStorage _jobStoragePrevio = JobStorage.Current;
+
         public TestApp()
         {
             // Default benigno: carrito vacío. Cada test ajusta lo que necesita.
             Carrito.Setup(x => x.ObtenerAsync()).ReturnsAsync(new List<ItemCarrito>());
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            JobStorage.Current = _jobStoragePrevio;
+        }
+
+        public override async ValueTask DisposeAsync()
+        {
+            await base.DisposeAsync();
+            JobStorage.Current = _jobStoragePrevio;
         }
 
         /// <summary>Client autenticado como un usuario del test (sin redirect automático).</summary>
