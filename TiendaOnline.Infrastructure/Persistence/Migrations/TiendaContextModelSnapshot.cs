@@ -382,11 +382,15 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                     b.Property<bool>("EsEnvioADomicilio")
                         .HasColumnType("bit");
 
-                    b.Property<int>("Estado")
-                        .HasColumnType("int");
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
-                    b.Property<int>("EstadoPago")
-                        .HasColumnType("int");
+                    b.Property<string>("EstadoPago")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<DateTime?>("FechaCancelado")
                         .HasColumnType("datetime2");
@@ -504,8 +508,10 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("Rol")
-                        .HasColumnType("int");
+                    b.Property<string>("Rol")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("Telefono")
                         .HasMaxLength(25)

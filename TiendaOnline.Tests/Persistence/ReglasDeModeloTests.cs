@@ -31,5 +31,32 @@ namespace TiendaOnline.Tests.Persistence
             // comercial de categorías es lógica; el borrado físico solo aplica a filas sin hijos).
             Assert.Equal(DeleteBehavior.Restrict, fk.DeleteBehavior);
         }
+
+        [Fact]
+        public void EstadosDelNegocio_GuardadosComoTexto()
+        {
+            // Regla única desde EstadosEnTexto: los estados del negocio se guardan
+            // como texto ('EnPreparacion', no 1) — la base es legible para quien la
+            // mira directamente. EF traduce en ambos sentidos, el código no cambia.
+            // Si alguien saca una de las conversiones, el test avisa.
+            using var context = _db.CreateContext();
+
+            var pedido = context.Model.FindEntityType(typeof(Pedido))!;
+            AssertConversionATexto(pedido.FindProperty(nameof(Pedido.Estado))!);
+            AssertConversionATexto(pedido.FindProperty(nameof(Pedido.EstadoPago))!);
+
+            var usuario = context.Model.FindEntityType(typeof(Usuario))!;
+            AssertConversionATexto(usuario.FindProperty(nameof(Usuario.Rol))!);
+
+            var movimiento = context.Model.FindEntityType(typeof(MovimientoStock))!;
+            AssertConversionATexto(movimiento.FindProperty(nameof(MovimientoStock.Tipo))!);
+        }
+
+        private static void AssertConversionATexto(Microsoft.EntityFrameworkCore.Metadata.IReadOnlyProperty propiedad)
+        {
+            // La conversión se declara por tipo (HasConversion<string>): EF arma el
+            // converter en el mapping y el proveedor del valor queda en string.
+            Assert.Equal(typeof(string), propiedad.GetProviderClrType());
+        }
     }
 }

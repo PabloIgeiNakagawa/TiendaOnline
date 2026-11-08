@@ -34,7 +34,11 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
             // Filtro por Tipo de Movimiento (Enum)
             if (filtros.TipoMovimientoId.HasValue)
             {
-                query = query.Where(m => (int)m.Tipo == filtros.TipoMovimientoId.Value);
+                // La columna Tipo es texto en la BD (estados como texto): la
+                // comparación es enum↔enum con la conversión del modelo; un cast
+                // SQL sobre el texto no devuelve filas (y rompería en SQL Server).
+                var tipoFiltro = (Domain.Entities.TipoMovimiento)filtros.TipoMovimientoId.Value;
+                query = query.Where(m => m.Tipo == tipoFiltro);
             }
 
             // Filtro por Rango de Fechas

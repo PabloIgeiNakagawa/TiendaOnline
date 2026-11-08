@@ -26,41 +26,57 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
         public async Task<List<PedidoListadoUsuarioDto>> ObtenerPedidosDeUsuarioAsync(int id, CancellationToken ct)
         {
-            return await _context.Pedidos
+            // El SQL solo entrega las columnas de estado ya convertidas a texto
+            // ('Enviado'); el cast al int del DTO ocurre en memoria después del
+            // fetch: un cast SQL sobre la columna convertida entrega 0 o rompe.
+            var filas = await _context.Pedidos
                 .AsNoTracking()
                 .Where(p => p.UsuarioId == id)
-                .Select(p => new PedidoListadoUsuarioDto
+                .Select(p => new
                 {
-                    PedidoId = p.PedidoId,
-                    FechaPedido = p.FechaPedido,
-                    FechaEnvio = p.FechaEnvio,
-                    FechaEntrega = p.FechaEntrega,
-                    FechaCancelado = p.FechaCancelado,
-                    EstadoId = (int)p.Estado,
-                    EstadoPagoId = (int)p.EstadoPago,
+                    p.PedidoId,
+                    p.FechaPedido,
+                    p.FechaEnvio,
+                    p.FechaEntrega,
+                    p.FechaCancelado,
+                    Estado = p.Estado,
+                    EstadoPago = p.EstadoPago,
 
                     Productos = p.DetallesPedido
                                 .Select(d => d.Producto.Nombre)
                                 .ToList()
                 })
                 .ToListAsync(ct);
+
+            return filas.Select(f => new PedidoListadoUsuarioDto
+            {
+                PedidoId = f.PedidoId,
+                FechaPedido = f.FechaPedido,
+                FechaEnvio = f.FechaEnvio,
+                FechaEntrega = f.FechaEntrega,
+                FechaCancelado = f.FechaCancelado,
+                EstadoId = (int)f.Estado,
+                EstadoPagoId = (int)f.EstadoPago,
+
+                Productos = f.Productos
+            }).ToList();
         }
 
         public async Task<PedidoDetallesDto?> ObtenerPedidoConDetallesAsync(int id, CancellationToken ct)
         {
-            return await _context.Pedidos
+            var pedido = await _context.Pedidos
                 .AsNoTracking()
                 .Where(p => p.PedidoId == id)
-                .Select(p => new PedidoDetallesDto
+                .Select(p => new
                 {
-                    PedidoId = p.PedidoId,
-                    FechaPedido = p.FechaPedido,
-                    FechaEnvio = p.FechaEnvio,
-                    FechaEntrega = p.FechaEntrega,
-                    FechaCancelado = p.FechaCancelado,
-                    EstadoId = (int)p.Estado,
-                    EstadoPagoId = (int)p.EstadoPago,
-                    MetodoPagoId = p.MetodoDePagoId,
+                    p.PedidoId,
+                    p.FechaPedido,
+                    p.FechaEnvio,
+                    p.FechaEntrega,
+                    p.FechaCancelado,
+                    Estado = p.Estado,
+                    EstadoPago = p.EstadoPago,
+                    p.MetodoDePagoId,
 
                     UsuarioId = p.Usuario.UsuarioId,
                     UsuarioNombre = p.Usuario.Nombre,
@@ -71,20 +87,55 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     Observaciones = p.EnvioObservaciones,
 
 
-                    Items = p.DetallesPedido.Select(d => new PedidoItemDto
+                    Items = p.DetallesPedido.Select(d => new
                     {
-                        ProductoNombre = d.Producto.Nombre,
-                        ProductoImagenUrl = d.Producto.ImagenUrl,
-                        Cantidad = d.Cantidad,
-                        PrecioUnitario = d.PrecioUnitario
+                        d.Producto.Nombre,
+                        d.Producto.ImagenUrl,
+                        d.Cantidad,
+                        d.PrecioUnitario
                     }).ToList(),
 
-                    TransaccionPagoId = p.TransaccionPagoId,
-                    ComprobanteUrl = p.ComprobanteUrl,
-                    FechaComprobante = p.FechaComprobante,
-                    CostoEnvio = p.CostoEnvio
+                    p.TransaccionPagoId,
+                    p.ComprobanteUrl,
+                    p.FechaComprobante,
+                    p.CostoEnvio
                 })
                 .FirstOrDefaultAsync(ct);
+
+            if (pedido == null) return null;
+
+            return new PedidoDetallesDto
+            {
+                PedidoId = pedido.PedidoId,
+                FechaPedido = pedido.FechaPedido,
+                FechaEnvio = pedido.FechaEnvio,
+                FechaEntrega = pedido.FechaEntrega,
+                FechaCancelado = pedido.FechaCancelado,
+                EstadoId = (int)pedido.Estado,
+                EstadoPagoId = (int)pedido.EstadoPago,
+                MetodoPagoId = pedido.MetodoDePagoId,
+
+                UsuarioId = pedido.UsuarioId,
+                UsuarioNombre = pedido.UsuarioNombre,
+                UsuarioEmail = pedido.UsuarioEmail,
+                UsuarioTelefono = pedido.UsuarioTelefono,
+
+                DireccionCompleta = pedido.DireccionCompleta,
+                Observaciones = pedido.Observaciones,
+
+                Items = pedido.Items.Select(i => new PedidoItemDto
+                {
+                    ProductoNombre = i.Nombre,
+                    ProductoImagenUrl = i.ImagenUrl,
+                    Cantidad = i.Cantidad,
+                    PrecioUnitario = i.PrecioUnitario
+                }).ToList(),
+
+                TransaccionPagoId = pedido.TransaccionPagoId,
+                ComprobanteUrl = pedido.ComprobanteUrl,
+                FechaComprobante = pedido.FechaComprobante,
+                CostoEnvio = pedido.CostoEnvio
+            };
         }
 
         public async Task<ComprobantePedidoDto?> ObtenerComprobanteDtoAsync(int pedidoId, CancellationToken ct)
@@ -102,7 +153,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     UsuarioTelefono = p.Usuario.Telefono,
                     DireccionCompleta = FormatearDireccionEnvio(p),
                     MetodoPago = p.MetodoDePago.Nombre,
-                    EstadoPagoId = (int)p.EstadoPago,
+                    EstadoPago = p.EstadoPago,
                     p.TransaccionPagoId,
                     Items = p.DetallesPedido.Select(d => new
                     {
@@ -129,7 +180,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 pedido.UsuarioTelefono ?? "N/A",
                 pedido.DireccionCompleta,
                 pedido.MetodoPago,
-                pedido.EstadoPagoId,
+                (int)pedido.EstadoPago,
                 pedido.TransaccionPagoId,
                 pedido.Items.Select(i => new ComprobanteItemDto(i.Nombre, i.Cantidad, i.PrecioUnitario, i.Subtotal)).ToList(),
                 pedido.Subtotal,
@@ -152,8 +203,20 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                                          p.Usuario.Apellido.Contains(filtros.Busqueda));
             }
 
-            if (filtros.EstadoId.HasValue) query = query.Where(p => ((int)p.Estado) == filtros.EstadoId);
-            if (filtros.EstadoPagoId.HasValue) query = query.Where(p => ((int)p.EstadoPago) == filtros.EstadoPagoId);
+            // El valor del filtro nace como int y pasa a enum antes de comparar: la
+            // comparación enum↔columna usa la conversión a texto del modelo; un cast
+            // SQL sobre la columna ya convertida no devuelve nada (o rompe en SQL Server).
+            if (filtros.EstadoId.HasValue)
+            {
+                var estadoFiltro = (Domain.Entities.EstadoPedido)filtros.EstadoId.Value;
+                query = query.Where(p => p.Estado == estadoFiltro);
+            }
+
+            if (filtros.EstadoPagoId.HasValue)
+            {
+                var estadoPagoFiltro = (Domain.Entities.EstadoPago)filtros.EstadoPagoId.Value;
+                query = query.Where(p => p.EstadoPago == estadoPagoFiltro);
+            }
             if (filtros.Desde.HasValue) query = query.Where(p => p.FechaPedido >= filtros.Desde.Value);
             if (filtros.Hasta.HasValue) query = query.Where(p => p.FechaPedido <= filtros.Hasta.Value);
 
@@ -180,24 +243,41 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             var total = await query.CountAsync(ct);
 
             // Paginación y Mapeo a DTO
-            var items = await query
+            // Estado/EstadoPago viajan como columnas ya convertidas a texto; el cast
+            // al int del DTO ocurre en memoria tras el fetch (el CAST SQL sobre el
+            // texto entregaba 0 en SQLite y rompería en SQL Server).
+            var filas = await query
                 .OrderByDescending(p => p.FechaPedido)
                 .Skip((filtros.Pagina - 1) * filtros.Cantidad)
                 .Take(filtros.Cantidad)
-                .Select(p => new PedidoListadoDto
+                .Select(p => new
                 {
-                    PedidoId = p.PedidoId,
+                    p.PedidoId,
                     NombreCliente = $"{p.Usuario.Nombre} {p.Usuario.Apellido}",
-                    EmailCliente = p.Usuario.Email,
-                    FechaPedido = p.FechaPedido,
-                    FechaEntrega = p.FechaEntrega,
-                    EstadoId = (int)p.Estado,
-                    EstadoPagoId = (int)p.EstadoPago,
-                    MetodoPagoId = p.MetodoDePagoId,
+                    p.Usuario.Email,
+                    p.FechaPedido,
+                    p.FechaEntrega,
+                    Estado = p.Estado,
+                    EstadoPago = p.EstadoPago,
+                    p.MetodoDePagoId,
                     TieneComprobante = p.ComprobanteUrl != null,
                     Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
                 })
-            .ToListAsync(ct);
+                .ToListAsync(ct);
+
+            var items = filas.Select(f => new PedidoListadoDto
+            {
+                PedidoId = f.PedidoId,
+                NombreCliente = f.NombreCliente,
+                EmailCliente = f.Email,
+                FechaPedido = f.FechaPedido,
+                FechaEntrega = f.FechaEntrega,
+                EstadoId = (int)f.Estado,
+                EstadoPagoId = (int)f.EstadoPago,
+                MetodoPagoId = f.MetodoDePagoId,
+                TieneComprobante = f.TieneComprobante,
+                Total = f.Total
+            }).ToList();
 
             return new PagedResult<PedidoListadoDto>(items, total, filtros.Pagina, filtros.Cantidad);
         }

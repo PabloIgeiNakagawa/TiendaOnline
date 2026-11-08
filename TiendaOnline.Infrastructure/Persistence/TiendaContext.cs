@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Application.Common.Interfaces;
 
@@ -164,7 +165,12 @@ namespace TiendaOnline.Infrastructure.Persistence
                     : propiedad.OriginalValue;
             }
 
-            return JsonConvert.SerializeObject(propiedades);
+            // Enums legibles en la auditoría: "Estado": "EnPreparacion" en el JSON,
+            // misma regla que las columnas de estados desde EstadosEnTexto.
+            return JsonConvert.SerializeObject(propiedades, new JsonSerializerSettings
+            {
+                Converters = { new StringEnumConverter() }
+            });
         }
 
         public DbSet<Auditoria> Auditorias { get; set; }
@@ -257,11 +263,32 @@ namespace TiendaOnline.Infrastructure.Persistence
             {
                 entity.ToTable("Pedidos");
 
+                // Estados del negocio como texto: la base se lee a ojo
+                // ('EnPreparacion', no 1). Misma regla que MovimientoStock.Tipo.
+                entity.Property(p => p.Estado)
+                      .HasConversion<string>()
+                      .HasMaxLength(30)
+                      .IsRequired();
+
+                entity.Property(p => p.EstadoPago)
+                      .HasConversion<string>()
+                      .HasMaxLength(30)
+                      .IsRequired();
+
                 // Relación con Usuario
                 entity.HasOne(p => p.Usuario)
                       .WithMany(u => u.Pedidos)
                       .HasForeignKey(p => p.UsuarioId)
                       .OnDelete(DeleteBehavior.Restrict); // Si borro un usuario, NO se borran sus pedidos
+            });
+
+            // Rol del usuario: también texto, regla única para los estados del negocio.
+            modelBuilder.Entity<Usuario>(entity =>
+            {
+                entity.Property(u => u.Rol)
+                      .HasConversion<string>()
+                      .HasMaxLength(30)
+                      .IsRequired();
             });
 
             // Configuración de DetallePedido

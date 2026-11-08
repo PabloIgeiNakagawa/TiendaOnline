@@ -69,16 +69,16 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                 .Where(p => p.FechaPedido >= inicioMesAnterior && p.FechaPedido <= finMesAnterior)
                 .CountAsync(ct);
 
-            var totalClientes = await _context.Usuarios.Where(u => u.Rol == 0 && u.Activo).CountAsync(ct);
+            var totalClientes = await _context.Usuarios.Where(u => u.Rol == Rol.Usuario && u.Activo).CountAsync(ct);
             var clientesMesActual = await _context.Usuarios
                 .AsNoTracking()
-                .Where(u => u.Rol == 0 && u.Activo
+                .Where(u => u.Rol == Rol.Usuario && u.Activo
                          && u.FechaCreacion >= inicioMesActual
                          && u.FechaCreacion <= finMesActual)
                 .CountAsync(ct);
             var clientesMesAnterior = await _context.Usuarios
                 .AsNoTracking()
-                .Where(u => u.Rol == 0 && u.Activo
+                .Where(u => u.Rol == Rol.Usuario && u.Activo
                          && u.FechaCreacion >= inicioMesAnterior
                          && u.FechaCreacion <= finMesAnterior)
                 .CountAsync(ct);
@@ -270,7 +270,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
         {
             var clientes = await _context.Pedidos
                 .AsNoTracking()
-                .Where(p => p.Estado != EstadoPedido.Cancelado && p.Usuario.Rol == 0)
+                .Where(p => p.Estado != EstadoPedido.Cancelado && p.Usuario.Rol == Rol.Usuario)
                 .GroupBy(p => new { p.UsuarioId, p.Usuario.Nombre, p.Usuario.Apellido, p.Usuario.Email })
                 .Select(g => new
                 {

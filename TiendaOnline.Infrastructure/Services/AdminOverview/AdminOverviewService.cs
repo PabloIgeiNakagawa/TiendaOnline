@@ -39,7 +39,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
             var limiteFecha = DateTime.Now.AddHours(-48);
             dto.PedidosEstancados = await _context.Pedidos
                 .AsNoTracking()
-                .Where(p => p.Estado == 0 && p.FechaPedido <= limiteFecha)
+                .Where(p => p.Estado == EstadoPedido.Nuevo && p.FechaPedido <= limiteFecha)
                 .Select(p => new PedidoEstancadoDto
                 {
                     PedidoId = p.PedidoId,
@@ -166,7 +166,7 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
             var limiteFecha = DateTime.Now.AddHours(-48);
             var query = _context.Pedidos
                 .AsNoTracking()
-                .Where(p => p.Estado == 0 && p.FechaPedido <= limiteFecha);
+                .Where(p => p.Estado == EstadoPedido.Nuevo && p.FechaPedido <= limiteFecha);
 
             var totalRegistros = await query.CountAsync(ct);
             var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)tamanoPagina);
