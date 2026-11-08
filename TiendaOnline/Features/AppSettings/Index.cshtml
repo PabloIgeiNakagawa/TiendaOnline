@@ -2,7 +2,7 @@
 @using TiendaOnline.Features.AppSettings
 @model IndexViewModel
 @{
-    ViewData["Title"] = Model.GroupName;
+    ViewData[ViewDataKeys.Title] = Model.GroupName;
 
     // 1. DICCIONARIO DE ICONOS (Bootstrap Icons)
     // Mapear el "Prefijo" con la clase del icono de Bootstrap Icons (ej. "bi bi-cloud-upload")

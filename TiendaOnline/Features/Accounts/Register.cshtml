@@ -3,7 +3,7 @@
 @model RegisterViewModel
 @{
     var esAdmin = User.IsInRole("Administrador");
-    ViewData["Title"] = esAdmin ? "Crear usuario" : "Registrarse";
+    ViewData[ViewDataKeys.Title] = esAdmin ? "Crear usuario" : "Registrarse";
 }
 
 <div class="container py-5">

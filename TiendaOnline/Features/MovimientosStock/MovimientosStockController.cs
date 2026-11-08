@@ -59,7 +59,7 @@ namespace TiendaOnline.Features.MovimientosStock
         [HttpGet("[action]")]
         public async Task<IActionResult> Historial(int id)
         {
-            ViewData["Title"] = "Historial";
+            ViewData[ViewDataKeys.Title] = "Historial";
             var historial = await _movimientoStockQueryService.ObtenerHistorialPorProductoAsync(id, HttpContext.RequestAborted);
             return View(historial);
         }

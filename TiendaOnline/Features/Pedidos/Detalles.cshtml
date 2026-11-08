@@ -4,7 +4,7 @@
 @using TiendaOnline.Features.Pedidos
 @model PedidoDetalleViewModel
 @{
-    ViewData["Title"] = $"Pedido #{Model.PedidoId.ToString("D6")}";
+    ViewData[ViewDataKeys.Title] = $"Pedido #{Model.PedidoId.ToString("D6")}";
 }
 
 @section Styles{

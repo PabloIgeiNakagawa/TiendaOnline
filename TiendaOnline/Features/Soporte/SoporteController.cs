@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Soporte
 {
@@ -10,14 +11,14 @@ namespace TiendaOnline.Features.Soporte
         [HttpGet("[action]")]
         public IActionResult Contacto()
         {
-            ViewData["Title"] = "Contacto";
+            ViewData[ViewDataKeys.Title] = "Contacto";
             return View();
         }
 
         [HttpGet("[action]")]
         public IActionResult FAQ()
         {
-            ViewData["Title"] = "Preguntas frecuentes";
+            ViewData[ViewDataKeys.Title] = "Preguntas frecuentes";
             return View();
         }
 

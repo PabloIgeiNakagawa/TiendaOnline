@@ -1,6 +1,6 @@
 @model TiendaOnline.Features.Ofertas.OfertaFormularioViewModel
 @{
-    ViewData["Title"] = Model.OfertaId == 0 ? "Nueva Oferta" : "Editar Oferta";
+    ViewData[ViewDataKeys.Title] = Model.OfertaId == 0 ? "Nueva Oferta" : "Editar Oferta";
     var esAlta = Model.OfertaId == 0;
 }
 

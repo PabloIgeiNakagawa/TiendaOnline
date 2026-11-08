@@ -1,7 +1,7 @@
 @using TiendaOnline.Application.Carritos
 @model List<ItemCarrito>
 @{
-    ViewData["Title"] = "Carrito de Compras";
+    ViewData[ViewDataKeys.Title] = "Carrito de Compras";
     bool usuarioEstaAutenticado = User.Identity != null && User.Identity.IsAuthenticated;
     decimal total = Model.Sum(i => i.Precio * i.Cantidad);
     var productosTotal = Model.Sum(i => i.Cantidad);
@@ -14,7 +14,7 @@
     <div class="mb-4 border-bottom pb-3">
         <h1 class="fs-3 fw-bold d-flex align-items-center text-primary gap-2">
             <i class="bi bi-cart3"></i>
-            @ViewData["Title"]
+            @ViewData[ViewDataKeys.Title]
             @if (Model != null && Model.Any())
             {
                 <span class="bg-primary text-white small fw-semibold rounded-pill px-3 py-1 ms-2">@productosTotal</span>
