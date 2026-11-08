@@ -61,7 +61,7 @@ namespace TiendaOnline.Features.AppSettings
 
             await _appSettingsService.SaveMultipleSettingsAsync(dtos, HttpContext.RequestAborted);
             _logger.LogInformation("Configuración actualizada: grupo {Grupo} ({Cantidad} claves) por {Admin}",
-                model.GroupName, model.Settings.Count, User.FindFirstValue(ClaimTypes.Email));
+                model.GroupName, model.Settings.Count, User.FindFirstValue(ClaimTypes.NameIdentifier));
             TempData.SetMensajeExito("Cambios guardados correctamente.");
             return RedirectToAction("Index", new { groupName = model.GroupName });
         }
@@ -122,7 +122,7 @@ namespace TiendaOnline.Features.AppSettings
 
             await _appSettingsService.RefreshCache();
 
-            _logger.LogInformation("Estética del sitio actualizada por {Admin}", User.FindFirstValue(ClaimTypes.Email));
+            _logger.LogInformation("Estética del sitio actualizada por {Admin}", User.FindFirstValue(ClaimTypes.NameIdentifier));
             TempData.SetMensajeExito("Apariencia actualizada correctamente.");
             return RedirectToAction(nameof(Estetica));
         }

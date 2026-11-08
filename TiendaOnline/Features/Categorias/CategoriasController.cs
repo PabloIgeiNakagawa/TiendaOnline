@@ -66,7 +66,7 @@ namespace TiendaOnline.Features.Categorias
                     };
                     await _categoriaCommandService.AgregarCategoriaAsync(dto, HttpContext.RequestAborted);
                     _logger.LogInformation("Categoría creada: {Nombre} (padre {CategoriaPadreId}) por {Admin}",
-                        dto.Nombre, dto.CategoriaPadreId, User.FindFirstValue(ClaimTypes.Email));
+                        dto.Nombre, dto.CategoriaPadreId, User.FindFirstValue(ClaimTypes.NameIdentifier));
                     TempData.SetMensajeExito("La categoría se creó correctamente.");
                     return RedirectToAction(nameof(Listado));
                 }
@@ -115,7 +115,7 @@ namespace TiendaOnline.Features.Categorias
         {
             bool eliminado = await _categoriaCommandService.EliminarCategoriaAsync(id, HttpContext.RequestAborted);
             _logger.LogInformation("Eliminación de categoría {CategoriaId} por {Admin} (resultado: {Eliminado})",
-                id, User.FindFirstValue(ClaimTypes.Email), eliminado);
+                id, User.FindFirstValue(ClaimTypes.NameIdentifier), eliminado);
             if (!eliminado)
             {
                 TempData.SetMensajeError("No se puede eliminar: la categoría tiene productos o subcategorías.");

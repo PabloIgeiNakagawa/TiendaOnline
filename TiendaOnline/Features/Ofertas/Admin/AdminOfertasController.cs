@@ -59,7 +59,7 @@ namespace TiendaOnline.Features.Ofertas.Admin
                 model.ProductoId, model.PrecioOferta, model.FechaInicio, model.FechaFin), HttpContext.RequestAborted);
 
             _logger.LogInformation("Oferta creada: producto {ProductoId} a {PrecioOferta} ({Inicio} - {Fin}) por {Admin}",
-                model.ProductoId, model.PrecioOferta, model.FechaInicio, model.FechaFin, User.FindFirstValue(ClaimTypes.Email));
+                model.ProductoId, model.PrecioOferta, model.FechaInicio, model.FechaFin, User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             TempData.SetMensajeExito("Oferta creada correctamente.");
             return RedirectToAction(nameof(Listado));
@@ -104,7 +104,7 @@ namespace TiendaOnline.Features.Ofertas.Admin
             await _ofertaCommandService.EditarOfertaAsync(id, new CrearOfertaDto(
                 model.ProductoId, model.PrecioOferta, model.FechaInicio, model.FechaFin), HttpContext.RequestAborted);
 
-            _logger.LogInformation("Oferta {OfertaId} editada por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
+            _logger.LogInformation("Oferta {OfertaId} editada por {Admin}", id, User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             TempData.SetMensajeExito("Oferta actualizada correctamente.");
             return RedirectToAction(nameof(Listado));
@@ -115,7 +115,7 @@ namespace TiendaOnline.Features.Ofertas.Admin
         public async Task<IActionResult> AlternarActiva(int id)
         {
             await _ofertaCommandService.AlternarActivaAsync(id, HttpContext.RequestAborted);
-            _logger.LogInformation("Oferta {OfertaId} alternada por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
+            _logger.LogInformation("Oferta {OfertaId} alternada por {Admin}", id, User.FindFirstValue(ClaimTypes.NameIdentifier));
             TempData.SetMensajeExito("Estado de la oferta actualizado.");
             return RedirectToAction(nameof(Listado));
         }

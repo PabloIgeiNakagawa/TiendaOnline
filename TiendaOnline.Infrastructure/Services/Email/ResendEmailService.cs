@@ -45,11 +45,13 @@ namespace TiendaOnline.Infrastructure.Services.Email
             try
             {
                 await _resend.EmailSendAsync(mensaje);
-                _logger.LogInformation("Email enviado a {Destino} con asunto: {Asunto}", destino, asunto);
+                // El asunto alcanza para operar la entrega; el destino es dato
+                // personal del cliente y queda fuera de los logs.
+                _logger.LogInformation("Email enviado con asunto: {Asunto}", asunto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error enviando email a {Destino}", destino);
+                _logger.LogError(ex, "Error enviando email con asunto: {Asunto}", asunto);
                 throw;
             }
         }

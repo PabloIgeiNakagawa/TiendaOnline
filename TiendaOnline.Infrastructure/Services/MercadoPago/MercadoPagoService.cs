@@ -181,9 +181,14 @@ public class MercadoPagoService : IPaymentService
             using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret)))
             {
                 var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(manifest));
-                var hashString = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
 
-                var isValid = hashString == v1;
+                // Comparación en tiempo constante: la igualdad directa corta en el
+                // primer byte distinto y la latencia de la respuesta podría delatar
+                // los bytes correctos de la firma. El largo se evalúa primero porque
+                // el regex admite hex de cualquier longitud y Convert lanzaría con
+                // una longitud impar.
+                var isValid = v1.Length == 64
+                    && CryptographicOperations.FixedTimeEquals(Convert.FromHexString(v1), hashBytes);
 
                 if (isValid)
                 {

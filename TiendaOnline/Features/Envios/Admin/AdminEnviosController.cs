@@ -73,7 +73,7 @@ namespace TiendaOnline.Features.Envios.Admin
                 await _envioCommandService.GuardarZonaAsync(model.ZonaEnvioId, model.Costo, model.Activa, HttpContext.RequestAborted);
 
                 _logger.LogInformation("Zona de envío {ZonaEnvioId} guardada por {Admin}",
-                    model.ZonaEnvioId, User.FindFirstValue(ClaimTypes.Email));
+                    model.ZonaEnvioId, User.FindFirstValue(ClaimTypes.NameIdentifier));
 
                 TempData.SetMensajeExito($"Costo de envío de {model.Provincia} actualizado.");
             }

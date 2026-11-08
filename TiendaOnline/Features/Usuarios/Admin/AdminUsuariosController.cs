@@ -56,7 +56,7 @@ namespace TiendaOnline.Features.Usuarios.Admin
         public async Task<IActionResult> DarAlta(int id)
         {
             await _usuarioCommandService.DarAltaUsuarioAsync(id, HttpContext.RequestAborted);
-            _logger.LogInformation("Usuario {UsuarioId} re-activado por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
+            _logger.LogInformation("Usuario {UsuarioId} re-activado por {Admin}", id, User.FindFirstValue(ClaimTypes.NameIdentifier));
             TempData.SetMensajeExito("Usuario activado.");
             return RedirectToAction(nameof(Listado));
         }
@@ -66,7 +66,7 @@ namespace TiendaOnline.Features.Usuarios.Admin
         public async Task<IActionResult> DarBaja(int id)
         {
             await _usuarioCommandService.DarBajaUsuarioAsync(id, HttpContext.RequestAborted);
-            _logger.LogInformation("Usuario {UsuarioId} deshabilitado (baja) por {Admin}", id, User.FindFirstValue(ClaimTypes.Email));
+            _logger.LogInformation("Usuario {UsuarioId} deshabilitado (baja) por {Admin}", id, User.FindFirstValue(ClaimTypes.NameIdentifier));
             TempData.SetMensajeExito("Usuario dado de baja.");
             return RedirectToAction(nameof(Listado));
         }

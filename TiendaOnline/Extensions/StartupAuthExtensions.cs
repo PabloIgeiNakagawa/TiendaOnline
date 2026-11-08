@@ -30,6 +30,11 @@ namespace TiendaOnline.Extensions
                 options.IdleTimeout = TimeSpan.FromMinutes(30);
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
+#if DEBUG
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+#else
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+#endif
             });
 
             // Cookies
@@ -53,6 +58,11 @@ namespace TiendaOnline.Extensions
                 .AddCookie("ExternalCookie", options =>  // <-- Esquema temporal para Google
                 {
                     options.Cookie.HttpOnly = true;
+#if DEBUG
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+#else
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+#endif
                     options.Cookie.SameSite = SameSiteMode.Lax; // Crucial para que Google pueda escribirla
                 })
                 .AddGoogle(options =>
