@@ -68,6 +68,35 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
             return direccion ?? throw new InvalidOperationException($"No se encontró la dirección con ID {id}.");
         }
 
+        /// <summary>
+        /// Lee una dirección SOLO si pertenece al usuario indicado; null si no existe
+        /// o es ajena. Guard de ownership server-side para los flows donde el id
+        /// llega del form (checkout): un DireccionSeleccionadaId ajeno ya no expone
+        /// calle/observaciones de otros usuarios (IDOR de la auditoría 07/11).
+        /// </summary>
+        public async Task<DireccionDto?> ObtenerDelUsuarioAsync(int direccionId, int usuarioId, CancellationToken ct = default)
+        {
+            return await _context.Direcciones
+                .Where(d => d.DireccionId == direccionId && d.UsuarioId == usuarioId)
+                .Select(d => new DireccionDto
+                {
+                    DireccionId = d.DireccionId,
+                    UsuarioId = d.UsuarioId,
+                    Etiqueta = d.Etiqueta,
+                    Calle = d.Calle,
+                    Numero = d.Numero,
+                    Localidad = d.Localidad,
+                    Provincia = d.Provincia,
+                    CodigoPostal = d.CodigoPostal,
+                    Piso = d.Piso,
+                    Departamento = d.Departamento,
+                    Observaciones = d.Observaciones,
+                    EsPrincipal = d.EsPrincipal,
+                    Activo = d.Activo
+                })
+                .FirstOrDefaultAsync(ct);
+        }
+
         public async Task<int> GuardarDireccionAsync(int usuarioId, DireccionDto direccion, CancellationToken ct = default)
         {
             if (direccion.EsPrincipal)

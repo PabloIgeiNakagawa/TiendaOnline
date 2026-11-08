@@ -53,12 +53,16 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
             await _context.SaveChangesAsync(ct);
         }
 
-        public async Task EditarUsuarioAsync(UsuarioUpdateDto dto, CancellationToken ct = default)
+        public async Task EditarUsuarioAsync(int usuarioId, UsuarioUpdateDto dto, CancellationToken ct = default)
         {
+            // El destino lo firma el parámetro (id del route, validado por la política
+            // EsDuenioDelPerfil): el UsuarioId dentro del dto queda ignorado — aun si un
+            // POST trae el id de otro usuario, no edita perfiles ajenos (IDOR de la
+            // auditoría 07/11).
             var usuario = await _context.Usuarios
-                        .FirstOrDefaultAsync(u => u.UsuarioId == dto.UsuarioId, ct);
+                        .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId, ct);
 
-            if (usuario == null) throw new KeyNotFoundException($"No se encontró el usuario con ID {dto.UsuarioId}");
+            if (usuario == null) throw new KeyNotFoundException($"No se encontró el usuario con ID {usuarioId}");
 
             usuario.Nombre = dto.Nombre;
             usuario.Apellido = dto.Apellido;

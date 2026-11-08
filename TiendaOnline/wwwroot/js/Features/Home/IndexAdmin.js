@@ -34,6 +34,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Escapa HTML: los datos que vienen del server (ej. nombre del cliente, controlado
+// por cualquier usuario al registrarse) viajan como TEXT, nunca como HTML del admin.
+// Son la defensa del stored XSS del panel (auditoría 07/11): sin esto, un
+// Nombre/Apellido con `<svg onload=...>` ejecuta JS en /admin con los cookies y
+// antiforgery tokens del admin en el mismo DOM.
+function escaparHtml(valor) {
+    return String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function crearPedidoCard(pedido) {
     const claseColor = pedido.horasTranscurridas > 72 ? 'danger' : 'warning';
     return `
@@ -44,7 +58,7 @@ function crearPedidoCard(pedido) {
                     <span class="badge bg-${claseColor} small">${Math.floor(pedido.horasTranscurridas)} hs</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <small class="text-muted"><i class="bi bi-person me-1"></i>${pedido.cliente}</small>
+                    <small class="text-muted"><i class="bi bi-person me-1"></i>${escaparHtml(pedido.cliente)}</small>
                 </div>
                 <div class="d-flex justify-content-end">
                     <a href="/Pedidos/Detalles/${pedido.pedidoId}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Revisar pedido">

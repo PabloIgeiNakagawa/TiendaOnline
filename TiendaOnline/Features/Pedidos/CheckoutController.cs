@@ -143,7 +143,14 @@ namespace TiendaOnline.Features.Pedidos
                         ModelState.AddModelError("", $"No hacemos envíos a {provincia}. Elegí otra dirección o retirá en el local.");
                     }
                 }
-                // Sin provincia aún (dirección incompleta): el costo queda en 0 y la
+                else if (model.DireccionSeleccionadaId != null)
+                {
+                    // El id vino del POST y la dirección no quedó accesible (borrada
+                    // o ajena a este usuario): frenamos el checkout con mensaje claro
+                    // — nunca pasa con costo 0 fingiendo que la dirección vale.
+                    ModelState.AddModelError("", "La dirección seleccionada ya no está disponible. Elegí otra en el checkout.");
+                }
+                // Sin provincia por dirección nueva incompleta: el costo queda en 0 y la
                 // validación de ModelState ya exige la dirección como antes.
             }
 
@@ -199,6 +206,13 @@ namespace TiendaOnline.Features.Pedidos
             return RedirectToAction("Confirmacion");
         }
 
+        // Confirmación es la segunda etapa de un checkout de usuario logueado (el POST
+        // anterior ya lo exige): sin [Authorize] un anónimo con TempData podrían caer
+        // a 500 en vez de al login. Ownership server-side del domicilio: el id viaja
+        // en el POST y NO es autorización — la dirección se lee solo del usuario
+        // logueado (ObtenerDelUsuarioAsync). Ajena/borrada → aviso y de vuelta al
+        // checkout; nunca se muestra un domicilio ajeno.
+        [Authorize]
         [HttpGet("[action]")]
         public async Task<IActionResult> Confirmacion()
         {
@@ -233,7 +247,14 @@ namespace TiendaOnline.Features.Pedidos
             {
                 if (model.DireccionSeleccionadaId != null)
                 {
-                    var dir = await _direccionService.ObtenerPorIdAsync(model.DireccionSeleccionadaId, HttpContext.RequestAborted);
+                    var dir = await _direccionService.ObtenerDelUsuarioAsync(
+                        model.DireccionSeleccionadaId.Value, ObtenerUsuarioId(), HttpContext.RequestAborted);
+                    if (dir == null)
+                    {
+                        TempData.SetMensajeError("La dirección seleccionada ya no está disponible. Elegí otra en el checkout.");
+                        return RedirectToAction("CheckOut");
+                    }
+
                     viewModel.Direccion = new DireccionCheckOut
                     {
                         EsNueva = false,
@@ -413,7 +434,11 @@ namespace TiendaOnline.Features.Pedidos
         {
             if (model.DireccionSeleccionadaId != null)
             {
-                var dir = await _direccionService.ObtenerPorIdAsync(model.DireccionSeleccionadaId, HttpContext.RequestAborted);
+                // El id viaja en el POST (no es autorización): la dirección se lee solo
+                // del usuario logueado (ObtenerDelUsuarioAsync). Ajena/borrada → null
+                // y el caller lo informa en ModelState (IDOR de la auditoría 07/11).
+                var dir = await _direccionService.ObtenerDelUsuarioAsync(
+                    model.DireccionSeleccionadaId.Value, ObtenerUsuarioId(), HttpContext.RequestAborted);
                 return dir?.Provincia;
             }
 

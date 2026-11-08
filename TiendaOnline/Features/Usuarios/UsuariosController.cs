@@ -96,16 +96,18 @@ namespace TiendaOnline.Features.Usuarios
 
             var dto = new UsuarioUpdateDto
             {
-                UsuarioId = model.UsuarioId,
                 Nombre = model.Nombre,
                 Apellido = model.Apellido,
                 Telefono = model.Telefono
             };
 
-            await _usuarioCommandService.EditarUsuarioAsync(dto, HttpContext.RequestAborted);
-            _logger.LogInformation("Perfil del usuario {UsuarioId} editado", dto.UsuarioId);
+            // El usuario a editar es el id del route (único valor que validó la política
+            // EsDuenioDelPerfil): el hidden UsuarioId del form se ignora — un valor del
+            // POST nunca es autorización (IDOR de la auditoría 07/11).
+            await _usuarioCommandService.EditarUsuarioAsync(id, dto, HttpContext.RequestAborted);
+            _logger.LogInformation("Perfil del usuario {UsuarioId} editado", id);
             TempData.SetMensajeExito("Tu información se actualizó correctamente.");
-            return RedirectToAction("PerfilUsuario", "Usuarios", new { id = dto.UsuarioId });
+            return RedirectToAction("PerfilUsuario", "Usuarios", new { id });
         }
 
         [HttpGet("AgregarDireccion/{usuarioId}")]

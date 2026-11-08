@@ -251,12 +251,13 @@ namespace TiendaOnline.Features.Pedidos
         }
 
         [Authorize(Policy = "EsDuenioDelPedido")]
-        [HttpPost("[action]")]
+        [HttpPost("[action]/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ReintentarPago(int pedidoId)
+        public async Task<IActionResult> ReintentarPago(int id)
         {
-            // Buscamos el pedido existente con sus datos
-            var pedidoDto = await _pedidoCommandService.ObtenerDatosParaPagoAsync(pedidoId, HttpContext.RequestAborted);
+            // El id va por route: es el único valor que el policy handler resuelve
+            // (vivo en el body del form, el endpoint respondía 403 siempre).
+            var pedidoDto = await _pedidoCommandService.ObtenerDatosParaPagoAsync(id, HttpContext.RequestAborted);
 
             if (pedidoDto == null) return NotFound();
 
