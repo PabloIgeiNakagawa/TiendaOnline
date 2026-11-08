@@ -73,7 +73,7 @@ namespace TiendaOnline.Features.Pedidos
             return View(viewmodel);
         }
 
-        [Authorize(Policy = "EsDuenioDelPedido")]
+        [Authorize(Policy = "VeDetallesDelPedido")]
         [HttpGet("Detalles/{id}")]
         public async Task<IActionResult> Detalles(int id)
         {

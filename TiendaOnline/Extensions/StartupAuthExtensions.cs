@@ -17,10 +17,16 @@ namespace TiendaOnline.Extensions
                 // Para los pedidos (ID Usuario == Pedido.UsuarioId en DB)
                 options.AddPolicy("EsDuenioDelPedido", policy =>
                     policy.Requirements.Add(new IsOrderOwnerRequirement()));
+
+                // Lectura de Detalles: dueño en cualquier estado; Repartidor solo los
+                // pedidos en reparto (Enviado) y el historial de los Entregados.
+                options.AddPolicy("VeDetallesDelPedido", policy =>
+                    policy.Requirements.Add(new VeDetallesDelPedidoRequirement()));
             });
 
             services.AddScoped<IAuthorizationHandler, IsOwnerHandler>();
             services.AddScoped<IAuthorizationHandler, OrderOwnerHandler>();
+            services.AddScoped<IAuthorizationHandler, VeDetallesDelPedidoHandler>();
 
             // Sesión
             services.AddSession(options =>

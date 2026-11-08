@@ -202,6 +202,46 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             return new PagedResult<PedidoListadoDto>(items, total, filtros.Pagina, filtros.Cantidad);
         }
 
+        // La cola del reparto: pedidos en camino (Enviado) e historial de las últimas
+        // 24 h (Entregado). Columnas de lo que necesita la entrega — cliente,
+        // contacto, dirección y observación; el resto del pedido es del dueño.
+        public async Task<List<PedidoRepartoDto>> ObtenerPedidosEnviadosAsync(CancellationToken ct)
+        {
+            var pedidos = _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.Estado == Domain.Entities.EstadoPedido.Enviado)
+                .OrderBy(p => p.FechaPedido); // los más viejos primero: primera salida de la cola
+
+            return await FilaDeReparto(pedidos).ToListAsync(ct);
+        }
+
+        public async Task<List<PedidoRepartoDto>> ObtenerPedidosEntregadosUltimoDiaAsync(CancellationToken ct)
+        {
+            var desde = DateTime.Now.AddDays(-1);
+
+            var pedidos = _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.Estado == Domain.Entities.EstadoPedido.Entregado && p.FechaEntrega >= desde)
+                .OrderByDescending(p => p.FechaEntrega);
+
+            return await FilaDeReparto(pedidos).ToListAsync(ct);
+        }
+
+        private IQueryable<PedidoRepartoDto> FilaDeReparto(IQueryable<Domain.Entities.Pedido> pedidos)
+        {
+            return pedidos.Select(p => new PedidoRepartoDto
+            {
+                PedidoId = p.PedidoId,
+                FechaPedido = p.FechaPedido,
+                FechaEntrega = p.FechaEntrega,
+                NombreCliente = p.Usuario.Nombre + " " + p.Usuario.Apellido,
+                Telefono = p.Usuario.Telefono,
+                DireccionCompleta = FormatearDireccionEnvio(p),
+                Observaciones = p.EnvioObservaciones,
+                CantidadItems = p.DetallesPedido.Sum(d => d.Cantidad)
+            });
+        }
+
         public async Task<InstruccionesTransferenciaDto?> ObtenerInstruccionesTransferenciaAsync(int pedidoId, CancellationToken ct)
         {
             // AsNoTracking + anon-type: EstaVencido() es lógica en memoria, se evalúa acá abajo

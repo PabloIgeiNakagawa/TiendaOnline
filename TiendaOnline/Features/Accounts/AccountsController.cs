@@ -11,6 +11,7 @@ using TiendaOnline.Application.Usuarios.Queries;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Enums;
 using TiendaOnline.Features.Home;
+using TiendaOnline.Features.Repartidor;
 using TiendaOnline.Features.Usuarios.Admin;
 using TiendaOnline.Features.Shared;
 
@@ -153,9 +154,14 @@ namespace TiendaOnline.Features.Accounts
 
             var role = principal.FindFirstValue(ClaimTypes.Role);
 
-            return role == "Administrador"
-                ? RedirectToAction(nameof(HomeController.IndexAdmin), "Home")
-                : RedirectToAction(nameof(HomeController.Index), "Home");
+            if (role == "Administrador")
+                return RedirectToAction(nameof(HomeController.IndexAdmin), "Home");
+
+            // El personal de reparto va a su cola: la tienda es el destino del cliente.
+            if (role == "Repartidor")
+                return RedirectToAction(nameof(RepartidorController.Index), "Repartidor");
+
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         [HttpGet("[action]")]
@@ -247,9 +253,14 @@ namespace TiendaOnline.Features.Accounts
 
             await FusionarCarritoDeSesionAsync(usuarioDto.UsuarioId);
 
-            return usuarioDto.Rol == "Administrador"
-                ? RedirectToAction(nameof(HomeController.IndexAdmin), "Home")
-                : RedirectToAction(nameof(HomeController.Index), "Home");
+            if (usuarioDto.Rol == "Administrador")
+                return RedirectToAction(nameof(HomeController.IndexAdmin), "Home");
+
+            // El personal de reparto va a su cola: la tienda es el destino del cliente.
+            if (usuarioDto.Rol == "Repartidor")
+                return RedirectToAction(nameof(RepartidorController.Index), "Repartidor");
+
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         [HttpPost]

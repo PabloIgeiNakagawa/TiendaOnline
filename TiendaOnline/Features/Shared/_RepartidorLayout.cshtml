@@ -1,0 +1,185 @@
+@using System.Security.Claims
+@{
+    var nombreUsuario = User?.FindFirstValue(ClaimTypes.Name);
+
+    var c = ViewContext.RouteData.Values["controller"]?.ToString();
+
+    // Un solo destino: la cola del reparto (el resto del ciclo del pedido
+    // es territorio del panel administrativo).
+    var activo = string.Equals(c, "Repartidor", StringComparison.OrdinalIgnoreCase)
+        ? "active bg-primary-subtle text-primary"
+        : "";
+}
+<!DOCTYPE html>
+<html lang="es" class="h-100">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] - @AppSettings.GetValue("Diseno:NombreDelSitio")</title>
+    <meta name="description" content="@AppSettings.GetValue("Seo:Descripcion")">
+    <meta name="keywords" content="@AppSettings.GetValue("Seo:Palabras claves")">
+    <meta name="author" content="@AppSettings.GetValue("Seo:Autor")">
+
+    <meta property="og:site_name" content="@AppSettings.GetValue("Diseno:NombreDelSitio")" />
+    <meta property="og:title" content="@AppSettings.GetValue("OpenGraph:Titulo")">
+    <meta property="og:description" content="@AppSettings.GetValue("OpenGraph:Descripcion")">
+    <meta property="og:image" content="@AppSettings.GetValue("OpenGraph:ImagenUrl")">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_AR">
+
+    <link rel="icon" type="image/x-icon" href="@AppSettings.GetValue("Diseno:FavIconUrl")" asp-append-version="true">
+
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" asp-append-version="true" />
+
+    <partial name="_Theme" />
+
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+    <script src="~/js/site.js" asp-append-version="true"></script>
+</head>
+
+<body>
+    <aside class="sidebar offcanvas-md offcanvas-start bg-body-tertiary d-flex flex-column vh-100 border-end" id="sidebarAdmin">
+        <div class="d-md-none p-3 text-end">
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarAdmin"></button>
+        </div>
+
+        <div class="p-4 d-flex align-items-center justify-content-center border-bottom border-light-subtle sidebar-logo-section">
+            <img src="@AppSettings.GetValue("Diseno:LogoUrl")" alt="Logo" width="28" height="28" class="me-2" asp-append-version="true" />
+            <h6 class="fw-bold mb-0 text-uppercase tracking-wider text-center">@AppSettings.GetValue("Diseno:NombreDelSitio")</h6>
+        </div>
+
+        <nav class="nav flex-column flex-nowrap overflow-y-auto overflow-x-hidden w-100 px-3 pt-3" style="flex: 1;">
+
+            <small class="text-uppercase text-muted fw-bold mt-3 mb-2 ps-3" style="font-size: 0.7rem;">Operaciones</small>
+
+            <div class="nav-item">
+                <a class="nav-link py-2 px-3 my-1 fw-medium rounded-2 link-body-emphasis d-flex align-items-center @activo" asp-controller="Repartidor" asp-action="Index">
+                    <i class="bi bi-truck me-2 text-primary"></i>
+                    <span>Entregas pendientes</span>
+                </a>
+            </div>
+
+            <div class="nav-item mt-auto">
+                <div class="p-3 border-top border-light-subtle">
+                    <button class="btn d-flex align-items-center gap-2 w-100 border-0 py-2 text-body-emphasis" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-5 text-primary"></i>
+                        <span class="small fw-medium">@nombreUsuario</span>
+                    </button>
+                    <ul class="dropdown-menu shadow border-0 rounded-3 mt-1 w-100">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house-door text-secondary"></i> Volver al Sitio
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form asp-controller="Accounts" asp-action="Logout" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger" style="border:none; background:transparent; width:100%;">
+                                    <i class="bi bi-power"></i> Cerrar Sesión
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </aside>
+
+    <div class="main-wrapper">
+        <!-- Header desktop -->
+        <header class="navbar navbar-expand bg-body-tertiary border-bottom border-light-subtle sticky-top d-none d-md-flex px-3" style="height: 60px;">
+            <div class="container-fluid px-4">
+                <button id="sidebarToggle" class="btn btn-link text-body p-1 me-3" type="button" title="Mostrar/ocultar menú">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <button id="btn-theme" class="btn btn-link nav-link text-body px-2" title="Cambiar tema">
+                        <i id="theme-icon-desktop" class="bi bi-sun fs-5"></i>
+                    </button>
+
+                    <div class="dropdown">
+                        <button class="btn d-flex align-items-center gap-2 border-0 p-1 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle fs-5 text-primary"></i>
+                            <span class="small fw-medium lh-1 text-body-emphasis">@nombreUsuario</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+                            <li><h6 class="dropdown-header">Mi Cuenta</h6></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2 py-2" asp-controller="Home" asp-action="Index">
+                                    <i class="bi bi-house-door text-secondary"></i> Volver al Sitio
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-controller="Accounts" asp-action="Logout" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger btn-logout" style="border:none; background:transparent; width:100%;">
+                                        <i class="bi bi-power"></i> Cerrar Sesión
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Header mobile -->
+        <header class="navbar navbar-expand bg-body border-bottom sticky-top p-0 d-md-none" style="height: 70px;">
+            <div class="container-fluid px-4">
+                <button class="btn d-md-none me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarAdmin">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <button id="btn-theme" class="btn nav-link text-body px-2" title="Cambiar tema">
+                        <i id="theme-icon-mobile" class="bi bi-sun fs-4"></i>
+                    </button>
+
+                    <div class="dropdown">
+                        <button class="btn d-flex align-items-center gap-2 border-0 p-1 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle fs-2 text-primary"></i>
+                            <p class="mb-0 small fw-bold text-body-emphasis lh-1 me-2">@nombreUsuario</p>
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+                            <li><h6 class="dropdown-header">Mi Cuenta</h6></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2 py-2" asp-controller="Home" asp-action="Index">
+                                    <i class="bi bi-house-door text-secondary"></i> Volver al Sitio
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-controller="Accounts" asp-action="Logout" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger btn-logout" style="border:none; background:transparent; width:100%;">
+                                        <i class="bi bi-power"></i> Cerrar Sesión
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container-fluid p-md-4 pt-3">
+            <div class="bg-body border rounded-3 p-md-4 min-vh-100">
+                <partial name="_MensajeTempData" />
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+<script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+<script src="~/lib/bootstrap/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+<partial name="_ValidationScriptsPartial" />
+@await RenderSectionAsync("Scripts", required: false)

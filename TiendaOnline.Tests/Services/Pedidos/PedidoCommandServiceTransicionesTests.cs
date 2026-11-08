@@ -44,6 +44,25 @@ namespace TiendaOnline.Tests.Services.Pedidos
         }
 
         [Fact]
+        public async Task PedidoEntregado_DesdeEnviado_MarcaEstadoYFechaEntrega()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var producto = TestDatabase.SeedProducto(ctx, stock: 5);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 1,
+                estado: EstadoPedido.Enviado);
+            var sut = Sut.PedidoCommand(ctx);
+
+            await sut.PedidoEntregadoAsync(pedido.PedidoId); // no debe lanzar
+
+            using var verify = db.CreateContext();
+            var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
+            Assert.Equal(EstadoPedido.Entregado, pedidoDb.Estado);
+            Assert.NotNull(pedidoDb.FechaEntrega);
+        }
+
+        [Fact]
         public async Task PedidoCancelado_DePedidoAprobado_DevuelveStock_YGeneraMovimiento()
         {
             using var db = new TestDatabase();
