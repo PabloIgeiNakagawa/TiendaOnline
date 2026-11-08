@@ -76,7 +76,11 @@ namespace TiendaOnline.Infrastructure.ExternalServices
             var uploadParams = new ImageUploadParams()
             {
                 File = new FileDescription(nombreArchivo, archivoStream),
-                Folder = "TechStore/Comprobantes"
+                // Sin PublicId, el identificador en Cloudinary es el nombre del archivo:
+                // "Pedido-000123.jpg" hace las URL enumerables en serie y la evidencia
+                // de pago queda pública sin autenticación. El suffix aleatorio por
+                // subida rompe el patrón conservando la traza del pedido y la carpeta.
+                PublicId = GenerarPublicIdDeComprobante(nombreArchivo)
             };
 
             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
@@ -88,6 +92,20 @@ namespace TiendaOnline.Infrastructure.ExternalServices
             }
 
             return uploadResult.SecureUrl.ToString();
+        }
+
+        /// <summary>
+        /// Identificador de Cloudinary del comprobante: carpeta + nombre base con
+        /// la traza del pedido (Pedido-000123) y un suffix aleatorio por subida que
+        /// evita URL adivinables en serie. Solo caracteres hex y sin puntos en el
+        /// nombre: la URL resultante mantiene la extracción del public id que usa
+        /// la baja del archivo.
+        /// </summary>
+        public static string GenerarPublicIdDeComprobante(string nombreArchivo)
+        {
+            var nombreBase = Path.GetFileNameWithoutExtension(nombreArchivo);
+            var extension = Path.GetExtension(nombreArchivo);
+            return $"TechStore/Comprobantes/{nombreBase}-{Guid.NewGuid():N}{extension}";
         }
 
         public async Task<bool> BorrarImagenAsync(string publicId, CancellationToken ct = default)
