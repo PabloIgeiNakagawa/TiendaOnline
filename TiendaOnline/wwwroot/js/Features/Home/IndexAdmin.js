@@ -35,10 +35,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Escapa HTML: los datos que vienen del server (ej. nombre del cliente, controlado
-// por cualquier usuario al registrarse) viajan como TEXT, nunca como HTML del admin.
-// Son la defensa del stored XSS del panel (auditoría 07/11): sin esto, un
-// Nombre/Apellido con `<svg onload=...>` ejecuta JS en /admin con los cookies y
-// antiforgery tokens del admin en el mismo DOM.
+// por cualquier usuario al registrarse) viajan como TEXT, nunca como HTML del admin:
+// sin esto, un Nombre/Apellido con `<svg onload=...>` ejecuta JS en /admin con los
+// cookies y antiforgery tokens del admin en el mismo DOM.
 function escaparHtml(valor) {
     return String(valor ?? '')
         .replace(/&/g, '&amp;')

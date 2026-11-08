@@ -125,6 +125,10 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 {
                     PedidoId = pedidoCompleto.PedidoId,
                     EmailUsuario = pedidoCompleto.Usuario.Email,
+                    // La preferencia de MercadoPago suma el ítem "Envío" cuando
+                    // CostoEnvio > 0: el cobro matchea el total (subtotal + envío)
+                    // que valida ConfirmarPagoAsync.
+                    CostoEnvio = pedidoCompleto.CostoEnvio,
                     Items = pedidoCompleto.DetallesPedido.Select(d => new ItemPagoDto
                     {
                         Nombre = d.Producto.Nombre,
@@ -206,6 +210,31 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                             return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
                         }
 
+                        // Los guards de arriba son lecturas: dos confirmaciones simultáneas
+                        // (webhook + reintentos del pago) pueden pasarlas ambas, reservar el
+                        // stock dos veces y encolar dos emails de "aprobado". El UPDATE
+                        // condicional hace el check y la escritura en la misma instrucción;
+                        // 0 filas = otro request ya cambió el pedido y el motivo se mapea
+                        // desde su estado real, sin tocar stock.
+                        var fechaLimiteAprobacion = DateTime.Now.Subtract(Pedido.TiempoMaximoPagoPendiente);
+                        var filasAprobado = await _context.Pedidos
+                            .Where(p => p.PedidoId == pedido.PedidoId
+                                && p.EstadoPago == EstadoPago.Pendiente
+                                && p.Estado != EstadoPedido.Cancelado
+                                && p.FechaPedido > fechaLimiteAprobacion)
+                            .ExecuteUpdateAsync(s => s
+                                .SetProperty(p => p.EstadoPago, EstadoPago.Aprobado)
+                                .SetProperty(p => p.Estado, EstadoPedido.EnPreparacion)
+                                .SetProperty(p => p.FechaEnPreparacion, DateTime.Now)
+                                .SetProperty(p => p.TransaccionPagoId, infoPago.TransaccionId), ct);
+
+                        if (filasAprobado == 0)
+                        {
+                            return await ResolverMotivoDeCarreraAsync(pedido.PedidoId, ct);
+                        }
+
+                        // La escritura ganó la transición: este request es el responsable
+                        // de la aprobación y de la reserva por ítem que sigue (atómica).
                         var reservaStockExitosa = await IntentarReservarStockAsync(pedido, ct);
                         if (!reservaStockExitosa)
                         {
@@ -433,6 +462,41 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 if (string.IsNullOrEmpty(pedido.ComprobanteUrl))
                     throw new ComprobanteNoValidoException("El pedido no tiene comprobante adjuntado todavía.");
 
+                // Los guards de arriba son lecturas: un doble click del admin (o una
+                // aprobación simultánea con un rechazo) puede pasar dos veces el check
+                // y reservar el stock dos veces. El UPDATE condicional adjudica la
+                // transición una sola vez; 0 filas = otro request ya cambió el estado
+                // y se informa con el mensaje del guard que corresponde a ese estado.
+                var fechaLimiteAprobacion = DateTime.Now.Subtract(Pedido.TiempoMaximoPagoPendiente);
+                var filasAprobado = await _context.Pedidos
+                    .Where(p => p.PedidoId == pedidoId
+                        && p.EstadoPago == EstadoPago.Pendiente
+                        && p.Estado != EstadoPedido.Cancelado
+                        && p.FechaPedido > fechaLimiteAprobacion)
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(p => p.EstadoPago, EstadoPago.Aprobado)
+                        .SetProperty(p => p.Estado, EstadoPedido.EnPreparacion)
+                        .SetProperty(p => p.FechaEnPreparacion, DateTime.Now), ct);
+
+                if (filasAprobado == 0)
+                {
+                    var estadoReal = await _context.Pedidos
+                        .AsNoTracking()
+                        .Where(p => p.PedidoId == pedidoId)
+                        .Select(p => new { p.Estado, p.EstadoPago, p.FechaPedido })
+                        .FirstOrDefaultAsync(ct);
+
+                    if (estadoReal == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
+                    if (estadoReal.Estado == EstadoPedido.Cancelado)
+                        throw new PedidoNoCancelableException("El pedido está cancelado: no se puede aprobar el pago.");
+                    if (estadoReal.EstadoPago == EstadoPago.Aprobado)
+                        throw new PedidoNoCancelableException("El pago de este pedido ya está aprobado.");
+                    if (estadoReal.FechaPedido <= DateTime.Now.Subtract(Pedido.TiempoMaximoPagoPendiente))
+                        throw new PedidoNoCancelableException("El pedido venció por falta de pago. Cancelalo pedile que vuelva a comprar.");
+
+                    throw new PedidoNoCancelableException("El pedido ya no está esperando el pago por transferencia.");
+                }
+
                 // Misma maquinaria que la aprobación de Mercado Pago: reserva + movimientos de salida.
                 var reservaStockExitosa = await IntentarReservarStockAsync(pedido, ct);
                 if (!reservaStockExitosa)
@@ -479,34 +543,81 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
         public async Task RechazarComprobanteTransferenciaAsync(int pedidoId, CancellationToken ct = default)
         {
-            var pedido = await _context.Pedidos
-                .Include(p => p.Usuario)
-                .Include(p => p.DetallesPedido)
-                .FirstOrDefaultAsync(p => p.PedidoId == pedidoId, ct);
+            // Transacción: sin ella, una carrera entre rechazar y aprobar deja a la
+            // vez pago aprobado, pedido cancelado y comprobante borrado de la nube.
+            // El guard de estado es la escritura misma — el UPDATE condicional
+            // adjudica la transición una sola vez, con rollback si algo falla antes
+            // del commit.
+            using var transaction = await _context.Database.BeginTransactionAsync(ct);
+            string urlComprobante;
+            string emailUsuario;
+            string nombreCompletoUsuario;
+            decimal totalCalculado;
 
-            if (pedido == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
+            try
+            {
+                var pedido = await _context.Pedidos
+                    .Include(p => p.Usuario)
+                    .Include(p => p.DetallesPedido)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.PedidoId == pedidoId, ct);
 
-            if (pedido.MetodoDePagoId != MetodoPagoTransferenciaId)
-                throw new ComprobanteNoValidoException("Este pedido no paga por transferencia bancaria.");
+                if (pedido == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
 
-            if (pedido.Estado == EstadoPedido.Cancelado)
-                throw new PedidoNoCancelableException("El pedido ya está cancelado.");
+                if (pedido.MetodoDePagoId != MetodoPagoTransferenciaId)
+                    throw new ComprobanteNoValidoException("Este pedido no paga por transferencia bancaria.");
 
-            if (pedido.EstadoPago != EstadoPago.Pendiente)
-                throw new PedidoNoCancelableException("El pedido ya no está esperando verificación de comprobante.");
+                if (string.IsNullOrEmpty(pedido.ComprobanteUrl))
+                    throw new ComprobanteNoValidoException("El pedido no tiene comprobante. Para darlo de baja sin comprobante usá el botón Cancelar.");
 
-            if (string.IsNullOrEmpty(pedido.ComprobanteUrl))
-                throw new ComprobanteNoValidoException("El pedido no tiene comprobante. Para darlo de baja sin comprobante usá el botón Cancelar.");
+                // El UPDATE condicional reemplaza los guards de estado de pantalla:
+                // pendiente y no cancelado pasan a rechazado + cancelado en una sola
+                // instrucción, y solo un request queda como ganador; el que pierde
+                // informa según el estado real que el ganador dejó, con el mensaje
+                // del guard que corresponde.
+                var filasRechazo = await _context.Pedidos
+                    .Where(p => p.PedidoId == pedidoId
+                        && p.EstadoPago == EstadoPago.Pendiente
+                        && p.Estado != EstadoPedido.Cancelado)
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(p => p.EstadoPago, EstadoPago.Rechazado)
+                        .SetProperty(p => p.Estado, EstadoPedido.Cancelado)
+                        .SetProperty(p => p.FechaCancelado, DateTime.Now), ct);
 
-            pedido.EstadoPago = EstadoPago.Rechazado;
-            pedido.Estado = EstadoPedido.Cancelado;
-            pedido.FechaCancelado = DateTime.Now;
+                if (filasRechazo == 0)
+                {
+                    var estadoReal = await _context.Pedidos
+                        .AsNoTracking()
+                        .Where(p => p.PedidoId == pedidoId)
+                        .Select(p => new { p.Estado, p.EstadoPago })
+                        .FirstOrDefaultAsync(ct);
 
-            var urlComprobante = pedido.ComprobanteUrl;
-            await _context.SaveChangesAsync(ct);
+                    if (estadoReal == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
+                    if (estadoReal.Estado == EstadoPedido.Cancelado)
+                        throw new PedidoNoCancelableException("El pedido ya está cancelado.");
+                    if (estadoReal.EstadoPago == EstadoPago.Aprobado)
+                        throw new PedidoNoCancelableException("El pago de este pedido ya está aprobado.");
 
-            // Borro el archivo de Cloudinary al salir: el rechazo es el fin de la vida del comprobante.
-            // La baja fallida no cancela la notificación al cliente.
+                    throw new PedidoNoCancelableException("El pedido ya no está esperando verificación de comprobante.");
+                }
+
+                urlComprobante = pedido.ComprobanteUrl;
+                emailUsuario = pedido.Usuario!.Email;
+                nombreCompletoUsuario = string.Join(" ", new[] { pedido.Usuario.Nombre, pedido.Usuario.Apellido }
+                    .Where(x => !string.IsNullOrWhiteSpace(x)));
+                totalCalculado = pedido.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario) + pedido.CostoEnvio;
+
+                await transaction.CommitAsync(ct);
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync(ct);
+                throw;
+            }
+
+            // La cancelación quedó en la base: del punto en adelante los efectos
+            // restantes se comportan igual que antes (la baja de Cloudinary con
+            // log si falla y la notificación fuera del commit).
             var publicId = _imagenService.ExtraerPublicIdDesdeUrl(urlComprobante);
             if (!string.IsNullOrEmpty(publicId))
             {
@@ -520,14 +631,10 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 }
             }
 
-            var nombreCompletoUsuario = string.Join(" ", new[] { pedido.Usuario!.Nombre, pedido.Usuario.Apellido }
-                .Where(x => !string.IsNullOrWhiteSpace(x)));
-            decimal totalCalculado = pedido.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario) + pedido.CostoEnvio;
-
             BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPagoRechazadoAsync(
-                pedido.Usuario!.Email,
+                emailUsuario,
                 nombreCompletoUsuario,
-                pedido.PedidoId,
+                pedidoId,
                 totalCalculado));
 
             _logger.LogInformation("Comprobante rechazado y pedido {PedidoId} cancelado: el cliente fue notificado.", pedidoId);
@@ -554,6 +661,9 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             {
                 PedidoId = pedido.PedidoId,
                 EmailUsuario = pedido.Usuario.Email,
+                // El reintento arma la preferencia con el ítem de envío: mismo total
+                // (subtotal + envío) que la creación, el que valida ConfirmarPagoAsync.
+                CostoEnvio = pedido.CostoEnvio,
                 Items = pedido.DetallesPedido.Select(d => new ItemPagoDto
                 {
                     Nombre = d.Producto.Nombre,
@@ -615,7 +725,47 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 if (pedido.Estado == EstadoPedido.Enviado)
                     throw new PedidoNoCancelableException("El pedido ya fue enviado, debe procesarse como devolución.");
 
-                var debeDevolverStock = pedido.EstadoPago == EstadoPago.Aprobado || pedido.EstadoPago == EstadoPago.Reembolsado;
+                // Dos cancelaciones simultáneas (doble click del admin) pueden pasar
+                // dos veces la verificación de estado y devolver el stock dos veces
+                // (dos movimientos de CancelacionPedido, stock inflado). El UPDATE
+                // condicional garantiza que un solo request ejecuta la cancelación y
+                // su devolución; el que pierde corta con el estado real.
+                var filasCancelado = await _context.Pedidos
+                    .Where(p => p.PedidoId == pedidoId
+                        && (p.Estado == EstadoPedido.Nuevo || p.Estado == EstadoPedido.EnPreparacion))
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(p => p.Estado, EstadoPedido.Cancelado)
+                        .SetProperty(p => p.FechaCancelado, DateTime.Now), ct);
+
+                if (filasCancelado == 0)
+                {
+                    var estadoReal = await _context.Pedidos
+                        .AsNoTracking()
+                        .Where(p => p.PedidoId == pedidoId)
+                        .Select(p => p.Estado)
+                        .FirstOrDefaultAsync(ct);
+
+                    throw new PedidoNoCancelableException(estadoReal switch
+                    {
+                        EstadoPedido.Cancelado => "El pedido ya estaba cancelado.",
+                        EstadoPedido.Entregado => "No se puede cancelar un pedido que ya ha sido entregado.",
+                        EstadoPedido.Enviado => "El pedido ya fue enviado, debe procesarse como devolución.",
+                        // El caso "pedido borrado entre medias" cae en el default: no se
+                        // puede describir el estado real de algo que ya no existe.
+                        _ => "El pedido ya no se puede cancelar."
+                    });
+                }
+
+                // El EstadoPago que decide la devolución se lee recién después del
+                // UPDATE condicional, dentro de la misma transacción: si un pago
+                // aprueba en paralelo, la carrera queda cerrada antes de decidir la
+                // devolución — una lectura previa podría mostrar pendiente aunque
+                // el pedido ya estuviera cobrado y silenciar su devolución de stock.
+                var estadoPagoReal = await _context.Pedidos
+                    .Where(p => p.PedidoId == pedidoId)
+                    .Select(p => p.EstadoPago)
+                    .FirstAsync(ct);
+                var debeDevolverStock = estadoPagoReal == EstadoPago.Aprobado || estadoPagoReal == EstadoPago.Reembolsado;
 
                 if (debeDevolverStock)
                 {
@@ -684,6 +834,40 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Motivo del resultado cuando el UPDATE condicional de la aprobación
+        /// perdió la carrera: recarga el estado real del pedido desde la DB,
+        /// porque la entidad del request perdedor quedó desactualizada. Pedido
+        /// ya aprobado → YaConfirmado (un reintento repetido no repite la
+        /// reserva); vencido → PedidoVencido; cualquier otro estado →
+        /// EstadoIncoherente.
+        /// </summary>
+        private async Task<ResultadoPago> ResolverMotivoDeCarreraAsync(int pedidoId, CancellationToken ct)
+        {
+            var estadoReal = await _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.PedidoId == pedidoId)
+                .Select(p => new { p.Estado, p.EstadoPago, p.FechaPedido })
+                .FirstOrDefaultAsync(ct);
+
+            if (estadoReal == null)
+            {
+                _logger.LogWarning("El pedido {PedidoId} desapareció durante la carrera de confirmación.", pedidoId);
+                return ResultadoPago.Fallo(MotivoPago.PedidoNoEncontrado);
+            }
+
+            if (estadoReal.EstadoPago == EstadoPago.Aprobado)
+                return ResultadoPago.ExitoYaConfirmado();
+
+            if (estadoReal.FechaPedido <= DateTime.Now.Subtract(Pedido.TiempoMaximoPagoPendiente))
+                return ResultadoPago.Fallo(MotivoPago.PedidoVencido);
+
+            _logger.LogInformation(
+                "Llegó una aprobación tardía al pedido {PedidoId} en estado {EstadoPago}/{Estado}: se descarta (EstadoIncoherente).",
+                pedidoId, estadoReal.EstadoPago, estadoReal.Estado);
+            return ResultadoPago.Fallo(MotivoPago.EstadoIncoherente);
         }
     }
 }

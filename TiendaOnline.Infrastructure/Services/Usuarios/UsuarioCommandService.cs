@@ -56,9 +56,8 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
         public async Task EditarUsuarioAsync(int usuarioId, UsuarioUpdateDto dto, CancellationToken ct = default)
         {
             // El destino lo firma el parámetro (id del route, validado por la política
-            // EsDuenioDelPerfil): el UsuarioId dentro del dto queda ignorado — aun si un
-            // POST trae el id de otro usuario, no edita perfiles ajenos (IDOR de la
-            // auditoría 07/11).
+            // EsDuenioDelPerfil): el UsuarioId dentro del dto queda ignorado — aun si
+            // el POST trae el id de otro usuario, no edita perfiles ajenos.
             var usuario = await _context.Usuarios
                         .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId, ct);
 

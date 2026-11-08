@@ -35,16 +35,14 @@ public class MercadoPagoService : IPaymentService
         if (string.IsNullOrEmpty(successUrl))
             throw new Exception("La URL de retorno (Success) no está configurada en MercadoPagoSettings");
 
+        // El armado de ítems vive en un helper estático testeable y agrega el
+        // ítem "Envío" cuando el pedido tiene costo de envío: la sumatoria de
+        // la preferencia es subtotal + envío, el mismo total que valida
+        // ConfirmarPagoAsync. Si se cobrara solo el subtotal, todo pago con
+        // envío a domicilio caería en MontoNoCoincide.
         var request = new PreferenceRequest
         {
-            Items = pedidoDto.Items.Select(i => new PreferenceItemRequest
-            {
-                Title = i.Nombre,
-                Description = $"Compra en {_appSettingsService.GetValue("Diseno:NombreDelSitio")} - {i.Nombre}",
-                Quantity = i.Cantidad,
-                UnitPrice = i.PrecioUnitario,
-                CurrencyId = "ARS"
-            }).ToList(),
+            Items = ArmarItemsDePreferencia(pedidoDto, _appSettingsService.GetValue("Diseno:NombreDelSitio")),
             Payer = new PreferencePayerRequest { Email = pedidoDto.EmailUsuario },
             ExternalReference = pedidoDto.PedidoId.ToString(),
             NotificationUrl = notificationUrl,
@@ -68,6 +66,39 @@ public class MercadoPagoService : IPaymentService
         var preference = await client.CreateAsync(request);
         _logger.LogInformation("Preferencia de pago creada para pedido {PedidoId}", pedidoDto.PedidoId);
         return preference.InitPoint;
+    }
+
+    /// <summary>
+    /// Ítems de la preferencia de pago: los productos del pedido con el
+    /// snapshot de precio cobrado, más un ítem "Envío" por el costo real
+    /// cuando el pedido es envío a domicilio. Estático y puro para testear
+    /// el armado sin cliente de la SDK. Retiro local (envío 0) arma la
+    /// lista de siempre, sin ítem extra.
+    /// </summary>
+    public static List<PreferenceItemRequest> ArmarItemsDePreferencia(PedidoPagoDto pedidoDto, string nombreSitio)
+    {
+        var items = pedidoDto.Items.Select(i => new PreferenceItemRequest
+        {
+            Title = i.Nombre,
+            Description = $"Compra en {nombreSitio} - {i.Nombre}",
+            Quantity = i.Cantidad,
+            UnitPrice = i.PrecioUnitario,
+            CurrencyId = "ARS"
+        }).ToList();
+
+        if (pedidoDto.CostoEnvio > 0m)
+        {
+            items.Add(new PreferenceItemRequest
+            {
+                Title = "Envío",
+                Description = $"Envío a domicilio - Pedido #{pedidoDto.PedidoId}",
+                Quantity = 1,
+                UnitPrice = pedidoDto.CostoEnvio,
+                CurrencyId = "ARS"
+            });
+        }
+
+        return items;
     }
 
     public async Task<InfoPagoDto?> ObtenerDetallesPagoAsync(string paymentId, CancellationToken ct = default)

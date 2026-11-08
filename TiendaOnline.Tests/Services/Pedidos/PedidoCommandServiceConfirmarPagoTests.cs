@@ -297,5 +297,35 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
             Assert.Equal(EstadoPago.Reembolsado, pedidoDb.EstadoPago);
         }
+
+        [Fact]
+        public async Task ConfirmarPago_DobleConfirmacion_ReservaUnaVezYElReintentoNoPisaLaTransaccion()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2);
+            var sut = Sut.PedidoCommand(ctx);
+
+            var primera = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 200m));
+            var reintento = await sut.ConfirmarPagoAsync(Info(pedido.PedidoId, "approved", 200m, transaccion: "tx-reintento"));
+
+            Assert.True(primera.Confirmado);
+            Assert.True(reintento.Confirmado);
+            Assert.Equal(MotivoPago.YaConfirmado, reintento.Motivo); // retry benigno: no repite la reserva
+
+            using var verify = db.CreateContext();
+            var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
+            Assert.Equal("tx-1", pedidoDb.TransaccionPagoId); // el reintento no pisa la transacción aprobada
+
+            var stock = await verify.Productos.AsNoTracking()
+                .Where(p => p.ProductoId == producto.ProductoId).Select(p => p.Stock).SingleAsync();
+            Assert.Equal(3, stock); // 5 - 2, reservado una sola vez
+
+            var movimientos = await verify.MovimientosStock
+                .Where(m => m.PedidoId == pedido.PedidoId).ToListAsync();
+            Assert.Single(movimientos);
+        }
     }
 }

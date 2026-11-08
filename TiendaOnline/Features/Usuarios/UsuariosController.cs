@@ -102,8 +102,8 @@ namespace TiendaOnline.Features.Usuarios
             };
 
             // El usuario a editar es el id del route (único valor que validó la política
-            // EsDuenioDelPerfil): el hidden UsuarioId del form se ignora — un valor del
-            // POST nunca es autorización (IDOR de la auditoría 07/11).
+            // EsDuenioDelPerfil): el hidden UsuarioId del form se ignora — un valor
+            // que viaja en el POST nunca es autorización.
             await _usuarioCommandService.EditarUsuarioAsync(id, dto, HttpContext.RequestAborted);
             _logger.LogInformation("Perfil del usuario {UsuarioId} editado", id);
             TempData.SetMensajeExito("Tu información se actualizó correctamente.");

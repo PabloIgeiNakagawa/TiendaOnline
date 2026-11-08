@@ -128,5 +128,29 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var detalle = await verify.DetallesPedido.FirstAsync(dp => dp.PedidoId == pago.PedidoId);
             Assert.Equal(100m, detalle.PrecioUnitario); // oferta expirada → precio de lista
         }
+
+        [Fact]
+        public async Task CrearPedido_ConEnvioADomicilio_DevuelveElCostoDeEnvioParaLaPreferencia()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var metodo = TestDatabase.SeedMetodoDePago(ctx);
+            var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 10);
+            var sut = Sut.PedidoCommand(ctx);
+
+            var dto = Dto(usuario.UsuarioId, metodo.MetodoDePagoId,
+                new CrearPedidoDetalleDto { ProductoId = producto.ProductoId, Cantidad = 1, PrecioUnitario = 100m });
+            dto.EsEnvioADomicilio = true;
+            dto.CostoEnvio = 50m;
+
+            var pago = await sut.CrearPedidoYPrepararPagoAsync(dto);
+
+            using var verify = db.CreateContext();
+            var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pago.PedidoId);
+            Assert.Equal(50m, pedidoDb.CostoEnvio);
+            Assert.True(pedidoDb.EsEnvioADomicilio);
+            Assert.Equal(50m, pago.CostoEnvio); // el costo viaja a la preferencia para el ítem "Envío"
+        }
     }
 }

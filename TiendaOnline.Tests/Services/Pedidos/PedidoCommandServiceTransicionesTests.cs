@@ -108,5 +108,32 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             await Assert.ThrowsAsync<PedidoNoCancelableException>(() => sut.PedidoCanceladoAsync(pedido.PedidoId));
         }
+
+        [Fact]
+        public async Task PedidoCancelado_DobleCancelacion_DevuelveElStockUnaSolaVez()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 10);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 3,
+                estado: EstadoPedido.EnPreparacion, estadoPago: EstadoPago.Aprobado);
+            var sut = Sut.PedidoCommand(ctx);
+
+            await sut.PedidoCanceladoAsync(pedido.PedidoId);
+
+            await Assert.ThrowsAsync<PedidoNoCancelableException>(
+                () => sut.PedidoCanceladoAsync(pedido.PedidoId));
+
+            using var verify = db.CreateContext();
+            var stock = await verify.Productos.AsNoTracking()
+                .Where(p => p.ProductoId == producto.ProductoId).Select(p => p.Stock).SingleAsync();
+            Assert.Equal(13, stock); // 10 + 3 devueltos una sola vez (no 16)
+
+            var movimientos = await verify.MovimientosStock
+                .Where(m => m.PedidoId == pedido.PedidoId && m.Tipo == TipoMovimiento.CancelacionPedido)
+                .ToListAsync();
+            Assert.Single(movimientos);
+        }
     }
 }

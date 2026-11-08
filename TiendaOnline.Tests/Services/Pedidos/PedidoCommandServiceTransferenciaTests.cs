@@ -388,5 +388,52 @@ namespace TiendaOnline.Tests.Services.Pedidos
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
                 () => sut.RechazarComprobanteTransferenciaAsync(pedido.PedidoId));
         }
+
+        [Fact]
+        public async Task AprobarPagoTransferencia_DobleAprobacion_ReservaElStockUnaSolaVez()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var (_, producto, pedido, _, _) = SeedEscenario(ctx, stock: 5, cantidad: 2);
+            var sut = Sut.PedidoCommand(ctx);
+
+            await sut.AprobarPagoTransferenciaAsync(pedido.PedidoId);
+
+            await Assert.ThrowsAsync<PedidoNoCancelableException>(
+                () => sut.AprobarPagoTransferenciaAsync(pedido.PedidoId));
+
+            using var verify = db.CreateContext();
+            var stock = await verify.Productos.AsNoTracking()
+                .Where(p => p.ProductoId == producto.ProductoId).Select(p => p.Stock).SingleAsync();
+            Assert.Equal(3, stock); // 5 - 2 reservado una sola vez (no 1)
+
+            var movimientos = await verify.MovimientosStock
+                .Where(m => m.PedidoId == pedido.PedidoId).ToListAsync();
+            Assert.Single(movimientos);
+        }
+
+        [Fact]
+        public async Task RechazarComprobante_PedidoYaAprobado_LanzaYNoBajaElComprobante()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var (_, _, pedido, _, _) = SeedEscenario(ctx,
+                estado: EstadoPedido.EnPreparacion, estadoPago: EstadoPago.Aprobado);
+
+            var imagen = new Mock<IImagenService>();
+            imagen.Setup(x => x.ExtraerPublicIdDesdeUrl(UrlComprobante)).Returns(PublicIdComprobante);
+            var sut = Sut.PedidoCommand(ctx, imagen: imagen);
+
+            await Assert.ThrowsAsync<PedidoNoCancelableException>(
+                () => sut.RechazarComprobanteTransferenciaAsync(pedido.PedidoId));
+
+            imagen.Verify(x => x.BorrarImagenAsync(It.IsAny<string>()), Times.Never);
+
+            using var verify = db.CreateContext();
+            var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
+            Assert.Equal(EstadoPago.Aprobado, pedidoDb.EstadoPago);
+            Assert.Equal(EstadoPedido.EnPreparacion, pedidoDb.Estado);
+            Assert.Null(pedidoDb.FechaCancelado);
+        }
     }
 }

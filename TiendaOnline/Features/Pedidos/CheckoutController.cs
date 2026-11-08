@@ -435,8 +435,8 @@ namespace TiendaOnline.Features.Pedidos
             if (model.DireccionSeleccionadaId != null)
             {
                 // El id viaja en el POST (no es autorización): la dirección se lee solo
-                // del usuario logueado (ObtenerDelUsuarioAsync). Ajena/borrada → null
-                // y el caller lo informa en ModelState (IDOR de la auditoría 07/11).
+                // del usuario logueado (ObtenerDelUsuarioAsync). Ajena/borrada → null,
+                // y el caller lo informa en el ModelState.
                 var dir = await _direccionService.ObtenerDelUsuarioAsync(
                     model.DireccionSeleccionadaId.Value, ObtenerUsuarioId(), HttpContext.RequestAborted);
                 return dir?.Provincia;

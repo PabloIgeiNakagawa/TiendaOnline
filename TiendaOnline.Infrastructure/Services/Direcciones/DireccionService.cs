@@ -71,8 +71,8 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
         /// <summary>
         /// Lee una dirección SOLO si pertenece al usuario indicado; null si no existe
         /// o es ajena. Guard de ownership server-side para los flows donde el id
-        /// llega del form (checkout): un DireccionSeleccionadaId ajeno ya no expone
-        /// calle/observaciones de otros usuarios (IDOR de la auditoría 07/11).
+        /// llega del form (checkout): un DireccionSeleccionadaId ajeno nunca expone
+        /// calle/observaciones de otros usuarios.
         /// </summary>
         public async Task<DireccionDto?> ObtenerDelUsuarioAsync(int direccionId, int usuarioId, CancellationToken ct = default)
         {

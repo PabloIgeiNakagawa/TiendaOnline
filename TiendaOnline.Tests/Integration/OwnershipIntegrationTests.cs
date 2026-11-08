@@ -11,11 +11,11 @@ using Xunit;
 namespace TiendaOnline.Tests.Integration
 {
     /// <summary>
-    /// Regla de ownership del front: el id que decide es el de la RUTA (el único
-    /// valor que la política valida), nunca el que viaja en el form. Un POST con
-    /// el hidden otrositado al id de la víctima no edita su perfil (IDOR 07/11),
-    /// y ReintentarPago con el id en la ruta vuelve a responder — antes moría en
-    /// 403 para siempre porque el handler solo miraba el body.
+    /// Regla de ownership: el id que decide es el de la RUTA (el único valor que
+    /// la política valida), nunca el que viaja en el form. Un POST con el hidden
+    /// otrositado al id de la víctima no edita su perfil, y ReintentarPago con el
+    /// id en la ruta vuelve a responder — con el id solo en el body el handler
+    /// devolvía 403 para siempre.
     /// </summary>
     [Collection("Integracion")] // un host por vez: los hosts comparten App_Data/Serilog del proceso
     public class OwnershipIntegrationTests : IClassFixture<TestApp>
