@@ -562,6 +562,23 @@
                                     data-pedido-id="@Model.PedidoId">
                                 <i class="bi bi-check-circle me-2"></i>Marcar como Entregado
                             </button>
+
+                            <a asp-controller="MovimientosStock" asp-action="Devolucion" asp-route-idPedido="@Model.PedidoId"
+                               class="btn btn-outline-secondary btn-lg w-100 mt-3">
+                                <i class="bi bi-arrow-return-left me-2"></i>Registrar devolución
+                            </a>
+                        }
+                        else if (Model.Estado == EstadoPedido.Entregado)
+                        {
+                            <div class="alert alert-info mt-0 mb-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                El pedido ya está entregado y no cambia de estado.
+                            </div>
+
+                            <a asp-controller="MovimientosStock" asp-action="Devolucion" asp-route-idPedido="@Model.PedidoId"
+                               class="btn btn-outline-secondary btn-lg w-100">
+                                <i class="bi bi-arrow-return-left me-2"></i>Registrar devolución
+                            </a>
                         }
                         else
                         {
@@ -603,6 +620,15 @@
                             <a asp-controller="Productos" asp-action="Index" class="btn btn-primary btn-lg w-100 mb-3">
                                 <i class="bi bi-cart-plus me-2"></i>Comprar de Nuevo
                             </a>
+                        }
+
+                        @if (Model.Estado == EstadoPedido.Enviado || Model.Estado == EstadoPedido.Entregado)
+                        {
+                            <p class="small text-muted mb-3">
+                                <i class="bi bi-arrow-return-left me-1"></i>
+                                ¿Algo no fue lo esperado?
+                                <a asp-controller="Soporte" asp-action="FAQ" asp-fragment="devoluciones">Los cambios y devoluciones se piden así</a>.
+                            </p>
                         }
 
                         <a asp-controller="Soporte" asp-action="Index" class="btn btn-outline-info btn-lg w-100">

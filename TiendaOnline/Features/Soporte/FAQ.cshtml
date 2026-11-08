@@ -112,6 +112,42 @@
                 </div>
             </div>
 
+            <div id="devoluciones"></div>
+
+            <div class="d-flex align-items-center mb-3 mt-4">
+                <div class="icon-box bg-info-subtle text-info rounded-3 p-2 me-3">
+                    <i class="bi bi-arrow-return-left fs-4"></i>
+                </div>
+                <h3 class="h4 mb-0 fw-bold">Cambios y Devoluciones</h3>
+            </div>
+
+            <div class="accordion mb-5" id="accordionDevoluciones">
+                <div class="accordion-item border-0 shadow-sm mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#devolucion1">
+                            ¿Cómo hago una devolución?
+                        </button>
+                    </h2>
+                    <div id="devolucion1" class="accordion-collapse collapse" data-bs-parent="#accordionDevoluciones">
+                        <div class="accordion-body text-secondary">
+                            Tienes <strong>30 días</strong> desde la recepción de tu pedido. Escríbenos por WhatsApp o desde el <a asp-action="Contacto" class="fw-semibold">formulario de contacto</a> con tu número de pedido (ej. #000042) y el producto a devolver. Coordinamos la vuelta del producto y una vez que llega al local se valida el estado: el sistema vuelve a sumar las unidades al inventario y queda registrado en tu pedido.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item border-0 shadow-sm mb-3">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#devolucion2">
+                            ¿En qué condiciones debe estar el producto?
+                        </button>
+                    </h2>
+                    <div id="devolucion2" class="accordion-collapse collapse" data-bs-parent="#accordionDevoluciones">
+                        <div class="accordion-body text-secondary">
+                            Para la devolución gratuita, el producto debe estar <strong>sin uso</strong> y con su empaque y accesorios originales. Si el problema es una falla técnica, ese es el camino de la <a href="#garantia2" class="fw-semibold">garantía (RMA)</a>, no de una devolución.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="d-flex align-items-center mb-3 mt-4">
                 <div class="icon-box bg-warning-subtle text-warning-emphasis rounded-3 p-2 me-3">
                     <i class="bi bi-credit-card fs-4"></i>
@@ -185,9 +221,19 @@
                     <h3 class="fw-bold mb-3">¿Aún tienes dudas técnicas?</h3>
                     <p class="mb-4">Nuestro equipo de expertos está listo para ayudarte a configurar tu setup ideal.</p>
                     <div class="d-grid d-md-flex justify-content-center gap-3">
-                        <a href="https://wa.me/tunumero" class="btn btn-success btn-lg px-4 rounded-pill">
-                            <i class="bi bi-whatsapp me-2"></i> WhatsApp Técnico
-                        </a>
+                        @{
+                            // WhatsApp del panel (AppSettings > Tienda:Whatsapp): el link wa.me
+                            // se arma con los dígitos del valor; sin valor configurado el
+                            // botón no se muestra (nada apunta a un número falso).
+                            var whatsappTexto = AppSettings.GetValue("Tienda:Whatsapp") ?? "";
+                            var whatsappDigits = new string(whatsappTexto.Where(char.IsDigit).ToArray());
+                        }
+                        @if (!string.IsNullOrEmpty(whatsappDigits))
+                        {
+                            <a href="https://wa.me/@whatsappDigits" class="btn btn-success btn-lg px-4 rounded-pill">
+                                <i class="bi bi-whatsapp me-2"></i> WhatsApp Técnico
+                            </a>
+                        }
                         <a asp-action="Contacto" class="btn btn-outline-info btn-lg px-4 rounded-pill">
                             <i class="bi bi-envelope me-2"></i> Formulario de Contacto
                         </a>

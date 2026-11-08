@@ -113,5 +113,46 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
                 })
                 .ToList();
         }
+
+        // DATOS PARA EL FORM DE DEVOLUCIÓN DEL PANEL: los productos del pedido con
+        // lo comprado y lo ya devuelto por producto (devuelta = suma de los
+        // movimientos de tipo Devolucion, el único camino que suma stock con
+        // traza). Pedido inexistente → null: el controller lo traduce a aviso.
+        public async Task<DatosDevolucionDto?> ObtenerDatosDeDevolucionAsync(int pedidoId, CancellationToken ct = default)
+        {
+            var pedido = await _context.Pedidos
+                .AsNoTracking()
+                .Include(p => p.Usuario)
+                .Include(p => p.DetallesPedido)
+                .ThenInclude(dp => dp.Producto)
+                .FirstOrDefaultAsync(p => p.PedidoId == pedidoId, ct);
+
+            if (pedido == null) return null;
+
+            var devueltas = await _context.MovimientosStock
+                .AsNoTracking()
+                .Where(m => m.Tipo == TipoMovimiento.Devolucion && m.PedidoId == pedidoId)
+                .GroupBy(m => m.ProductoId)
+                .Select(g => new { ProductoId = g.Key, Cantidad = g.Sum(m => m.Cantidad) })
+                .ToDictionaryAsync(x => x.ProductoId, x => x.Cantidad, ct);
+
+            return new DatosDevolucionDto
+            {
+                PedidoId = pedido.PedidoId,
+                Estado = pedido.Estado,
+                ClienteNombre = pedido.Usuario == null ? null : $"{pedido.Usuario.Nombre} {pedido.Usuario.Apellido}".Trim(),
+                AdmiteDevolucion = pedido.Estado is EstadoPedido.Enviado or EstadoPedido.Entregado,
+                Items = pedido.DetallesPedido
+                    .Where(dp => dp.Producto != null)
+                    .Select(dp => new ItemDevolucionDto
+                    {
+                        ProductoId = dp.ProductoId,
+                        ProductoNombre = dp.Producto.Nombre,
+                        CantidadComprada = dp.Cantidad,
+                        CantidadDevuelta = devueltas.GetValueOrDefault(dp.ProductoId)
+                    })
+                    .ToList()
+            };
+        }
     }
 }

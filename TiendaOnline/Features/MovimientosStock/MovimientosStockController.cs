@@ -123,5 +123,55 @@ namespace TiendaOnline.Features.MovimientosStock
 
             return RedirectToAction(nameof(Movimientos));
         }
+
+        // FORM DE DEVOLUCIÓN (desde el detalle del pedido del panel): muestra los
+        // productos del pedido con lo comprado y lo ya devuelto. Sin estado
+        // permitido, la vista muestra el aviso; el guard del service es el que
+        // decide al escribir (el form nunca queda como autorización).
+        [HttpGet("[action]")]
+        public async Task<IActionResult> Devolucion(int idPedido)
+        {
+            ViewData[ViewDataKeys.Title] = "Registrar devolución";
+
+            var datos = await _movimientoStockQueryService.ObtenerDatosDeDevolucionAsync(idPedido, HttpContext.RequestAborted);
+            if (datos == null)
+            {
+                TempData.SetMensajeError("No encontramos ese pedido.");
+                return RedirectToAction(nameof(Movimientos));
+            }
+
+            return View(datos);
+        }
+
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegistrarDevolucion(DevolucionStockDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                var error = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage;
+                TempData.SetMensajeError(error ?? "Datos de devolución inválidos.");
+                return RedirectToAction(nameof(Devolucion), new { idPedido = dto.PedidoId });
+            }
+
+            try
+            {
+                await _movimientoStockCommandService.RegistrarDevolucionAsync(dto, HttpContext.RequestAborted);
+                TempData.SetMensajeExito("Devolución registrada: el stock volvió al inventario y quedó en el historial.");
+            }
+            catch (DomainException ex)
+            {
+                // El guard del service describe el motivo con el dato real (ej. lo
+                // que resta por devolver): ese mensaje corregible es el que se muestra.
+                TempData.SetMensajeError(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error registrando devolución de stock (pedido {PedidoId}, producto {ProductoId}, cantidad {Cantidad})", dto.PedidoId, dto.ProductoId, dto.Cantidad);
+                TempData.SetMensajeError("No se pudo registrar la devolución. Intente nuevamente.");
+            }
+
+            return RedirectToAction(nameof(Devolucion), new { idPedido = dto.PedidoId });
+        }
     }
 }

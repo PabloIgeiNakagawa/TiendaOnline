@@ -61,25 +61,48 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
             using var transaction = await _context.Database.BeginTransactionAsync(ct);
             try
             {
+                var pedido = await _context.Pedidos.FindAsync(dto.PedidoId, ct);
+                if (pedido == null)
+                    throw new MovimientoStockNoValidoException("El pedido indicado no existe.");
+
+                // La devolución reingresa unidades que ya salieron físicamente: en
+                // Nuevo/EnPreparacion el pedido se anula entero (la cancelación
+                // devuelve el stock) y en Cancelado ya lo devolvió por su camino.
+                var admiteDevolucion = pedido.Estado is EstadoPedido.Enviado or EstadoPedido.Entregado;
+                if (!admiteDevolucion)
+                    throw new MovimientoStockNoValidoException("La devolución solo aplica a pedidos enviados o entregados.");
+
                 var producto = await _context.Productos.FindAsync(dto.ProductoId, ct);
                 if (producto == null) throw new Exception("Producto no encontrado");
 
-                // Validación de integridad: ¿El producto estaba en ese pedido (y devolvé solo hasta lo comprado)?
+                // Validación de integridad: ¿El producto estaba en ese pedido?
                 var cantidadComprada = await _context.DetallesPedido
                     .Where(dp => dp.PedidoId == dto.PedidoId && dp.ProductoId == dto.ProductoId)
-                    .Select(dp => dp.Cantidad)
-                    .FirstOrDefaultAsync(ct);
+                    .SumAsync(dp => (int?)dp.Cantidad, ct) ?? 0;
 
                 if (cantidadComprada == 0)
                     throw new MovimientoStockNoValidoException("El producto no pertenece al pedido indicado.");
 
-                // La devolución solo suma stock y hasta lo comprado del pedido: más
+                // La devolución solo suma stock, y hasta lo comprado del pedido
+                // DESCONTANDO lo ya devuelto en devoluciones anteriores: más
                 // cantidad inventaría unidades que nunca entraron al sistema.
                 if (dto.Cantidad <= 0)
                     throw new MovimientoStockNoValidoException("La devolución debe sumar stock, no restarlo.");
 
-                if (dto.Cantidad > cantidadComprada)
-                    throw new MovimientoStockNoValidoException($"No se puede devolver más que las {cantidadComprada} unidades compradas en el pedido.");
+                var yaDevuelta = await _context.MovimientosStock.AsNoTracking()
+                    .Where(m => m.Tipo == TipoMovimiento.Devolucion
+                             && m.PedidoId == dto.PedidoId
+                             && m.ProductoId == dto.ProductoId)
+                    .SumAsync(m => (int?)m.Cantidad, ct) ?? 0;
+
+                var restante = cantidadComprada - yaDevuelta;
+                if (dto.Cantidad > restante)
+                {
+                    if (restante == 0)
+                        throw new MovimientoStockNoValidoException("Ese producto ya se devolvió completo en este pedido.");
+                    throw new MovimientoStockNoValidoException(
+                        $"Ya se devolvieron {yaDevuelta} de las {cantidadComprada} unidades compradas: solo quedan {restante} por devolver.");
+                }
 
                 producto.Stock += dto.Cantidad;
 
