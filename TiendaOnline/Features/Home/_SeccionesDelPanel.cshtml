@@ -1,0 +1,14 @@
+@using TiendaOnline.Features.Home
+@model HomeAdminViewModel
+@* Envase del cuerpo del panel: lo pide el caparazón en UN solo fetch
+   (admin/secciones/todas). Cada wrapper data-seccion es la clave por la que el
+   loader de site.js reparte el HTML a su contenedor de IndexAdmin (mismo
+   atributo en la vista). El contenido de cada pieza lo renderea el parcial de
+   su sección — Razor sigue siendo el único que arma HTML: auto-escapado. *@
+<div data-seccion="estado-sistema"><partial name="_EstadoSistema" model='(Model.EstaDbOnline, Model.VersionApp)' /></div>
+<div data-seccion="resumen-diario"><partial name="_ResumenDiario" model="Model.ResumenDiario" /></div>
+<div data-seccion="productos-bajo-stock"><partial name="_ProductosBajoStock" model="Model.ProductosBajoStock" /></div>
+<div data-seccion="pedidos-estancados"><partial name="_AtencionRequeridaLista" model="Model" /></div>
+<div data-seccion="ultimos-cambios"><partial name="_UltimosCambios" model="Model.UltimosCambios" /></div>
+<div data-seccion="movimientos-stock"><partial name="_MovimientosStock" model="Model.UltimosMovimientosStock" /></div>
+<div data-seccion="pedidos-recientes"><partial name="_PedidosRecientes" model="Model.PedidosRecientes" /></div>

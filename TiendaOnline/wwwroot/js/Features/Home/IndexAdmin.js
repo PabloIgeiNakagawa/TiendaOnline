@@ -1,8 +1,8 @@
 // Atención Requerida (panel admin): este script maneja solo la PAGINACIÓN del
-// widget. La carga inicial la dispara el caparazón (data-cargar en la vista
-// + maquinaria de site.js); acá se repagina con retardo de 300ms (con respuesta
-// rápida no se pinta esqueleto: un parpadeo incómodo al revés) y se escucha el
-// evento de pintado para refrescar badge y contadores del server.
+// widget. La página 1 la trae el envase del caparazón (un fetch para todo el
+// panel); acá se repagina con retardo de 300ms (con respuesta rápida no se
+// pinta esqueleto: un parpadeo incómodo al revés) y se escucha el evento de
+// pintado para refrescar badge y contadores del server.
 
 let paginaActual = 1;
 let totalPaginas = 1;

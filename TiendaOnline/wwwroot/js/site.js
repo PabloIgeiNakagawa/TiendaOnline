@@ -3,12 +3,12 @@ const applyTheme = (theme) => {
     document.documentElement.setAttribute('data-bs-theme', theme);
 };
 
-// --- Refrescos con esqueleto (maquinaria compartida) ---
+// --- Refrescos de sección (maquinaria compartida) ---
 // La FORMA del esqueleto la declara cada vista con un <template>; esta función
-// aporta solo el comportamiento: pinta el esqueleto si el refresco tarda más
-// que el retardo (configurable: 0 para la carga inicial del caparazón — ahí el
-// esqueleto SIEMPRE se ve — y 300ms para refrescos manuales, donde pintarlo
-// con respuesta rápida sería un parpadeo incómodo al revés).
+// aporta solo el comportamiento de una sección suelta: pinta el esqueleto si
+// el refresco tarda más que el retardo (300ms — con respuesta rápida sería un
+// parpadeo incómodo al revés). La carga inicial del caparazón no pasa por acá:
+// se pinta de una sin retardo (cargarElPanelDelCaparazon, más abajo).
 const retardoDelEsqueleto = 300;
 
 async function cargarFragmentoConEsqueleto(contenedor, url, idDeEsqueleto, idDeError, alPintar, retardoMs) {
@@ -45,59 +45,76 @@ async function cargarFragmentoConEsqueleto(contenedor, url, idDeEsqueleto, idDeE
     }
 }
 
-// Carga inicial del caparazón: cada contenedor [data-cargar] declara su carga
-// con data-cargar / data-esqueleto en el HTML — los JS de página no escriben
-// esto. Dos condiciones de arrancar:
-//  1. Esqueletos de una: el caparazón completo se ve cargando desde la primera
-//     paint (ninguna página en blanco).
-//  2. Fetches en fila (no en paralelo): con cache frío, seis fetches a la vez
-//     armarían seis veces el mismo caché contra la base. En fila, el primero lo
-//     arma y los siguientes lo sirven de una (ventana del cache ya caliente).
-function iniciarWidgetsDelCaparazon() {
-    const contenedores = Array.from(document.querySelectorAll('[data-cargar]'));
+// Caparazón del panel, TODO DE GOLPE: la página declara UNA carga para todo el
+// cuerpo del panel (data-cargar en el raíz) y cada contenedor declara
+// data-seccion (la clave del envase que arma el server) + data-esqueleto (su
+// forma). Un único fetch trae todas las secciones juntas: los esqueletos se
+// pintan de una al primer paint y el reparto pinta el panel completo en el
+// mismo borrón — ninguna sección aparece antes que las demás.
+async function cargarElPanelDelCaparazon() {
+    const contenedores = Array.from(document.querySelectorAll('[data-seccion]'));
+    if (!contenedores.length) return;
+
+    const url = contenedores[0].closest('[data-cargar]')?.dataset.cargar;
+    if (!url) return;
 
     contenedores.forEach(contenedor => {
         const plantilla = document.getElementById(contenedor.dataset.esqueleto);
         if (plantilla) contenedor.replaceChildren(plantilla.content.cloneNode(true));
     });
 
-    const siguiente = () => {
-        const contenedor = contenedores.shift();
-        if (!contenedor) return;
+    try {
+        const respuesta = await fetch(url, { credentials: 'same-origin' });
+        if (!respuesta.ok) throw new Error('HTTP ' + respuesta.status);
 
-        Promise.resolve(
-            cargarFragmentoConEsqueleto(
-                contenedor,
-                contenedor.dataset.cargar,
-                contenedor.dataset.esqueleto,
-                'tpl-error-widget',
-                null,
-                0)
-        ).then(siguiente, siguiente);
-    };
-    siguiente();
+        const cuerpo = new DOMParser().parseFromString(await respuesta.text(), 'text/html');
+        const avisoDelError = document.getElementById('tpl-error-widget');
+
+        // Reparto por clave y pintado EN LA MISMA pasada: badge/contadores se
+        // enteran por evento, igual que cuando las secciones vuelan sueltas.
+        contenedores.forEach(contenedor => {
+            const seccion = cuerpo.querySelector(`[data-seccion="${contenedor.dataset.seccion}"]`);
+            if (seccion) {
+                contenedor.innerHTML = seccion.innerHTML;
+            } else if (avisoDelError) {
+                contenedor.replaceChildren(avisoDelError.content.cloneNode(true));
+            }
+            document.dispatchEvent(new CustomEvent('fragmento:pintado', { detail: { id: contenedor.id, contenedor: contenedor } }));
+        });
+    } catch {
+        const aviso = document.getElementById('tpl-error-widget');
+        if (aviso) contenedores.forEach(contenedor => contenedor.replaceChildren(aviso.content.cloneNode(true)));
+    }
 }
 
-// Reintentar del aviso de error: repite la ÚLTIMA carga del widget (la página
-// que el usuario estaba viendo, no la de inicio).
+document.addEventListener('DOMContentLoaded', cargarElPanelDelCaparazon);
+
+// Reintentar del aviso de error. Dos caminos:
+//  - El error lo dejó la PAGINACIÓN (cargarPagina guarda su URL en
+//    dataset.ultimaCarga): repite ESA página, no vuelve al inicio.
+//  - La caída fue del envase completo: se pide todo el panel de nuevo, con
+//    esqueletos y pintado juntos otra vez.
 document.addEventListener('click', function (e) {
     const boton = e.target.closest('.js-reintentar-widget');
     if (!boton) return;
     e.preventDefault();
 
-    const contenedor = boton.closest('[data-cargar]');
+    const contenedor = boton.closest('[data-seccion]');
     if (!contenedor) return;
 
-    cargarFragmentoConEsqueleto(
-        contenedor,
-        contenedor.dataset.ultimaCarga || contenedor.dataset.cargar,
-        contenedor.dataset.esqueleto,
-        'tpl-error-widget',
-        null,
-        0);
-});
+    if (contenedor.dataset.ultimaCarga) {
+        cargarFragmentoConEsqueleto(
+            contenedor,
+            contenedor.dataset.ultimaCarga,
+            contenedor.dataset.esqueleto,
+            'tpl-error-widget',
+            null,
+            0);
+        return;
+    }
 
-document.addEventListener('DOMContentLoaded', iniciarWidgetsDelCaparazon);
+    cargarElPanelDelCaparazon();
+});
 
 const savedTheme = getStoredTheme();
 if (savedTheme) {

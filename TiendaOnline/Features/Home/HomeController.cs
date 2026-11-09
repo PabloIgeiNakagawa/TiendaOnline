@@ -37,104 +37,86 @@ namespace TiendaOnline.Features.Home
         public IActionResult IndexAdmin()
         {
             // Caparazón: cero consultas del panel en esta acción — la página sale
-            // casi de una y cada tarjeta pide su fragmento por fetch
-            // (los endpoints admin/secciones/* de acá abajo; el loader y los
-            // esqueletos son maquinaria de site.js con data-* de la vista).
+            // casi de una y su cuerpo completo llega en UN fetch (la acción
+            // TodasLasSecciones de acá abajo). El reparto por data-seccion y los
+            // esqueletos son maquinaria de site.js con data-* de la vista.
             return View(new HomeAdminViewModel());
         }
 
-        // Fragmentos del caparazón: los 6 fetches de una carga del panel piden
-        // secciones del MISMO AdminOverviewDto, que vive guardado 30s en cache —
-        // la base corre sus consultas a lo sumo una vez por ventana, no una por
-        // fetch. Cada fragmento proyecta solo su tajada hacia su ViewModel.
-        [Route("admin/secciones/estado-sistema")]
+        // TODO DE GOLPE: el caparazón pide su cuerpo completo en UN fetch
+        // (admin/secciones/todas). La respuesta es el envase con TODAS las
+        // secciones; el loader de site.js reparte por data-seccion y pinta el
+        // panel junto. La base corre sus consultas UNA vez por carga del panel
+        // (el overview vive 30s en cache).
+        [Route("admin/secciones/todas")]
         [Authorize(Roles = "Administrador")]
         [HttpGet]
-        public async Task<IActionResult> EstadoSistemaParcial()
+        public async Task<IActionResult> TodasLasSecciones()
         {
-            var datos = await _adminOverviewService.ObtenerResumenHomeAsync(HttpContext.RequestAborted);
-            return PartialView("_EstadoSistema", (datos.DbOnline, datos.AppVersion));
-        }
+            var cancelado = HttpContext.RequestAborted;
+            var datos = await _adminOverviewService.ObtenerResumenHomeAsync(cancelado);
+            var estancados = await _adminOverviewService.ObtenerPedidosEstancadosPaginadoAsync(1, ct: cancelado);
 
-        [Route("admin/secciones/resumen-diario")]
-        [Authorize(Roles = "Administrador")]
-        [HttpGet]
-        public async Task<IActionResult> ResumenDiarioParcial()
-        {
-            var datos = await _adminOverviewService.ObtenerResumenHomeAsync(HttpContext.RequestAborted);
-            return PartialView("_ResumenDiario", new ResumenDiarioViewModel
+            // Envase = el mismo HomeAdminViewModel del caparazón: cada pieza
+            // sale rendereada por su parcial, con la clave data-seccion arriba.
+            var modelo = new HomeAdminViewModel
             {
-                VentasHoy = datos.ResumenDiario.VentasHoy,
-                PorcentajeVentas = datos.ResumenDiario.PorcentajeVentas,
-                PedidosHoy = datos.ResumenDiario.PedidosHoy,
-                PorcentajePedidos = datos.ResumenDiario.PorcentajePedidos,
-                EnviadosHoy = datos.ResumenDiario.EnviadosHoy,
-                PorcentajeEnviados = datos.ResumenDiario.PorcentajeEnviados,
-                StockBajo = datos.ResumenDiario.StockBajo
-            });
-        }
+                EstaDbOnline = datos.DbOnline,
+                VersionApp = datos.AppVersion,
+                ResumenDiario = new ResumenDiarioViewModel
+                {
+                    VentasHoy = datos.ResumenDiario.VentasHoy,
+                    PorcentajeVentas = datos.ResumenDiario.PorcentajeVentas,
+                    PedidosHoy = datos.ResumenDiario.PedidosHoy,
+                    PorcentajePedidos = datos.ResumenDiario.PorcentajePedidos,
+                    EnviadosHoy = datos.ResumenDiario.EnviadosHoy,
+                    PorcentajeEnviados = datos.ResumenDiario.PorcentajeEnviados,
+                    StockBajo = datos.ResumenDiario.StockBajo
+                },
+                UltimosCambios = datos.UltimosCambios.Select(a => new AuditoriaItemViewModel
+                {
+                    Usuario = a.UsuarioNombre,
+                    Accion = a.Accion,
+                    Fecha = a.Fecha
+                }).ToList(),
+                UltimosMovimientosStock = datos.UltimosMovimientosStock.Select(m => new MovimientoStockItemViewModel
+                {
+                    ProductoNombre = m.ProductoNombre,
+                    Cantidad = m.Cantidad,
+                    TipoMovimientoId = m.TipoMovimientoId,
+                    Fecha = m.Fecha,
+                    Observaciones = m.Observaciones
+                }).ToList(),
+                ProductosBajoStock = datos.ProductosBajoStock.Select(p => new ProductoBajoStockItemViewModel
+                {
+                    ProductoId = p.ProductoId,
+                    Nombre = p.Nombre,
+                    ImagenUrl = p.ImagenUrl,
+                    Categoria = p.Categoria,
+                    Stock = p.Stock
+                }).ToList(),
+                PedidosRecientes = datos.PedidosRecientes.Select(p => new PedidoRecienteItemViewModel
+                {
+                    PedidoId = p.PedidoId,
+                    FechaPedido = p.FechaPedido,
+                    Cliente = p.Cliente,
+                    Total = p.Total,
+                    EstadoPedido = p.EstadoPedido,
+                    EstadoPedidoId = p.EstadoPedidoId
+                }).ToList(),
+                PaginaActual = estancados.PaginaActual,
+                TotalPaginas = estancados.TotalPaginas,
+                TotalRegistros = estancados.TotalRegistros,
+                PedidosEstancados = estancados.Pedidos.Select(p => new PedidoEstancadoViewModel
+                {
+                    PedidoId = p.PedidoId,
+                    Cliente = p.ClienteNombre,
+                    Fecha = p.Fecha,
+                    HorasTranscurridas = p.HorasTranscurridas
+                }).ToList()
+            };
 
-        [Route("admin/secciones/ultimos-cambios")]
-        [Authorize(Roles = "Administrador")]
-        [HttpGet]
-        public async Task<IActionResult> UltimosCambiosParcial()
-        {
-            var datos = await _adminOverviewService.ObtenerResumenHomeAsync(HttpContext.RequestAborted);
-            return PartialView("_UltimosCambios", datos.UltimosCambios.Select(a => new AuditoriaItemViewModel
-            {
-                Usuario = a.UsuarioNombre,
-                Accion = a.Accion,
-                Fecha = a.Fecha
-            }).ToList());
-        }
-
-        [Route("admin/secciones/movimientos-stock")]
-        [Authorize(Roles = "Administrador")]
-        [HttpGet]
-        public async Task<IActionResult> MovimientosStockParcial()
-        {
-            var datos = await _adminOverviewService.ObtenerResumenHomeAsync(HttpContext.RequestAborted);
-            return PartialView("_MovimientosStock", datos.UltimosMovimientosStock.Select(m => new MovimientoStockItemViewModel
-            {
-                ProductoNombre = m.ProductoNombre,
-                Cantidad = m.Cantidad,
-                TipoMovimientoId = m.TipoMovimientoId,
-                Fecha = m.Fecha,
-                Observaciones = m.Observaciones
-            }).ToList());
-        }
-
-        [Route("admin/secciones/productos-bajo-stock")]
-        [Authorize(Roles = "Administrador")]
-        [HttpGet]
-        public async Task<IActionResult> ProductosBajoStockParcial()
-        {
-            var datos = await _adminOverviewService.ObtenerResumenHomeAsync(HttpContext.RequestAborted);
-            return PartialView("_ProductosBajoStock", datos.ProductosBajoStock.Select(p => new ProductoBajoStockItemViewModel
-            {
-                ProductoId = p.ProductoId,
-                Nombre = p.Nombre,
-                ImagenUrl = p.ImagenUrl,
-                Categoria = p.Categoria,
-                Stock = p.Stock
-            }).ToList());
-        }
-
-        [Route("admin/secciones/pedidos-recientes")]
-        [Authorize(Roles = "Administrador")]
-        [HttpGet]
-        public async Task<IActionResult> PedidosRecientesParcial()
-        {
-            var datos = await _adminOverviewService.ObtenerResumenHomeAsync(HttpContext.RequestAborted);
-            return PartialView("_PedidosRecientes", datos.PedidosRecientes.Select(p => new PedidoRecienteItemViewModel
-            {
-                PedidoId = p.PedidoId,
-                FechaPedido = p.FechaPedido,
-                Cliente = p.Cliente,
-                Total = p.Total,
-                EstadoPedido = p.EstadoPedido,
-                EstadoPedidoId = p.EstadoPedidoId
-            }).ToList());
+            return PartialView("_SeccionesDelPanel", modelo);
         }
 
         [Route("admin/pedidos-estancados")]

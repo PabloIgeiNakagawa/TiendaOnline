@@ -52,29 +52,31 @@
     </style>
 }
 
-@* CAPARAZÓN: la página no consulta la base — cada contenedor declara su carga
-   con data-cargar (endpoint del fragmento) + data-esqueleto (la <template> con
-   SU propia forma) y el loader genérico de site.js pinta el esqueleto de
-   inmediato y pega el HTML rendereado del server cuando llega. *@
-<div class="container-fluid py-4">
+@* CAPARAZÓN TODO DE GOLPE: la página no consulta la base — sale casi de una
+   con SUS esqueletos y TODO el cuerpo llega en UN fetch (data-cargar del raíz
+   contra admin/secciones/todas). El loader de site.js reparte el envase por
+   data-seccion (misma clave en server y cliente) y pinta todos los
+   contenedores juntos: ninguna sección aparece antes que las demás.
+   El esqueleto de cada uno es la <template> que declara en data-esqueleto. *@
+<div class="container-fluid py-4" data-cargar="/admin/secciones/todas">
     <div class="d-md-flex justify-content-md-between align-items-md-center mb-4">
         <partial name="_TituloSeccion" model='("Panel de Control", "Estado operativo del sistema en tiempo real")' />
 
         <div class="d-flex gap-2"
-             data-cargar="/admin/secciones/estado-sistema"
+             data-seccion="estado-sistema"
              data-esqueleto="tpl-skeleton-estado"></div>
     </div>
 
     <!-- Resumen Diario -->
     <div class="row g-3 mb-4"
-         data-cargar="/admin/secciones/resumen-diario"
+         data-seccion="resumen-diario"
          data-esqueleto="tpl-skeleton-resumen"></div>
 
     <!-- Cards de 3 columnas -->
     <div class="row g-3">
         <!-- Columna 1: Productos Bajo Stock -->
         <div class="col-12 col-lg-4">
-            <div data-cargar="/admin/secciones/productos-bajo-stock"
+            <div data-seccion="productos-bajo-stock"
                  data-esqueleto="tpl-skeleton-bajo-stock"></div>
         </div>
 
@@ -87,7 +89,7 @@
                     </h5>
                 </div>
                 <div class="card-body"
-                     data-cargar="/admin/secciones/ultimos-cambios"
+                     data-seccion="ultimos-cambios"
                      data-esqueleto="tpl-skeleton-actividad"></div>
             </div>
         </div>
@@ -102,9 +104,8 @@
                     </h5>
                 </div>
                 <div class="card-body overflow-y-auto" id="pedidos-estancados-container"
-                     data-cargar="/admin/pedidos-estancados?pagina=1"
-                     data-esqueleto="tpl-esqueleto-filas"
-                     data-error="tpl-error-widget"></div>
+                     data-seccion="pedidos-estancados"
+                     data-esqueleto="tpl-esqueleto-filas"></div>
             </div>
         </div>
     </div>
@@ -119,7 +120,7 @@
                     </h5>
                 </div>
                 <div class="card-body p-0"
-                     data-cargar="/admin/secciones/movimientos-stock"
+                     data-seccion="movimientos-stock"
                      data-esqueleto="tpl-skeleton-movimientos"></div>
             </div>
         </div>
@@ -141,16 +142,17 @@
                     </div>
                 </div>
                 <div class="card-body"
-                     data-cargar="/admin/secciones/pedidos-recientes"
+                     data-seccion="pedidos-recientes"
                      data-esqueleto="tpl-skeleton-pedidos"></div>
             </div>
         </div>
     </div>
 </div>
 
-@* Formas de la carga (cada vista su esqueleto): la maquinaria es la única
-   función de site.js; el aviso de error es compartido por todos los widgets
-   (el Reintentar del propio loader recarga la última dirección del widget). *@
+@* Formas de la carga (cada vista su esqueleto): la maquinaria vive una vez en
+   site.js. El aviso de error es compartido y su Reintentar repite la última
+   carga de lo que falló: la paginación vuelve a SU página; la caída del
+   envase completo vuelve a pedir todo el panel. *@
 <template id="tpl-skeleton-estado">
     <span class="badge rounded-pill bg-secondary p-2 px-3 placeholder-glow"><span class="placeholder col-8">&nbsp;</span></span>
     <span class="badge rounded-pill bg-secondary p-2 px-3 placeholder-glow"><span class="placeholder col-8">&nbsp;</span></span>
