@@ -187,7 +187,7 @@
                                             </div>
                                         </td>
                                         <td class="py-3">
-                                            <div class="@(producto.Activo ? "" : "text-muted") fw-semibold">@producto.Precio.ToString("C", new System.Globalization.CultureInfo("es-CO"))</div>
+                                            <div class="@(producto.Activo ? "" : "text-muted") fw-semibold">@producto.Precio.ToString("C")</div>
                                         </td>
                                         <td class="py-3">
                                             @if (producto.Stock > 0)
@@ -304,7 +304,7 @@
                                                 <i class="bi bi-currency-dollar text-primary me-1"></i>Precio
                                             </small>
                                             <div class="@(producto.Activo ? "" : "text-muted") fw-semibold">
-                                                @producto.Precio.ToString("C", new System.Globalization.CultureInfo("es-CO"))
+                                                @producto.Precio.ToString("C")
                                             </div>
                                         </div>
                                         <div class="col-6">

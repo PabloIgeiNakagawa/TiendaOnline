@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using System.Globalization;
 using TiendaOnline.Application.Reportes;
 using TiendaOnline.Domain.Entities;
@@ -9,67 +10,109 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
     public class ReportesService : IReportesService
     {
         private readonly TiendaContext _context;
-        public ReportesService(TiendaContext context)
+        private readonly IMemoryCache _cache;
+
+        private const string ClaveCacheDashboard = "reportes:dashboard";
+        private static readonly TimeSpan VigenciaDelDashboard = TimeSpan.FromSeconds(60);
+
+        // El cache es opcional (el DI lo inyecta; los tests crean el service sin
+        // él y quedan deterministas: cada instancia arma el suyo).
+        public ReportesService(TiendaContext context, IMemoryCache? cache = null)
         {
             _context = context;
+            _cache = cache ?? new MemoryCache(new MemoryCacheOptions());
         }
 
         public async Task<DashboardDto> ObtenerDatosAsync(CancellationToken ct = default)
         {
-            var dashboard = new DashboardDto
+            // El armado recorre TODOS los pedidos del negocio (promedio de
+            // preparación, mapa calendario, stock inmovilizado...). Es la consulta
+            // más cara del panel y su resultado no exige frescura al segundo: se
+            // guarda 60 segundos, así cada visita de un admin curioso (F5 sobre
+            // F5) deja de repaginar la base completa.
+            return await _cache.GetOrCreateAsync(ClaveCacheDashboard, async entrada =>
             {
-                MetricasGenerales = await ObtenerMetricasGeneralesAsync(ct),
-                TopProductos = await ObtenerTopProductosAsync(10, ct),
-                TopClientes = await ObtenerTopClientesAsync(10, ct),
-                VentasPorCategoria = await ObtenerVentasPorCategoriaAsync(ct),
-                VentasPorMes = await ObtenerVentasPorMesAsync(12, ct),
-                EstadisticasPedidos = await ObtenerEstadisticasPedidosAsync(ct),
-                VentasPorMetodoDePago = await ObtenerVentasPorMetodoDePagoAsync(ct),
-                VentasPorDiaHora = await ObtenerVentasPorDiaHoraAsync(ct),
-                StockInmovilizado = await ObtenerStockInmovilizadoAsync(ct)
-            };
+                entrada.AbsoluteExpirationRelativeToNow = VigenciaDelDashboard;
 
-            return dashboard;
+                var dashboard = new DashboardDto
+                {
+                    MetricasGenerales = await ObtenerMetricasGeneralesAsync(ct),
+                    TopProductos = await ObtenerTopProductosAsync(10, ct),
+                    TopClientes = await ObtenerTopClientesAsync(10, ct),
+                    VentasPorCategoria = await ObtenerVentasPorCategoriaAsync(ct),
+                    VentasPorMes = await ObtenerVentasPorMesAsync(12, ct),
+                    EstadisticasPedidos = await ObtenerEstadisticasPedidosAsync(ct),
+                    VentasPorMetodoDePago = await ObtenerVentasPorMetodoDePagoAsync(ct),
+                    VentasPorDiaHora = await ObtenerVentasPorDiaHoraAsync(ct),
+                    StockInmovilizado = await ObtenerStockInmovilizadoAsync(ct)
+                };
+
+                return dashboard;
+            }) ?? new DashboardDto();
         }
 
         private async Task<MetricasGeneralesDto> ObtenerMetricasGeneralesAsync(CancellationToken ct)
         {
             var fechaActual = DateTime.Now;
             var inicioMesActual = new DateTime(fechaActual.Year, fechaActual.Month, 1);
-            var finMesActual = inicioMesActual.AddMonths(1).AddDays(-1);
+            // Bordes exclusivos: "inicio del mes siguiente" en vez de "último
+            // día del mes" — un corte <= último-día-00:00 dejaba fuera todos los
+            // pedidos con horario de ese día.
+            var inicioMesSiguiente = inicioMesActual.AddMonths(1);
             var inicioMesAnterior = inicioMesActual.AddMonths(-1);
-            var finMesAnterior = inicioMesActual.AddDays(-1);
 
-            // Las métricas de dinero cuentan SOLO pagos aprobados: un pendiente o
-            // rechazado no es venta aunque no esté cancelado (los totales viejos
-            // se inflaban con plata que nunca entró).
-            var ventasTotales = await _context.DetallesPedido
+            // Regla de la venta (08/11): solo pagos aprobados, y la venta es la
+            // plata REAL cobrada = subtotal de ítems + costo de envío (MercadoPago
+            // cobra ambos en el mismo pago; sumar solo ítems desentendería el total).
+            var ventasSubtotales = await _context.DetallesPedido
                 .AsNoTracking()
                 .Where(dp => dp.Pedido.EstadoPago == EstadoPago.Aprobado)
                 .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario, ct);
 
-            var ventasMesActual = await _context.DetallesPedido
+            var envioTotales = await _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.EstadoPago == EstadoPago.Aprobado)
+                .SumAsync(p => (decimal?)p.CostoEnvio, ct) ?? 0m;
+            var ventasTotales = ventasSubtotales + envioTotales;
+
+            var ventasSubtotalesMesActual = await _context.DetallesPedido
                 .AsNoTracking()
                 .Where(dp => dp.Pedido.FechaPedido >= inicioMesActual
-                          && dp.Pedido.FechaPedido <= finMesActual
+                          && dp.Pedido.FechaPedido < inicioMesSiguiente
                           && dp.Pedido.EstadoPago == EstadoPago.Aprobado)
                 .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario, ct);
 
-            var ventasMesAnterior = await _context.DetallesPedido
+            var envioMesActual = await _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.FechaPedido >= inicioMesActual
+                         && p.FechaPedido < inicioMesSiguiente
+                         && p.EstadoPago == EstadoPago.Aprobado)
+                .SumAsync(p => (decimal?)p.CostoEnvio, ct) ?? 0m;
+            var ventasMesActual = ventasSubtotalesMesActual + envioMesActual;
+
+            var ventasSubtotalesMesAnterior = await _context.DetallesPedido
                 .AsNoTracking()
                 .Where(dp => dp.Pedido.FechaPedido >= inicioMesAnterior
-                          && dp.Pedido.FechaPedido <= finMesAnterior
+                          && dp.Pedido.FechaPedido < inicioMesActual
                           && dp.Pedido.EstadoPago == EstadoPago.Aprobado)
                 .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario, ct);
+
+            var envioMesAnterior = await _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.FechaPedido >= inicioMesAnterior
+                         && p.FechaPedido < inicioMesActual
+                         && p.EstadoPago == EstadoPago.Aprobado)
+                .SumAsync(p => (decimal?)p.CostoEnvio, ct) ?? 0m;
+            var ventasMesAnterior = ventasSubtotalesMesAnterior + envioMesAnterior;
 
             var totalPedidos = await _context.Pedidos.CountAsync(ct);
             var pedidosMesActual = await _context.Pedidos
                 .AsNoTracking()
-                .Where(p => p.FechaPedido >= inicioMesActual && p.FechaPedido <= finMesActual)
+                .Where(p => p.FechaPedido >= inicioMesActual && p.FechaPedido < inicioMesSiguiente)
                 .CountAsync(ct);
             var pedidosMesAnterior = await _context.Pedidos
                 .AsNoTracking()
-                .Where(p => p.FechaPedido >= inicioMesAnterior && p.FechaPedido <= finMesAnterior)
+                .Where(p => p.FechaPedido >= inicioMesAnterior && p.FechaPedido < inicioMesActual)
                 .CountAsync(ct);
 
             var totalClientes = await _context.Usuarios.Where(u => u.Rol == Rol.Usuario && u.Activo).CountAsync(ct);
@@ -77,13 +120,13 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                 .AsNoTracking()
                 .Where(u => u.Rol == Rol.Usuario && u.Activo
                          && u.FechaCreacion >= inicioMesActual
-                         && u.FechaCreacion <= finMesActual)
+                         && u.FechaCreacion < inicioMesSiguiente)
                 .CountAsync(ct);
             var clientesMesAnterior = await _context.Usuarios
                 .AsNoTracking()
                 .Where(u => u.Rol == Rol.Usuario && u.Activo
                          && u.FechaCreacion >= inicioMesAnterior
-                         && u.FechaCreacion <= finMesAnterior)
+                         && u.FechaCreacion < inicioMesActual)
                 .CountAsync(ct);
 
             var productosBajoStock = await _context.Productos
@@ -91,7 +134,15 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                 .Where(p => p.Stock < 10 && p.Activo)
                 .CountAsync(ct);
 
-            var promedioVentaPorPedido = totalPedidos > 0 ? ventasTotales / totalPedidos : 0;
+            // El ticket promedio reparte la plata cobrada entre los pedidos QUE
+            // PAGARON: incluir pendientes/rechazados en el divisor hundía el
+            // número sin motivo.
+            var pedidosCobrados = await _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.EstadoPago == EstadoPago.Aprobado)
+                .CountAsync(ct);
+
+            var promedioVentaPorPedido = pedidosCobrados > 0 ? ventasTotales / pedidosCobrados : 0;
 
             var tiempoPromedioPreparacionHoras = await CalcularTiempoPromedioPreparacionAsync(ct);
 
@@ -114,25 +165,32 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
 
         private async Task<double> CalcularTiempoPromedioPreparacionAsync(CancellationToken ct)
         {
-            var todosPedidos = await _context.Pedidos
+            // La base filtra lo inútil (solo pedidos con ambas fechas); el
+            // promedio es en memoria porque la aritmética de TIME por servidor
+            // (DateDiff de SQL Server) no existe en el proveedor SQLite de los tests.
+            var conAmbasFechas = await _context.Pedidos
                 .AsNoTracking()
+                .Where(p => p.FechaEnPreparacion.HasValue && p.FechaEnvio.HasValue)
                 .Select(p => new { p.FechaEnPreparacion, p.FechaEnvio })
                 .ToListAsync(ct);
 
-            var conAmbasFechas = todosPedidos
-                .Where(p => p.FechaEnPreparacion.HasValue && p.FechaEnvio.HasValue)
+            var horas = conAmbasFechas
                 .Select(p => (p.FechaEnvio!.Value - p.FechaEnPreparacion!.Value).TotalHours)
                 .Where(h => h >= 0)
                 .ToList();
 
-            return conAmbasFechas.Any() ? conAmbasFechas.Average() : 0;
+            return horas.Any() ? horas.Average() : 0;
         }
 
         private async Task<List<VentasPorDiaHoraDto>> ObtenerVentasPorDiaHoraAsync(CancellationToken ct)
         {
+            // Ventana de 12 meses: el mapa de calor describe la operación actual,
+            // no la historia completa (es tráfico de pedidos, no plata: por eso
+            // vale el filtro de cancelados además del rango).
+            var haceDoceMeses = DateTime.Now.AddMonths(-12);
             var pedidos = await _context.Pedidos
                 .AsNoTracking()
-                .Where(p => p.Estado != EstadoPedido.Cancelado)
+                .Where(p => p.FechaPedido >= haceDoceMeses && p.Estado != EstadoPedido.Cancelado)
                 .Select(p => new { p.FechaPedido })
                 .ToListAsync(ct);
 
@@ -209,7 +267,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
 
             var productosVendidosRecientemente = await _context.DetallesPedido
                 .AsNoTracking()
-                .Where(dp => dp.Pedido.Estado != EstadoPedido.Cancelado
+                .Where(dp => dp.Pedido.EstadoPago == EstadoPago.Aprobado
                           && dp.Pedido.FechaPedido >= fechaLimite)
                 .Select(dp => dp.ProductoId)
                 .Distinct()
@@ -217,7 +275,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
 
             var ultimaVentaTodos = await _context.DetallesPedido
                 .AsNoTracking()
-                .Where(dp => dp.Pedido.Estado != EstadoPedido.Cancelado)
+                .Where(dp => dp.Pedido.EstadoPago == EstadoPago.Aprobado)
                 .GroupBy(dp => dp.ProductoId)
                 .Select(g => new { ProductoId = g.Key, UltimaVenta = g.Max(dp => dp.Pedido.FechaPedido) })
                 .ToListAsync(ct);
@@ -229,9 +287,11 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                 .Select(p =>
                 {
                     var ultimaVenta = ultimaVentaMap.ContainsKey(p.ProductoId) ? ultimaVentaMap[p.ProductoId] : (DateTime?)null;
+                    // Sin ventas = null: la vista muestra el badge "Nunca", no
+                    // un mentiroso "90 días" heredado del viejo default.
                     var diasSinVenta = ultimaVenta.HasValue
                         ? (int)(DateTime.Now - ultimaVenta.Value).Days
-                        : 90;
+                        : (int?)null;
 
                     return new StockInmovilizadoDto
                     {
@@ -284,7 +344,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                     NombreCompleto = g.Key.Nombre + " " + g.Key.Apellido,
                     g.Key.Email,
                     TotalPedidos = g.Count(),
-                    TotalGastado = g.SelectMany(p => p.DetallesPedido).Sum(dp => dp.Cantidad * dp.PrecioUnitario),
+                    TotalGastado = g.SelectMany(p => p.DetallesPedido).Sum(dp => dp.Cantidad * dp.PrecioUnitario) + g.Sum(p => p.CostoEnvio),
                     UltimaCompra = g.Max(p => p.FechaPedido)
                 })
                 .OrderByDescending(c => c.TotalGastado)
@@ -338,7 +398,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                 {
                     g.Key.Year,
                     g.Key.Month,
-                    TotalVentas = g.SelectMany(p => p.DetallesPedido).Sum(dp => dp.Cantidad * dp.PrecioUnitario),
+                    TotalVentas = g.SelectMany(p => p.DetallesPedido).Sum(dp => dp.Cantidad * dp.PrecioUnitario) + g.Sum(p => p.CostoEnvio),
                     CantidadPedidos = g.Count()
                 })
                 .OrderBy(v => v.Year).ThenBy(v => v.Month)
@@ -395,7 +455,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
                 {
                     MetodoDePago = g.Key,
                     CantidadPedidos = g.Count(),
-                    TotalVentas = g.SelectMany(p => p.DetallesPedido).Sum(dp => dp.Cantidad * dp.PrecioUnitario)
+                    TotalVentas = g.SelectMany(p => p.DetallesPedido).Sum(dp => dp.Cantidad * dp.PrecioUnitario) + g.Sum(p => p.CostoEnvio)
                 })
                 .OrderByDescending(v => v.TotalVentas)
                 .ToListAsync(ct);

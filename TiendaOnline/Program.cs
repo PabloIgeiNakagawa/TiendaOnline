@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using TiendaOnline.Extensions;
 using TiendaOnline.Filters;
 using TiendaOnline.Hangfire;
@@ -10,6 +11,14 @@ using Serilog;
 using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Cultura única es-AR para TODO el server: la plata y las fechas vierten igual
+// en cualquier pantalla (antes coexistían es-CO escrito a mano en algunas vistas
+// y la cultura por defecto del server en otras). El JS usa es-AR explícito, hoy
+// y siempre, sin depender de esta línea.
+var culturaArgentina = new CultureInfo("es-AR");
+CultureInfo.DefaultThreadCurrentCulture = culturaArgentina;
+CultureInfo.DefaultThreadCurrentUICulture = culturaArgentina;
 
 // Logging a archivo: la consola en shared hosting es un agujero negro.
 // App_Data está bloqueada para HTTP: los logs solo se leen por FTP del sitio.

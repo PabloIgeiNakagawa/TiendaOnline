@@ -7,10 +7,10 @@ namespace TiendaOnline.Features.Home
     {
         // --- SECCIÓN: STATUS DEL SISTEMA ---
         public bool EstaDbOnline { get; set; }
-        public string VersionApp { get; set; }
+        public string VersionApp { get; set; } = string.Empty;
 
         // --- SECCIÓN: RESUMEN DIARIO ---
-        public ResumenDiarioViewModel ResumenDiario { get; set; }
+        public ResumenDiarioViewModel ResumenDiario { get; set; } = new();
 
         // --- SECCIÓN: TIMELINE DE AUDITORÍA ---
         // Usamos una lista de una clase interna para que sea fácil de iterar
@@ -20,6 +20,7 @@ namespace TiendaOnline.Features.Home
         public int PaginaActual { get; set; } = 1;
         public int TotalPaginas { get; set; }
         public int TotalRegistros { get; set; }
+        public List<PedidoEstancadoViewModel> PedidosEstancados { get; set; } = new();
 
         // --- SECCIÓN: MOVIMIENTOS DE STOCK ---
         public List<MovimientoStockItemViewModel> UltimosMovimientosStock { get; set; } = new();

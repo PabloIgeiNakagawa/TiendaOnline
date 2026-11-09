@@ -4,10 +4,10 @@
     {
         // Status del Sistema
         public bool DbOnline { get; set; }
-        public string AppVersion { get; set; }
+        public string AppVersion { get; set; } = string.Empty;
 
         // Resumen Diario
-        public ResumenDiarioDto ResumenDiario { get; set; }
+        public ResumenDiarioDto ResumenDiario { get; set; } = new();
 
         // Timeline de Auditoría (Cambios)
         public List<AuditoriaEntryDto> UltimosCambios { get; set; } = new();
@@ -44,15 +44,15 @@
 
     public class AuditoriaEntryDto
     {
-        public string UsuarioNombre { get; set; }
-        public string Accion { get; set; }
+        public string UsuarioNombre { get; set; } = string.Empty;
+        public string Accion { get; set; } = string.Empty;
         public DateTime Fecha { get; set; }
     }
 
     public class PedidoEstancadoDto
     {
         public int PedidoId { get; set; }
-        public string ClienteNombre { get; set; }
+        public string ClienteNombre { get; set; } = string.Empty;
         public DateTime Fecha { get; set; }
         public double HorasTranscurridas { get; set; }
     }
@@ -67,19 +67,19 @@
 
     public class MovimientoStockDto
     {
-        public string ProductoNombre { get; set; }
+        public string ProductoNombre { get; set; } = string.Empty;
         public int Cantidad { get; set; }
         public int TipoMovimientoId { get; set; }
         public DateTime Fecha { get; set; }
-        public string Observaciones { get; set; }
+        public string Observaciones { get; set; } = string.Empty;
     }
 
     public class ProductoBajoStockDto
     {
         public int ProductoId { get; set; }
-        public string Nombre { get; set; }
-        public string ImagenUrl { get; set; }
-        public string Categoria { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public string ImagenUrl { get; set; } = string.Empty;
+        public string Categoria { get; set; } = string.Empty;
         public int Stock { get; set; }
     }
 
@@ -87,9 +87,9 @@
     {
         public int PedidoId { get; set; }
         public DateTime FechaPedido { get; set; }
-        public string Cliente { get; set; }
+        public string Cliente { get; set; } = string.Empty;
         public decimal Total { get; set; }
-        public string EstadoPedido { get; set; }
+        public string EstadoPedido { get; set; } = string.Empty;
         public int EstadoPedidoId { get; set; }
     }
 }

@@ -1,8 +1,17 @@
-﻿// Configuración global de Chart.js
-Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-Chart.defaults.color = '#6c757d';
+﻿document.addEventListener("DOMContentLoaded", function () {
+    // Guard: si Chart.js no llegó (archivo ausente, bloqueo de red), TODO el
+    // dashboard moría en silencio con un TypeError en su primera línea. Ahora
+    // el banner #graficos-averia avisa y corta acá.
+    if (typeof Chart === "undefined") {
+        const averia = document.getElementById("graficos-averia");
+        if (averia) averia.classList.remove("d-none");
+        return;
+    }
 
-document.addEventListener("DOMContentLoaded", function () {
+    // Configuración global de Chart.js (debe vivir tras el guard)
+    Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    Chart.defaults.color = '#6c757d';
+
     const datosVentasMensuales = JSON.parse(
         document.getElementById("datosVentas").textContent
     );
@@ -132,8 +141,10 @@ document.addEventListener("DOMContentLoaded", function () {
                         label: function (context) {
                             const label = context.label || '';
                             const value = context.parsed || 0;
+                            // Sin pedidos, value/total = NaN% en el tooltip: si
+                            // el total es 0, el porcentaje es 0.
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
                             return label + ': ' + value + ' (' + percentage + '%)';
                         }
                     }
@@ -299,8 +310,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // Actualizar fecha y hora cada minuto
+    // Relojito vivo: #ultimaActualizacion existe en la vista (lo reanimó el
+    // backend junto a esta tanda; antes el intervalo tiraba TypeError cada 60s
+    // buscando un elemento que ya no estaba).
     setInterval(() => {
+        const reloj = document.getElementById('ultimaActualizacion');
+        if (!reloj) return;
         const fecha = new Date();
         const opciones = {
             day: '2-digit',
@@ -309,8 +324,7 @@ document.addEventListener("DOMContentLoaded", function () {
             hour: '2-digit',
             minute: '2-digit'
         };
-        document.getElementById('ultimaActualizacion').textContent =
-            fecha.toLocaleString('es-AR', opciones);
+        reloj.textContent = fecha.toLocaleString('es-AR', opciones);
     }, 60000);
 
 });

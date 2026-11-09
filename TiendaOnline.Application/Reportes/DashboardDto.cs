@@ -2,15 +2,15 @@
 {
     public class DashboardDto
     {
-        public MetricasGeneralesDto MetricasGenerales { get; set; }
-        public List<ProductoMasVendidoDto> TopProductos { get; set; }
-        public List<ClienteTopDto> TopClientes { get; set; }
-        public List<VentaPorCategoriaDto> VentasPorCategoria { get; set; }
-        public List<VentaPorMesDto> VentasPorMes { get; set; }
-        public EstadisticasPedidosDto EstadisticasPedidos { get; set; }
-        public List<VentaPorMetodoDePagoDto> VentasPorMetodoDePago { get; set; }
-        public List<VentasPorDiaHoraDto> VentasPorDiaHora { get; set; }
-        public List<StockInmovilizadoDto> StockInmovilizado { get; set; }
+        public MetricasGeneralesDto MetricasGenerales { get; set; } = new();
+        public List<ProductoMasVendidoDto> TopProductos { get; set; } = new();
+        public List<ClienteTopDto> TopClientes { get; set; } = new();
+        public List<VentaPorCategoriaDto> VentasPorCategoria { get; set; } = new();
+        public List<VentaPorMesDto> VentasPorMes { get; set; } = new();
+        public EstadisticasPedidosDto EstadisticasPedidos { get; set; } = new();
+        public List<VentaPorMetodoDePagoDto> VentasPorMetodoDePago { get; set; } = new();
+        public List<VentasPorDiaHoraDto> VentasPorDiaHora { get; set; } = new();
+        public List<StockInmovilizadoDto> StockInmovilizado { get; set; } = new();
     }
 
     public class MetricasGeneralesDto
@@ -32,18 +32,18 @@
     public class ProductoMasVendidoDto
     {
         public int ProductoId { get; set; }
-        public string Nombre { get; set; }
-        public string Categoria { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public string Categoria { get; set; } = string.Empty;
         public int CantidadVendida { get; set; }
         public decimal TotalVentas { get; set; }
-        public string ImagenUrl { get; set; }
+        public string ImagenUrl { get; set; } = string.Empty;
     }
 
     public class ClienteTopDto
     {
         public int UsuarioId { get; set; }
-        public string NombreCompleto { get; set; }
-        public string Email { get; set; }
+        public string NombreCompleto { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
         public int TotalPedidos { get; set; }
         public decimal TotalGastado { get; set; }
         public DateTime UltimaCompra { get; set; }
@@ -51,7 +51,7 @@
 
     public class VentaPorCategoriaDto
     {
-        public string Categoria { get; set; }
+        public string Categoria { get; set; } = string.Empty;
         public int CantidadProductos { get; set; }
         public decimal TotalVentas { get; set; }
         public int PorcentajeDelTotal { get; set; }
@@ -61,7 +61,7 @@
     {
         public int Mes { get; set; }
         public int Anio { get; set; }
-        public string NombreMes { get; set; }
+        public string NombreMes { get; set; } = string.Empty;
         public decimal TotalVentas { get; set; }
         public int CantidadPedidos { get; set; }
     }
@@ -82,7 +82,7 @@
 
     public class VentaPorMetodoDePagoDto
     {
-        public string MetodoDePago { get; set; }
+        public string MetodoDePago { get; set; } = string.Empty;
         public int CantidadPedidos { get; set; }
         public decimal TotalVentas { get; set; }
         public int PorcentajeDelTotal { get; set; }
@@ -90,7 +90,7 @@
 
     public class VentasPorDiaHoraDto
     {
-        public string DiaSemana { get; set; }
+        public string DiaSemana { get; set; } = string.Empty;
         public int OrdenDia { get; set; }
         public int Madrugada { get; set; }
         public int Manana { get; set; }
@@ -101,13 +101,16 @@
     public class StockInmovilizadoDto
     {
         public int ProductoId { get; set; }
-        public string Nombre { get; set; }
-        public string Categoria { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public string Categoria { get; set; } = string.Empty;
         public int Stock { get; set; }
         public decimal Precio { get; set; }
         public decimal ValorInvertido { get; set; }
         public DateTime? UltimaVenta { get; set; }
-        public int DiasSinVenta { get; set; }
-        public string ImagenUrl { get; set; }
+
+        // NULO = nunca vendido: el badge de la vista muestra "Nunca" en vez de
+        // fingir que pasaron 90 días (el viejo default del campo).
+        public int? DiasSinVenta { get; set; }
+        public string ImagenUrl { get; set; } = string.Empty;
     }
 }

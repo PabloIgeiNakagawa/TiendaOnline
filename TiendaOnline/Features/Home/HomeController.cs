@@ -38,6 +38,11 @@ namespace TiendaOnline.Features.Home
         {
             var datosHome = await _adminOverviewService.ObtenerResumenHomeAsync(HttpContext.RequestAborted);
 
+            // La lista de atención requerida viaja armada desde el server: el
+            // panel muestra datos al instante y el JS la refresca solo cuando
+            // el usuario pagina (sin fetch inicial, sin badge mentiroso).
+            var estancados = await _adminOverviewService.ObtenerPedidosEstancadosPaginadoAsync(1, ct: HttpContext.RequestAborted);
+
             var viewModel = new HomeAdminViewModel
             {
                 EstaDbOnline = datosHome.DbOnline,
@@ -61,9 +66,16 @@ namespace TiendaOnline.Features.Home
                     Fecha = a.Fecha
                 }).ToList(),
 
-                PaginaActual = 1,
-                TotalPaginas = 1,
-                TotalRegistros = 0,
+                PaginaActual = estancados.PaginaActual,
+                TotalPaginas = estancados.TotalPaginas,
+                TotalRegistros = estancados.TotalRegistros,
+                PedidosEstancados = estancados.Pedidos.Select(p => new PedidoEstancadoViewModel
+                {
+                    PedidoId = p.PedidoId,
+                    Cliente = p.ClienteNombre,
+                    Fecha = p.Fecha,
+                    HorasTranscurridas = p.HorasTranscurridas
+                }).ToList(),
 
                 UltimosMovimientosStock = datosHome.UltimosMovimientosStock.Select(m => new MovimientoStockItemViewModel
                 {
@@ -104,21 +116,25 @@ namespace TiendaOnline.Features.Home
         {
             var resultado = await _adminOverviewService.ObtenerPedidosEstancadosPaginadoAsync(pagina, ct: HttpContext.RequestAborted);
 
-            var pedidos = resultado.Pedidos.Select(p => new PedidoEstancadoViewModel
+            // Caparazón + parcial: el fragmento es HTML rendereado por Razor (el
+            // molde de las filas vive UNA vez en _AtencionRequeridaLista, no
+            // copiado en JS; Razor auto-escapa el nombre del cliente, dato
+            // controlado por cualquier usuario registrado).
+            var modelo = new HomeAdminViewModel
             {
-                PedidoId = p.PedidoId,
-                Cliente = p.ClienteNombre,
-                Fecha = p.Fecha,
-                HorasTranscurridas = p.HorasTranscurridas
-            }).ToList();
+                PaginaActual = resultado.PaginaActual,
+                TotalPaginas = resultado.TotalPaginas,
+                TotalRegistros = resultado.TotalRegistros,
+                PedidosEstancados = resultado.Pedidos.Select(p => new PedidoEstancadoViewModel
+                {
+                    PedidoId = p.PedidoId,
+                    Cliente = p.ClienteNombre,
+                    Fecha = p.Fecha,
+                    HorasTranscurridas = p.HorasTranscurridas
+                }).ToList()
+            };
 
-            return Json(new
-            {
-                pedidos,
-                paginaActual = resultado.PaginaActual,
-                totalPaginas = resultado.TotalPaginas,
-                totalRegistros = resultado.TotalRegistros
-            });
+            return PartialView("_AtencionRequeridaLista", modelo);
         }
 
         [AllowAnonymous]

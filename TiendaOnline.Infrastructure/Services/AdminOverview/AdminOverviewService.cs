@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using System.Reflection;
 using TiendaOnline.Application.AdminOverview;
 using TiendaOnline.Domain.Entities;
@@ -9,13 +11,35 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
     public class AdminOverviewService : IAdminOverviewService
     {
         private readonly TiendaContext _context;
+        private readonly IMemoryCache _cache;
+        private readonly ILogger<AdminOverviewService>? _logger;
 
-        public AdminOverviewService(TiendaContext context)
+        private const string ClaveCacheHome = "admin:overview";
+        private static readonly TimeSpan VigenciaDelHome = TimeSpan.FromSeconds(30);
+
+        // Cache y logger opcionales: el DI los inyecta; los tests crean el service
+        // directo y quedan deterministas (cada instancia trae su propio cache).
+        public AdminOverviewService(TiendaContext context, IMemoryCache? cache = null, ILogger<AdminOverviewService>? logger = null)
         {
             _context = context;
+            _cache = cache ?? new MemoryCache(new MemoryCacheOptions());
+            _logger = logger;
         }
 
         public async Task<AdminOverviewDto> ObtenerResumenHomeAsync(CancellationToken ct = default)
+        {
+            // El panel re-corre ~10 consultas en cada visita y su contenido no
+            // exige frescura al segundo: 30 segundos de cache hacen que navegar
+            // entre pantallas y volver no repagine todo (el paginado del listado
+            // de atención requerida consulta directo, sin esta cache).
+            return await _cache.GetOrCreateAsync(ClaveCacheHome, async entrada =>
+            {
+                entrada.AbsoluteExpirationRelativeToNow = VigenciaDelHome;
+                return await ArmarResumenHomeAsync(ct);
+            }) ?? new AdminOverviewDto();
+        }
+
+        private async Task<AdminOverviewDto> ArmarResumenHomeAsync(CancellationToken ct)
         {
             var dto = new AdminOverviewDto
             {
@@ -23,134 +47,145 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                 AppVersion = ObtenerVersionApp()
             };
 
-            // Timeline de Auditoría (Últimos 5 cambios de productos o precios)
-            dto.UltimosCambios = await _context.Auditorias
-                .AsNoTracking()
-                .OrderByDescending(a => a.Fecha)
-                .Take(5)
-                .Select(a => new AuditoriaEntryDto
+            // Caída de base: el panel se degrada amable (badge offline + secciones
+            // vacías) en vez de un 500 genérico.
+            if (!dto.DbOnline)
+            {
+                _logger?.LogWarning("Panel admin: base no accesible; se sirven secciones vacías.");
+                return dto;
+            }
+
+            try
+            {
+                // Timeline de Auditoría (Últimos 5 cambios de productos o precios)
+                dto.UltimosCambios = await _context.Auditorias
+                    .AsNoTracking()
+                    .OrderByDescending(a => a.Fecha)
+                    .Take(5)
+                    .Select(a => new AuditoriaEntryDto
+                    {
+                        UsuarioNombre = $"{a.Usuario.Nombre} {a.Usuario.Apellido}",
+                        Accion = a.Accion,
+                        Fecha = a.Fecha
+                    }).ToListAsync(ct);
+
+                // Atención requerida: los dos únicos grupos que piden acción humana
+                // (ver PedidosQuePidenAtencion). "Desde" es el momento del hecho que
+                // espera: el cobro (grupo pagado) o la apertura del pedido (grupo pendiente).
+                var ahora = DateTime.Now;
+                dto.PedidosEstancados = await MapearPedidosQuePidenAtencionAsync(
+                    PedidosQuePidenAtencion(ahora), ahora, ct);
+
+                // Últimos 10 Movimientos de Stock
+                var movimientos = await _context.MovimientosStock
+                    .AsNoTracking()
+                    .Include(m => m.Producto)
+                    .OrderByDescending(m => m.Fecha)
+                    .Take(10)
+                    .ToListAsync(ct);
+
+                dto.UltimosMovimientosStock = movimientos.Select(m => new MovimientoStockDto
                 {
-                    UsuarioNombre = $"{a.Usuario.Nombre} {a.Usuario.Apellido}",
-                    Accion = a.Accion,
-                    Fecha = a.Fecha
-                }).ToListAsync(ct);
+                    ProductoNombre = m.Producto.Nombre,
+                    Cantidad = m.Cantidad,
+                    TipoMovimientoId = (int)m.Tipo,
+                    Fecha = m.Fecha,
+                    Observaciones = m.Observaciones ?? string.Empty
+                }).ToList();
 
-            // Atención requerida: los dos únicos grupos que piden acción humana
-            // (ver PedidosQuePidenAtencion). "Desde" es el momento del hecho que
-            // espera: el cobro (grupo pagado) o la apertura del pedido (grupo pendiente).
-            var ahora = DateTime.Now;
-            dto.PedidosEstancados = await MapearPedidosQuePidenAtencionAsync(
-                PedidosQuePidenAtencion(ahora), ahora, ct);
+                // Resumen Diario (hoy vs ayer): la plata es la cobrada, subtotal +
+                // envío — misma regla de venta que el dashboard de reportes.
+                var hoy = DateTime.Today;
+                var manana = hoy.AddDays(1);
+                var ayer = hoy.AddDays(-1);
 
-            // Últimos 10 Movimientos de Stock
-            var movimientos = await _context.MovimientosStock
-                .AsNoTracking()
-                .Include(m => m.Producto)
-                .OrderByDescending(m => m.Fecha)
-                .Take(10)
-                .ToListAsync(ct);
+                // Dinero + pedidos de hoy y ayer en UNA consulta: el subtotal lo
+                // suma la base (antes bajaba pedidos completos con tracking para
+                // sumar por mano).
+                var resumenDinero = await _context.Pedidos
+                    .AsNoTracking()
+                    .Where(p => p.EstadoPago == EstadoPago.Aprobado && p.FechaPedido >= ayer && p.FechaPedido < manana)
+                    .Select(p => new
+                    {
+                        DeHoy = p.FechaPedido >= hoy,
+                        Envio = p.CostoEnvio,
+                        Subtotal = p.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario)
+                    })
+                    .ToListAsync(ct);
 
-            dto.UltimosMovimientosStock = movimientos.Select(m => new MovimientoStockDto
-            {
-                ProductoNombre = m.Producto.Nombre,
-                Cantidad = m.Cantidad,
-                TipoMovimientoId = (int)Enum.Parse(typeof(TipoMovimiento), m.Tipo.ToString()),
-                Fecha = m.Fecha,
-                Observaciones = m.Observaciones ?? string.Empty
-            }).ToList();
+                var ventasHoy = resumenDinero.Where(v => v.DeHoy).Sum(v => v.Subtotal + v.Envio);
+                var ventasAyer = resumenDinero.Where(v => !v.DeHoy).Sum(v => v.Subtotal + v.Envio);
+                var pedidosHoy = resumenDinero.Count(v => v.DeHoy);
+                var pedidosAyer = resumenDinero.Count - pedidosHoy;
 
-            // Resumen Diario
-            var hoy = DateTime.Today;
-            var manana = hoy.AddDays(1);
-            var ayer = hoy.AddDays(-1);
+                // Enviados de hoy y ayer en una consulta liviana (solo fechas).
+                var fechasEnvio = await _context.Pedidos
+                    .AsNoTracking()
+                    .Where(p => p.Estado == EstadoPedido.Enviado && p.FechaEnvio >= ayer && p.FechaEnvio < manana)
+                    .Select(p => p.FechaEnvio!.Value)
+                    .ToListAsync(ct);
+                var enviadosHoy = fechasEnvio.Count(f => f >= hoy);
+                var enviadosAyer = fechasEnvio.Count - enviadosHoy;
 
-            // Ventas hoy - calcular desde DetallePedido
-            var pedidosVentasHoy = await _context.Pedidos
-                .Include(p => p.DetallesPedido)
-                .Where(p => p.EstadoPago == EstadoPago.Aprobado && p.FechaPedido >= hoy && p.FechaPedido < manana)
-                .ToListAsync(ct);
-            var ventasHoy = pedidosVentasHoy.Sum(p => p.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario));
+                // Stock bajo: UNA consulta alimenta el número del resumen y el listado.
+                var bajoStock = await _context.Productos
+                    .AsNoTracking()
+                    .Where(p => p.Activo && p.Stock < 5)
+                    .OrderBy(p => p.Stock)
+                    .Select(p => new ProductoBajoStockDto
+                    {
+                        ProductoId = p.ProductoId,
+                        Nombre = p.Nombre,
+                        ImagenUrl = p.ImagenUrl,
+                        Categoria = p.Categoria.Nombre,
+                        Stock = p.Stock
+                    })
+                    .ToListAsync(ct);
 
-            var pedidosVentasAyer = await _context.Pedidos
-                .Include(p => p.DetallesPedido)
-                .Where(p => p.EstadoPago == EstadoPago.Aprobado && p.FechaPedido >= ayer && p.FechaPedido < hoy)
-                .ToListAsync(ct);
-            var ventasAyer = pedidosVentasAyer.Sum(p => p.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario));
-
-            // Pedidos hoy (con pago aprobado)
-            var pedidosHoy = await _context.Pedidos
-                .Where(p => p.EstadoPago == EstadoPago.Aprobado && p.FechaPedido >= hoy && p.FechaPedido < manana)
-                .CountAsync(ct);
-
-            var pedidosAyer = await _context.Pedidos
-                .Where(p => p.EstadoPago == EstadoPago.Aprobado && p.FechaPedido >= ayer && p.FechaPedido < hoy)
-                .CountAsync(ct);
-
-            // Pedidos enviados hoy - usar FechaEnvio
-            var enviadosHoy = await _context.Pedidos
-                .Where(p => p.Estado == EstadoPedido.Enviado && p.FechaEnvio >= hoy && p.FechaEnvio < manana)
-                .CountAsync(ct);
-
-            var enviadosAyer = await _context.Pedidos
-                .Where(p => p.Estado == EstadoPedido.Enviado && p.FechaEnvio >= ayer && p.FechaEnvio < hoy)
-                .CountAsync(ct);
-
-            // Stock bajo (productos con stock < 5)
-            var stockBajo = await _context.Productos
-                .Where(p => p.Activo && p.Stock < 5)
-                .CountAsync(ct);
-
-            dto.ResumenDiario = new ResumenDiarioDto
-            {
-                VentasHoy = ventasHoy,
-                VentasAyer = ventasAyer,
-                PorcentajeVentas = ventasAyer > 0 ? (double)((ventasHoy - ventasAyer) / ventasAyer) * 100 : (ventasHoy > 0 ? 100 : 0),
-
-                PedidosHoy = pedidosHoy,
-                PedidosAyer = pedidosAyer,
-                PorcentajePedidos = pedidosAyer > 0 ? ((pedidosHoy - pedidosAyer) / (double)pedidosAyer) * 100 : (pedidosHoy > 0 ? 100 : 0),
-
-                EnviadosHoy = enviadosHoy,
-                EnviadosAyer = enviadosAyer,
-                PorcentajeEnviados = enviadosAyer > 0 ? ((enviadosHoy - enviadosAyer) / (double)enviadosAyer) * 100 : (enviadosHoy > 0 ? 100 : 0),
-
-                StockBajo = stockBajo
-            };
-
-            // Productos bajo stock
-            dto.ProductosBajoStock = await _context.Productos
-                .AsNoTracking()
-                .Include(p => p.Categoria)
-                .Where(p => p.Activo && p.Stock < 5)
-                .OrderBy(p => p.Stock)
-                .Take(5)
-                .Select(p => new ProductoBajoStockDto
+                dto.ResumenDiario = new ResumenDiarioDto
                 {
-                    ProductoId = p.ProductoId,
-                    Nombre = p.Nombre,
-                    ImagenUrl = p.ImagenUrl,
-                    Categoria = p.Categoria.Nombre,
-                    Stock = p.Stock
-                }).ToListAsync(ct);
+                    VentasHoy = ventasHoy,
+                    VentasAyer = ventasAyer,
+                    PorcentajeVentas = ventasAyer > 0 ? (double)((ventasHoy - ventasAyer) / ventasAyer) * 100 : (ventasHoy > 0 ? 100 : 0),
 
-            // Pedidos recientes
-            var pedidosRecientesQuery = await _context.Pedidos
-                .AsNoTracking()
-                .Include(p => p.Usuario)
-                .Include(p => p.DetallesPedido)
-                .OrderByDescending(p => p.FechaPedido)
-                .Take(10)
-                .ToListAsync(ct);
+                    PedidosHoy = pedidosHoy,
+                    PedidosAyer = pedidosAyer,
+                    PorcentajePedidos = pedidosAyer > 0 ? ((pedidosHoy - pedidosAyer) / (double)pedidosAyer) * 100 : (pedidosHoy > 0 ? 100 : 0),
 
-            dto.PedidosRecientes = pedidosRecientesQuery.Select(p => new PedidoRecienteDto
+                    EnviadosHoy = enviadosHoy,
+                    EnviadosAyer = enviadosAyer,
+                    PorcentajeEnviados = enviadosAyer > 0 ? ((enviadosHoy - enviadosAyer) / (double)enviadosAyer) * 100 : (enviadosHoy > 0 ? 100 : 0),
+
+                    StockBajo = bajoStock.Count
+                };
+
+                dto.ProductosBajoStock = bajoStock.Take(5).ToList();
+
+                // Pedidos recientes
+                var pedidosRecientesQuery = await _context.Pedidos
+                    .AsNoTracking()
+                    .Include(p => p.Usuario)
+                    .Include(p => p.DetallesPedido)
+                    .OrderByDescending(p => p.FechaPedido)
+                    .Take(10)
+                    .ToListAsync(ct);
+
+                dto.PedidosRecientes = pedidosRecientesQuery.Select(p => new PedidoRecienteDto
+                {
+                    PedidoId = p.PedidoId,
+                    FechaPedido = p.FechaPedido,
+                    Cliente = p.Usuario.Nombre + " " + p.Usuario.Apellido,
+                    Total = p.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario) + p.CostoEnvio,
+                    EstadoPedido = p.Estado.ToString(),
+                    EstadoPedidoId = (int)p.Estado
+                }).ToList();
+            }
+            catch (Exception ex)
             {
-                PedidoId = p.PedidoId,
-                FechaPedido = p.FechaPedido,
-                Cliente = p.Usuario.Nombre + " " + p.Usuario.Apellido,
-                Total = p.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario),
-                EstadoPedido = p.Estado.ToString(),
-                EstadoPedidoId = (int)p.Estado
-            }).ToList();
+                // Falla transitoria a mitad del armado: mismo amable degrade que
+                // la caída de base (secciones calculadas quedan; el resto vacías).
+                _logger?.LogWarning(ex, "Panel admin: falló el armado del resumen; se sirven las secciones ya calculadas.");
+            }
 
             return dto;
         }

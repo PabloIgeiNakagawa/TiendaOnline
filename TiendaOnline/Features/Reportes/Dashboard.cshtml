@@ -22,7 +22,19 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <partial name="_TituloSeccion" model='("Dashboards", $"Última actualización: {DateTime.Now.ToString("dd/MM/yyyy HH:mm")}")' />
+            @* Mismo bloque que el parcial _TituloSeccion, con el relojito vivo:
+               Dashboard.js actualiza #ultimaActualizacion cada minuto (el código
+               que lo buscaba todos los días tiraba TypeError al no existir). *@
+            <div>
+                <div class="d-flex align-items-center border-start border-primary border-4 ps-4">
+                    <div>
+                        <h2 class="display-6 fw-black text-primary text-uppercase tracking-widest mb-1 fw-medium" style="letter-spacing: 2px;">
+                            Dashboards
+                        </h2>
+                        <p class="text-secondary small text-uppercase mb-0">Última actualización: <span id="ultimaActualizacion">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</span></p>
+                    </div>
+                </div>
+            </div>
             <div>
                 <button id="btnImprimir" class="btn btn-outline-secondary">
                     <i class="bi bi-printer me-1"></i>Imprimir
@@ -30,6 +42,12 @@
             </div>
         </div>
     </div>
+</div>
+
+@* Si Chart.js no llega (CDN caído, bloqueo de red), el JS muere en silencio y
+   el dashboard queda sin gráficos ni explicación: este banner lo despierta. *@
+<div id="graficos-averia" class="alert alert-warning d-none mb-4" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>Los gráficos no pudieron cargarse. Probá recargar la página; si persiste, avisá al equipo técnico.
 </div>
 
 <!-- Tarjetas de Métricas Principales -->
@@ -41,7 +59,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-muted mb-1 small">Ventas del Mes</p>
-                        <h3 class="mb-0 fw-bold">@Model.MetricasGenerales.VentasMesActual.ToString("C", new System.Globalization.CultureInfo("es-CO"))</h3>
+                        <h3 class="mb-0 fw-bold">@Model.MetricasGenerales.VentasMesActual.ToString("C")</h3>
                     </div>
                     <div class="bg-success bg-opacity-10 rounded-3 p-3">
                         <i class="bi bi-cash-coin text-success fs-4"></i>
@@ -137,7 +155,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-muted mb-1 small">Ticket Promedio</p>
-                        <h3 class="mb-0 fw-bold">@Model.MetricasGenerales.PromedioVentaPorPedido.ToString("C", new System.Globalization.CultureInfo("es-CO"))</h3>
+                        <h3 class="mb-0 fw-bold">@Model.MetricasGenerales.PromedioVentaPorPedido.ToString("C")</h3>
                     </div>
                     <div class="bg-success bg-opacity-10 rounded-3 p-3">
                         <i class="bi bi-receipt text-success fs-4"></i>
@@ -239,7 +257,7 @@
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="fw-medium">@categoria.Categoria</span>
-                                <span class="text-muted small">@categoria.TotalVentas.ToString("C", new System.Globalization.CultureInfo("es-CO"))</span>
+                                <span class="text-muted small">@categoria.TotalVentas.ToString("C")</span>
                             </div>
                             <div class="progress" style="height: 8px;">
                                 <div class="progress-bar bg-primary" role="progressbar" style="width: @categoria.PorcentajeDelTotal%"></div>
@@ -311,7 +329,7 @@
                                             <span class="fw-semibold">@metodo.CantidadPedidos</span>
                                         </td>
                                         <td class="text-end fw-semibold bg-transparent">
-                                            @metodo.TotalVentas.ToString("C", new System.Globalization.CultureInfo("es-CO"))
+                                            @metodo.TotalVentas.ToString("C")
                                         </td>
                                         <td class="text-end bg-transparent">
                                             <span class="badge bg-primary bg-opacity-10 text-primary">@metodo.PorcentajeDelTotal%</span>
@@ -408,7 +426,7 @@
                                             <span class="fw-semibold">@cliente.TotalPedidos</span>
                                         </td>
                                         <td class="text-end fw-semibold bg-transparent">
-                                            @cliente.TotalGastado.ToString("C", new System.Globalization.CultureInfo("es-CO"))
+                                            @cliente.TotalGastado.ToString("C")
                                         </td>
                                     </tr>
                                 }
@@ -463,7 +481,7 @@
                             @Model.StockInmovilizado.Count productos con stock sin ventas en los últimos 90 días
                         </p>
                         <span class="badge bg-danger">
-                            $@Model.StockInmovilizado.Sum(s => s.ValorInvertido).ToString("N0", new System.Globalization.CultureInfo("es-CO")) invertido
+                            $@Model.StockInmovilizado.Sum(s => s.ValorInvertido).ToString("N0") invertido
                         </span>
                     </div>
                     <div class="table-responsive bg-transparent">
@@ -496,11 +514,11 @@
                                             <span class="fw-bold">@producto.Stock</span>
                                         </td>
                                         <td class="text-end bg-transparent">
-                                            @producto.Precio.ToString("C", new System.Globalization.CultureInfo("es-CO"))
+                                            @producto.Precio.ToString("C")
                                         </td>
                                         <td class="text-end bg-transparent">
                                             <span class="fw-bold text-danger">
-                                                @producto.ValorInvertido.ToString("C", new System.Globalization.CultureInfo("es-CO"))
+                                                @producto.ValorInvertido.ToString("C")
                                             </span>
                                         </td>
                                         <td class="text-center bg-transparent">
@@ -514,7 +532,11 @@
                                             }
                                         </td>
                                         <td class="text-center bg-transparent">
-                                            @if (producto.DiasSinVenta > 120)
+                                            @if (producto.DiasSinVenta is null)
+                                            {
+                                                <span class="badge bg-secondary">Nunca se vendió</span>
+                                            }
+                                            else if (producto.DiasSinVenta > 120)
                                             {
                                                 <span class="badge bg-danger">@producto.DiasSinVenta días</span>
                                             }
@@ -552,7 +574,9 @@
 </div>
 
 @section Scripts {
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" asp-append-version="true"></script>
+    <!-- Chart.js AUTOALOJADO (D2): antes venía por CDN — tercero imprescindible
+         para que el dashboard tenga gráficos. El archivo vive en wwwroot y
+         asp-append-version lo refresca por huella. -->
+    <script src="~/lib/chartjs/chart.umd.min.js" asp-append-version="true"></script>
     <script src="~/js/Features/Reportes/Dashboard.js" asp-append-version="true"></script>
 }

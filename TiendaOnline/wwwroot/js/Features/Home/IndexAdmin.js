@@ -1,7 +1,12 @@
+// Atención Requerida (panel admin): el listado viene armado del server (_AtencionRequeridaLista);
+// este script solo repagina. El refresco usa la maquinaria de site.js — el
+// esqueleto y el aviso de error son <template> de la vista (IndexAdmin.cshtml),
+// acá no hay HTML de ninguno de los dos.
+
 let paginaActual = 1;
 let totalPaginas = 1;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const container = document.getElementById('pedidos-estancados-container');
 
     if (container) {
@@ -9,14 +14,14 @@ document.addEventListener('DOMContentLoaded', function() {
         totalPaginas = parseInt(container.dataset.totalPaginas) || 1;
     }
 
-    // Carga inicial
-    cargarPagina(paginaActual);
+    // Sin carga inicial: el server ya entregó la página 1 rendereada.
 
-    // Event delegation on document for pagination (elements are recreated dynamically)
-    document.addEventListener('click', function(e) {
+    // Event delegation: los pedazos se recrean en cada página
+    document.addEventListener('click', function (e) {
         const prevBtn = e.target.closest('#btn-anterior');
         const nextBtn = e.target.closest('#btn-siguiente');
         const pageLink = e.target.closest('.page-number');
+        const reintentar = e.target.closest('.js-reintentar');
 
         if (prevBtn && paginaActual > 1) {
             e.preventDefault();
@@ -30,118 +35,39 @@ document.addEventListener('DOMContentLoaded', function() {
             if (pagina && pagina !== paginaActual) {
                 cargarPagina(pagina);
             }
+        } else if (reintentar) {
+            e.preventDefault();
+            cargarPagina(paginaActual);
         }
     });
 });
 
-// Escapa HTML: los datos que vienen del server (ej. nombre del cliente, controlado
-// por cualquier usuario al registrarse) viajan como TEXT, nunca como HTML del admin:
-// sin esto, un Nombre/Apellido con `<svg onload=...>` ejecuta JS en /admin con los
-// cookies y antiforgery tokens del admin en el mismo DOM.
-function escaparHtml(valor) {
-    return String(valor ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
+// El techo de páginas ya lo calcula el server (data-total-paginas): acá no hay
+// números mágicos desincronizables.
 
-function crearPedidoCard(pedido) {
-    const claseColor = pedido.horasTranscurridas > 72 ? 'danger' : 'warning';
-    return `
-        <div class="card bg-body-tertiary border-0 shadow-sm mb-2 border-start border-3 border-${claseColor}">
-            <div class="card-body py-2 px-2">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="fw-semibold small">Pedido #${pedido.pedidoId}</span>
-                    <span class="badge bg-${claseColor} small">${Math.floor(pedido.horasTranscurridas)} hs</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <small class="text-muted"><i class="bi bi-person me-1"></i>${escaparHtml(pedido.cliente)}</small>
-                </div>
-                <div class="d-flex justify-content-end">
-                    <a href="/Pedidos/Detalles/${pedido.pedidoId}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Revisar pedido">
-                        <i class="bi bi-eye me-1"></i>Revisar
-                    </a>
-                </div>
-            </div>
-        </div>`;
-}
+async function cargarPagina(pagina) {
+    const container = document.getElementById('pedidos-estancados-container');
+    if (!container) return;
 
-function crearPaginacion(paginaActual, totalPaginas) {
-    const radio = 2;
-    let html = '<nav aria-label="Paginación de pedidos estancados"><ul class="pagination justify-content-center mb-0">';
+    // Se marca la página pedida ANTES del fetch: si el refresco falla, el
+    // Reintentar repega la página que el usuario quería, no la que quedó.
+    paginaActual = pagina;
 
-    // Previous
-    html += `<li class="page-item ${paginaActual <= 1 ? 'disabled' : ''}">
-        <a class="page-link" href="#" id="btn-anterior" aria-label="Anterior">
-            <i class="bi bi-chevron-left"></i>
-        </a>
-    </li>`;
-
-    // Pages
-    for (let i = 1; i <= totalPaginas; i++) {
-        if (i === 1 || i === totalPaginas || (i >= paginaActual - radio && i <= paginaActual + radio)) {
-            html += `<li class="page-item ${i === paginaActual ? 'active' : ''}">
-                <a class="page-link page-number" href="#" data-pagina="${i}">${i}</a>
-            </li>`;
-        } else if (i === paginaActual - radio - 1 || i === paginaActual + radio + 1) {
-            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-        }
-    }
-
-    // Next
-    html += `<li class="page-item ${paginaActual >= totalPaginas ? 'disabled' : ''}">
-        <a class="page-link" href="#" id="btn-siguiente" aria-label="Siguiente">
-            <i class="bi bi-chevron-right"></i>
-        </a>
-    </li>`;
-
-    html += '</ul></nav>';
-    return html;
-}
-
-function cargarPagina(pagina) {
-    fetch(`/admin/pedidos-estancados?pagina=${pagina}`, {
-        credentials: 'same-origin'
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        if (!response.ok) {
-            throw new Error('HTTP error: ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-            const container = document.getElementById('pedidos-estancados-container');
-
-            if (data.pedidos.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-4">
-                        <i class="bi bi-check2-circle fs-1 text-success opacity-50"></i>
-                        <p class="text-muted mt-2 mb-0">Todo al día. No hay pedidos demorados.</p>
-                    </div>`;
-            } else {
-                container.innerHTML = data.pedidos.map(crearPedidoCard).join('');
+    await cargarFragmentoConEsqueleto(
+        container,
+        `/admin/pedidos-estancados?pagina=${pagina}`,
+        'tpl-esqueleto-filas',
+        'tpl-error-refresco',
+        (contenedor) => {
+            // El fragmento trae el estado (contrato data-*): paginación y badge
+            // siguen al server, sin estados paralelos a mano.
+            const fragmento = contenedor.querySelector('[data-total-registros]');
+            if (fragmento) {
+                paginaActual = parseInt(fragmento.dataset.paginaActual) || paginaActual;
+                totalPaginas = parseInt(fragmento.dataset.totalPaginas) || totalPaginas;
+                const badge = document.querySelector('.card-header .badge.bg-danger');
+                if (badge) badge.textContent = fragmento.dataset.totalRegistros;
             }
-
-            paginaActual = data.paginaActual;
-            totalPaginas = data.totalPaginas;
-
-            // Update Bootstrap pagination
-            const footerExistente = document.querySelector('.card-footer');
-            if (footerExistente) footerExistente.remove();
-
-            if (data.totalRegistros > 5) {
-                const card = document.getElementById('pedidos-estancados-container').closest('.card');
-                const footerDiv = document.createElement('div');
-                footerDiv.className = 'card-footer bg-body-tertiary border-0 py-2';
-                footerDiv.innerHTML = crearPaginacion(data.paginaActual, data.totalPaginas);
-                card.appendChild(footerDiv);
-            }
-
-            const headerBadge = document.querySelector('.card-header .badge.bg-danger');
-            if (headerBadge) headerBadge.textContent = data.totalRegistros;
-        })
-        .catch(error => console.error('Error:', error));
+        }
+    );
 }

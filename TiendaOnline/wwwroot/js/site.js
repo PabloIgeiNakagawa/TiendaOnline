@@ -3,6 +3,37 @@ const applyTheme = (theme) => {
     document.documentElement.setAttribute('data-bs-theme', theme);
 };
 
+// --- Refrescos con esqueleto (maquinaria compartida) ---
+// La FORMA del esqueleto la declara cada vista con un <template>; esta función
+// aporta solo el comportamiento: pinta el esqueleto SOLO si el server tarda
+// más de 300 ms (con respuesta rápida, pintarlo es un parpadeo incómodo al
+// revés), deja el aviso de error de la vista si el refresco falla y pega el
+// fragmento HTML nuevo cuando llega.
+const retardoDelEsqueleto = 300;
+
+async function cargarFragmentoConEsqueleto(contenedor, url, idDeEsqueleto, idDeError, alPintar) {
+    let reloj = setTimeout(() => {
+        const plantilla = document.getElementById(idDeEsqueleto);
+        if (plantilla && contenedor.isConnected) {
+            contenedor.replaceChildren(plantilla.content.cloneNode(true));
+        }
+    }, retardoDelEsqueleto);
+
+    try {
+        const respuesta = await fetch(url, { credentials: 'same-origin' });
+        if (!respuesta.ok) throw new Error('HTTP ' + respuesta.status);
+
+        const html = await respuesta.text();
+        clearTimeout(reloj);
+        contenedor.innerHTML = html;
+        if (typeof alPintar === 'function') alPintar(contenedor);
+    } catch {
+        clearTimeout(reloj);
+        const aviso = document.getElementById(idDeError);
+        if (aviso) contenedor.replaceChildren(aviso.content.cloneNode(true));
+    }
+}
+
 const savedTheme = getStoredTheme();
 if (savedTheme) {
     applyTheme(savedTheme);

@@ -125,7 +125,7 @@ namespace TiendaOnline.Features.Reportes
         public decimal Precio { get; set; }
         public decimal ValorInvertido { get; set; }
         public DateTime? UltimaVenta { get; set; }
-        public int DiasSinVenta { get; set; }
+        public int? DiasSinVenta { get; set; }
         public string ImagenUrl { get; set; }
     }
 }
