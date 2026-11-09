@@ -38,7 +38,7 @@ namespace TiendaOnline.Features.Home
         {
             // Caparazón: cero consultas del panel en esta acción — la página sale
             // casi de una y cada tarjeta pide su fragmento por fetch
-            // (los endpoints admin/parciales/* de acá abajo; el loader y los
+            // (los endpoints admin/secciones/* de acá abajo; el loader y los
             // esqueletos son maquinaria de site.js con data-* de la vista).
             return View(new HomeAdminViewModel());
         }
@@ -47,7 +47,7 @@ namespace TiendaOnline.Features.Home
         // secciones del MISMO AdminOverviewDto, que vive guardado 30s en cache —
         // la base corre sus consultas a lo sumo una vez por ventana, no una por
         // fetch. Cada fragmento proyecta solo su tajada hacia su ViewModel.
-        [Route("admin/parciales/estado-sistema")]
+        [Route("admin/secciones/estado-sistema")]
         [Authorize(Roles = "Administrador")]
         [HttpGet]
         public async Task<IActionResult> EstadoSistemaParcial()
@@ -56,7 +56,7 @@ namespace TiendaOnline.Features.Home
             return PartialView("_EstadoSistema", (datos.DbOnline, datos.AppVersion));
         }
 
-        [Route("admin/parciales/resumen-diario")]
+        [Route("admin/secciones/resumen-diario")]
         [Authorize(Roles = "Administrador")]
         [HttpGet]
         public async Task<IActionResult> ResumenDiarioParcial()
@@ -74,7 +74,7 @@ namespace TiendaOnline.Features.Home
             });
         }
 
-        [Route("admin/parciales/ultimos-cambios")]
+        [Route("admin/secciones/ultimos-cambios")]
         [Authorize(Roles = "Administrador")]
         [HttpGet]
         public async Task<IActionResult> UltimosCambiosParcial()
@@ -88,7 +88,7 @@ namespace TiendaOnline.Features.Home
             }).ToList());
         }
 
-        [Route("admin/parciales/movimientos-stock")]
+        [Route("admin/secciones/movimientos-stock")]
         [Authorize(Roles = "Administrador")]
         [HttpGet]
         public async Task<IActionResult> MovimientosStockParcial()
@@ -104,7 +104,7 @@ namespace TiendaOnline.Features.Home
             }).ToList());
         }
 
-        [Route("admin/parciales/productos-bajo-stock")]
+        [Route("admin/secciones/productos-bajo-stock")]
         [Authorize(Roles = "Administrador")]
         [HttpGet]
         public async Task<IActionResult> ProductosBajoStockParcial()
@@ -120,7 +120,7 @@ namespace TiendaOnline.Features.Home
             }).ToList());
         }
 
-        [Route("admin/parciales/pedidos-recientes")]
+        [Route("admin/secciones/pedidos-recientes")]
         [Authorize(Roles = "Administrador")]
         [HttpGet]
         public async Task<IActionResult> PedidosRecientesParcial()

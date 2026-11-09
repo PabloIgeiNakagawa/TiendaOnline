@@ -7,7 +7,7 @@ namespace TiendaOnline.Tests.Integration
 {
     /// <summary>
     /// Regla del caparazón: cada fragmento del panel (los 6 endpoints
-    /// admin/parciales/* y el paginado admin/pedidos-estancados) responde 200
+    /// admin/secciones/* y el paginado admin/pedidos-estancados) responde 200
     /// con el rol Administrador pegando el endpoint directo. El error de un
     /// widget se degrada en el front al aviso de reintento — invisible para
     /// los tests — así que este guard es el único que pega al 500 de fondo.
@@ -28,12 +28,12 @@ namespace TiendaOnline.Tests.Integration
 
         public static TheoryData<string> RutasDeFragmentos => new()
         {
-            "/admin/parciales/estado-sistema",
-            "/admin/parciales/resumen-diario",
-            "/admin/parciales/ultimos-cambios",
-            "/admin/parciales/movimientos-stock",
-            "/admin/parciales/productos-bajo-stock",
-            "/admin/parciales/pedidos-recientes",
+            "/admin/secciones/estado-sistema",
+            "/admin/secciones/resumen-diario",
+            "/admin/secciones/ultimos-cambios",
+            "/admin/secciones/movimientos-stock",
+            "/admin/secciones/productos-bajo-stock",
+            "/admin/secciones/pedidos-recientes",
             "/admin/pedidos-estancados"
         };
 
