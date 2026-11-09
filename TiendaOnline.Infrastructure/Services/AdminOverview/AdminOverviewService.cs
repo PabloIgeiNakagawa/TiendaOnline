@@ -35,18 +35,12 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                     Fecha = a.Fecha
                 }).ToListAsync(ct);
 
-            // Pedidos Estancados (Estado 0: Pendiente y más de 48hs)
-            var limiteFecha = DateTime.Now.AddHours(-48);
-            dto.PedidosEstancados = await _context.Pedidos
-                .AsNoTracking()
-                .Where(p => p.Estado == EstadoPedido.Nuevo && p.FechaPedido <= limiteFecha)
-                .Select(p => new PedidoEstancadoDto
-                {
-                    PedidoId = p.PedidoId,
-                    ClienteNombre = $"{p.Usuario.Nombre} {p.Usuario.Apellido}",
-                    Fecha = p.FechaPedido,
-                    HorasTranscurridas = (DateTime.Now - p.FechaPedido).TotalHours
-                }).ToListAsync(ct);
+            // Atención requerida: los dos únicos grupos que piden acción humana
+            // (ver PedidosQuePidenAtencion). "Desde" es el momento del hecho que
+            // espera: el cobro (grupo pagado) o la apertura del pedido (grupo pendiente).
+            var ahora = DateTime.Now;
+            dto.PedidosEstancados = await MapearPedidosQuePidenAtencionAsync(
+                PedidosQuePidenAtencion(ahora), ahora, ct);
 
             // Últimos 10 Movimientos de Stock
             var movimientos = await _context.MovimientosStock
@@ -163,25 +157,14 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
 
         public async Task<PedidosEstancadosPaginadoDto> ObtenerPedidosEstancadosPaginadoAsync(int pagina, int tamanoPagina = 5, CancellationToken ct = default)
         {
-            var limiteFecha = DateTime.Now.AddHours(-48);
-            var query = _context.Pedidos
-                .AsNoTracking()
-                .Where(p => p.Estado == EstadoPedido.Nuevo && p.FechaPedido <= limiteFecha);
+            var ahora = DateTime.Now;
+            var query = PedidosQuePidenAtencion(ahora);
 
             var totalRegistros = await query.CountAsync(ct);
             var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)tamanoPagina);
 
-            var pedidos = await query
-                .OrderBy(p => p.FechaPedido)
-                .Skip((pagina - 1) * tamanoPagina)
-                .Take(tamanoPagina)
-                .Select(p => new PedidoEstancadoDto
-                {
-                    PedidoId = p.PedidoId,
-                    ClienteNombre = $"{p.Usuario.Nombre} {p.Usuario.Apellido}",
-                    Fecha = p.FechaPedido,
-                    HorasTranscurridas = (DateTime.Now - p.FechaPedido).TotalHours
-                }).ToListAsync(ct);
+            var pedidos = await MapearPedidosQuePidenAtencionAsync(
+                query.Skip((pagina - 1) * tamanoPagina).Take(tamanoPagina), ahora, ct);
 
             return new PedidosEstancadosPaginadoDto
             {
@@ -190,6 +173,53 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                 TotalPaginas = totalPaginas,
                 TotalRegistros = totalRegistros
             };
+        }
+
+        // La atención requerida del panel son solo dos grupos; preguntarle por
+        // los "Nuevo hace 48hs" sería consultar pedidos ya cancelados por el job
+        // de vencimiento (Nuevo+Pendiente muere a las 24h):
+        //  - EnPreparacion hace más de 48hs: plata cobrada esperando el despacho.
+        //  - Nuevo+Pendiente con más de 16hs de vida: quedan menos de 8hs antes
+        //    del vencimiento automático (el techo de 24h descarta cadáveres si
+        //    el job todavía no pasó).
+        private IQueryable<Pedido> PedidosQuePidenAtencion(DateTime ahora)
+        {
+            var haceDosDias = ahora.AddHours(-48);
+            var cercaDeVencer = ahora.AddHours(-16);
+            var vidaMaximaDelPendiente = ahora.AddHours(-24);
+
+            return _context.Pedidos
+                .AsNoTracking()
+                .Where(p =>
+                    (p.Estado == EstadoPedido.EnPreparacion && p.FechaEnPreparacion <= haceDosDias)
+                    || (p.Estado == EstadoPedido.Nuevo && p.EstadoPago == EstadoPago.Pendiente
+                        && p.FechaPedido > vidaMaximaDelPendiente && p.FechaPedido <= cercaDeVencer))
+                .OrderBy(p => p.FechaPedido);
+        }
+
+        // El cliente y el "desde" (el momento en que empezó a esperar) salen de
+        // SQL; las horas se computan en memoria contra el `ahora` capturado una
+        // vez, así todas las filas de la lista miden contra el mismo reloj.
+        private async Task<List<PedidoEstancadoDto>> MapearPedidosQuePidenAtencionAsync(IQueryable<Pedido> query, DateTime ahora, CancellationToken ct)
+        {
+            var filas = await query
+                .Select(p => new
+                {
+                    p.PedidoId,
+                    ClienteNombre = $"{p.Usuario.Nombre} {p.Usuario.Apellido}",
+                    Desde = p.Estado == EstadoPedido.EnPreparacion && p.FechaEnPreparacion != null
+                        ? p.FechaEnPreparacion.Value
+                        : p.FechaPedido
+                })
+                .ToListAsync(ct);
+
+            return filas.Select(f => new PedidoEstancadoDto
+            {
+                PedidoId = f.PedidoId,
+                ClienteNombre = f.ClienteNombre,
+                Fecha = f.Desde,
+                HorasTranscurridas = (ahora - f.Desde).TotalHours
+            }).ToList();
         }
 
         private async Task<bool> VerificarEstadoBaseDatosAsync(CancellationToken ct)

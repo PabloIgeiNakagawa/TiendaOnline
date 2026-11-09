@@ -40,23 +40,26 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             var inicioMesAnterior = inicioMesActual.AddMonths(-1);
             var finMesAnterior = inicioMesActual.AddDays(-1);
 
+            // Las métricas de dinero cuentan SOLO pagos aprobados: un pendiente o
+            // rechazado no es venta aunque no esté cancelado (los totales viejos
+            // se inflaban con plata que nunca entró).
             var ventasTotales = await _context.DetallesPedido
                 .AsNoTracking()
-                .Where(dp => dp.Pedido.Estado != EstadoPedido.Cancelado)
+                .Where(dp => dp.Pedido.EstadoPago == EstadoPago.Aprobado)
                 .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario, ct);
 
             var ventasMesActual = await _context.DetallesPedido
                 .AsNoTracking()
                 .Where(dp => dp.Pedido.FechaPedido >= inicioMesActual
                           && dp.Pedido.FechaPedido <= finMesActual
-                          && dp.Pedido.Estado != EstadoPedido.Cancelado)
+                          && dp.Pedido.EstadoPago == EstadoPago.Aprobado)
                 .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario, ct);
 
             var ventasMesAnterior = await _context.DetallesPedido
                 .AsNoTracking()
                 .Where(dp => dp.Pedido.FechaPedido >= inicioMesAnterior
                           && dp.Pedido.FechaPedido <= finMesAnterior
-                          && dp.Pedido.Estado != EstadoPedido.Cancelado)
+                          && dp.Pedido.EstadoPago == EstadoPago.Aprobado)
                 .SumAsync(dp => dp.Cantidad * dp.PrecioUnitario, ct);
 
             var totalPedidos = await _context.Pedidos.CountAsync(ct);
@@ -253,7 +256,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
         {
             return await _context.DetallesPedido
                 .AsNoTracking()
-                .Where(dp => dp.Pedido.Estado != EstadoPedido.Cancelado)
+                .Where(dp => dp.Pedido.EstadoPago == EstadoPago.Aprobado)
                 .GroupBy(dp => new { dp.ProductoId, dp.Producto.Nombre, dp.Producto.ImagenUrl, Categoria = dp.Producto.Categoria.Nombre })
                 .Select(g => new ProductoMasVendidoDto
                 {
@@ -273,7 +276,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
         {
             var clientes = await _context.Pedidos
                 .AsNoTracking()
-                .Where(p => p.Estado != EstadoPedido.Cancelado && p.Usuario.Rol == Rol.Usuario)
+                .Where(p => p.EstadoPago == EstadoPago.Aprobado && p.Usuario.Rol == Rol.Usuario)
                 .GroupBy(p => new { p.UsuarioId, p.Usuario.Nombre, p.Usuario.Apellido, p.Usuario.Email })
                 .Select(g => new
                 {
@@ -303,7 +306,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
         {
             var ventas = await _context.DetallesPedido
                 .AsNoTracking()
-                .Where(dp => dp.Pedido.Estado != EstadoPedido.Cancelado)
+                .Where(dp => dp.Pedido.EstadoPago == EstadoPago.Aprobado)
                 .GroupBy(dp => dp.Producto.Categoria.Nombre)
                 .Select(g => new VentaPorCategoriaDto
                 {
@@ -329,7 +332,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
 
             var ventasPorMes = await _context.Pedidos
                 .AsNoTracking()
-                .Where(p => p.FechaPedido >= fechaInicio && p.Estado != EstadoPedido.Cancelado)
+                .Where(p => p.FechaPedido >= fechaInicio && p.EstadoPago == EstadoPago.Aprobado)
                 .GroupBy(p => new { p.FechaPedido.Year, p.FechaPedido.Month })
                 .Select(g => new
                 {
@@ -386,7 +389,7 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
         {
             var ventas = await _context.Pedidos
                 .AsNoTracking()
-                .Where(p => p.Estado != EstadoPedido.Cancelado)
+                .Where(p => p.EstadoPago == EstadoPago.Aprobado)
                 .GroupBy(p => p.MetodoDePago.Nombre)
                 .Select(g => new VentaPorMetodoDePagoDto
                 {
