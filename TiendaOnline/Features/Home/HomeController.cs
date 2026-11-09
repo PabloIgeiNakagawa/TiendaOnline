@@ -117,7 +117,7 @@ namespace TiendaOnline.Features.Home
                 ImagenUrl = p.ImagenUrl,
                 Categoria = p.Categoria,
                 Stock = p.Stock
-            }));
+            }).ToList());
         }
 
         [Route("admin/parciales/pedidos-recientes")]
@@ -134,7 +134,7 @@ namespace TiendaOnline.Features.Home
                 Total = p.Total,
                 EstadoPedido = p.EstadoPedido,
                 EstadoPedidoId = p.EstadoPedidoId
-            }));
+            }).ToList());
         }
 
         [Route("admin/pedidos-estancados")]
