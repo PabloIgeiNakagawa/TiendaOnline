@@ -96,14 +96,14 @@
 
         <!-- Columna 3: Atención Requerida -->
         <div class="col-12 col-lg-4">
-            <div class="card border-0 shadow-sm bg-body-tertiary h-100">
+            <div class="card border-0 shadow-sm bg-body-tertiary h-100 overflow-hidden d-flex flex-column">
                 <div class="card-header bg-transparent border-0 pt-4 pb-3">
                     <h5 class="mb-0 fw-semibold">
                         <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Atención Requerida
                         <span class="badge bg-danger placeholder-glow" id="badge-atencion"><span class="placeholder col-2">&nbsp;&nbsp;</span><span class="visually-hidden">cargando</span></span>
                     </h5>
                 </div>
-                <div class="card-body overflow-y-auto" id="pedidos-estancados-container"
+                <div class="card-body flex-grow-1 overflow-auto" id="pedidos-estancados-container"
                      data-seccion="pedidos-estancados"
                      data-esqueleto="tpl-esqueleto-filas"></div>
             </div>
