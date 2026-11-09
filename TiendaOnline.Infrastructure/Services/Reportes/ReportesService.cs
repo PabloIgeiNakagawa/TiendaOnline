@@ -196,8 +196,11 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
         {
             var fechaLimite = DateTime.Now.AddDays(-90);
 
+            // El armado es in-memory: si el fetch no trae la categoría, p.Categoria
+            // queda NULL en el contexto fresco del request y el Nombre explota.
             var productosConStock = await _context.Productos
                 .AsNoTracking()
+                .Include(p => p.Categoria)
                 .Where(p => p.Stock > 0 && p.Activo)
                 .ToListAsync(ct);
 
