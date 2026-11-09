@@ -132,9 +132,14 @@ namespace TiendaOnline.Infrastructure.Services.Productos
             // Filtros
             if (!string.IsNullOrWhiteSpace(request.Busqueda))
             {
+                // Búsqueda case-insensitive explícita (lower por ambos lados):
+                // no depende de la collation del server (SQL Server suele ser
+                // CI; SQLite no) — "silla" encuentra "Silla Gamer" en ambos.
+                var termino = request.Busqueda.Trim().ToLower();
+
                 query = query.Where(p =>
-                    p.Nombre.Contains(request.Busqueda) ||
-                    p.Descripcion.Contains(request.Busqueda));
+                    p.Nombre.ToLower().Contains(termino) ||
+                    p.Descripcion.ToLower().Contains(termino));
             }
 
             if (request.CategoriaId.HasValue)

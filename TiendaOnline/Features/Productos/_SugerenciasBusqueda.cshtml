@@ -1,0 +1,34 @@
+@using TiendaOnline.Application.Productos.Queries
+@model List<ProductoDto>
+@* Sugerencias del buscador de la navbar: el JS de _TiendaHeader pega este
+   fragmento debajo del input. Todo el HTML lo arma Razor (auto-escapado) —
+   acá el JS nunca construye contenido. *@
+<div class="dropdown-menu show position-absolute w-100 rounded-3 shadow mt-2" style="z-index: 1100;">
+    @if (Model.Count == 0)
+    {
+        <div class="px-3 py-3 text-center text-muted small">
+            <i class="bi bi-search me-1"></i>No encontramos productos
+        </div>
+    }
+    else
+    {
+        @foreach (var producto in Model)
+        {
+            <a class="dropdown-item d-flex align-items-center gap-2 py-2"
+               asp-controller="Productos" asp-action="Detalles" asp-route-id="@producto.ProductoId">
+                <img src="@(string.IsNullOrEmpty(producto.ImagenUrl) ? "/img/placeholder.png" : producto.ImagenUrl)"
+                     class="rounded-1" width="40" height="40" style="object-fit: contain;" alt="@producto.Nombre" loading="lazy">
+                <span class="flex-grow-1 text-truncate small">@producto.Nombre</span>
+                @if (producto.PrecioOferta.HasValue)
+                {
+                    <span class="text-danger fw-semibold small">$@producto.PrecioOferta.Value.ToString("N0")</span>
+                    <span class="text-muted text-decoration-line-through small d-none d-sm-inline">$@producto.Precio.ToString("N0")</span>
+                }
+                else
+                {
+                    <span class="fw-semibold small">$@producto.Precio.ToString("N0")</span>
+                }
+            </a>
+        }
+    }
+</div>

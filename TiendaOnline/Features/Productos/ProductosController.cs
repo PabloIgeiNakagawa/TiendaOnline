@@ -37,6 +37,25 @@ namespace TiendaOnline.Features.Productos
             return View(viewModel);
         }
 
+        // Sugerencias del buscador de la navbar: la misma consulta del catálogo
+        // (busca por nombre/descripción) recortada a 6. Devuelve HTML armado por
+        // Razor (auto-escapado) que el JS de _TiendaHeader pega debajo del input.
+        [HttpGet("Sugerencias")]
+        public async Task<IActionResult> Sugerencias([FromQuery] string? busqueda)
+        {
+            var termino = busqueda?.Trim();
+            if (string.IsNullOrEmpty(termino) || termino.Length < 2)
+                return Content(string.Empty);
+
+            if (termino.Length > 100) termino = termino[..100];
+
+            var resultado = await _productoQueryService.ObtenerProductosCatalogoAsync(
+                new ObtenerProductosCatalogoRequest { Busqueda = termino, Cantidad = 6 },
+                HttpContext.RequestAborted);
+
+            return PartialView("_SugerenciasBusqueda", resultado.Items.ToList());
+        }
+
         [HttpGet("[action]")]
         public async Task<IActionResult> Detalles(int id)
         {
