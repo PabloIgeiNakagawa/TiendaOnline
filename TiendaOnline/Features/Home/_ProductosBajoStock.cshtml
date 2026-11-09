@@ -1,0 +1,43 @@
+@using TiendaOnline.Features.Home
+@model List<ProductoBajoStockItemViewModel>
+
+@* Fragmento del widget "Productos con Bajo Stock". La tarjeta SIEMPRE existe:
+   si no hay nada bajo stock, el estado vacío es el mensaje (antes la tarjeta
+   entera desaparecía y la columna quedaba en blanco). *@
+<div class="card bg-body-tertiary border-0 shadow-sm h-100">
+    <div class="card-header bg-transparent border-0 pt-4 pb-3">
+        <h5 class="mb-0 fw-semibold">
+            <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+            Productos con Bajo Stock
+        </h5>
+    </div>
+    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+        <div class="row g-3">
+            @if (Model.Count == 0)
+            {
+                <div class="col-12">
+                    <div class="text-center py-3">
+                        <i class="bi bi-check-circle fs-1 text-success opacity-50"></i>
+                        <p class="text-muted mt-2 mb-0 small">Nada bajo stock. Todo tiene sus unidades.</p>
+                    </div>
+                </div>
+            }
+            @foreach (var producto in Model)
+            {
+                <div class="col-12 col-sm-6 col-lg-12">
+                    <div class="d-flex align-items-center">
+                        <img src="@producto.ImagenUrl" alt="@producto.Nombre"
+                             class="rounded me-3" style="width: 45px; height: 45px; object-fit: cover;">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">@producto.Nombre</h6>
+                            <small class="text-muted">@producto.Categoria</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge @producto.BadgeClase">@producto.BadgeTexto</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

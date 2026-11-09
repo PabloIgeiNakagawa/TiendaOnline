@@ -1,0 +1,71 @@
+@using TiendaOnline.Features.Home
+@model List<PedidoRecienteItemViewModel>
+
+@* Fragmento del widget "Pedidos Recientes": tabla en desktop, cards en mobile. *@
+@if (Model.Count == 0)
+{
+    <p class="text-muted text-center py-3">No hay pedidos recientes</p>
+}
+else
+{
+    <!-- Table desktop -->
+    <div class="table-responsive d-none d-lg-block">
+        <table class="table table-hover align-middle mb-0 bg-transparent">
+            <thead>
+                <tr>
+                    <th class="bg-transparent text-muted small uppercase">ID</th>
+                    <th class="bg-transparent text-muted small uppercase">Cliente</th>
+                    <th class="bg-transparent text-muted small uppercase">Fecha</th>
+                    <th class="bg-transparent text-end text-muted small uppercase">Total</th>
+                    <th class="bg-transparent text-center text-muted small uppercase">Estado</th>
+                    <th class="bg-transparent text-center text-muted small uppercase"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var pedido in Model)
+                {
+                    <tr>
+                        <td class="fw-medium bg-transparent">#@pedido.PedidoId</td>
+                        <td class="bg-transparent">@pedido.Cliente</td>
+                        <td class="bg-transparent">@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="text-end fw-semibold bg-transparent">@pedido.Total.ToString("C")</td>
+                        <td class="text-center bg-transparent">
+                            <span class="badge @pedido.EstadoBadge">@pedido.EstadoPedido</span>
+                        </td>
+                        <td class="text-center bg-transparent">
+                            <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@pedido.PedidoId"
+                               class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Ver detalle">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <!-- Cards mobile -->
+    <div class="d-lg-none">
+        @foreach (var pedido in Model)
+        {
+            <div class="card bg-body-tertiary border border-secondary-subtle border-1 mb-2">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-semibold">#@pedido.PedidoId</span>
+                        <span class="badge @pedido.EstadoBadge">@pedido.EstadoPedido</span>
+                    </div>
+                    <div class="small text-muted mb-1">@pedido.Cliente</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</small>
+                        <span class="fw-semibold">@pedido.Total.ToString("C")</span>
+                    </div>
+                    <div class="text-end mt-2">
+                        <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@pedido.PedidoId"
+                           class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Ver detalle">
+                            <i class="bi bi-eye me-1"></i>Ver
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

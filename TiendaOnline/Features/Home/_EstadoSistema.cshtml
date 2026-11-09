@@ -1,0 +1,16 @@
+@using TiendaOnline.Features.Home
+@model (bool EstaDbOnline, string VersionApp)
+
+@* Fragmento del widget "Estado del Sistema" (badges del encabezado).
+   La animación de la lucecita vive en el CSS de IndexAdmin (Styles). *@
+<span class="badge rounded-pill border border-secondary p-2 px-3 position-relative @(Model.EstaDbOnline ? "bg-success" : "bg-danger")">
+    <i class="bi bi-database-fill me-1"></i>
+    DB: @(Model.EstaDbOnline ? "Online" : "Offline")
+
+    <span class="position-absolute top-0 start-100 translate-middle p-1 @(Model.EstaDbOnline ? "bg-success" : "bg-danger") border border-light rounded-circle @(Model.EstaDbOnline ? "luz-parpadeante" : "")">
+        <span class="visually-hidden">Estado</span>
+    </span>
+</span>
+<span class="badge rounded-pill bg-secondary border border-secondary p-2 px-3">
+    App version: v@(Model.VersionApp)
+</span>

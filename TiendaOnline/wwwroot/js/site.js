@@ -5,19 +5,26 @@ const applyTheme = (theme) => {
 
 // --- Refrescos con esqueleto (maquinaria compartida) ---
 // La FORMA del esqueleto la declara cada vista con un <template>; esta función
-// aporta solo el comportamiento: pinta el esqueleto SOLO si el server tarda
-// más de 300 ms (con respuesta rápida, pintarlo es un parpadeo incómodo al
-// revés), deja el aviso de error de la vista si el refresco falla y pega el
-// fragmento HTML nuevo cuando llega.
+// aporta solo el comportamiento: pinta el esqueleto si el refresco tarda más
+// que el retardo (configurable: 0 para la carga inicial del caparazón — ahí el
+// esqueleto SIEMPRE se ve — y 300ms para refrescos manuales, donde pintarlo
+// con respuesta rápida sería un parpadeo incómodo al revés).
 const retardoDelEsqueleto = 300;
 
-async function cargarFragmentoConEsqueleto(contenedor, url, idDeEsqueleto, idDeError, alPintar) {
+async function cargarFragmentoConEsqueleto(contenedor, url, idDeEsqueleto, idDeError, alPintar, retardoMs) {
+    const retardo = retardoMs === undefined ? retardoDelEsqueleto : retardoMs;
+
+    // Memoria del último origen pedido: el Reintentar del aviso repite la
+    // ÚLTIMA página que el usuario pidió — incluida la fallida — no la de
+    // inicio del widget.
+    contenedor.dataset.ultimaCarga = url;
+
     let reloj = setTimeout(() => {
         const plantilla = document.getElementById(idDeEsqueleto);
         if (plantilla && contenedor.isConnected) {
             contenedor.replaceChildren(plantilla.content.cloneNode(true));
         }
-    }, retardoDelEsqueleto);
+    }, retardo);
 
     try {
         const respuesta = await fetch(url, { credentials: 'same-origin' });
@@ -27,12 +34,70 @@ async function cargarFragmentoConEsqueleto(contenedor, url, idDeEsqueleto, idDeE
         clearTimeout(reloj);
         contenedor.innerHTML = html;
         if (typeof alPintar === 'function') alPintar(contenedor);
+
+        // El widget puede estar pendiente (badge, contadores): quien pinte se
+        // entera por evento (desacopla el loader de la lógica de cada página).
+        document.dispatchEvent(new CustomEvent('fragmento:pintado', { detail: { id: contenedor.id, contenedor: contenedor } }));
     } catch {
         clearTimeout(reloj);
-        const aviso = document.getElementById(idDeError);
+        const aviso = document.getElementById(idDeError || 'tpl-error-widget');
         if (aviso) contenedor.replaceChildren(aviso.content.cloneNode(true));
     }
 }
+
+// Carga inicial del caparazón: cada contenedor [data-cargar] declara su carga
+// con data-cargar / data-esqueleto en el HTML — los JS de página no escriben
+// esto. Dos condiciones de arrancar:
+//  1. Esqueletos de una: el caparazón completo se ve cargando desde la primera
+//     paint (ninguna página en blanco).
+//  2. Fetches en fila (no en paralelo): con cache frío, seis fetches a la vez
+//     armarían seis veces el mismo caché contra la base. En fila, el primero lo
+//     arma y los siguientes lo sirven de una (ventana del cache ya caliente).
+function iniciarWidgetsDelCaparazon() {
+    const contenedores = Array.from(document.querySelectorAll('[data-cargar]'));
+
+    contenedores.forEach(contenedor => {
+        const plantilla = document.getElementById(contenedor.dataset.esqueleto);
+        if (plantilla) contenedor.replaceChildren(plantilla.content.cloneNode(true));
+    });
+
+    const siguiente = () => {
+        const contenedor = contenedores.shift();
+        if (!contenedor) return;
+
+        Promise.resolve(
+            cargarFragmentoConEsqueleto(
+                contenedor,
+                contenedor.dataset.cargar,
+                contenedor.dataset.esqueleto,
+                'tpl-error-widget',
+                null,
+                0)
+        ).then(siguiente, siguiente);
+    };
+    siguiente();
+}
+
+// Reintentar del aviso de error: repite la ÚLTIMA carga del widget (la página
+// que el usuario estaba viendo, no la de inicio).
+document.addEventListener('click', function (e) {
+    const boton = e.target.closest('.js-reintentar-widget');
+    if (!boton) return;
+    e.preventDefault();
+
+    const contenedor = boton.closest('[data-cargar]');
+    if (!contenedor) return;
+
+    cargarFragmentoConEsqueleto(
+        contenedor,
+        contenedor.dataset.ultimaCarga || contenedor.dataset.cargar,
+        contenedor.dataset.esqueleto,
+        'tpl-error-widget',
+        null,
+        0);
+});
+
+document.addEventListener('DOMContentLoaded', iniciarWidgetsDelCaparazon);
 
 const savedTheme = getStoredTheme();
 if (savedTheme) {
