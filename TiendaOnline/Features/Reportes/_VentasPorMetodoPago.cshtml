@@ -1,0 +1,65 @@
+@using TiendaOnline.Features.Reportes
+@model List<VentaPorMetodoDePago>
+@* Contenido de Ventas por Método de Pago: canvas + tabla con los mismos
+   datos. La tarjeta vive en el caparazón; Dashboard.js arma el gráfico al
+   escuchar el pintado del contenedor. *@
+@if (Model.Any())
+{
+    <canvas id="graficoMetodoPago" style="max-height: 200px;" class="mb-3"></canvas>
+    <script type="application/json" id="datosMetodoPago">
+        @Html.Raw(Json.Serialize(Model))
+    </script>
+    <div class="table-responsive bg-transparent">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="bg-transparent text-muted small uppercase">Método</th>
+                    <th class="text-end bg-transparent text-muted small uppercase">Pedidos</th>
+                    <th class="text-end bg-transparent text-muted small uppercase">Total</th>
+                    <th class="text-end bg-transparent text-muted small uppercase">%</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var metodo in Model)
+                {
+                    <tr>
+                        <td class="bg-transparent">
+                            <div class="d-flex align-items-center">
+                                @if (metodo.MetodoDePago.Contains("Mercado"))
+                                {
+                                    <i class="bi bi-wallet2 text-info me-2"></i>
+                                }
+                                else if (metodo.MetodoDePago.Contains("Transferencia"))
+                                {
+                                    <i class="bi bi-bank text-success me-2"></i>
+                                }
+                                else if (metodo.MetodoDePago.Contains("Tarjeta"))
+                                {
+                                    <i class="bi bi-credit-card text-primary me-2"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-cash text-warning me-2"></i>
+                                }
+                                <span class="fw-medium">@metodo.MetodoDePago</span>
+                            </div>
+                        </td>
+                        <td class="text-end bg-transparent">
+                            <span class="fw-semibold">@metodo.CantidadPedidos</span>
+                        </td>
+                        <td class="text-end fw-semibold bg-transparent">
+                            @metodo.TotalVentas.ToString("C")
+                        </td>
+                        <td class="text-end bg-transparent">
+                            <span class="badge bg-primary bg-opacity-10 text-primary">@metodo.PorcentajeDelTotal%</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="text-muted text-center py-4">No hay datos disponibles</p>
+}

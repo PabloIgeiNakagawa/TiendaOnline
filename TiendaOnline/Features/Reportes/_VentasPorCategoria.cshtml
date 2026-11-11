@@ -1,0 +1,24 @@
+@using TiendaOnline.Features.Reportes
+@model List<VentaPorCategoria>
+@* Contenido de Ventas por Categoría: barras de progreso de las 5 categorías
+   con más ventas. La tarjeta vive en el caparazón. *@
+@if (Model.Any())
+{
+    @foreach (var categoria in Model.Take(5))
+    {
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fw-medium">@categoria.Categoria</span>
+                <span class="text-muted small">@categoria.TotalVentas.ToString("C")</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: @categoria.PorcentajeDelTotal%"></div>
+            </div>
+            <small class="text-muted">@categoria.CantidadProductos productos vendidos (@categoria.PorcentajeDelTotal%)</small>
+        </div>
+    }
+}
+else
+{
+    <p class="text-muted text-center py-4">No hay datos disponibles</p>
+}

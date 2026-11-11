@@ -1,0 +1,99 @@
+@using TiendaOnline.Features.Reportes
+@model List<StockInmovilizado>
+@* Contenido de Stock Inmovilizado: productos con stock sin ventas en 90 días.
+   La tarjeta vive en el caparazón; el recorte a 15 filas es de display —
+   el conteo completo del stock inmovilizado se calcula server-side. *@
+@if (Model.Any())
+{
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <p class="text-muted mb-0 small">
+            @Model.Count productos con stock sin ventas en los últimos 90 días
+        </p>
+        <span class="badge bg-danger">
+            $@Model.Sum(s => s.ValorInvertido).ToString("N0") invertido
+        </span>
+    </div>
+    <div class="table-responsive bg-transparent">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="bg-transparent text-muted small uppercase">Producto</th>
+                    <th class="text-center bg-transparent text-muted small uppercase">Stock</th>
+                    <th class="text-end bg-transparent text-muted small uppercase">Precio</th>
+                    <th class="text-end bg-transparent text-muted small uppercase">Valor Invertido</th>
+                    <th class="text-center bg-transparent text-muted small uppercase">Última Venta</th>
+                    <th class="text-center bg-transparent text-muted small uppercase">Días sin venta</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var producto in Model.Take(15))
+                {
+                    <tr>
+                        <td class="bg-transparent">
+                            <div class="d-flex align-items-center">
+                                <img src="@producto.ImagenUrl" alt="@producto.Nombre"
+                                     class="rounded me-3" style="width: 45px; height: 45px; object-fit: cover;">
+                                <div>
+                                    <div class="fw-medium">@producto.Nombre</div>
+                                    <small class="text-muted">@producto.Categoria</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center bg-transparent">
+                            <span class="fw-bold">@producto.Stock</span>
+                        </td>
+                        <td class="text-end bg-transparent">
+                            @producto.Precio.ToString("C")
+                        </td>
+                        <td class="text-end bg-transparent">
+                            <span class="fw-bold text-danger">
+                                @producto.ValorInvertido.ToString("C")
+                            </span>
+                        </td>
+                        <td class="text-center bg-transparent">
+                            @if (producto.UltimaVenta.HasValue)
+                            {
+                                <small class="text-muted">@producto.UltimaVenta.Value.ToString("dd/MM/yyyy")</small>
+                            }
+                            else
+                            {
+                                <small class="text-muted">Nunca</small>
+                            }
+                        </td>
+                        <td class="text-center bg-transparent">
+                            @if (producto.DiasSinVenta is null)
+                            {
+                                <span class="badge bg-secondary">Nunca se vendió</span>
+                            }
+                            else if (producto.DiasSinVenta > 120)
+                            {
+                                <span class="badge bg-danger">@producto.DiasSinVenta días</span>
+                            }
+                            else if (producto.DiasSinVenta > 90)
+                            {
+                                <span class="badge bg-warning text-dark">@producto.DiasSinVenta días</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">@producto.DiasSinVenta días</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Count > 15)
+    {
+        <p class="text-muted text-center small mt-2">
+            Mostrando 15 de @Model.Count productos
+        </p>
+    }
+}
+else
+{
+    <p class="text-success text-center py-4">
+        <i class="bi bi-check-circle fs-3 d-block mb-2"></i>
+        Todos los productos con stock han tenido ventas recientes
+    </p>
+}

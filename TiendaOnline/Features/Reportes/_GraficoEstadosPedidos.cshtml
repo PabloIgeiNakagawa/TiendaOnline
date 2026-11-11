@@ -1,0 +1,8 @@
+@using TiendaOnline.Features.Reportes
+@model EstadisticasPedidos
+@* Cuerpo del doughnut de Estado de Pedidos: la tarjeta y su header viven en
+   el caparazón; Dashboard.js arma el gráfico al escuchar el pintado. *@
+<canvas id="graficoEstadosPedidos" style="max-height: 250px;"></canvas>
+<script type="application/json" id="datosEstados">
+    @Html.Raw(Json.Serialize(Model))
+</script>

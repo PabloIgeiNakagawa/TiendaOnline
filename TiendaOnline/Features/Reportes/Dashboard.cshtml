@@ -1,7 +1,4 @@
 ﻿@using TiendaOnline.Extensions
-@using TiendaOnline.Features.Reportes
-@using TiendaOnline.Enums
-@model DashboardViewModel
 @{
     ViewData[ViewDataKeys.Title] = "Dashboard";
 }
@@ -18,560 +15,296 @@
         }
     </style>
 }
-<!-- Header del Dashboard -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-            @* Mismo bloque que el parcial _TituloSeccion, con el relojito vivo:
-               Dashboard.js actualiza #ultimaActualizacion cada minuto (el código
-               que lo buscaba todos los días tiraba TypeError al no existir). *@
-            <div>
-                <div class="d-flex align-items-center border-start border-primary border-4 ps-4">
-                    <div>
-                        <h2 class="display-6 fw-black text-primary text-uppercase tracking-widest mb-1 fw-medium" style="letter-spacing: 2px;">
-                            Dashboards
-                        </h2>
-                        <p class="text-secondary small text-uppercase mb-0">Última actualización: <span id="ultimaActualizacion">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</span></p>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <button id="btnImprimir" class="btn btn-outline-secondary">
-                    <i class="bi bi-printer me-1"></i>Imprimir
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
-@* Si Chart.js no llega (CDN caído, bloqueo de red), el JS muere en silencio y
-   el dashboard queda sin gráficos ni explicación: este banner lo despierta. *@
-<div id="graficos-averia" class="alert alert-warning d-none mb-4" role="alert">
-    <i class="bi bi-exclamation-triangle me-2"></i>Los gráficos no pudieron cargarse. Probá recargar la página; si persiste, avisá al equipo técnico.
-</div>
-
-<!-- Tarjetas de Métricas Principales -->
-<div class="row g-3 mb-4">
-    <!-- Ventas Totales -->
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted mb-1 small">Ventas del Mes</p>
-                        <h3 class="mb-0 fw-bold">@Model.MetricasGenerales.VentasMesActual.ToString("C")</h3>
-                    </div>
-                    <div class="bg-success bg-opacity-10 rounded-3 p-3">
-                        <i class="bi bi-cash-coin text-success fs-4"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    @if (Model.MetricasGenerales.PorcentajeCambioVentas >= 0)
-                    {
-                        <span class="badge bg-success bg-opacity-10 text-success">
-                            <i class="bi bi-arrow-up"></i> @Model.MetricasGenerales.PorcentajeCambioVentas.ToString("F1")%
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-danger bg-opacity-10 text-danger">
-                            <i class="bi bi-arrow-down"></i> @Math.Abs(Model.MetricasGenerales.PorcentajeCambioVentas).ToString("F1")%
-                        </span>
-                    }
-                    <small class="text-muted ms-2">vs mes anterior</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Total Pedidos -->
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted mb-1 small">Pedidos del Mes</p>
-                        <h3 class="mb-0 fw-bold">@Model.MetricasGenerales.PedidosMesActual</h3>
-                    </div>
-                    <div class="bg-primary bg-opacity-10 rounded-3 p-3">
-                        <i class="bi bi-cart-check text-primary fs-4"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    @if (Model.MetricasGenerales.PorcentajeCambioPedidos >= 0)
-                    {
-                        <span class="badge bg-success bg-opacity-10 text-success">
-                            <i class="bi bi-arrow-up"></i> @Model.MetricasGenerales.PorcentajeCambioPedidos.ToString("F1")%
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-danger bg-opacity-10 text-danger">
-                            <i class="bi bi-arrow-down"></i> @Math.Abs(Model.MetricasGenerales.PorcentajeCambioPedidos).ToString("F1")%
-                        </span>
-                    }
-                    <small class="text-muted ms-2">vs mes anterior</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Total Clientes -->
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted mb-1 small">Nuevos Clientes</p>
-                        <h3 class="mb-0 fw-bold">@Model.MetricasGenerales.ClientesMesActual</h3>
-                    </div>
-                    <div class="bg-info bg-opacity-10 rounded-3 p-3">
-                        <i class="bi bi-people text-info fs-4"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    @if (Model.MetricasGenerales.PorcentajeCambioClientes >= 0)
-                    {
-                        <span class="badge bg-success bg-opacity-10 text-success">
-                            <i class="bi bi-arrow-up"></i> @Model.MetricasGenerales.PorcentajeCambioClientes.ToString("F1")%
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-danger bg-opacity-10 text-danger">
-                            <i class="bi bi-arrow-down"></i> @Math.Abs(Model.MetricasGenerales.PorcentajeCambioClientes).ToString("F1")%
-                        </span>
-                    }
-                    <small class="text-muted ms-2">vs mes anterior</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Ticket Promedio -->
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted mb-1 small">Ticket Promedio</p>
-                        <h3 class="mb-0 fw-bold">@Model.MetricasGenerales.PromedioVentaPorPedido.ToString("C")</h3>
-                    </div>
-                    <div class="bg-success bg-opacity-10 rounded-3 p-3">
-                        <i class="bi bi-receipt text-success fs-4"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <small class="text-muted">Promedio por compra</small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Métricas Secundarias -->
-<div class="row g-3 mb-4">
-    <div class="col-12 col-md-6 col-xl-4">
-        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted mb-1 small">Tiempo Promedio de Preparación</p>
-                        @if (Model.MetricasGenerales.TiempoPromedioPreparacionHoras > 0)
-                        {
-                            var horas = (int)Model.MetricasGenerales.TiempoPromedioPreparacionHoras;
-                            var minutos = (int)((Model.MetricasGenerales.TiempoPromedioPreparacionHoras - horas) * 60);
-                            <h3 class="mb-0 fw-bold">@horas<span class="fs-5">h</span> @minutos<span class="fs-5">m</span></h3>
-                            <small class="text-muted">De "En preparación" a "Enviado"</small>
-                        }
-                        else
-                        {
-                            <h3 class="mb-0 fw-bold text-muted">--</h3>
-                            <small class="text-muted">Sin datos suficientes</small>
-                        }
-                    </div>
-                    <div class="bg-warning bg-opacity-10 rounded-3 p-3">
-                        <i class="bi bi-clock-history text-warning fs-4"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Gráficos Principales -->
-<div class="row g-3 mb-4">
-    <!-- Gráfico de Ventas por Mes -->
-    <div class="col-12 col-lg-8">
-        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 pt-4 pb-0">
-                <h5 class="mb-0 fw-semibold">
-                    <i class="bi bi-graph-up text-primary me-2"></i>
-                    Ventas de los Últimos 12 Meses
-                </h5>
-            </div>
-            <div class="card-body">
-                <canvas id="graficoVentasMensuales" style="max-height: 300px;"></canvas>
-                <script type="application/json" id="datosVentas">
-                    @Html.Raw(Json.Serialize(Model.VentasPorMes))
-                </script>
-            </div>
-        </div>
-    </div>
-
-    <!-- Gráfico de Estados de Pedidos -->
-    <div class="col-12 col-lg-4">
-        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 pt-4 pb-0">
-                <h5 class="mb-0 fw-semibold">
-                    <i class="bi bi-pie-chart text-primary me-2"></i>
-                    Estado de Pedidos
-                </h5>
-            </div>
-            <div class="card-body d-flex align-items-center justify-content-center">
-                <canvas id="graficoEstadosPedidos" style="max-height: 250px;"></canvas>
-                <script type="application/json" id="datosEstados">
-                    @Html.Raw(Json.Serialize(Model.EstadisticasPedidos))
-                </script>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Ventas por Categoría, Top Productos y Método de Pago -->
-<div class="row g-3 mb-4">
-    <!-- Ventas por Categoría -->
-    <div class="col-12 col-lg-6">
-        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 pt-4 pb-3">
-                <h5 class="mb-0 fw-semibold">
-                    <i class="bi bi-tag text-primary me-2"></i>
-                    Ventas por Categoría
-                </h5>
-            </div>
-            <div class="card-body">
-                @if (Model.VentasPorCategoria.Any())
-                {
-                    @foreach (var categoria in Model.VentasPorCategoria.Take(5))
-                    {
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="fw-medium">@categoria.Categoria</span>
-                                <span class="text-muted small">@categoria.TotalVentas.ToString("C")</span>
-                            </div>
-                            <div class="progress" style="height: 8px;">
-                                <div class="progress-bar bg-primary" role="progressbar" style="width: @categoria.PorcentajeDelTotal%"></div>
-                            </div>
-                            <small class="text-muted">@categoria.CantidadProductos productos vendidos (@categoria.PorcentajeDelTotal%)</small>
+@* CAPARAZÓN TODO DE GOLPE (mismo patrón que el panel de /admin): la página no
+   consulta la base — sale casi de una con SUS esqueletos y el cuerpo completo
+   llega en UN fetch (data-cargar del raíz contra Admin/AdminReportes/Secciones).
+   El loader de site.js reparte el envase por data-seccion (misma clave en
+   server y cliente) y pinta todos los contenedores juntos: ninguna sección
+   aparece antes que las demás. El esqueleto de cada uno es la <template> que
+   declara en data-esqueleto; los gráficos los arma Dashboard.js al escuchar el
+   pintado de cada contenedor (fragmento:pintado). *@
+<div class="container-fluid py-4" data-cargar="@Url.Action("Secciones")">
+    <!-- Header del Dashboard (estático: no depende de la base) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                @* Mismo bloque que el parcial _TituloSeccion, con el relojito vivo:
+                   Dashboard.js actualiza #ultimaActualizacion cada minuto. *@
+                <div>
+                    <div class="d-flex align-items-center border-start border-primary border-4 ps-4">
+                        <div>
+                            <h2 class="display-6 fw-black text-primary text-uppercase tracking-widest mb-1 fw-medium" style="letter-spacing: 2px;">
+                                Dashboards
+                            </h2>
+                            <p class="text-secondary small text-uppercase mb-0">Última actualización: <span id="ultimaActualizacion">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</span></p>
                         </div>
-                    }
-                }
-                else
-                {
-                    <p class="text-muted text-center py-4">No hay datos disponibles</p>
-                }
+                    </div>
+                </div>
+                <div>
+                    <button id="btnImprimir" class="btn btn-outline-secondary">
+                        <i class="bi bi-printer me-1"></i>Imprimir
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Ventas por Método de Pago -->
-    <div class="col-12 col-lg-6">
-        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 pt-4 pb-3">
-                <h5 class="mb-0 fw-semibold">
-                    <i class="bi bi-credit-card text-primary me-2"></i>
-                    Ventas por Método de Pago
-                </h5>
-            </div>
-            <div class="card-body">
-                @if (Model.VentasPorMetodoDePago.Any())
-                {
-                    <canvas id="graficoMetodoPago" style="max-height: 200px;" class="mb-3"></canvas>
-                    <script type="application/json" id="datosMetodoPago">
-                        @Html.Raw(Json.Serialize(Model.VentasPorMetodoDePago))
-                    </script>
-                    <div class="table-responsive bg-transparent">
-                        <table class="table table-hover align-middle">
-                            <thead>
-                                <tr>
-                                    <th class="bg-transparent text-muted small uppercase">Método</th>
-                                    <th class="text-end bg-transparent text-muted small uppercase">Pedidos</th>
-                                    <th class="text-end bg-transparent text-muted small uppercase">Total</th>
-                                    <th class="text-end bg-transparent text-muted small uppercase">%</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var metodo in Model.VentasPorMetodoDePago)
-                                {
-                                    <tr>
-                                        <td class="bg-transparent">
-                                            <div class="d-flex align-items-center">
-                                                @if (metodo.MetodoDePago.Contains("Mercado"))
-                                                {
-                                                    <i class="bi bi-wallet2 text-info me-2"></i>
-                                                }
-                                                else if (metodo.MetodoDePago.Contains("Transferencia"))
-                                                {
-                                                    <i class="bi bi-bank text-success me-2"></i>
-                                                }
-                                                else if (metodo.MetodoDePago.Contains("Tarjeta"))
-                                                {
-                                                    <i class="bi bi-credit-card text-primary me-2"></i>
-                                                }
-                                                else
-                                                {
-                                                    <i class="bi bi-cash text-warning me-2"></i>
-                                                }
-                                                <span class="fw-medium">@metodo.MetodoDePago</span>
-                                            </div>
-                                        </td>
-                                        <td class="text-end bg-transparent">
-                                            <span class="fw-semibold">@metodo.CantidadPedidos</span>
-                                        </td>
-                                        <td class="text-end fw-semibold bg-transparent">
-                                            @metodo.TotalVentas.ToString("C")
-                                        </td>
-                                        <td class="text-end bg-transparent">
-                                            <span class="badge bg-primary bg-opacity-10 text-primary">@metodo.PorcentajeDelTotal%</span>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <p class="text-muted text-center py-4">No hay datos disponibles</p>
-                }
+    @* Si Chart.js no llega (CDN caído, bloqueo de red), el JS muere en silencio y
+       el dashboard queda sin gráficos ni explicación: este banner lo despierta. *@
+    <div id="graficos-averia" class="alert alert-warning d-none mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>Los gráficos no pudieron cargarse. Probá recargar la página; si persiste, avisá al equipo técnico.
+    </div>
+
+    <!-- Tarjetas de Métricas Principales -->
+    <div class="row g-3 mb-4"
+         data-seccion="metricas"
+         data-esqueleto="tpl-skeleton-metricas"></div>
+
+    <!-- Métrica Secundaria: Tiempo de Preparación -->
+    <div class="row g-3 mb-4"
+         data-seccion="preparacion"
+         data-esqueleto="tpl-skeleton-tarjeta"></div>
+
+    <!-- Gráficos Principales -->
+    <div class="row g-3 mb-4">
+        <!-- Gráfico de Ventas por Mes -->
+        <div class="col-12 col-lg-8">
+            <div class="card bg-body-tertiary border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-graph-up text-primary me-2"></i>
+                        Ventas de los Últimos 12 Meses
+                    </h5>
+                </div>
+                <div class="card-body"
+                     data-seccion="grafico-ventas"
+                     data-esqueleto="tpl-skeleton-grafico"></div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Top Productos y Top Clientes -->
-<div class="row g-3 mb-4">
-    <!-- Top Productos -->
-    <div class="col-12 col-lg-6">
-        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 pt-4 pb-3">
-                <h5 class="mb-0 fw-semibold">
-                    <i class="bi bi-trophy text-primary me-2"></i>
-                    Top 5 Productos Más Vendidos
-                </h5>
-            </div>
-            <div class="card-body">
-                @if (Model.TopProductos.Any())
-                {
-                    <div class="list-group list-group-flush">
-                        @foreach (var producto in Model.TopProductos.Take(5))
-                        {
-                            <div class="list-group-item bg-transparent border-0">
-                                <div class="d-flex align-items-center">
-                                    <img src="@producto.ImagenUrl" alt="@producto.Nombre"
-                                         class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-0">@producto.Nombre</h6>
-                                        <small class="text-muted">@producto.Categoria</small>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="fw-bold">@producto.CantidadVendida</div>
-                                        <small class="text-muted">unidades</small>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <p class="text-muted text-center py-4">No hay datos disponibles</p>
-                }
+        <!-- Gráfico de Estados de Pedidos -->
+        <div class="col-12 col-lg-4">
+            <div class="card bg-body-tertiary border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-pie-chart text-primary me-2"></i>
+                        Estado de Pedidos
+                    </h5>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center"
+                     data-seccion="grafico-estados"
+                     data-esqueleto="tpl-skeleton-grafico"></div>
             </div>
         </div>
     </div>
 
-    <!-- Top Clientes -->
-    <div class="col-12 col-lg-6">
-        <div class="card bg-body-tertiary border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 pt-4 pb-3">
-                <h5 class="mb-0 fw-semibold">
-                    <i class="bi bi-star text-primary me-2"></i>
-                    Top 5 Mejores Clientes
-                </h5>
+    <!-- Ventas por Categoría y Método de Pago -->
+    <div class="row g-3 mb-4">
+        <!-- Ventas por Categoría -->
+        <div class="col-12 col-lg-6">
+            <div class="card bg-body-tertiary border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-tag text-primary me-2"></i>
+                        Ventas por Categoría
+                    </h5>
+                </div>
+                <div class="card-body"
+                     data-seccion="ventas-categoria"
+                     data-esqueleto="tpl-skeleton-progress"></div>
             </div>
-            <div class="card-body">
-                @if (Model.TopClientes.Any())
-                {
-                    <div class="table-responsive bg-transparent">
-                        <table class="table table-hover align-middle">
-                            <thead>
-                                <tr>
-                                    <th class="bg-transparent text-muted small uppercase">Cliente</th>
-                                    <th class="text-end bg-transparent text-muted small uppercase">Pedidos</th>
-                                    <th class="text-end bg-transparent text-muted small uppercase">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var cliente in Model.TopClientes.Take(5))
-                                {
-                                    <tr>
-                                        <td class="bg-transparent">
-                                            <div>
-                                                <div class="fw-medium">@cliente.NombreCompleto</div>
-                                                <small class="text-muted">@cliente.Email</small>
-                                            </div>
-                                        </td>
-                                        <td class="text-end bg-transparent">
-                                            <span class="fw-semibold">@cliente.TotalPedidos</span>
-                                        </td>
-                                        <td class="text-end fw-semibold bg-transparent">
-                                            @cliente.TotalGastado.ToString("C")
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <p class="text-muted text-center py-4">No hay datos disponibles</p>
-                }
+        </div>
+
+        <!-- Ventas por Método de Pago -->
+        <div class="col-12 col-lg-6">
+            <div class="card bg-body-tertiary border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-credit-card text-primary me-2"></i>
+                        Ventas por Método de Pago
+                    </h5>
+                </div>
+                <div class="card-body"
+                     data-seccion="ventas-metodo-pago"
+                     data-esqueleto="tpl-skeleton-tabla"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Productos y Top Clientes -->
+    <div class="row g-3 mb-4">
+        <!-- Top Productos -->
+        <div class="col-12 col-lg-6">
+            <div class="card bg-body-tertiary border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-trophy text-primary me-2"></i>
+                        Top 5 Productos Más Vendidos
+                    </h5>
+                </div>
+                <div class="card-body"
+                     data-seccion="top-productos"
+                     data-esqueleto="tpl-skeleton-lista"></div>
+            </div>
+        </div>
+
+        <!-- Top Clientes -->
+        <div class="col-12 col-lg-6">
+            <div class="card bg-body-tertiary border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-star text-primary me-2"></i>
+                        Top 5 Mejores Clientes
+                    </h5>
+                </div>
+                <div class="card-body"
+                     data-seccion="top-clientes"
+                     data-esqueleto="tpl-skeleton-tabla"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pedidos por Día y Hora -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card bg-body-tertiary border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-4 pb-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-calendar2-week text-primary me-2"></i>
+                        Pedidos por Día y Hora
+                    </h5>
+                </div>
+                <div class="card-body"
+                     data-seccion="dia-hora"
+                     data-esqueleto="tpl-skeleton-grafico"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Inmovilizado (Productos "Hueso") -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card bg-body-tertiary border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-4 pb-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-box-seam text-danger me-2"></i>
+                        Stock Inmovilizado (sin ventas en 90 días)
+                    </h5>
+                </div>
+                <div class="card-body"
+                     data-seccion="stock-inmovilizado"
+                     data-esqueleto="tpl-skeleton-tabla"></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Pedidos por Día y Hora -->
-<div class="row g-3 mb-4">
-    <div class="col-12">
-        <div class="card bg-body-tertiary border-0 shadow-sm">
-            <div class="card-header bg-transparent border-0 pt-4 pb-3">
-                <h5 class="mb-0 fw-semibold">
-                    <i class="bi bi-calendar2-week text-primary me-2"></i>
-                    Pedidos por Día y Hora
-                </h5>
+@* Formas de la carga (cada vista su esqueleto): la maquinaria vive una vez en
+   site.js. El aviso de error es compartido y su Reintentar repite la última
+   carga de lo que falló: acá vuelve a pedir el dashboard completo. *@
+<template id="tpl-skeleton-metricas">
+    @for (int i = 0; i < 4; i++)
+    {
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card bg-body-tertiary border-0 shadow-sm h-100" aria-hidden="true">
+                <div class="card-body placeholder-glow">
+                    <p class="small text-muted mb-1"><span class="placeholder col-6"></span></p>
+                    <h3 class="mb-0"><span class="placeholder col-7"></span></h3>
+                    <div class="mt-3"><span class="placeholder col-4"></span></div>
+                </div>
             </div>
-            <div class="card-body">
-                <canvas id="graficoDiaHora" style="max-height: 350px;"></canvas>
-                <script type="application/json" id="datosDiaHora">
-                    @Html.Raw(Json.Serialize(Model.VentasPorDiaHora))
-                </script>
+        </div>
+    }
+</template>
+
+<template id="tpl-skeleton-tarjeta">
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="card bg-body-tertiary border-0 shadow-sm h-100" aria-hidden="true">
+            <div class="card-body placeholder-glow">
+                <div class="d-flex justify-content-between align-items-start">
+                    <p class="small text-muted mb-1 flex-grow-1"><span class="placeholder col-8"></span></p>
+                    <span class="placeholder rounded-3" style="width: 48px; height: 48px;"></span>
+                </div>
+                <h3 class="mt-3 mb-0"><span class="placeholder col-6"></span></h3>
             </div>
         </div>
     </div>
-</div>
+</template>
 
-<!-- Stock Inmovilizado (Productos "Hueso") -->
-<div class="row g-3 mb-4">
-    <div class="col-12">
-        <div class="card bg-body-tertiary border-0 shadow-sm">
-            <div class="card-header bg-transparent border-0 pt-4 pb-3">
-                <h5 class="mb-0 fw-semibold">
-                    <i class="bi bi-box-seam text-danger me-2"></i>
-                    Stock Inmovilizado (sin ventas en 90 días)
-                </h5>
+<template id="tpl-skeleton-grafico">
+    <div class="placeholder-glow" aria-hidden="true">
+        <span class="placeholder w-100" style="height: 240px;"></span>
+    </div>
+</template>
+
+<template id="tpl-skeleton-progress">
+    <div class="placeholder-glow" aria-hidden="true">
+        @for (int i = 0; i < 4; i++)
+        {
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="placeholder col-4"></span>
+                    <span class="placeholder col-2"></span>
+                </div>
+                <span class="placeholder col-10" style="height: 8px;"></span>
+                <div class="mt-1"><span class="placeholder col-6"></span></div>
             </div>
-            <div class="card-body">
-                @if (Model.StockInmovilizado != null && Model.StockInmovilizado.Any())
-                {
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <p class="text-muted mb-0 small">
-                            @Model.StockInmovilizado.Count productos con stock sin ventas en los últimos 90 días
-                        </p>
-                        <span class="badge bg-danger">
-                            $@Model.StockInmovilizado.Sum(s => s.ValorInvertido).ToString("N0") invertido
-                        </span>
-                    </div>
-                    <div class="table-responsive bg-transparent">
-                        <table class="table table-hover align-middle">
-                            <thead>
-                                <tr>
-                                    <th class="bg-transparent text-muted small uppercase">Producto</th>
-                                    <th class="text-center bg-transparent text-muted small uppercase">Stock</th>
-                                    <th class="text-end bg-transparent text-muted small uppercase">Precio</th>
-                                    <th class="text-end bg-transparent text-muted small uppercase">Valor Invertido</th>
-                                    <th class="text-center bg-transparent text-muted small uppercase">Última Venta</th>
-                                    <th class="text-center bg-transparent text-muted small uppercase">Días sin venta</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var producto in Model.StockInmovilizado.Take(15))
-                                {
-                                    <tr>
-                                        <td class="bg-transparent">
-                                            <div class="d-flex align-items-center">
-                                                <img src="@producto.ImagenUrl" alt="@producto.Nombre"
-                                                     class="rounded me-3" style="width: 45px; height: 45px; object-fit: cover;">
-                                                <div>
-                                                    <div class="fw-medium">@producto.Nombre</div>
-                                                    <small class="text-muted">@producto.Categoria</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="text-center bg-transparent">
-                                            <span class="fw-bold">@producto.Stock</span>
-                                        </td>
-                                        <td class="text-end bg-transparent">
-                                            @producto.Precio.ToString("C")
-                                        </td>
-                                        <td class="text-end bg-transparent">
-                                            <span class="fw-bold text-danger">
-                                                @producto.ValorInvertido.ToString("C")
-                                            </span>
-                                        </td>
-                                        <td class="text-center bg-transparent">
-                                            @if (producto.UltimaVenta.HasValue)
-                                            {
-                                                <small class="text-muted">@producto.UltimaVenta.Value.ToString("dd/MM/yyyy")</small>
-                                            }
-                                            else
-                                            {
-                                                <small class="text-muted">Nunca</small>
-                                            }
-                                        </td>
-                                        <td class="text-center bg-transparent">
-                                            @if (producto.DiasSinVenta is null)
-                                            {
-                                                <span class="badge bg-secondary">Nunca se vendió</span>
-                                            }
-                                            else if (producto.DiasSinVenta > 120)
-                                            {
-                                                <span class="badge bg-danger">@producto.DiasSinVenta días</span>
-                                            }
-                                            else if (producto.DiasSinVenta > 90)
-                                            {
-                                                <span class="badge bg-warning text-dark">@producto.DiasSinVenta días</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-secondary">@producto.DiasSinVenta días</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                    @if (Model.StockInmovilizado.Count > 15)
+        }
+    </div>
+</template>
+
+<template id="tpl-skeleton-tabla">
+    <div class="placeholder-glow" aria-hidden="true">
+        <table class="table">
+            <thead>
+                <tr>
+                    @for (int i = 0; i < 4; i++)
                     {
-                        <p class="text-muted text-center small mt-2">
-                            Mostrando 15 de @Model.StockInmovilizado.Count productos
-                        </p>
+                        <th class="bg-transparent"><span class="placeholder col-7"></span></th>
                     }
-                }
-                else
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < 4; i++)
                 {
-                    <p class="text-success text-center py-4">
-                        <i class="bi bi-check-circle fs-3 d-block mb-2"></i>
-                        Todos los productos con stock han tenido ventas recientes
-                    </p>
+                    <tr>
+                        <td class="bg-transparent"><span class="placeholder col-6"></span></td>
+                        <td class="bg-transparent"><span class="placeholder col-4"></span></td>
+                        <td class="bg-transparent"><span class="placeholder col-5"></span></td>
+                        <td class="bg-transparent text-end"><span class="placeholder col-4"></span></td>
+                    </tr>
                 }
-            </div>
-        </div>
+            </tbody>
+        </table>
     </div>
-</div>
+</template>
+
+<template id="tpl-skeleton-lista">
+    <div class="placeholder-glow" aria-hidden="true">
+        @for (int i = 0; i < 3; i++)
+        {
+            <div class="d-flex align-items-center mb-3">
+                <span class="placeholder rounded me-3" style="width: 50px; height: 50px;"></span>
+                <div class="flex-grow-1">
+                    <span class="placeholder col-6 d-block mb-1"></span>
+                    <span class="placeholder col-4"></span>
+                </div>
+                <span class="placeholder col-1"></span>
+            </div>
+        }
+    </div>
+</template>
+
+<template id="tpl-error-widget">
+    <div class="text-center py-4">
+        <i class="bi bi-wifi-off fs-1 text-secondary opacity-50"></i>
+        <p class="text-muted mt-2 mb-2">No se pudo cargar esta sección. Podés reintentar; si persiste, avisale a soporte.</p>
+        <button type="button" class="btn btn-sm btn-outline-primary js-reintentar-widget">
+            <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
+        </button>
+    </div>
+</template>
 
 @section Scripts {
     <!-- Chart.js AUTOALOJADO (D2): antes venía por CDN — tercero imprescindible

@@ -1,0 +1,17 @@
+@using TiendaOnline.Features.Reportes
+@model DashboardViewModel
+@* Envase del cuerpo del dashboard: lo pide el caparazón en UN solo fetch
+   (Admin/AdminReportes/Secciones). Cada wrapper data-seccion es la clave por la
+   que el loader de site.js reparte el HTML a su contenedor de Dashboard (mismo
+   atributo en la vista). El contenido de cada pieza lo renderea el parcial de
+   su sección — Razor sigue siendo el único que arma HTML: auto-escapado. *@
+<div data-seccion="metricas"><partial name="_MetricasPrincipales" model="Model.MetricasGenerales" /></div>
+<div data-seccion="preparacion"><partial name="_TiempoPreparacion" model="Model.MetricasGenerales" /></div>
+<div data-seccion="grafico-ventas"><partial name="_GraficoVentasMensuales" model="Model.VentasPorMes" /></div>
+<div data-seccion="grafico-estados"><partial name="_GraficoEstadosPedidos" model="Model.EstadisticasPedidos" /></div>
+<div data-seccion="ventas-categoria"><partial name="_VentasPorCategoria" model="Model.VentasPorCategoria" /></div>
+<div data-seccion="ventas-metodo-pago"><partial name="_VentasPorMetodoPago" model="Model.VentasPorMetodoDePago" /></div>
+<div data-seccion="top-productos"><partial name="_TopProductos" model="Model.TopProductos" /></div>
+<div data-seccion="top-clientes"><partial name="_TopClientes" model="Model.TopClientes" /></div>
+<div data-seccion="dia-hora"><partial name="_PedidosPorDiaHora" model="Model.VentasPorDiaHora" /></div>
+<div data-seccion="stock-inmovilizado"><partial name="_StockInmovilizado" model="Model.StockInmovilizado" /></div>

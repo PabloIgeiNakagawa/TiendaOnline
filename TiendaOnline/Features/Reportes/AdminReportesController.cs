@@ -16,8 +16,24 @@ namespace TiendaOnline.Features.Reportes
             _reportesService = reportesService;
         }
 
+        // Caparazón: cero consultas del dashboard en esta acción — la página sale
+        // con sus esqueletos (data-seccion + data-esqueleto) y el cuerpo completo
+        // llega en UN fetch a la acción Secciones de acá abajo. El reparto y los
+        // esqueletos son maquinaria de site.js con data-* de la vista, igual que
+        // en el panel de /admin.
         [HttpGet("[action]")]
-        public async Task<IActionResult> Dashboard()
+        public IActionResult Dashboard()
+        {
+            return View();
+        }
+
+        // TODO DE GOLPE: el caparazón pide su cuerpo completo en UN fetch. La
+        // respuesta es el envase _SeccionesDelDashboard con TODAS las secciones
+        // rendereadas por Razor (parciales, cada una con su data-seccion);
+        // site.js reparte por clave y pinta el dashboard junto. La base corre
+        // UNA vez por carga (los datos viven en cache del service).
+        [HttpGet("[action]")]
+        public async Task<IActionResult> Secciones()
         {
             var datosDto = await _reportesService.ObtenerDatosAsync(HttpContext.RequestAborted);
 
@@ -122,7 +138,7 @@ namespace TiendaOnline.Features.Reportes
                 }).ToList()
             };
 
-            return View(viewModel);
+            return PartialView("_SeccionesDelDashboard", viewModel);
         }
     }
 }

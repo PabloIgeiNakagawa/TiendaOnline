@@ -1,0 +1,41 @@
+@using TiendaOnline.Features.Reportes
+@model List<ClienteTopViewModel>
+@* Contenido del Top 5 Mejores Clientes: tabla con pedidos y total gastado.
+   La tarjeta vive en el caparazón. *@
+@if (Model.Any())
+{
+    <div class="table-responsive bg-transparent">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="bg-transparent text-muted small uppercase">Cliente</th>
+                    <th class="text-end bg-transparent text-muted small uppercase">Pedidos</th>
+                    <th class="text-end bg-transparent text-muted small uppercase">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var cliente in Model.Take(5))
+                {
+                    <tr>
+                        <td class="bg-transparent">
+                            <div>
+                                <div class="fw-medium">@cliente.NombreCompleto</div>
+                                <small class="text-muted">@cliente.Email</small>
+                            </div>
+                        </td>
+                        <td class="text-end bg-transparent">
+                            <span class="fw-semibold">@cliente.TotalPedidos</span>
+                        </td>
+                        <td class="text-end fw-semibold bg-transparent">
+                            @cliente.TotalGastado.ToString("C")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="text-muted text-center py-4">No hay datos disponibles</p>
+}

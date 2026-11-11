@@ -1,0 +1,9 @@
+@using TiendaOnline.Features.Reportes
+@model List<VentaPorMes>
+@* Cuerpo del gráfico de Ventas de los Últimos 12 Meses: la tarjeta y su header
+   viven en el caparazón; acá van el canvas y los datos que Dashboard.js arma
+   al escuchar el pintado del contenedor (fragmento:pintado de site.js). *@
+<canvas id="graficoVentasMensuales" style="max-height: 300px;"></canvas>
+<script type="application/json" id="datosVentas">
+    @Html.Raw(Json.Serialize(Model))
+</script>

@@ -1,0 +1,8 @@
+@using TiendaOnline.Features.Reportes
+@model List<VentasPorDiaHora>
+@* Cuerpo del gráfico de Pedidos por Día y Hora: la tarjeta y su header viven
+   en el caparazón; Dashboard.js arma el gráfico al escuchar el pintado. *@
+<canvas id="graficoDiaHora" style="max-height: 350px;"></canvas>
+<script type="application/json" id="datosDiaHora">
+    @Html.Raw(Json.Serialize(Model))
+</script>
