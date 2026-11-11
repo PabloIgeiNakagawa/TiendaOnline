@@ -233,7 +233,7 @@
 
             <div class="col-auto col-lg-3 d-none d-lg-flex justify-content-end align-items-center gap-2">
 
-                <a class="nav-link text-body position-relative px-2" asp-controller="Carritos" asp-action="Index">
+                <a class="nav-link text-body position-relative px-2" asp-controller="Carritos" asp-action="Index" data-carrito-icono>
                     <i class="bi bi-cart3 fs-4"></i>
                     @await Component.InvokeAsync("CarritoHeader")
                 </a>
@@ -332,7 +332,7 @@
             <i class="bi bi-grid-3x3-gap fs-5"></i>
             <span class="d-block small">Productos</span>
         </a>
-        <a class="text-decoration-none flex-fill text-center position-relative @colorDeTab(enCarrito)" asp-controller="Carritos" asp-action="Index">
+        <a class="text-decoration-none flex-fill text-center position-relative @colorDeTab(enCarrito)" asp-controller="Carritos" asp-action="Index" data-carrito-icono>
             <i class="bi bi-cart3 fs-5"></i>
             @await Component.InvokeAsync("CarritoHeader")
             <span class="d-block small">Carrito</span>

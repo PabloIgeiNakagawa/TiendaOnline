@@ -150,7 +150,7 @@
                 <!-- Formulario para agregar al carrito -->
                 @if (Model.Stock > 0)
                 {
-                    <form asp-controller="Carritos"  asp-action="Agregar" method="post" class="producto-acciones-detalle">
+                    <form asp-controller="Carritos" asp-action="Agregar" method="post" class="producto-acciones-detalle" data-agregar-carrito>
                         @Html.AntiForgeryToken()
 
                         <input type="hidden" name="id" value="@Model.ProductoId" />
@@ -205,3 +205,7 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/Features/Productos/AgregarCarrito.js" asp-append-version="true"></script>
+}

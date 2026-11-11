@@ -46,16 +46,9 @@ namespace TiendaOnline.Features.Carritos
 
             var resultado = await _carritoService.AgregarAsync(id, HttpContext.RequestAborted);
 
-            if (resultado.IsFailure)
-            {
-                TempData.SetMensajeError(resultado.Error);
-            }
-            else
-            {
-                TempData.SetMensajeExito("Producto agregado al carrito.");
-            }
-
-            return RedirectToAction(nameof(Index));
+            return resultado.IsSuccess
+                ? Ok(new { ok = true, mensaje = "Producto agregado al carrito.", cantidadEnCarrito = await _carritoService.ObtenerCantidadTotalAsync() })
+                : Ok(new { ok = false, mensaje = resultado.Error });
         }
 
         [HttpPost("[action]")]

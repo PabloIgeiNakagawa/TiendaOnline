@@ -247,7 +247,7 @@
                                         </div>
                                         @if (producto.Stock > 0)
                                         {
-                                            <form asp-controller="Carritos" asp-action="Agregar" method="post">
+                                            <form asp-controller="Carritos" asp-action="Agregar" method="post" data-agregar-carrito>
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@producto.ProductoId" />
                                                 <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100">
@@ -328,4 +328,5 @@
 
 @section Scripts {
     <script src="~/js/Features/Productos/Index.js" asp-append-version="true"></script>
+    <script src="~/js/Features/Productos/AgregarCarrito.js" asp-append-version="true"></script>
 }
