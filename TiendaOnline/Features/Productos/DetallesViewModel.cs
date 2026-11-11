@@ -10,6 +10,7 @@
         public DateTime? FechaFinOferta { get; set; }
         public int Stock { get; set; }
         public string ImagenUrl { get; set; }
+        public List<string>? Imagenes { get; set; } // extras de la galería (la principal vive en ImagenUrl)
         public string CategoriaNombre { get; set; }
         public int CategoriaId { get; set; }
     }

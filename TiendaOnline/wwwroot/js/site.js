@@ -3,6 +3,61 @@ const applyTheme = (theme) => {
     document.documentElement.setAttribute('data-bs-theme', theme);
 };
 
+// --- Toast armado del lado del cliente (misma forma que _MensajeTempData) ---
+// Para avisos que nacen en JS (validaciones de formularios, etc.). El mensaje
+// viaja por textContent: nada de HTML interpolado con datos del usuario.
+// Regla de la casa: error persiste hasta cerrarlo, éxito se va solo a los 5s.
+function mostrarToast(mensaje, tipo = 'error') {
+    if (!(window.bootstrap && bootstrap.Toast)) return;
+
+    var contenedor = document.querySelector('.toast-container[data-toast-cliente]');
+    if (!contenedor) {
+        contenedor = document.createElement('div');
+        // Medio abajo, por encima del header sticky (1100 = el mismo z-index que
+        // usan los dropdowns para superar la barra fija). En móvil el mb-5 lo deja
+        // justo arriba de la barra de tabs fixed-bottom.
+        contenedor.className = 'toast-container position-fixed bottom-0 start-50 translate-middle-x p-3 mb-5 mb-lg-0';
+        contenedor.style.zIndex = '1100';
+        contenedor.setAttribute('data-toast-cliente', '');
+        document.body.appendChild(contenedor);
+    }
+
+    var esError = tipo === 'error';
+    var toast = document.createElement('div');
+    toast.className = 'toast align-items-center ' + (esError ? 'text-bg-danger' : 'text-bg-success') + ' border-0';
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    if (esError) toast.setAttribute('data-bs-autohide', 'false');
+
+    var fila = document.createElement('div');
+    fila.className = 'd-flex';
+
+    var cuerpo = document.createElement('div');
+    cuerpo.className = 'toast-body';
+    var icono = document.createElement('i');
+    icono.className = esError ? 'bi bi-x-circle-fill me-2' : 'bi bi-check-circle-fill me-2';
+    cuerpo.appendChild(icono);
+    cuerpo.appendChild(document.createTextNode(mensaje));
+
+    var cierre = document.createElement('button');
+    cierre.type = 'button';
+    cierre.className = 'btn-close ' + (esError ? 'btn-close-white' : '') + ' me-2 m-auto';
+    cierre.setAttribute('data-bs-dismiss', 'toast');
+    cierre.setAttribute('aria-label', 'Cerrar');
+
+    fila.appendChild(cuerpo);
+    fila.appendChild(cierre);
+    toast.appendChild(fila);
+    contenedor.appendChild(toast);
+
+    toast.addEventListener('hidden.bs.toast', function () {
+        toast.remove(); // sin autotoasts fantasma acumulados en el DOM
+    });
+
+    new bootstrap.Toast(toast, { autohide: !esError, delay: 5000 }).show();
+}
+
 // --- Refrescos de sección (maquinaria compartida) ---
 // La FORMA del esqueleto la declara cada vista con un <template>; esta función
 // aporta solo el comportamiento de una sección suelta: pinta el esqueleto si

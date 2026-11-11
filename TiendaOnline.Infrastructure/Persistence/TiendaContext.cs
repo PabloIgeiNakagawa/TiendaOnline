@@ -185,6 +185,7 @@ namespace TiendaOnline.Infrastructure.Persistence
         public DbSet<ZonaEnvio> ZonasEnvio { get; set; }
         public DbSet<AppSetting> AppSettings { get; set; }
         public DbSet<CarritoUsuario> CarritosUsuarios { get; set; }
+        public DbSet<ProductoImagen> ImagenesProducto { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -229,6 +230,19 @@ namespace TiendaOnline.Infrastructure.Persistence
             modelBuilder.Entity<DetallePedido>()
                 .Property(d => d.PrecioUnitario)
                 .HasPrecision(18, 2);
+
+            // Galería del visor: imágenes adicionales del producto. Hijo dueño del
+            // producto (muere con él); la principal vive en Producto.ImagenUrl y
+            // acá solo están las extras, en el orden de subida.
+            modelBuilder.Entity<ProductoImagen>(entity =>
+            {
+                entity.HasOne(i => i.Producto)
+                      .WithMany(p => p.Imagenes)
+                      .HasForeignKey(i => i.ProductoId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(i => i.ProductoId);
+            });
 
             //  Configuración de MovimientoStock
             modelBuilder.Entity<MovimientoStock>(entity =>

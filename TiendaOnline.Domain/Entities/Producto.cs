@@ -35,5 +35,6 @@ namespace TiendaOnline.Domain.Entities
 
         public ICollection<MovimientoStock> Movimientos { get; set; } = new List<MovimientoStock>();
         public virtual ICollection<OfertaProducto> Ofertas { get; set; } = new List<OfertaProducto>();
+        public virtual ICollection<ProductoImagen> Imagenes { get; set; } = new List<ProductoImagen>();
     }
 }

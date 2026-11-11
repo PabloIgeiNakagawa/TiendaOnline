@@ -77,6 +77,7 @@ namespace TiendaOnline.Features.Productos
                 FechaFinOferta = producto.FechaFinOferta,
                 Stock = producto.Stock,
                 ImagenUrl = producto.ImagenUrl,
+                Imagenes = producto.Imagenes?.Select(i => i.Url).ToList(),
                 CategoriaNombre = producto.CategoriaNombre,
                 CategoriaId = producto.CategoriaId
             };

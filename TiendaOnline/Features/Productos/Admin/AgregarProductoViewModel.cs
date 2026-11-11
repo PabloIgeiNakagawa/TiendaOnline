@@ -27,6 +27,9 @@ namespace TiendaOnline.Features.Productos.Admin
         [Required(ErrorMessage = "La imagen es obligatoria")]
         public IFormFile ImagenArchivo { get; set; }
 
+        [Display(Name = "Imágenes adicionales")]
+        public List<IFormFile>? ImagenesAdicionales { get; set; }
+
         public IEnumerable<SelectListItem>? Categorias { get; set; }
     }
 }

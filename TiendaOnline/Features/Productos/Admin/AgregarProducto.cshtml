@@ -209,6 +209,23 @@
                     </div>
                 </div>
 
+                <!-- Imágenes adicionales de la galería -->
+                <div class="mt-4">
+                    <label for="imagenesAdicionales" class="form-label fw-semibold">
+                        <i class="bi bi-images me-1"></i>Imágenes adicionales (opcional)
+                    </label>
+                    <input type="file" asp-for="ImagenesAdicionales"
+                           name="ImagenesAdicionales"
+                           id="imagenesAdicionales"
+                           class="form-control"
+                           accept="image/*"
+                           multiple />
+                    <div class="form-text">
+                        Hasta 5 imágenes más (6 en total con la principal). Aparecen en el visor de la ficha, después de la principal.
+                    </div>
+                    <div id="previewsAdicionales" class="d-flex gap-2 mt-3 flex-wrap"></div>
+                </div>
+
                 <div class="progress-container">
                     <div class="progress">
                         <div class="progress-bar" role="progressbar" style="width: 0%"></div>

@@ -50,5 +50,10 @@ namespace TiendaOnline.Tests.TestSupport
 
         public static Infrastructure.Services.Envios.EnvioCommandService EnvioCommand(TiendaContext ctx)
             => new(ctx, NullLogger<Infrastructure.Services.Envios.EnvioCommandService>.Instance);
+
+        public static Infrastructure.Services.Productos.ProductoCommandService ProductoCommand(
+            TiendaContext ctx,
+            Mock<IImagenService>? imagen = null)
+            => new(ctx, imagen?.Object ?? Mock.Of<IImagenService>());
     }
 }

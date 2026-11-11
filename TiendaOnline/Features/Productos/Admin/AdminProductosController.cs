@@ -69,9 +69,12 @@ namespace TiendaOnline.Features.Productos.Admin
             return View(model);
         }
 
+        // Mismo nombre que el GET (patrón de la casa, como EditarProducto): el
+        // form postea a /admin/productos/AgregarProducto y un nombre distinto
+        // en el POST dejaba la ruta solo-GET → 405 Method Not Allowed.
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Agregar(AgregarProductoViewModel model)
+        public async Task<IActionResult> AgregarProducto(AgregarProductoViewModel model)
         {
             if (!await _categoriaQueryService.EsCategoriaHojaAsync(model.CategoriaId, HttpContext.RequestAborted))
             {
@@ -80,6 +83,11 @@ namespace TiendaOnline.Features.Productos.Admin
 
             if (!ModelState.IsValid)
             {
+                // El re-render no muestra los errores del ModelState (los spans
+                // quedan ocultos sin el CSS de validación): el flash los pone
+                // en un toast de la casa para que nadie envíe a ciegas.
+                TempData.SetMensajeError(PrimerErrorDeModelState());
+
                 // RE-CARGAMOS las categorías antes de volver a la vista
                 model.Categorias = await ObtenerListaCategoriasAsync();
                 return View(model);
@@ -93,7 +101,11 @@ namespace TiendaOnline.Features.Productos.Admin
                 Stock = model.Stock,
                 CategoriaId = model.CategoriaId,
                 ImagenStream = model.ImagenArchivo?.OpenReadStream(),
-                NombreArchivo = model.ImagenArchivo?.FileName
+                NombreArchivo = model.ImagenArchivo?.FileName,
+                ImagenesAdicionales = (model.ImagenesAdicionales ?? new List<IFormFile>())
+                    .Where(f => f is { Length: > 0 })
+                    .Select(f => new ArchivoImagenDto { Stream = f.OpenReadStream(), NombreArchivo = f.FileName })
+                    .ToList()
             };
 
             await _productoCommandService.AgregarProductoAsync(dto, HttpContext.RequestAborted);
@@ -117,6 +129,7 @@ namespace TiendaOnline.Features.Productos.Admin
                 Precio = producto.Precio,
                 CategoriaId = producto.CategoriaId,
                 ImagenUrlActual = producto.ImagenUrl,
+                ImagenesActuales = producto.Imagenes?.Select(i => new ImagenActualViewModel(i.ProductoImagenId, i.Url)).ToList(),
                 Categorias = await ObtenerListaCategoriasAsync()
             };
 
@@ -129,6 +142,11 @@ namespace TiendaOnline.Features.Productos.Admin
         {
             if (!ModelState.IsValid)
             {
+                // El re-render no muestra los errores del ModelState (los spans
+                // quedan ocultos sin el CSS de validación): el flash los pone
+                // en un toast de la casa para que nadie envíe a ciegas.
+                TempData.SetMensajeError(PrimerErrorDeModelState());
+
                 // IMPORTANTE: Si volvemos a la vista, hay que rellenar la lista
                 model.Categorias = await ObtenerListaCategoriasAsync();
                 return View(model);
@@ -142,7 +160,11 @@ namespace TiendaOnline.Features.Productos.Admin
                 Precio = model.Precio,
                 CategoriaId = model.CategoriaId,
                 ImagenStream = model.ImagenArchivo?.OpenReadStream(),
-                NombreArchivo = model.ImagenArchivo?.FileName
+                NombreArchivo = model.ImagenArchivo?.FileName,
+                ImagenesAdicionalesNuevas = (model.ImagenesAdicionales ?? new List<IFormFile>())
+                    .Where(f => f is { Length: > 0 })
+                    .Select(f => new ArchivoImagenDto { Stream = f.OpenReadStream(), NombreArchivo = f.FileName })
+                    .ToList()
             };
 
             await _productoCommandService.EditarProductoAsync(dto, HttpContext.RequestAborted);
@@ -150,6 +172,20 @@ namespace TiendaOnline.Features.Productos.Admin
 
             TempData.SetMensajeExito("Producto actualizado correctamente.");
             return RedirectToAction(nameof(Catalogo));
+        }
+
+        [HttpPost("[action]/{id}/{imagenId}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminarImagen(int id, int imagenId)
+        {
+            // Los dos ids viajan en la ruta: una imagen ajena al producto no se
+            // ve ni se borra (el guard del service lanza ImagenNoValidaException
+            // y el filtro global la vuelve mensaje amable).
+            await _productoCommandService.EliminarImagenAsync(id, imagenId, HttpContext.RequestAborted);
+            _logger.LogInformation("Imagen {ImagenId} eliminada del producto {ProductoId} por {Admin}",
+                imagenId, id, User.FindFirstValue(ClaimTypes.NameIdentifier));
+            TempData.SetMensajeExito("Imagen eliminada.");
+            return RedirectToAction(nameof(EditarProducto), new { id });
         }
 
         [HttpPost("[action]")]
@@ -173,7 +209,12 @@ namespace TiendaOnline.Features.Productos.Admin
         }
         private async Task<IEnumerable<SelectListItem>> ObtenerListaCategoriasAsync()
         {
-            var categoriasHoja = await _categoriaQueryService.ObtenerCategoriasHojaAsync(HttpContext.RequestAborted);
+            // Mismo criterio que el guard del POST (EsCategoriaHojaAsync: con
+            // padre y sin hijos): el select jamás ofrece una opción que el
+            // guard rechace — una raíz sin hijos pasaba el filtro y el alta
+            // moría en el ModelState con un error invisible.
+            var categoriasHoja = (await _categoriaQueryService.ObtenerCategoriasHojaAsync(HttpContext.RequestAborted))
+                .Where(c => c.CategoriaPadreId != null);
 
             return categoriasHoja.Select(c => new SelectListItem
             {
@@ -186,6 +227,18 @@ namespace TiendaOnline.Features.Productos.Admin
         {
             if (cat.CategoriaPadre == null) return cat.Nombre;
             return $"{ObtenerRutaCompleta(cat.CategoriaPadre)} > {cat.Nombre}";
+        }
+
+        // Primer mensaje de validación del ModelState: los de DataAnnotations
+        // ya vienen curados; los de binding (texto no parseable) llegan vacíos.
+        private string PrimerErrorDeModelState()
+        {
+            var mensaje = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m));
+
+            return mensaje ?? "Revisá los campos del formulario.";
         }
     }
 }

@@ -25,6 +25,7 @@ namespace TiendaOnline.Infrastructure.Services.Productos
             var producto = await _context.Productos
                 .AsNoTracking()
                 .Include(p => p.Categoria)
+                .Include(p => p.Imagenes)
                 .Where(p => p.Activo)
                 .FirstOrDefaultAsync(p => p.ProductoId == id, ct);
 
@@ -45,6 +46,10 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 FechaFinOferta = oferta?.FechaFin,
                 Stock = producto.Stock,
                 ImagenUrl = producto.ImagenUrl,
+                Imagenes = producto.Imagenes
+                    .OrderBy(i => i.Orden)
+                    .Select(i => new ProductoImagenDto(i.ProductoImagenId, i.Url))
+                    .ToList(),
                 CategoriaId = producto.CategoriaId,
                 CategoriaNombre = producto.Categoria.Nombre
             };

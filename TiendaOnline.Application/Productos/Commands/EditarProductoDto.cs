@@ -9,5 +9,6 @@
         public int CategoriaId { get; set; }
         public Stream? ImagenStream { get; set; }
         public string? NombreArchivo { get; set; }
+        public List<ArchivoImagenDto>? ImagenesAdicionalesNuevas { get; set; }
     }
 }

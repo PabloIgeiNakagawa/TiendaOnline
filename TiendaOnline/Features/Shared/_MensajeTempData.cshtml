@@ -6,7 +6,10 @@
 
 @if (mensaje != null)
 {
-    <div class="toast-container position-fixed top-0 end-0 p-3 z-3">
+    @* Medio abajo, por encima del header sticky (1100 = el mismo z-index que
+       usan los dropdowns para superar la barra fija). En móvil el mb-5 lo deja
+       justo arriba de la barra de tabs fixed-bottom *@
+    <div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3 mb-5 mb-lg-0" style="z-index: 1100;">
         @if (mensaje.Tipo == TipoMensaje.Error)
         {
             <div class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">

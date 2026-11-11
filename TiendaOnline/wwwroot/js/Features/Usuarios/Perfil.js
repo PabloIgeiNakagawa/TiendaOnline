@@ -78,28 +78,9 @@ function copiarAlPortapapeles(texto) {
 
     navigator.clipboard.writeText(texto).then(function () {
 
-        const toast = document.createElement('div');
-        toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3';
-        toast.style.zIndex = '9999';
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="bi bi-check-circle me-2"></i>Copiado al portapapeles
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        `;
-
-        document.body.appendChild(toast);
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
-
-        toast.addEventListener('hidden.bs.toast', () => {
-            document.body.removeChild(toast);
-        });
-
+        mostrarToast('Copiado al portapapeles', 'exito');
     }).catch(function () {
-        alert('No se pudo copiar');
+        mostrarToast('No se pudo copiar');
     });
 }
 

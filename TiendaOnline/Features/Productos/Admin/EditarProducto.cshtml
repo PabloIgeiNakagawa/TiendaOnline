@@ -134,6 +134,50 @@
                     </div>
                 </div>
 
+                <!-- Galería adicional -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h5 class="text-primary mb-3">
+                            <i class="bi bi-images me-2"></i>
+                            Imágenes adicionales
+                        </h5>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        @if (Model.ImagenesActuales is { Count: > 0 })
+                        {
+                            @* Una mini-form por imagen: la baja es un POST propio con
+                               antiforgery y los ids en la ruta ( ownership server-side). *@
+                            <div class="d-flex flex-wrap gap-3 mb-3">
+                                @foreach (var imagen in Model.ImagenesActuales)
+                                {
+                                    <form asp-action="EliminarImagen" asp-route-id="@Model.ProductoId" asp-route-imagenId="@imagen.ImagenId"
+                                          method="post" class="card bg-body-tertiary border-0 p-2">
+                                        @Html.AntiForgeryToken()
+                                        <img src="@imagen.Url" alt="Imagen adicional del producto" class="rounded object-fit-cover mx-auto d-block" style="width: 96px; height: 96px;" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger mt-2">
+                                            <i class="bi bi-trash me-1"></i>Eliminar
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-body-secondary small mb-3">El producto no tiene imágenes adicionales.</p>
+                        }
+
+                        <label for="ImagenesAdicionales" class="form-label">
+                            <i class="bi bi-plus-lg me-1"></i>Agregar imágenes
+                        </label>
+                        <input type="file" name="ImagenesAdicionales" id="ImagenesAdicionales" class="form-control" accept="image/*" multiple />
+                        <div class="form-text">Hasta 5 en total (6 con la principal). Formatos permitidos: JPG, PNG, JPEG</div>
+                        <div id="previewsAdicionales" class="d-flex gap-2 mt-2 flex-wrap"></div>
+                    </div>
+                </div>
+
                 <!-- Botones -->
                 <div class="row mt-5">
                     <div class="col-12">

@@ -471,6 +471,31 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                     b.ToTable("Productos");
                 });
 
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.ProductoImagen", b =>
+                {
+                    b.Property<int>("ProductoImagenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductoImagenId"));
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ProductoImagenId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("ImagenesProducto");
+                });
+
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Usuario", b =>
                 {
                     b.Property<int>("UsuarioId")
@@ -676,6 +701,17 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                     b.Navigation("Categoria");
                 });
 
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.ProductoImagen", b =>
+                {
+                    b.HasOne("TiendaOnline.Domain.Entities.Producto", "Producto")
+                        .WithMany("Imagenes")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+                });
+
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Categoria", b =>
                 {
                     b.Navigation("Productos");
@@ -692,6 +728,8 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Producto", b =>
                 {
+                    b.Navigation("Imagenes");
+
                     b.Navigation("Movimientos");
 
                     b.Navigation("Ofertas");

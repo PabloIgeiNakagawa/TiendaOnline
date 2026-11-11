@@ -24,12 +24,66 @@
 
 <div class="container-fluid">
     <div class="row">
-        <!-- Imagen del Producto -->
+        <!-- Visor del producto: slide 0 = imagen principal (la misma que leen el
+             resto de las vistas), los slides siguientes son las extras de la
+             galería. Carousel de Bootstrap con thumbnails verticales a la
+             izquierda como indicadores: el cambio de imagen es data-bs-target,
+             sin JS propio. La caja es de altura fija (object-fit-contain): la
+             imagen no agranda ni achica el visor según su aspect ratio. -->
         <div class="col-lg-6 col-md-6 mb-4">
-            <img src="@(Model.ImagenUrl != null ? Model.ImagenUrl : Url.Content("~/img/placeholder.svg?height=500&width=500"))"
-                 class="img-fluid producto-imagen-principal"
-                 alt="@Model.Nombre"
-                 id="imagenPrincipal" />
+            @{
+                var visor = new List<string>();
+                if (!string.IsNullOrEmpty(Model.ImagenUrl) && !Model.ImagenUrl.Contains("no-image.png"))
+                    visor.Add(Model.ImagenUrl);
+                if (Model.Imagenes != null)
+                    visor.AddRange(Model.Imagenes.Where(u => !string.IsNullOrEmpty(u) && !u.Contains("no-image.png")));
+            }
+
+            @if (visor.Count == 0)
+            {
+                <div class="d-flex align-items-center justify-content-center rounded-3 border bg-body-tertiary" style="height: 440px;">
+                    <div class="text-center text-body-secondary">
+                        <i class="bi bi-image fs-1 d-block mb-2"></i>Sin imagen disponible
+                    </div>
+                </div>
+            }
+            else if (visor.Count == 1)
+            {
+                <div class="d-flex align-items-center justify-content-center rounded-3 border bg-body-tertiary" style="height: 440px;">
+                    <img src="@visor[0]" class="w-100 h-100 object-fit-contain" alt="@Model.Nombre" />
+                </div>
+            }
+            else
+            {
+                @* El carousel mismo es el flex: columna de thumbnails (order
+                   natural, izquierda) + slide fijo a la derecha. position-static
+                   y los estilos inline pisan el indicador default de Bootstrap
+                   (3px, absolute); el toggle de .active lo hace Bootstrap solo. *@
+                <div id="visorProducto" class="carousel slide d-flex gap-2 align-items-start" data-bs-ride="false">
+                    <div class="carousel-indicators position-static flex-column justify-content-start gap-2 mt-0 mb-0 mx-0">
+                        @for (var i = 0; i < visor.Count; i++)
+                        {
+                            <button type="button" data-bs-target="#visorProducto" data-bs-slide-to="@i"
+                                    class="@(i == 0 ? "active" : "")"
+                                    aria-current="@(i == 0 ? "true" : "false")"
+                                    aria-label="Ir a la imagen @(i + 1)"
+                                    style="width: 64px; height: 64px; text-indent: 0; margin: 0; border-radius: .375rem; overflow: hidden;">
+                                <img src="@visor[i]" alt="" class="w-100 h-100 object-fit-cover" />
+                            </button>
+                        }
+                    </div>
+
+                    <div class="carousel-inner rounded-3 border bg-body-tertiary flex-grow-1" style="height: 440px;">
+                        @for (var i = 0; i < visor.Count; i++)
+                        {
+                            <div class="carousel-item h-100 @(i == 0 ? "active" : "")">
+                                <img src="@visor[i]" class="d-block w-100 h-100 object-fit-contain"
+                                     alt="@(Model.Nombre) - imagen @(i + 1)" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
         </div>
 
         <!-- Información del Producto -->

@@ -10,6 +10,7 @@
         public DateTime? FechaFinOferta { get; set; } // hasta cuándo vale la oferta (si la hay)
         public int Stock { get; set; }
         public string ImagenUrl { get; set; }
+        public List<ProductoImagenDto>? Imagenes { get; set; }
         public string CategoriaNombre { get; set; }
         public int CategoriaId { get; set; }
     }
