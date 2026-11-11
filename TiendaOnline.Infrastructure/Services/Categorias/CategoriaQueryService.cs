@@ -30,7 +30,7 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
 
         public async Task<IEnumerable<CategoriaDto>> ObtenerCategoriasRaizAsync(CancellationToken ct = default)
         {
-            return await _context.Categorias
+            var categoriasRaiz = await _context.Categorias
                 .AsNoTracking()
                 .Where(c => c.CategoriaPadreId == null)
                 .Select(c => new CategoriaDto
@@ -46,6 +46,8 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
                     }).ToList()
                 })
                 .ToListAsync(ct);
+
+            return categoriasRaiz;
         }
 
         public async Task<IEnumerable<CategoriaDto>> ObtenerCategoriasHojaAsync(CancellationToken ct = default)
