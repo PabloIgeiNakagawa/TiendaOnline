@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using TiendaOnline.Application.AdminOverview;
+using TiendaOnline.Features.Shared;
 using TiendaOnline.Features.Shared.ViewModels;
 
 namespace TiendaOnline.Features.Home
@@ -40,6 +41,9 @@ namespace TiendaOnline.Features.Home
             // casi de una y su cuerpo completo llega en UN fetch (la acción
             // TodasLasSecciones de acá abajo). El reparto por data-seccion y los
             // esqueletos son maquinaria de site.js con data-* de la vista.
+            // HomeController es el único controller mixto (público + admin): el
+            // layout lo declara el action acá — la clase no hereda de una base.
+            ViewData[ViewDataKeys.Layout] = LayoutKeys.Admin;
             return View(new HomeAdminViewModel());
         }
 

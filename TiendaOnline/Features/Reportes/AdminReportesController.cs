@@ -2,12 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Application.Reportes;
 using TiendaOnline.Enums;
+using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.Reportes
 {
     [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
-    public class AdminReportesController : Controller
+    public class AdminReportesController : AdminControllerBase
     {
         private readonly IReportesService _reportesService;
 

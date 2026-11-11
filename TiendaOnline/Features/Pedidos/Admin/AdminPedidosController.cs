@@ -8,12 +8,13 @@ using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Extensions;
 using TiendaOnline.Features.Shared;
+using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.Pedidos.Admin
 {
     [Route("admin/pedidos")]
     [Authorize(Roles = "Administrador")]
-    public class AdminPedidosController : Controller
+    public class AdminPedidosController : AdminControllerBase
     {
         private readonly IPedidoQueryService _pedidoQueryService;
         private readonly IGestionTransferenciaService _gestionTransferenciaService;

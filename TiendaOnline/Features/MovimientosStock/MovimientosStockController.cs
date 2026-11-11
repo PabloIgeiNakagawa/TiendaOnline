@@ -6,12 +6,13 @@ using TiendaOnline.Application.MovimientosStock.Queries;
 using TiendaOnline.Features.Shared.ViewModels;
 using TiendaOnline.Features.Shared;
 using TiendaOnline.Domain.Exceptions;
+using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.MovimientosStock
 {
     [Route("Admin/[controller]")]
     [Authorize(Roles = "Administrador")]
-    public class MovimientosStockController : Controller
+    public class MovimientosStockController : AdminControllerBase
     {
         private readonly IMovimientoStockQueryService _movimientoStockQueryService;
         private readonly IMovimientoStockCommandService _movimientoStockCommandService;

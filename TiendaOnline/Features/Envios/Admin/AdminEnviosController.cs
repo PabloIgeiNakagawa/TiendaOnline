@@ -5,12 +5,13 @@ using System.Security.Claims;
 using TiendaOnline.Application.Envios;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Features.Shared;
+using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.Envios.Admin
 {
     [Route("admin/envios")]
     [Authorize(Roles = "Administrador")]
-    public class AdminEnviosController : Controller
+    public class AdminEnviosController : AdminControllerBase
     {
         private readonly IEnvioQueryService _envioQueryService;
         private readonly IEnvioCommandService _envioCommandService;

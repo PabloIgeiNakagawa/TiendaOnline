@@ -5,12 +5,13 @@ using System.Security.Claims;
 using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Features.Shared;
+using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.AppSettings
 {
     [Route("admin/app-settings")]
     [Authorize(Roles = "Administrador")]
-    public class AppSettingsController : Controller
+    public class AppSettingsController : AdminControllerBase
     {
         private readonly IAppSettingsService _appSettingsService;
         private readonly IImagenService _imagenService;

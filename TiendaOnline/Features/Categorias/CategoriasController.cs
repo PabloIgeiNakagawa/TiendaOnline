@@ -7,12 +7,13 @@ using TiendaOnline.Application.Categorias.Commands;
 using TiendaOnline.Application.Categorias.Common;
 using TiendaOnline.Application.Categorias.Queries;
 using TiendaOnline.Features.Shared;
+using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.Categorias
 {
     [Route("admin/categorias")]
     [Authorize(Roles = "Administrador")]
-    public class CategoriasController : Controller
+    public class CategoriasController : AdminControllerBase
     {
         private readonly ICategoriaQueryService _categoriaQueryService;
         private readonly ICategoriaCommandService _categoriaCommandService;

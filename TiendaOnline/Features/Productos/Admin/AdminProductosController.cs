@@ -8,12 +8,13 @@ using TiendaOnline.Application.Categorias.Queries;
 using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Features.Shared;
+using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.Productos.Admin
 {
     [Route("admin/productos")]
     [Authorize(Roles = "Administrador")]
-    public class AdminProductosController : Controller
+    public class AdminProductosController : AdminControllerBase
     {
         private readonly IProductoCommandService _productoCommandService;
         private readonly IProductoQueryService _productoQueryService;

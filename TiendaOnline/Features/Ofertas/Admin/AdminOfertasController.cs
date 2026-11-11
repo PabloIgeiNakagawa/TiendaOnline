@@ -5,12 +5,13 @@ using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using TiendaOnline.Application.Ofertas;
 using TiendaOnline.Features.Shared;
+using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.Ofertas.Admin
 {
     [Route("admin/ofertas")]
     [Authorize(Roles = "Administrador")]
-    public class AdminOfertasController : Controller
+    public class AdminOfertasController : AdminControllerBase
     {
         private readonly IOfertaCommandService _ofertaCommandService;
         private readonly IOfertaQueryService _ofertaQueryService;

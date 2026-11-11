@@ -5,12 +5,13 @@ using System.Security.Claims;
 using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Application.Usuarios.Queries;
 using TiendaOnline.Features.Shared;
+using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.Usuarios.Admin
 {
     [Route("admin/usuarios")]
     [Authorize(Roles = "Administrador")]
-    public class AdminUsuariosController : Controller
+    public class AdminUsuariosController : AdminControllerBase
     {
         private readonly IUsuarioQueryService _usuarioQueryService;
         private readonly IUsuarioCommandService _usuarioCommandService;

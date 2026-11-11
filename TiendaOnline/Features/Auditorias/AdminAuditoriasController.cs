@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TiendaOnline.Application.Auditoria;
+using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.Auditorias
 {
     [Route("admin/auditorias")]
     [Authorize(Roles = "Administrador")]
-    public class AdminAuditoriasController : Controller
+    public class AdminAuditoriasController : AdminControllerBase
     {
         private readonly IAuditoriaService _auditoriaService;
 

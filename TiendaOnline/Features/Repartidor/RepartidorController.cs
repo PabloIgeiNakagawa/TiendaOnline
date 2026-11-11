@@ -5,6 +5,7 @@ using System.Security.Claims;
 using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Application.Pedidos.Queries;
 using TiendaOnline.Features.Shared;
+using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.Repartidor
 {
@@ -17,7 +18,7 @@ namespace TiendaOnline.Features.Repartidor
     /// </summary>
     [Route("[controller]")]
     [Authorize(Roles = "Repartidor")]
-    public class RepartidorController : Controller
+    public class RepartidorController : RepartidorControllerBase
     {
         private readonly IPedidoQueryService _pedidoQueryService;
         private readonly IEstadosPedidoService _estadosPedidoService;

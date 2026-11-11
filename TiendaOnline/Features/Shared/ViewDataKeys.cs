@@ -10,5 +10,8 @@ namespace TiendaOnline.Features.Shared
     {
         /// <summary>Título de página (Title) — lo declara la vista o el action que la sirve; lo renderiza el layout.</summary>
         public const string Title = "Title";
+
+        /// <summary>Layout de la vista — lo declara el controller base o el action; Features/_ViewStart lo consume para elegir el layout.</summary>
+        public const string Layout = "Layout";
     }
 }
