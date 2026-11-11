@@ -15,7 +15,7 @@ namespace TiendaOnline.ViewComponents
         public async Task<IViewComponentResult> InvokeAsync()
         {
             var cantidad = await _carritoService.ObtenerCantidadTotalAsync();
-            return View("CarritoHeader", cantidad);
+            return View(cantidad);
         }
     }
 }
