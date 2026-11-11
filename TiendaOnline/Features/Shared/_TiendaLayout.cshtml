@@ -25,9 +25,11 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 </head>
 
-<body class="h-100 d-flex flex-column">
+<body class="h-100 d-flex flex-column pb-5 pb-lg-0">
 
-    <partial name="_TiendaHeader" />
+    @* pb-5 solo en móvil: reserva el alto de la barra de tabs fija de abajo
+       (fixed-bottom) para que no tape el pie. En desktop no hay barra. *@
+    <partial name="_TiendaNavbar" />
 
     <main role="main">
         <div class="container">

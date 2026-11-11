@@ -1,0 +1,357 @@
+﻿@using System.Security.Claims
+@using TiendaOnline.Application.Categorias.Queries
+@inject ICategoriaQueryService CategoriasNav
+
+@{
+    // Estado activo: la página actual marca con pastilla (server-side, sin JS).
+    var controladorActual = ViewContext.RouteData.Values["controller"]?.ToString();
+    var accionActual = ViewContext.RouteData.Values["action"]?.ToString();
+
+    var enInicio = controladorActual == "Home" && accionActual == "Index";
+    var enProductos = controladorActual == "Productos" && accionActual == "Index";
+    var enFaq = controladorActual == "Soporte" && accionActual == "FAQ";
+    var enCarrito = controladorActual == "Carritos";
+    var enLogin = controladorActual == "Accounts" && (accionActual == "Login" || accionActual == "Register");
+
+    // Chip de la nav: la página activa es pastilla azul; el resto gris.
+    string activoSi(bool estaActivo) => estaActivo
+        ? "fw-semibold bg-primary-subtle text-primary"
+        : "text-body-secondary";
+
+    // Tab del celular: mismo criterio, solo color (la barrita es angosta).
+    string colorDeTab(bool estaActivo) => estaActivo ? "text-primary" : "text-body-secondary";
+}
+
+<style>
+    /* Chips de la nav: hover suave con variables del tema (válido en ambos modos).
+       Bootstrap no trae hover de fondo utilitario — es lo mínimo que se agrega. */
+    .nav-chip {
+        border-radius: .5rem;
+        transition: background-color .15s ease;
+    }
+
+        .nav-chip:hover {
+            background-color: rgba(var(--bs-emphasis-color-rgb), .08);
+        }
+
+    /* Buscador pill: el ring de foco lo pinta el contenedor (con focus-within)
+       y con transición corta; el input pierde su caja dura al enfocar. */
+    .buscador-tienda {
+        border: var(--bs-border-width) solid var(--bs-border-color);
+        transition: box-shadow .15s ease, background-color .15s ease;
+    }
+
+        .buscador-tienda .form-control {
+            font-size: .95rem;
+        }
+
+            .buscador-tienda .form-control:focus {
+                box-shadow: none;
+                background-color: transparent;
+            }
+
+        .buscador-tienda:focus-within {
+            background-color: var(--bs-body-bg);
+            box-shadow: 0 0 0 .15rem rgba(var(--bs-primary-rgb), .18);
+        }
+
+        .buscador-tienda .btn {
+            width: 34px;
+            height: 34px;
+            /* respiración vertical adentro de la pill (no pega contra el marco) */
+            margin-block: .25rem;
+            padding: 0;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+    /* Menú de cuenta (compartido desktop/móvil): fade al abrir, items píldora
+       con chip de icono tintado. El chip rojo solo para Cerrar Sesión. */
+    .dropdown-menu.show {
+        animation: apareceMenu .15s ease;
+    }
+
+    @@keyframes apareceMenu {
+        from {
+            opacity: 0;
+        }
+    }
+
+    .dropdown-menu .dropdown-item {
+        border-radius: .6rem;
+        transition: background-color .15s ease;
+    }
+
+        /* hover de items: lavadito de la tinta del tema (8%) — el gris tertiary
+       de Bootstrap sobre el panel es casi imperceptible en ambos modos. */
+    .dropdown-menu .dropdown-item:hover,
+        .dropdown-menu .dropdown-item:focus {
+            background-color: rgba(var(--bs-emphasis-color-rgb), .08);
+        }
+
+    .menu-icono {
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: .55rem;
+        background-color: var(--bs-tertiary-bg);
+        font-size: 1rem;
+    }
+
+    .menu-icono-rojo {
+        background-color: var(--bs-danger-bg-subtle);
+        color: var(--bs-danger-emphasis);
+    }
+
+    /* Droplist del buscador y su cartel de invitación: entraman con fade corto.
+       El cartel es solo una invitación (input enfocado y vacío): no come
+       clics — pointer-events none y el usuario sigue escribiendo encima. */
+    .js-sugerencias .dropdown-menu,
+    .js-sugerencias-ayuda {
+        animation: apareceMenu .15s ease;
+    }
+
+    .js-sugerencias-ayuda {
+        pointer-events: none;
+    }
+
+    /* Submenú de categorías: al pasar el puntero (o con foco por teclado) la
+       raíz despliega sus subcategorías en un menú a la derecha. Bootstrap no
+       trae submenús — es CSS puro sobre el <li>. */
+    .dropdown-submenu {
+        position: relative;
+    }
+
+        .dropdown-submenu > .dropdown-menu {
+            display: none;
+            /* posición explícita es obligatoria: Bootstrap en navbar deja los
+               menús static (.navbar-nav .dropdown-menu). */
+            position: absolute;
+            /* a un costado, PEGADO al borde exterior del panel padre: termina
+               el item + su padding .5rem = arranca donde termina el panel. */
+            left: calc(100% + .5rem);
+            top: -.5rem;
+            margin: 0;
+            /* paleta invertida pero suave: el panel nunca es blanco/negro
+               pleno — gris 200 en oscuro y gris 900 en claro (cruzados con la
+               tinta de la página). */
+            --bs-dropdown-color: var(--bs-body-bg);
+            --bs-dropdown-link-color: var(--bs-body-bg);
+            --bs-dropdown-link-hover-color: var(--bs-body-bg);
+        }
+
+        /* en claro es el panel oscuro; en oscuro lo pisa la regla de abajo */
+        .dropdown-submenu > .dropdown-menu {
+            --bs-dropdown-bg: var(--bs-gray-900);
+        }
+
+        [data-bs-theme="dark"] .dropdown-submenu > .dropdown-menu {
+            --bs-dropdown-bg: var(--bs-gray-200);
+        }
+
+        /* hover del subpanel invertido: lavadito más fuerte de la tinta del panel
+           (0,4,0 = gana también al hover del madre, que matchea a los mismos
+           items por descendencia). */
+        .dropdown-submenu > .dropdown-menu .dropdown-item:hover,
+        .dropdown-submenu > .dropdown-menu .dropdown-item:focus {
+            background-color: rgba(var(--bs-body-bg-rgb), .18);
+        }
+
+        /* hover de las filas de raíz del menú de categorías: solo las filas
+           directas (los items del subpanel tienen su propio lavado) — lavado
+           de tinta, el gris del tema sobre el panel es apenas visible. */
+        .menu-categorias > li > .dropdown-item:hover,
+        .menu-categorias > li > .dropdown-item:focus {
+            background-color: rgba(var(--bs-emphasis-color-rgb), .08);
+        }
+
+        .dropdown-submenu:hover > .dropdown-menu,
+        .dropdown-submenu:focus-within > .dropdown-menu {
+            display: block;
+            animation: apareceMenu .15s ease;
+        }
+
+    /* Puente del hover: entre el item y el submenú quedan los 8px del padding
+       del panel padre; la franja (y un pelín de tolerancia vertical) mantiene
+       activo el :hover del li en ese pasaje, para que el menú no parpadee. */
+    .dropdown-submenu > a::after {
+        content: "";
+        position: absolute;
+        top: -.25rem;
+        right: -.5rem;
+        width: .5rem;
+        height: calc(100% + .5rem);
+    }
+</style>
+
+<header class="bg-body sticky-lg-top">
+    <div class="container py-3">
+        <div class="row align-items-center gy-3">
+
+            <div class="col-auto col-lg-3 d-flex justify-content-start align-items-center">
+                <a class="d-flex align-items-center text-decoration-none gap-2" asp-controller="Home" asp-action="Index" title="Ir al inicio">
+                    <img src="@AppSettings.GetValue("Diseno:LogoUrl")" alt="@AppSettings.GetValue("Diseno:NombreDelSitio") Logo" width="50" height="50" asp-append-version="true" loading="eager" class="img-fluid" />
+                    <span class="fw-bold fs-4 text-body d-none d-sm-inline">@AppSettings.GetValue("Diseno:NombreDelSitio")</span>
+                </a>
+            </div>
+
+            <div class="col col-lg-6">
+                @* El buscador de la navbar: el JS de _TiendaNavbar.js pide las
+                   sugerencias (Productos/Sugerencias) con debuncia y pega el
+                   fragmento en .js-sugerencias. Sin JS, el form GET muestra el
+                   catálogo filtrado como siempre. *@
+                <form class="w-100 position-relative" method="get" asp-controller="Productos" asp-action="Index">
+                    <div class="buscador-tienda d-flex align-items-center rounded-pill bg-body-tertiary px-2">
+                        <input class="form-control border-0 bg-transparent py-2 js-busqueda-navbar"
+                               type="search"
+                               name="busqueda"
+                               placeholder="Buscar procesadores, gráficas, memorias..."
+                               aria-label="Buscar"
+                               autocomplete="off">
+
+                        <button class="btn btn-primary rounded-circle flex-shrink-0" type="submit" aria-label="Buscar">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                    <div class="js-sugerencias" data-url-endpoint="@Url.Action("Sugerencias", "Productos")"></div>
+                    @* Cartel de invitación: con el input enfocado y vacío cuenta
+                       que hay sugerencias en vivo (el JS solo lo muestra/esconde,
+                       el HTML lo arma Razor como todo). *@
+                    <div class="js-sugerencias-ayuda d-none dropdown-menu show position-absolute w-100 rounded-3 shadow mt-2" style="z-index: 1100;">
+                        <div class="px-3 py-3 text-center text-body-secondary small">
+                            <i class="bi bi-magic me-1"></i>Escribí y te sugerimos productos
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="col-auto col-lg-3 d-none d-lg-flex justify-content-end align-items-center gap-2">
+
+                <a class="nav-link text-body position-relative px-2" asp-controller="Carritos" asp-action="Index">
+                    <i class="bi bi-cart3 fs-4"></i>
+                    @await Component.InvokeAsync("CarritoHeader")
+                </a>
+
+                <button id="btn-theme" class="btn nav-link text-body px-2" title="Cambiar tema">
+                    <i id="theme-icon" class="bi bi-sun fs-4"></i>
+                </button>
+
+                <div class="dropdown">
+                    <button class="btn nav-link px-2 dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person fs-3"></i>
+                        <span class="d-none d-sm-inline small fw-medium">@User.FindFirstValue(ClaimTypes.Name)</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-0 p-2" style="min-width: 220px;">
+                        <partial name="_OpcionesDelUsuario" />
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Nav inferior: solo desktop. En móvil la reemplazan los tabs fijos de
+       abajo (la hamburguesa murió con esta tanda). El menú de Categorías
+       lista las raíces del catálogo (60s de cache en el service). *@
+    <nav class="border-top bg-body-tertiary d-none d-lg-block" aria-label="Navegación principal">
+        <div class="container">
+            <ul class="navbar-nav flex-row justify-content-center gap-1 py-1">
+
+                <li class="nav-item dropdown">
+                    <a class="nav-link nav-chip px-3 dropdown-toggle text-body-secondary" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Categorías
+                    </a>
+                    <ul class="menu-categorias dropdown-menu shadow-lg border-0 rounded-0 p-2">
+                        @foreach (var raiz in (await CategoriasNav.ObtenerCategoriasRaizAsync(ViewContext.HttpContext.RequestAborted)).ToList())
+                        {
+                            var tieneSubs = raiz.Subcategorias?.Any() == true;
+                            <li class="@(tieneSubs ? "dropdown-submenu" : null)">
+                                <a class="dropdown-item py-2 @(tieneSubs ? "d-flex align-items-center" : null)"
+                                   asp-controller="Productos" asp-action="Index" asp-route-categoriaId="@raiz.CategoriaId">
+                                    @raiz.Nombre
+                                    @if (tieneSubs)
+                                    {
+                                        <i class="bi bi-chevron-right ms-auto small opacity-75"></i>
+                                    }
+                                </a>
+                                @if (tieneSubs)
+                                {
+                                    <ul class="dropdown-menu shadow-lg border-0 rounded-0 p-2">
+                                        @foreach (var sub in raiz.Subcategorias)
+                                        {
+                                            <li>
+                                                <a class="dropdown-item py-2" asp-controller="Productos" asp-action="Index" asp-route-categoriaId="@sub.CategoriaId">
+                                                    @sub.Nombre
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </li>
+                        }
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item py-2 fw-semibold" asp-controller="Productos" asp-action="Index">
+                                Ver todo <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link nav-chip px-3 @activoSi(enInicio)" asp-controller="Home" asp-action="Index">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-chip px-3 @activoSi(enProductos)" asp-controller="Productos" asp-action="Index">Productos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-chip px-3 @activoSi(enFaq)" asp-controller="Soporte" asp-action="FAQ">FAQ</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</header>
+
+@* Tabs móviles estilo app: barra fija abajo. La página activa sangra en azul;
+    el carrito conserva su badge (componente de siempre). Productos manda al
+    catálogo (la barra de búsqueda vive arriba). Cuenta es un dropup con el
+    MISMO menú del encabezado (parcial compartido): anónimo ve
+    Ingresar/Registrarse; logueado adiciona sus opciones y Cerrar Sesión. *@
+<nav class="fixed-bottom d-lg-none bg-body border-top" aria-label="Navegación móvil">
+    <div class="d-flex py-2">
+        <a class="text-decoration-none flex-fill text-center @colorDeTab(enInicio)" asp-controller="Home" asp-action="Index">
+            <i class="bi bi-house fs-5"></i>
+            <span class="d-block small">Inicio</span>
+        </a>
+        <a class="text-decoration-none flex-fill text-center @colorDeTab(enProductos)" asp-controller="Productos" asp-action="Index">
+            <i class="bi bi-grid-3x3-gap fs-5"></i>
+            <span class="d-block small">Productos</span>
+        </a>
+        <a class="text-decoration-none flex-fill text-center position-relative @colorDeTab(enCarrito)" asp-controller="Carritos" asp-action="Index">
+            <i class="bi bi-cart3 fs-5"></i>
+            @await Component.InvokeAsync("CarritoHeader")
+            <span class="d-block small">Carrito</span>
+        </a>
+        <div class="dropup flex-fill text-center">
+            <button class="btn w-100 p-0 bg-transparent border-0 d-flex flex-column align-items-center @colorDeTab(controladorActual == "Usuarios" || enLogin)"
+                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-person fs-5"></i>
+                <span class="small">Cuenta</span>
+            </button>
+            <ul class="dropdown-menu shadow-lg border-0 rounded-0 p-2" style="min-width: 220px;">
+                <partial name="_OpcionesDelUsuario" />
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<form id="logoutForm" asp-controller="Accounts" asp-action="Logout" method="post" class="d-none">
+    @Html.AntiForgeryToken()
+</form>
+
+<script src="~/js/Features/Shared/_TiendaNavbar.js" asp-append-version="true"></script>

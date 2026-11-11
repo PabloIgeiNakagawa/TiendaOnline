@@ -1,0 +1,86 @@
+@using System.Security.Claims
+@* Opciones del menú de cuenta (compartido): lo pega el dropdown del
+   encabezado (desktop) y el dropup del tab "Cuenta" (móvil). El contenido
+   cambia por sesión: anónimo ve ingreso/registro; logueado su perfil y sus
+   pedidos; admin y repartidor además su espacio de trabajo. Los estilos de
+   items/chips viven en el <style> de _TiendaNavbar. *@
+@if (User?.Identity?.IsAuthenticated == true)
+{
+    <li><h6 class="dropdown-header text-uppercase fw-bold small">Mi Cuenta</h6></li>
+
+    <li>
+        <a class="dropdown-item d-flex align-items-center gap-2 py-2" asp-controller="Usuarios" asp-action="PerfilUsuario" asp-route-id="@User?.FindFirstValue(ClaimTypes.NameIdentifier)">
+            <span class="menu-icono"><i class="bi bi-person"></i></span>
+            Mi Perfil
+        </a>
+    </li>
+
+    @if (User?.IsInRole("Administrador") == true)
+    {
+        <li><hr class="dropdown-divider mx-2"></li>
+        <li><h6 class="dropdown-header text-uppercase fw-bold small text-primary">Gestión</h6></li>
+        <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 py-2 fw-semibold" asp-controller="Home" asp-action="IndexAdmin">
+                <span class="menu-icono"><i class="bi bi-shield-lock"></i></span>
+                Panel Admin
+            </a>
+        </li>
+    }
+    else if (User?.IsInRole("Repartidor") == true)
+    {
+        <li><hr class="dropdown-divider mx-2"></li>
+        <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 py-2" asp-controller="Admin" asp-action="Pedidos">
+                <span class="menu-icono"><i class="bi bi-truck"></i></span>
+                Pedidos Asignados
+            </a>
+        </li>
+    }
+    else
+    {
+        <li><hr class="dropdown-divider mx-2"></li>
+        <li>
+            <a class="dropdown-item d-flex align-items-center gap-2 py-2" asp-controller="Pedidos" asp-action="MisPedidos">
+                <span class="menu-icono"><i class="bi bi-bag-check"></i></span>
+                Mis Pedidos
+            </a>
+        </li>
+    }
+
+    <li><hr class="dropdown-divider mx-2"></li>
+    <li>
+        <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2 js-cambiar-tema">
+            <span class="menu-icono"><i class="bi bi-moon-stars"></i></span>
+            Cambiar tema
+        </button>
+    </li>
+    <li>
+        <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger btn-logout">
+            <span class="menu-icono menu-icono-rojo"><i class="bi bi-box-arrow-right"></i></span>
+            Cerrar Sesión
+        </button>
+    </li>
+}
+else
+{
+    <li><h6 class="dropdown-header text-uppercase fw-bold small">Bienvenido</h6></li>
+    <li>
+        <a class="dropdown-item d-flex align-items-center gap-2 py-2" asp-controller="Accounts" asp-action="Login">
+            <span class="menu-icono"><i class="bi bi-box-arrow-in-right"></i></span>
+            Ingresar
+        </a>
+    </li>
+    <li>
+        <a class="dropdown-item d-flex align-items-center gap-2 py-2" asp-controller="Accounts" asp-action="Register">
+            <span class="menu-icono"><i class="bi bi-person-plus"></i></span>
+            Registrarse
+        </a>
+    </li>
+    <li><hr class="dropdown-divider mx-2"></li>
+    <li>
+        <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2 js-cambiar-tema">
+            <span class="menu-icono"><i class="bi bi-moon-stars"></i></span>
+            Cambiar tema
+        </button>
+    </li>
+}

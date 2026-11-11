@@ -39,7 +39,7 @@ namespace TiendaOnline.Features.Productos
 
         // Sugerencias del buscador de la navbar: la misma consulta del catálogo
         // (busca por nombre/descripción) recortada a 6. Devuelve HTML armado por
-        // Razor (auto-escapado) que el JS de _TiendaHeader pega debajo del input.
+        // Razor (auto-escapado) que el JS de _TiendaNavbar pega debajo del input.
         [HttpGet("Sugerencias")]
         public async Task<IActionResult> Sugerencias([FromQuery] string? busqueda)
         {
