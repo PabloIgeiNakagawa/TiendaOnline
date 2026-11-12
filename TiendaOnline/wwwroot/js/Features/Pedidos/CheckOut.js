@@ -3,8 +3,14 @@
     const radioLocal = document.getElementById('radioLocal');
     const radioEnvio = document.getElementById('radioEnvio');
     const seccionDir = document.getElementById('seccionDireccion');
+    const infoRetiro = document.getElementById('infoRetiro');
     const textoEnvio = document.getElementById('textoEnvio');
-    const btnConfirmar = document.querySelector('button[type="submit"]');
+    const textoTotal = document.getElementById('textoTotal');
+    const panelResumen = document.querySelector('[data-subtotal]');
+    const subtotal = panelResumen ? parseFloat(panelResumen.dataset.subtotal) || 0 : 0;
+
+    const btnContinuar = document.getElementById('btnContinuarAlPago');
+    const btnConfirmar = document.getElementById('btnConfirmarCompra');
 
     const selectDireccionGuardada = document.getElementById('DireccionSeleccionadaId');
     const bloqueNuevaDireccion = document.getElementById('bloqueNuevaDireccion');
@@ -14,56 +20,58 @@
     const $codigoPostal = document.querySelector('input[name="NuevaDireccion.CodigoPostal"]');
     const $calle = document.querySelector('input[name="NuevaDireccion.Calle"]');
 
-    // --- 1. LÓGICA DE VALIDACIÓN (BOTÓN) ---
-    function validarEstadoBoton() {
-        const btn = document.getElementById('btnConfirmarPedido');
-        if (!btn) return;
-
-        const radioLocal = document.getElementById('radioLocal');
-        const radioEnvio = document.getElementById('radioEnvio');
-        const selectGuardada = document.getElementById('DireccionSeleccionadaId');
-
-        // Selectores de los campos obligatorios (asegurate que los 'name' coincidan con tu HTML)
-        const inputCalle = document.querySelector('input[name="NuevaDireccion.Calle"]');
-        const inputNumero = document.querySelector('input[name="NuevaDireccion.Numero"]');
-        const inputEtiqueta = document.querySelector('input[name="NuevaDireccion.Etiqueta"]');
-        const inputCP = document.querySelector('input[name="NuevaDireccion.CodigoPostal"]');
-        const selectProv = document.getElementById("selectProvincia");
-        const selectLoc = document.getElementById("selectLocalidad");
-
-        let esValido = false;
-
+    // --- 1. VALIDACIÓN DE LA ENTREGA (habilita "Continuar al pago" y el submit) ---
+    function entregaCompleta() {
         // Caso A: Retiro en local
-        if (radioLocal && radioLocal.checked) {
-            esValido = true;
-        }
-        // Caso B: Envío a domicilio
-        else if (radioEnvio && radioEnvio.checked) {
+        if (radioLocal && radioLocal.checked) return true;
+
+        // Caso B: Envío a domicilio: una guardada O la nueva completa
+        if (radioEnvio && radioEnvio.checked) {
+            const selectGuardada = document.getElementById('DireccionSeleccionadaId');
             const tieneGuardada = selectGuardada && selectGuardada.value !== "";
 
-            // Verificamos TODOS los obligatorios
-            const tieneCalle = inputCalle && inputCalle.value.trim().length >= 3;
-            const tieneNumero = inputNumero && inputNumero.value.trim() !== "";
-            const tieneEtiqueta = inputEtiqueta && inputEtiqueta.value.trim() !== "";
-            const tieneCP = inputCP && inputCP.value.trim().length >= 4; // CP en Argentina tiene min 4
-            const tieneProv = selectProv && selectProv.value !== "";
-            const tieneLoc = selectLoc && selectLoc.value !== "";
+            const inputCalle = document.querySelector('input[name="NuevaDireccion.Calle"]');
+            const inputNumero = document.querySelector('input[name="NuevaDireccion.Numero"]');
+            const inputEtiqueta = document.querySelector('input[name="NuevaDireccion.Etiqueta"]');
+            const inputCP = document.querySelector('input[name="NuevaDireccion.CodigoPostal"]');
+            const selectProv = document.getElementById("selectProvincia");
+            const selectLoc = document.getElementById("selectLocalidad");
 
-            const tieneNuevaCompleta = tieneCalle && tieneNumero && tieneEtiqueta && tieneCP && tieneProv && tieneLoc;
+            const tieneNuevaCompleta =
+                inputCalle && inputCalle.value.trim().length >= 3 &&
+                inputNumero && inputNumero.value.trim() !== "" &&
+                inputEtiqueta && inputEtiqueta.value.trim() !== "" &&
+                inputCP && inputCP.value.trim().length >= 4 && // CP en Argentina tiene min 4
+                selectProv && selectProv.value !== "" &&
+                selectLoc && selectLoc.value !== "";
 
-            // Se habilita si elije una guardada O completa todos los campos de la nueva
-            if (tieneGuardada || tieneNuevaCompleta) {
-                esValido = true;
-            }
+            return tieneGuardada || tieneNuevaCompleta;
         }
 
-        btn.disabled = !esValido;
+        return false;
     }
 
-    // --- 2. LÓGICA DE INTERFAZ (MOSTRAR/OCULTAR) ---
+    function validarEstadoBotones() {
+        if (btnContinuar) btnContinuar.disabled = !entregaCompleta();
+        if (btnConfirmar) btnConfirmar.disabled = !entregaCompleta();
+    }
+
+    // --- 2. TOTAL Y ENVÍO EN VIVO ---
+    function setTotal(costoEnvio) {
+        if (!textoTotal) return;
+        if (costoEnvio === null) {
+            textoTotal.innerText = "—"; // envío sin cotizar: no inventamos el total
+            return;
+        }
+        const total = subtotal + costoEnvio;
+        textoTotal.innerText = "$" + total.toLocaleString("es-AR", { maximumFractionDigits: 0 });
+    }
+
+    // --- 3. INTERFAZ (MOSTRAR/OCULTAR) ---
     function actualizarInterfaz() {
         if (radioEnvio && radioEnvio.checked) {
             seccionDir.classList.remove('d-none');
+            infoRetiro?.classList.add('d-none');
 
             // El costo lo cota el server contra la tabla de zonas: en vivo según la provincia.
             const guardadaSeleccionada = selectDireccionGuardada?.selectedOptions[0];
@@ -71,19 +79,28 @@
                 cotizarEnvio(guardadaSeleccionada.dataset.provincia);
             } else {
                 textoEnvio.innerText = "Elegí una provincia";
+                setTotal(null);
             }
 
             if ($provincia && $provincia.options.length <= 1) {
                 cargarProvincias();
             }
-        } else {
+        } else if (radioLocal && radioLocal.checked) {
             seccionDir.classList.add('d-none');
-            textoEnvio.innerText = "$0.00";
+            infoRetiro?.classList.remove('d-none');
+            textoEnvio.innerText = "Sin costo";
+            setTotal(0);
+        } else {
+            // Sin entrega elegida todavía
+            seccionDir.classList.add('d-none');
+            infoRetiro?.classList.add('d-none');
+            textoEnvio.innerText = "A calcular";
+            setTotal(null);
         }
-        validarEstadoBoton();
+        validarEstadoBotones();
     }
 
-    // --- 2b. COTIZACIÓN EN VIVO (el precio real lo fija igual el server al finalizar) ---
+    // --- 3b. COTIZACIÓN EN VIVO (el precio real lo fija igual el server al finalizar) ---
     async function cotizarEnvio(provincia) {
         if (!textoEnvio) return;
         textoEnvio.innerText = "Calculando...";
@@ -92,16 +109,21 @@
             if (!response.ok) throw new Error("Error en servidor");
 
             const data = await response.json();
-            textoEnvio.innerText = data.permitida
-                ? `$${data.costo.toFixed(2)}`
-                : "No llegamos a esta zona"; // Zona deshabilitada en el panel de envíos
+            if (data.permitida) {
+                textoEnvio.innerText = "$" + data.costo.toLocaleString("es-AR", { maximumFractionDigits: 0 });
+                setTotal(data.costo);
+            } else {
+                textoEnvio.innerText = "No llegamos a esta zona"; // Zona deshabilitada en el panel de envíos
+                setTotal(null);
+            }
         } catch (error) {
             console.error("Error al cotizar envío:", error);
             textoEnvio.innerText = "A calcular";
+            setTotal(null);
         }
     }
 
-    // --- 3. LÓGICA DE DIRECCIÓN GUARDADA ---
+    // --- 4. DIRECCIÓN GUARDADA ---
     if (selectDireccionGuardada) {
         selectDireccionGuardada.addEventListener('change', function () {
             if (this.value !== "") {
@@ -113,7 +135,7 @@
             } else {
                 bloqueNuevaDireccion.classList.remove('d-none');
             }
-            validarEstadoBoton();
+            validarEstadoBotones();
         });
     }
 
@@ -123,15 +145,13 @@
         $localidad.innerHTML = '<option value="">Primero elija una provincia...</option>';
     }
 
-    // --- 4. LÓGICA DE API (LLAMANDO A TU BACKEND) ---
+    // --- 5. API GEO ---
     async function cargarProvincias() {
         try {
-            // Llamamos a TU controller
             const response = await fetch("/api/GeoApi/provincias");
             if (!response.ok) throw new Error("Error en servidor");
 
             const provincias = await response.json();
-
             provincias.forEach(p => {
                 $provincia.add(new Option(p.nombre, p.nombre));
             });
@@ -171,23 +191,26 @@
                     $localidad.innerHTML = '<option value="">Error al cargar</option>';
                 }
             }
-            validarEstadoBoton();
+            validarEstadoBotones();
         });
     }
 
-    // --- 5. EVENTOS Y ARRANQUE ---
+    // --- 6. EVENTOS Y ARRANQUE ---
     if (radioLocal && radioEnvio) {
         radioLocal.addEventListener('change', actualizarInterfaz);
         radioEnvio.addEventListener('change', actualizarInterfaz);
     }
 
-    document.querySelector('input[name="NuevaDireccion.Etiqueta"]')?.addEventListener('input', validarEstadoBoton);
-    document.getElementById("selectProvincia")?.addEventListener('change', validarEstadoBoton);
-    document.getElementById("selectLocalidad")?.addEventListener('change', validarEstadoBoton);
-    document.querySelector('input[name="NuevaDireccion.CodigoPostal"]')?.addEventListener('input', validarEstadoBoton);
-    document.querySelector('input[name="NuevaDireccion.Calle"]')?.addEventListener('input', validarEstadoBoton);
-    document.querySelector('input[name="NuevaDireccion.Numero"]')?.addEventListener('input', validarEstadoBoton);
-    
+    // Los cambios de pago solo revalidan el submit (MP viene pre-seleccionado).
+    document.querySelectorAll('input[name="MetodoPagoId"]').forEach(function (radio) {
+        radio.addEventListener('change', validarEstadoBotones);
+    });
+
+    document.querySelector('input[name="NuevaDireccion.Etiqueta"]')?.addEventListener('input', validarEstadoBotones);
+    document.querySelector('input[name="NuevaDireccion.CodigoPostal"]')?.addEventListener('input', validarEstadoBotones);
+    document.querySelector('input[name="NuevaDireccion.Calle"]')?.addEventListener('input', validarEstadoBotones);
+    document.querySelector('input[name="NuevaDireccion.Numero"]')?.addEventListener('input', validarEstadoBotones);
+
     // Ejecutar al cargar la página
     actualizarInterfaz();
 });

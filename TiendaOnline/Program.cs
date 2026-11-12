@@ -61,7 +61,7 @@ builder.Services.AddDbContext<TiendaContext>(options =>
 builder.Services.AddCustomSecurity(builder.Configuration); // Configura Cookies y Session
 builder.Services.AddBusinessServices(builder.Configuration); // Registra todos tus Services
 builder.Services.AddMemoryCache();
-builder.Services.AddRateLimitingConfig(); // Rate limiting para endpoints críticos
+builder.Services.AddRateLimitingConfig(builder.Environment); // Rate limiting para endpoints críticos
 
 // Hash de contraseñas y protección de datos (para tokens, etc.)
 // Llaves de DataProtection persistidas en App_Data del sitio: sobreviven recycles y deploys.

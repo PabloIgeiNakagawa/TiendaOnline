@@ -1,158 +1,231 @@
 ﻿@using TiendaOnline.Enums
 @model TiendaOnline.Features.Pedidos.CheckOutViewModel
 
+@* Wizard de una sola página: entrega y pago en un acordeón, un único POST a
+   FinalizarCompra (el paso de Confirmación desapareció). El resumen se mantiene
+   visible a la derecha con el total en vivo (cotización de envío del server). *@
+
 <div class="container my-5">
 
     <partial name="_ProgresoCompra" model="2" />
 
-    <form asp-action="ProcesarCheckout" method="post">
+    <form asp-action="FinalizarCompra" method="post">
         @Html.AntiForgeryToken()
-        @* Errores de ModelState a nivel form: dirección faltante o zona de envío deshabilitada. *@
+        @* Errores de ModelState a nivel form: dirección faltante, pago faltante o zona de envío deshabilitada. *@
         <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0"></div>
         <div class="row">
             <div class="col-md-8">
-                <div class="card mb-4">
-                    <div class="card-header p-3 bg-body-tertiary border-bottom">
-                        <h5 class="mb-0 fw-bold"><i class="bi bi-truck me-2"></i>Método de Entrega</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3 mb-4" role="group" aria-label="Selección de método de entrega">
-                            <div class="col-sm-6">
-                                <input type="radio" class="btn-check" asp-for="MetodoEntrega" value="@MetodoEntrega.RetiroLocal" id="radioLocal" autocomplete="off">
-                                <label class="btn btn-outline-primary card h-100 p-3 transition-hover d-flex flex-column align-items-center justify-content-center" for="radioLocal">
-                                    <i class="bi bi-shop fs-3 mb-2"></i>
-                                    <span class="fw-bold text-uppercase small">Retiro en el local</span>
-                                </label>
-                            </div>
+                <div class="accordion shadow-sm rounded-3 border" id="acordeonCheckout">
 
-                            <div class="col-sm-6">
-                                <input type="radio" class="btn-check" asp-for="MetodoEntrega" value="@MetodoEntrega.EnvioDomicilio" id="radioEnvio" autocomplete="off">
-                                <label class="btn btn-outline-primary card h-100 p-3 transition-hover d-flex flex-column align-items-center justify-content-center" for="radioEnvio">
-                                    <i class="bi bi-house-door fs-3 mb-2"></i>
-                                    <span class="fw-bold text-uppercase small">Envío a Domicilio</span>
-                                </label>
-                            </div>
-                        </div>
+                    @* PASO 1: ENTREGA *@
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelEntrega" aria-expanded="true">
+                                <i class="bi bi-truck me-2"></i>
+                                <span class="fw-bold">1 · Método de entrega</span>
+                            </button>
+                        </h2>
+                        <div id="panelEntrega" class="accordion-collapse collapse show" data-bs-parent="#acordeonCheckout">
+                            <div class="accordion-body">
+                                <div class="row g-3" role="group" aria-label="Selección de método de entrega">
+                                    <div class="col-sm-6">
+                                        <input type="radio" class="btn-check" asp-for="MetodoEntrega" value="@MetodoEntrega.RetiroLocal" id="radioLocal" autocomplete="off">
+                                        <label class="btn btn-outline-primary card h-100 p-3 transition-hover d-flex flex-column align-items-center justify-content-center" for="radioLocal">
+                                            <i class="bi bi-shop fs-3 mb-2"></i>
+                                            <span class="fw-bold text-uppercase small">Retiro en el local</span>
+                                        </label>
+                                    </div>
 
-                        <div id="seccionDireccion" class="d-none mt-4 border-top pt-3">
-                            <h5 class="mb-3 text-secondary-emphasis">Datos de Envío</h5>
+                                    <div class="col-sm-6">
+                                        <input type="radio" class="btn-check" asp-for="MetodoEntrega" value="@MetodoEntrega.EnvioDomicilio" id="radioEnvio" autocomplete="off">
+                                        <label class="btn btn-outline-primary card h-100 p-3 transition-hover d-flex flex-column align-items-center justify-content-center" for="radioEnvio">
+                                            <i class="bi bi-house-door fs-3 mb-2"></i>
+                                            <span class="fw-bold text-uppercase small">Envío a Domicilio</span>
+                                        </label>
+                                    </div>
+                                </div>
 
-                            <div class="card border-0 mb-4">
-                                <div class="card-body p-3">
-                                    <label class="form-label fw-bold text-primary">
-                                        <i class="bi bi-bookmark-check me-2"></i>Elegir dirección guardada
-                                    </label>
+                                @* Lo que la página de confirmación mostraba para retiro: dónde retirar. *@
+                                <div id="infoRetiro" class="d-none alert alert-info border-0 shadow-sm d-flex align-items-center mt-4 mb-0" role="alert">
+                                    <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                                    <span>Te esperamos en nuestra sucursal, <b>@AppSettings.GetValue("Ubicacion:Direccion"), @AppSettings.GetValue("Ubicacion:Ciudad"), @AppSettings.GetValue("Ubicacion:Provincia")</b></span>
+                                </div>
 
-                                    <select asp-for="DireccionSeleccionadaId"
-                                            class="form-select shadow-sm"
-                                            disabled="@(!Model.DireccionesGuardadas.Any() ? "disabled" : null)">
+                                <div id="seccionDireccion" class="d-none mt-4 border-top pt-3">
+                                    <h5 class="mb-3 text-secondary-emphasis">Datos de Envío</h5>
 
-                                        @if (!Model.DireccionesGuardadas.Any())
-                                        {
-                                            <option value="">-- No posee direcciones guardadas --</option>
-                                        }
-                                        else
-                                        {
-                                            <option value="">-- Cargar una nueva dirección --</option>
-                                            @foreach (var dir in Model.DireccionesGuardadas)
+                                    <div class="card border-0 mb-4">
+                                        <div class="card-body p-3">
+                                            <label class="form-label fw-bold text-primary">
+                                                <i class="bi bi-bookmark-check me-2"></i>Elegir dirección guardada
+                                            </label>
+
+                                            <select asp-for="DireccionSeleccionadaId"
+                                                    class="form-select shadow-sm"
+                                                    disabled="@(!Model.DireccionesGuardadas.Any() ? "disabled" : null)">
+
+                                                @if (!Model.DireccionesGuardadas.Any())
+                                                {
+                                                    <option value="">-- No posee direcciones guardadas --</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="">-- Cargar una nueva dirección --</option>
+                                                    @foreach (var dir in Model.DireccionesGuardadas)
+                                                    {
+                                                        <option value="@dir.DireccionId" data-provincia="@dir.Provincia">@dir.Etiqueta (@dir.Calle @dir.Numero)</option>
+                                                    }
+                                                }
+                                            </select>
+
+                                            @if (!Model.DireccionesGuardadas.Any())
                                             {
-                                                <option value="@dir.DireccionId" data-provincia="@dir.Provincia">@dir.Etiqueta (@dir.Calle @dir.Numero)</option>
+                                                <div class="form-text mt-2 italic">
+                                                    <i class="bi bi-info-circle small me-1"></i> Podés registrar una nueva debajo.
+                                                </div>
                                             }
-                                        }
-                                    </select>
-
-                                    @if (!Model.DireccionesGuardadas.Any())
-                                    {
-                                        <div class="form-text mt-2 italic">
-                                            <i class="bi bi-info-circle small me-1"></i> Podés registrar una nueva debajo.
                                         </div>
-                                    }
-                                </div>
-                            </div>
+                                    </div>
 
-                            <div id="bloqueNuevaDireccion">
-                                <div class="d-flex align-items-center my-4 opacity-75">
-                                    <hr class="flex-grow-1">
-                                    <span class="mx-3 small text-uppercase fw-bold text-muted">Datos de nueva dirección</span>
-                                    <hr class="flex-grow-1">
-                                </div>
+                                    <div id="bloqueNuevaDireccion">
+                                        <div class="d-flex align-items-center my-4 opacity-75">
+                                            <hr class="flex-grow-1">
+                                            <span class="mx-3 small text-uppercase fw-bold text-muted">Datos de nueva dirección</span>
+                                            <hr class="flex-grow-1">
+                                        </div>
 
-                                <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center py-2" role="alert">
-                                    <i class="bi bi-info-circle-fill fs-5 me-2"></i>
-                                    <div class="small">
-                                        Esta dirección se guardará en tu perfil automáticamente.
+                                        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center py-2" role="alert">
+                                            <i class="bi bi-info-circle-fill fs-5 me-2"></i>
+                                            <div class="small">
+                                                Esta dirección se guardará en tu perfil automáticamente.
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label asp-for="NuevaDireccion.Etiqueta" class="form-label"></label>
+                                            <input asp-for="NuevaDireccion.Etiqueta" class="form-control" placeholder="Ej: Mi Casa, Oficina..." />
+                                            <span asp-validation-for="NuevaDireccion.Etiqueta" class="text-danger small"></span>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-5 mb-3">
+                                                <label asp-for="NuevaDireccion.Provincia" class="form-label">Provincia</label>
+                                                <select id="selectProvincia" asp-for="NuevaDireccion.Provincia" class="form-select">
+                                                    <option value="">Seleccione una provincia...</option>
+                                                </select>
+                                                <span asp-validation-for="NuevaDireccion.Provincia" class="text-danger small"></span>
+                                            </div>
+
+                                            <div class="col-md-4 mb-3">
+                                                <label asp-for="NuevaDireccion.Localidad" class="form-label">Localidad</label>
+                                                <select id="selectLocalidad" asp-for="NuevaDireccion.Localidad" class="form-select" disabled>
+                                                    <option value="">Primero elija una provincia...</option>
+                                                </select>
+                                                <span asp-validation-for="NuevaDireccion.Localidad" class="text-danger small"></span>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label asp-for="NuevaDireccion.CodigoPostal" class="form-label"></label>
+                                                <input asp-for="NuevaDireccion.CodigoPostal" class="form-control" />
+                                                <span asp-validation-for="NuevaDireccion.CodigoPostal" class="text-danger small"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-8 mb-3">
+                                                <label asp-for="NuevaDireccion.Calle" class="form-label"></label>
+                                                <input asp-for="NuevaDireccion.Calle" class="form-control" />
+                                                <span asp-validation-for="NuevaDireccion.Calle" class="text-danger small"></span>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label asp-for="NuevaDireccion.Numero" class="form-label"></label>
+                                                <input asp-for="NuevaDireccion.Numero" class="form-control" />
+                                                <span asp-validation-for="NuevaDireccion.Numero" class="text-danger small"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label asp-for="NuevaDireccion.Piso" class="form-label"></label>
+                                                <input asp-for="NuevaDireccion.Piso" class="form-control" />
+                                                <span asp-validation-for="NuevaDireccion.Piso" class="text-danger small"></span>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label asp-for="NuevaDireccion.Departamento" class="form-label"></label>
+                                                <input asp-for="NuevaDireccion.Departamento" class="form-control" />
+                                                <span asp-validation-for="NuevaDireccion.Departamento" class="text-danger small"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label asp-for="NuevaDireccion.Observaciones" class="form-label"></label>
+                                        <textarea asp-for="NuevaDireccion.Observaciones" class="form-control" rows="3"
+                                                  placeholder="Ej: Portón blanco, el timbre no funciona, entregar a portería..."></textarea>
+                                        <span asp-validation-for="NuevaDireccion.Observaciones" class="text-danger small"></span>
                                     </div>
                                 </div>
 
-                                <div class="mb-3">
-                                    <label asp-for="NuevaDireccion.Etiqueta" class="form-label"></label>
-                                    <input asp-for="NuevaDireccion.Etiqueta" class="form-control" placeholder="Ej: Mi Casa, Oficina..." />
-                                    <span asp-validation-for="NuevaDireccion.Etiqueta" class="text-danger small"></span>
+                                <div class="text-end mt-4">
+                                    <button type="button" id="btnContinuarAlPago" class="btn btn-primary px-4" disabled
+                                            data-bs-toggle="collapse" data-bs-target="#panelPago">
+                                        Continuar al pago <i class="bi bi-arrow-right ms-1"></i>
+                                    </button>
                                 </div>
-
-                                <div class="row">
-                                    <div class="col-md-5 mb-3">
-                                        <label asp-for="NuevaDireccion.Provincia" class="form-label">Provincia</label>
-                                        <select id="selectProvincia" asp-for="NuevaDireccion.Provincia" class="form-select">
-                                            <option value="">Seleccione una provincia...</option>
-                                        </select>
-                                        <span asp-validation-for="NuevaDireccion.Provincia" class="text-danger small"></span>
-                                    </div>
-
-                                    <div class="col-md-4 mb-3">
-                                        <label asp-for="NuevaDireccion.Localidad" class="form-label">Localidad</label>
-                                        <select id="selectLocalidad" asp-for="NuevaDireccion.Localidad" class="form-select" disabled>
-                                            <option value="">Primero elija una provincia...</option>
-                                        </select>
-                                        <span asp-validation-for="NuevaDireccion.Localidad" class="text-danger small"></span>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label asp-for="NuevaDireccion.CodigoPostal" class="form-label"></label>
-                                        <input asp-for="NuevaDireccion.CodigoPostal" class="form-control" />
-                                        <span asp-validation-for="NuevaDireccion.CodigoPostal" class="text-danger small"></span>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-8 mb-3">
-                                        <label asp-for="NuevaDireccion.Calle" class="form-label"></label>
-                                        <input asp-for="NuevaDireccion.Calle" class="form-control" />
-                                        <span asp-validation-for="NuevaDireccion.Calle" class="text-danger small"></span>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label asp-for="NuevaDireccion.Numero" class="form-label"></label>
-                                        <input asp-for="NuevaDireccion.Numero" class="form-control" />
-                                        <span asp-validation-for="NuevaDireccion.Numero" class="text-danger small"></span>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="NuevaDireccion.Piso" class="form-label"></label>
-                                        <input asp-for="NuevaDireccion.Piso" class="form-control" />
-                                        <span asp-validation-for="NuevaDireccion.Piso" class="text-danger small"></span>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="NuevaDireccion.Departamento" class="form-label"></label>
-                                        <input asp-for="NuevaDireccion.Departamento" class="form-control" />
-                                        <span asp-validation-for="NuevaDireccion.Departamento" class="text-danger small"></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label asp-for="NuevaDireccion.Observaciones" class="form-label"></label>
-                                <textarea asp-for="NuevaDireccion.Observaciones" class="form-control" rows="3"
-                                          placeholder="Ej: Portón blanco, el timbre no funciona, entregar a portería..."></textarea>
-                                <span asp-validation-for="NuevaDireccion.Observaciones" class="text-danger small"></span>
                             </div>
                         </div>
                     </div>
+
+                    @* PASO 2: PAGO *@
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelPago" aria-expanded="false">
+                                <i class="bi bi-credit-card me-2"></i>
+                                <span class="fw-bold">2 · Método de pago</span>
+                            </button>
+                        </h2>
+                        <div id="panelPago" class="accordion-collapse collapse" data-bs-parent="#acordeonCheckout">
+                            <div class="accordion-body">
+                                <div class="d-flex flex-column gap-2">
+                                    @* El fondo va en un wrapper: el .form-check mantiene el
+                                       padding-left default de Bootstrap (1.5em) y el radio queda
+                                       adentro del rectángulo (con el bg encima, el input flotado
+                                       con margen -1.5em se iba afuera del borde). *@
+                                    <div class="bg-body-tertiary rounded-2 p-3">
+                                        <div class="form-check m-0">
+                                            <input class="form-check-input" type="radio" asp-for="MetodoPagoId"
+                                                   value="@MetodoPagoId.MercadoPago" id="metodoMp" />
+                                            <label class="form-check-label fw-semibold" for="metodoMp">
+                                                Mercado Pago
+                                                <small class="d-block text-muted fw-normal">Tarjeta, d&eacute;bito y cuotas con proceso autom&aacute;tico</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="bg-body-tertiary rounded-2 p-3">
+                                        <div class="form-check m-0">
+                                            <input class="form-check-input" type="radio" asp-for="MetodoPagoId"
+                                                   value="@MetodoPagoId.Transferencia" id="metodoTransferencia" />
+                                            <label class="form-check-label fw-semibold" for="metodoTransferencia">
+                                                Transferencia bancaria
+                                                <small class="d-block text-muted fw-normal">Te mostramos el CBU y sub&iacute;s el comprobante</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" id="btnConfirmarCompra" class="btn btn-success w-100 mt-4 fw-semibold" disabled>
+                                    <i class="bi bi-check2-circle me-2 fs-5"></i>
+                                    Confirmar compra
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
             <div class="col-md-4">
-                <div class="bg-body-tertiary rounded-3 shadow-sm p-4 border">
+                @* data-subtotal alimenta el total en vivo del JS (subtotal server + envío cotizado). *@
+                <div class="bg-body-tertiary rounded-3 shadow-sm p-4 border" data-subtotal="@Model.SubTotal">
                     <h3 class="h5 fw-semibold pb-3 border-bottom">Resumen del pedido</h3>
                     <div class="card-body">
                         @foreach (var item in Model.Items)
@@ -193,7 +266,7 @@
                         }
                         <div class="d-flex justify-content-between">
                             <span>Subtotal</span>
-                            <strong>$@Model.SubTotal</strong>
+                            <strong>@Model.SubTotal.ToString("C0")</strong>
                         </div>
                         <div class="d-flex justify-content-between mt-2">
                             <span>Envío</span>
@@ -202,9 +275,29 @@
                         <hr />
                         <div class="d-flex justify-content-between fs-5 text-primary">
                             <span>Total</span>
-                            <strong>$@Model.Total</strong>
+                            <strong id="textoTotal">@Model.Total.ToString("C0")</strong>
                         </div>
-                        <button id="btnConfirmarPedido" type="submit" class="btn btn-success w-100 mt-4" disabled>Ir a confirmar pedido</button>
+                    </div>
+
+                    <h6 class="card-subtitle mt-4 mb-3 text-secondary fw-bold text-uppercase text-center" style="letter-spacing: 1px; font-size: 0.75rem;">
+                        Pagás de forma segura con:
+                    </h6>
+                    <div class="d-flex flex-wrap gap-2 justify-content-center align-items-center">
+                        <div class="bg-body-tertiary rounded-2 p-2 d-flex align-items-center justify-content-center" style="width: 55px; height: 40px;">
+                            <img src="~/img/logos/visa_logo.svg" alt="Visa" class="img-fluid grayscale-filter">
+                        </div>
+
+                        <div class="bg-body-tertiary rounded-2 p-2 d-flex align-items-center justify-content-center" style="width: 55px; height: 40px;">
+                            <img src="~/img/logos/mastercard_logo.svg" alt="MasterCard" class="img-fluid grayscale-filter">
+                        </div>
+
+                        <div class="bg-body-tertiary rounded-2 d-flex align-items-center justify-content-center" style="width: 75px; height: 40px;">
+                            <img src="~/img/logos/mercado_pago_logo_horizontal.svg" alt="Mercado Pago" class="img-fluid grayscale-filter">
+                        </div>
+
+                        <div class="bg-body-tertiary rounded-2 p-2 d-flex align-items-center justify-content-center text-muted" style="width: 55px; height: 40px;">
+                            <i class="bi bi-bank fs-5"></i>
+                        </div>
                     </div>
                 </div>
             </div>

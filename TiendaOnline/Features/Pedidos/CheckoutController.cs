@@ -70,242 +70,35 @@ namespace TiendaOnline.Features.Pedidos
                 return RedirectToAction("Index", "Carritos");
             }
 
-            var subtotal = items.Sum(i => i.Precio * i.Cantidad);
-
-            var direcciones = await _direccionService.ObtenerDireccionesAsync(ObtenerUsuarioId(), HttpContext.RequestAborted);
-
             var viewModel = new CheckOutViewModel
             {
-                DireccionesGuardadas = direcciones.Select(d => new DireccionGuardadaViewModel
-                {
-                    DireccionId = d.DireccionId,
-                    Etiqueta = d.Etiqueta,
-                    Calle = d.Calle,
-                    Numero = d.Numero,
-                    Piso = d.Piso,
-                    Departamento = d.Departamento,
-                    Localidad = d.Localidad,
-                    Provincia = d.Provincia,
-                    CodigoPostal = d.CodigoPostal
-                }).ToList(),
-                Items = items.Select(i => new CheckOutItemViewModel
-                {
-                    ProductoId = i.ProductoId,
-                    Nombre = i.Nombre,
-                    Precio = i.Precio,
-                    PrecioLista = i.PrecioLista,
-                    Cantidad = i.Cantidad,
-                    ImagenUrl = i.ImagenUrl
-                }).ToList(),
-                SubTotal = subtotal,
-                CostoEnvio = 0
+                DireccionesGuardadas = MapearDireccionesGuardadas(
+                    await _direccionService.ObtenerDireccionesAsync(ObtenerUsuarioId(), HttpContext.RequestAborted)),
+                Items = MapearItems(items),
+                SubTotal = items.Sum(i => i.Precio * i.Cantidad),
+                CostoEnvio = 0, // display: el JS lo cotiza en vivo; el server re-cotiza al POST
+                MetodoPagoId = MetodoPagoId.MercadoPago // pre-seleccionado como en la vista
             };
 
             return View(viewModel);
         }
 
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [EnableRateLimiting("checkout")]
-        public async Task<IActionResult> ProcesarCheckout(CheckOutViewModel model)
-        {
-            // RECARGAR DATOS DEL CARRITO (Vital para que no se pierdan los Items)
-            var carritoItems = await _carritoService.ObtenerAsync();
-
-            // Mapeamos los items del servicio al ViewModel porque el POST los trajo nulos
-            model.Items = carritoItems.Select(i => new CheckOutItemViewModel
-            {
-                ProductoId = i.ProductoId,
-                Nombre = i.Nombre,
-                Precio = i.Precio,
-                PrecioLista = i.PrecioLista,
-                Cantidad = i.Cantidad,
-                ImagenUrl = i.ImagenUrl
-            }).ToList();
-
-            model.SubTotal = model.Items.Sum(i => i.Precio * i.Cantidad);
-
-            // El costo de envío sale de la tabla de zonas (editable del panel); retiro local = $0.
-            model.CostoEnvio = 0;
-            if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio)
-            {
-                var provincia = await ObtenerProvinciaDeEntregaAsync(model);
-                if (!string.IsNullOrWhiteSpace(provincia))
-                {
-                    var cotizacion = await _envioQueryService.CotizarEnvioAsync(provincia, HttpContext.RequestAborted);
-                    if (cotizacion.Permitida)
-                    {
-                        model.CostoEnvio = cotizacion.Costo;
-                    }
-                    else
-                    {
-                        ModelState.AddModelError("", $"No hacemos envíos a {provincia}. Elegí otra dirección o retirá en el local.");
-                    }
-                }
-                else if (model.DireccionSeleccionadaId != null)
-                {
-                    // El id vino del POST y la dirección no quedó accesible (borrada
-                    // o ajena a este usuario): frenamos el checkout con mensaje claro
-                    // — nunca pasa con costo 0 fingiendo que la dirección vale.
-                    ModelState.AddModelError("", "La dirección seleccionada ya no está disponible. Elegí otra en el checkout.");
-                }
-                // Sin provincia por dirección nueva incompleta: el costo queda en 0 y la
-                // validación de ModelState ya exige la dirección como antes.
-            }
-
-            // Si es retiro en local, ignoramos la validación de la dirección
-            if (model.MetodoEntrega == MetodoEntrega.RetiroLocal)
-            {
-                // Eliminamos todos los errores que empiecen con "NuevaDireccion"
-                foreach (var key in ModelState.Keys.Where(k => k.StartsWith("NuevaDireccion")).ToList())
-                {
-                    ModelState.Remove(key);
-                }
-
-                // También si tienes validación para la dirección guardada
-                ModelState.Remove(nameof(model.DireccionSeleccionadaId));
-            }
-
-            // Lógica de validación
-            if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio)
-            {
-                // SI ELIGIÓ UNA GUARDADA: Ignoramos los errores de validación de la "NuevaDireccion"
-                if (model.DireccionSeleccionadaId != null)
-                {
-                    // Buscamos todas las llaves que empiecen con "NuevaDireccion" y las removemos del ModelState
-                    var keysToRemove = ModelState.Keys.Where(k => k.StartsWith("NuevaDireccion")).ToList();
-                    foreach (var key in keysToRemove)
-                    {
-                        ModelState.Remove(key);
-                    }
-                }
-                else if (string.IsNullOrEmpty(model.NuevaDireccion?.Calle))
-                {
-                    ModelState.AddModelError("", "Debes seleccionar o ingresar una dirección.");
-                }
-            }
-
-            if (!ModelState.IsValid)
-            {
-                // Si hay errores, las direcciones guardadas también se pierden, hay que recargarlas
-                var dir = await _direccionService.ObtenerDireccionesAsync(ObtenerUsuarioId(), HttpContext.RequestAborted);
-                model.DireccionesGuardadas = dir.Select(d => new DireccionGuardadaViewModel
-                {
-                    DireccionId = d.DireccionId,
-                    Etiqueta = d.Etiqueta,
-                    Calle = d.Calle,
-                    Numero = d.Numero
-                }).ToList();
-
-                return View("CheckOut", model);
-            }
-
-            var modelJson = System.Text.Json.JsonSerializer.Serialize(model);
-            TempData[TempDataKeys.CheckOutTemp] = modelJson;
-            return RedirectToAction("Confirmacion");
-        }
-
-        // Confirmación es la segunda etapa de un checkout de usuario logueado (el POST
-        // anterior ya lo exige): sin [Authorize] un anónimo con TempData podrían caer
-        // a 500 en vez de al login. Ownership server-side del domicilio: el id viaja
-        // en el POST y NO es autorización — la dirección se lee solo del usuario
-        // logueado (ObtenerDelUsuarioAsync). Ajena/borrada → aviso y de vuelta al
-        // checkout; nunca se muestra un domicilio ajeno.
-        [Authorize]
-        [HttpGet("[action]")]
-        public async Task<IActionResult> Confirmacion()
-        {
-            var modelJson = TempData[TempDataKeys.CheckOutTemp] as string;
-            if (string.IsNullOrEmpty(modelJson))
-                return RedirectToAction("CheckOut");
-
-            var model = System.Text.Json.JsonSerializer.Deserialize<CheckOutViewModel>(modelJson);
-            if (model == null)
-                return RedirectToAction("CheckOut");
-
-            var carritoItems = await _carritoService.ObtenerAsync();
-
-            var nombre = User.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
-            var apellido = User.FindFirstValue(ClaimTypes.Surname) ?? string.Empty;
-            var email = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
-            var telefono = User.FindFirstValue(ClaimTypes.MobilePhone) ?? string.Empty;
-
-            var viewModel = new ConfirmacionPedidoViewModel
-            {
-                Items = carritoItems,
-                SubTotal = model.SubTotal,
-                CostoEnvio = model.CostoEnvio,
-                MetodoEntrega = model.MetodoEntrega,
-                NombreUsuario = $"{nombre} {apellido}",
-                EmailUsuario = email,
-                TelefonoUsuario = telefono
-            };
-
-            // Lógica para la dirección a mostrar
-            if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio)
-            {
-                if (model.DireccionSeleccionadaId != null)
-                {
-                    var dir = await _direccionService.ObtenerDelUsuarioAsync(
-                        model.DireccionSeleccionadaId.Value, ObtenerUsuarioId(), HttpContext.RequestAborted);
-                    if (dir == null)
-                    {
-                        TempData.SetMensajeError("La dirección seleccionada ya no está disponible. Elegí otra en el checkout.");
-                        return RedirectToAction("CheckOut");
-                    }
-
-                    viewModel.Direccion = new DireccionCheckOut
-                    {
-                        EsNueva = false,
-                        Etiqueta = dir.Etiqueta,
-                        Provincia = dir.Provincia,
-                        Localidad = dir.Localidad,
-                        CodigoPostal = dir.CodigoPostal,
-                        Calle = dir.Calle,
-                        Numero = dir.Numero,
-                        Piso = dir.Piso,
-                        Departamento = dir.Departamento,
-                        Observaciones = dir.Observaciones ?? string.Empty
-                    };
-                }
-                else
-                {
-                    var d = model.NuevaDireccion;
-                    viewModel.Direccion = new DireccionCheckOut
-                    {
-                        EsNueva = true,
-                        Etiqueta = d.Etiqueta,
-                        Provincia = d.Provincia,
-                        Localidad = d.Localidad,
-                        CodigoPostal = d.CodigoPostal,
-                        Calle = d.Calle,
-                        Numero = d.Numero,
-                        Piso = d.Piso,
-                        Departamento = d.Departamento,
-                        Observaciones = d.Observaciones ?? string.Empty
-                    };
-                }
-            }
-
-            return View(viewModel);
-        }
-
+        // Wizard de una sola página: entrega + pago en un único POST (el paso de
+        // Confirmación desapareció). El carrito vivo del service es la única fuente
+        // de items: el POST no trae productos, ni precios, ni dinero.
         [Authorize]
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting("checkout")]
-        public async Task<IActionResult> FinalizarCompra(ConfirmacionPedidoViewModel model, MetodoPagoId metodoDePagoId)
+        public async Task<IActionResult> FinalizarCompra(CheckOutViewModel model)
         {
             var usuarioId = ObtenerUsuarioId();
 
-            // Recargamos los items del carrito (vital porque el POST no los envía)
             var carritoItems = await _carritoService.ObtenerAsync();
-
-            if (model == null || carritoItems == null || !carritoItems.Any())
+            if (carritoItems == null || carritoItems.Count == 0)
             {
-                TempData.SetMensajeError("La sesión de compra expiró o los datos son inválidos.");
-                return RedirectToAction("CheckOut");
+                TempData.SetMensajeError("Tu carrito está vacío.");
+                return RedirectToAction("Index", "Carritos");
             }
 
             // Última barrera antes de cobrar: stock y precio recién refrescados contra BD
@@ -323,26 +116,65 @@ namespace TiendaOnline.Features.Pedidos
                 return RedirectToAction("Index", "Carritos");
             }
 
-            // Releemos el carrito YA refrescado por la validación (precio vigente)
+            // Recién acá leemos el carrito YA refrescado por la validación (precio vigente)
             carritoItems = await _carritoService.ObtenerAsync();
 
-            // Para envío a domicilio, la dirección es obligatoria
-            if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio && model.Direccion == null)
+            // Retiro en local no exige dirección; envío a domicilio exige una guardada
+            // o una nueva con datos (los campos de la otra rama salen del ModelState).
+            if (model.MetodoEntrega == MetodoEntrega.RetiroLocal)
             {
-                TempData.SetMensajeError("La dirección de envío es requerida.");
-                return RedirectToAction("CheckOut");
+                QuitarErroresDeNuevaDireccion();
+                ModelState.Remove(nameof(model.DireccionSeleccionadaId));
+            }
+            else if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio)
+            {
+                if (model.DireccionSeleccionadaId != null)
+                {
+                    QuitarErroresDeNuevaDireccion();
+                }
+                else if (string.IsNullOrEmpty(model.NuevaDireccion?.Calle))
+                {
+                    ModelState.AddModelError(string.Empty, "Debes seleccionar o ingresar una dirección.");
+                }
             }
 
-            // El precio nunca lo define el POST: el costo de envío se re-cotiza acá
-            // contra la zona y de este valor sale el Total del pedido que se cobra.
+            // El default del enum (0) no es un método real: exigimos uno conocido.
+            if (model.MetodoPagoId is not (MetodoPagoId.MercadoPago or MetodoPagoId.Transferencia))
+            {
+                ModelState.AddModelError(nameof(model.MetodoPagoId), "Seleccioná un método de pago.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                // Items y direcciones no viajan en el POST: se recargan para re-renderizar.
+                return await VistaConDatosRecargadosAsync(model);
+            }
+
+            // Dirección de entrega: guardada → leída del usuario en la BD (ownership
+            // server-side; el id del POST no es autorización); nueva → los datos del
+            // form. El costo de envío NUNCA lo define el POST: se re-cotiza acá contra
+            // la zona y de este valor sale el Total del pedido que se cobra.
+            DireccionDeEntrega? entrega = null;
             decimal costoEnvio = 0;
             if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio)
             {
-                var cotizacion = await _envioQueryService.CotizarEnvioAsync(model.Direccion?.Provincia, HttpContext.RequestAborted);
+                entrega = model.DireccionSeleccionadaId != null
+                    ? await LeerDireccionGuardadaAsync(model.DireccionSeleccionadaId.Value, usuarioId)
+                    : DireccionDeEntrega.DelFormulario(model.NuevaDireccion!);
+
+                if (entrega == null)
+                {
+                    // Guardada borrada o ajena a este usuario: frenamos con mensaje
+                    // claro — nunca pasamos con costo 0 fingiendo que la dirección vale.
+                    TempData.SetMensajeError("La dirección seleccionada ya no está disponible. Elegí otra en el checkout.");
+                    return RedirectToAction(nameof(CheckOut));
+                }
+
+                var cotizacion = await _envioQueryService.CotizarEnvioAsync(entrega.Provincia, HttpContext.RequestAborted);
                 if (!cotizacion.Permitida)
                 {
-                    TempData.SetMensajeError($"No hacemos envíos a {model.Direccion?.Provincia}. Vuelve al checkout y elegí retiro en el local u otra dirección.");
-                    return RedirectToAction("CheckOut");
+                    TempData.SetMensajeError($"No hacemos envíos a {entrega.Provincia}. Vuelve al checkout y elegí retiro en el local u otra dirección.");
+                    return RedirectToAction(nameof(CheckOut));
                 }
                 costoEnvio = cotizacion.Costo;
             }
@@ -350,16 +182,16 @@ namespace TiendaOnline.Features.Pedidos
             var dto = new CrearPedidoDto
             {
                 UsuarioId = usuarioId,
-                MetodoDePagoId = (int)metodoDePagoId,
+                MetodoDePagoId = (int)model.MetodoPagoId,
                 EsEnvioADomicilio = model.MetodoEntrega == MetodoEntrega.EnvioDomicilio,
-                EnvioCalle = model.Direccion?.Calle,
-                EnvioNumero = model.Direccion?.Numero,
-                EnvioPiso = model.Direccion?.Piso,
-                EnvioDepartamento = model.Direccion?.Departamento,
-                EnvioObservaciones = model.Direccion?.Observaciones,
-                EnvioLocalidad = model.Direccion?.Localidad,
-                EnvioProvincia = model.Direccion?.Provincia,
-                EnvioCodigoPostal = model.Direccion?.CodigoPostal,
+                EnvioCalle = entrega?.Calle,
+                EnvioNumero = entrega?.Numero,
+                EnvioPiso = entrega?.Piso,
+                EnvioDepartamento = entrega?.Departamento,
+                EnvioObservaciones = entrega?.Observaciones,
+                EnvioLocalidad = entrega?.Localidad,
+                EnvioProvincia = entrega?.Provincia,
+                EnvioCodigoPostal = entrega?.CodigoPostal,
                 CostoEnvio = costoEnvio,
                 Items = carritoItems.Select(i => new CrearPedidoDetalleDto
                 {
@@ -374,25 +206,25 @@ namespace TiendaOnline.Features.Pedidos
                 // Crear el pedido en BD
                 var pedido = await _creacionPedidoService.CrearPedidoYPrepararPagoAsync(dto, HttpContext.RequestAborted);
 
-                if (model.MetodoEntrega == MetodoEntrega.EnvioDomicilio && model.Direccion?.EsNueva == true)
+                // Solo la dirección cargada nueva se guarda en el perfil; la guardada ya vive ahí.
+                if (entrega != null && entrega.EsNueva)
                 {
-                    // Si es envío a domicilio, guardamos la dirección para el usuario
                     await _direccionService.GuardarDireccionAsync(usuarioId, new DireccionDto
                     {
-                        Etiqueta = model.Direccion.Etiqueta,
-                        Calle = model.Direccion.Calle,
-                        Numero = model.Direccion.Numero,
-                        Piso = model.Direccion.Piso,
-                        Departamento = model.Direccion.Departamento,
-                        Localidad = model.Direccion.Localidad,
-                        Provincia = model.Direccion.Provincia,
-                        CodigoPostal = model.Direccion.CodigoPostal,
-                        Observaciones = model.Direccion.Observaciones
+                        Etiqueta = entrega.Etiqueta,
+                        Calle = entrega.Calle,
+                        Numero = entrega.Numero,
+                        Piso = entrega.Piso,
+                        Departamento = entrega.Departamento,
+                        Localidad = entrega.Localidad,
+                        Provincia = entrega.Provincia,
+                        CodigoPostal = entrega.CodigoPostal,
+                        Observaciones = entrega.Observaciones
                     }, HttpContext.RequestAborted);
                 }
 
-                // Si el método es Mercado Pago (ID 1), generamos link y salimos
-                if (metodoDePagoId == MetodoPagoId.MercadoPago)
+                // Mercado Pago: generamos link y salimos
+                if (model.MetodoPagoId == MetodoPagoId.MercadoPago)
                 {
                     var urlPago = await _paymentService.GenerarPreferenciaPagoAsync(pedido, HttpContext.RequestAborted);
                     return Redirect(urlPago);
@@ -418,6 +250,102 @@ namespace TiendaOnline.Features.Pedidos
             }
         }
 
+        // Datos de la entrega a domicilio: de una dirección guardada (leída del
+        // usuario logueado — ajena/borrada → null y el caller informa) o de la
+        // nueva que el usuario completó en el form. EsNueva decide si al cerrar el
+        // pedido la dirección se guarda en el perfil.
+        private sealed record DireccionDeEntrega(
+            bool EsNueva,
+            string Etiqueta,
+            string Calle,
+            string Numero,
+            string? Piso,
+            string? Departamento,
+            string Localidad,
+            string Provincia,
+            string CodigoPostal,
+            string? Observaciones)
+        {
+            public static DireccionDeEntrega DelFormulario(CheckOutDatosViewModel d) => new(
+                EsNueva: true,
+                Etiqueta: d.Etiqueta,
+                Calle: d.Calle,
+                Numero: d.Numero,
+                Piso: d.Piso,
+                Departamento: d.Departamento,
+                Localidad: d.Localidad,
+                Provincia: d.Provincia,
+                CodigoPostal: d.CodigoPostal,
+                Observaciones: d.Observaciones ?? string.Empty);
+        }
+
+        // Dirección guardada del usuario logueado: ajena/borrada → null (el caller
+        // informa con mensaje amable). El id que decide es el del POST pero la
+        // lectura solo alcanza sus direcciones.
+        private async Task<DireccionDeEntrega?> LeerDireccionGuardadaAsync(int direccionId, int usuarioId)
+        {
+            var dir = await _direccionService.ObtenerDelUsuarioAsync(direccionId, usuarioId, HttpContext.RequestAborted);
+            return dir == null ? null : new DireccionDeEntrega(
+                EsNueva: false,
+                Etiqueta: dir.Etiqueta,
+                Calle: dir.Calle,
+                Numero: dir.Numero,
+                Piso: dir.Piso,
+                Departamento: dir.Departamento,
+                Localidad: dir.Localidad,
+                Provincia: dir.Provincia,
+                CodigoPostal: dir.CodigoPostal,
+                Observaciones: dir.Observaciones ?? string.Empty);
+        }
+
+        private void QuitarErroresDeNuevaDireccion()
+        {
+            foreach (var key in ModelState.Keys.Where(k => k.StartsWith("NuevaDireccion")).ToList())
+            {
+                ModelState.Remove(key);
+            }
+        }
+
+        // Re-render del wizard con errores de ModelState: items del carrito y
+        // direcciones del perfil se recargan (el POST no los trae).
+        private async Task<IActionResult> VistaConDatosRecargadosAsync(CheckOutViewModel model)
+        {
+            var items = await _carritoService.ObtenerAsync() ?? new List<ItemCarrito>();
+            model.Items = MapearItems(items);
+            model.SubTotal = items.Sum(i => i.Precio * i.Cantidad);
+            model.CostoEnvio = 0; // display: sin re-cotización en el re-render
+
+            model.DireccionesGuardadas = MapearDireccionesGuardadas(
+                await _direccionService.ObtenerDireccionesAsync(ObtenerUsuarioId(), HttpContext.RequestAborted));
+
+            return View("CheckOut", model);
+        }
+
+        private static List<CheckOutItemViewModel> MapearItems(List<ItemCarrito> items)
+            => items.Select(i => new CheckOutItemViewModel
+            {
+                ProductoId = i.ProductoId,
+                Nombre = i.Nombre,
+                Precio = i.Precio,
+                PrecioLista = i.PrecioLista,
+                Cantidad = i.Cantidad,
+                ImagenUrl = i.ImagenUrl
+            }).ToList();
+
+        private static List<DireccionGuardadaViewModel> MapearDireccionesGuardadas(List<DireccionDto> direcciones)
+            => direcciones.Select(d => new DireccionGuardadaViewModel
+            {
+                DireccionId = d.DireccionId,
+                Etiqueta = d.Etiqueta,
+                Calle = d.Calle,
+                Numero = d.Numero,
+                Piso = d.Piso,
+                Departamento = d.Departamento,
+                Localidad = d.Localidad,
+                Provincia = d.Provincia,
+                CodigoPostal = d.CodigoPostal
+            }).ToList();
+
         // Mensaje único para TempData: lista los productos con stock insuficiente y cuánto quedó.
         private static string ArmarMensajeStockInsuficiente(List<StockInsuficienteDto> itemsSinStock)
             => "Hay productos con stock insuficiente: "
@@ -427,23 +355,6 @@ namespace TiendaOnline.Features.Pedidos
                        ? $"{i.Nombre} (sin stock)"
                        : $"{i.Nombre} (quedan {i.StockDisponible})"))
                + ". Revisá tu carrito para ajustar cantidades.";
-
-        // Provincia de la dirección de entrega: guardada (la leemos de la DB, no del POST)
-        // o nueva (la que el usuario completó en el formulario del checkout).
-        private async Task<string?> ObtenerProvinciaDeEntregaAsync(CheckOutViewModel model)
-        {
-            if (model.DireccionSeleccionadaId != null)
-            {
-                // El id viaja en el POST (no es autorización): la dirección se lee solo
-                // del usuario logueado (ObtenerDelUsuarioAsync). Ajena/borrada → null,
-                // y el caller lo informa en el ModelState.
-                var dir = await _direccionService.ObtenerDelUsuarioAsync(
-                    model.DireccionSeleccionadaId.Value, ObtenerUsuarioId(), HttpContext.RequestAborted);
-                return dir?.Provincia;
-            }
-
-            return model.NuevaDireccion?.Provincia;
-        }
 
         private int ObtenerUsuarioId()
         {

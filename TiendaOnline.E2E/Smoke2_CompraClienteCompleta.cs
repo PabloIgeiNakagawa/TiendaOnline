@@ -54,24 +54,23 @@ namespace TiendaOnline.E2E
                 await page.ClickAsync("#loginBtn");
                 await page.WaitForURLAsync(new Regex($"^{Regex.Escape(_fixture.BaseUrl)}/$"));
 
-                // Agregar al carrito desde el listado de productos
+                // Agregar al carrito sin cambiar de página (contrato JSON, 08/11):
+                // el server dicta el éxito — el toast lo dice y el badge sube a 1.
                 await page.GotoAsync($"{_fixture.BaseUrl}/Productos");
                 await page.ClickAsync("button:has-text(\"Agregar al carrito\")");
-                await page.WaitForURLAsync("**/Carrito/Index");
-                // El nombre del producto aparece en varios nodos de la página
-                // (título del item y resumen): al primero le alcanza.
-                await Expect(page.GetByText(E2EFixture.NombreProductoTienda).First).ToBeVisibleAsync();
+                await Expect(page.GetByText("Producto agregado al carrito.")).ToBeVisibleAsync();
 
-                // Checkout: retiro en el local (no exige dirección). El radio de
-                // Bootstrap es visualmente oculto: el click lo dispara el label.
+                // Checkout wizard de una sola página: el resumen lista el producto del
+                // carrito vivo; retiro en el local (no exige dirección), continuar al
+                // pago y confirmar directo a FinalizarCompra. El radio de Bootstrap es
+                // visualmente oculto: el click lo dispara el label.
                 await page.GotoAsync($"{_fixture.BaseUrl}/Checkout/CheckOut");
+                await Expect(page.GetByText(E2EFixture.NombreProductoTienda).First).ToBeVisibleAsync();
                 await page.ClickAsync("label[for=\"radioLocal\"]");
-                await Expect(page.Locator("#btnConfirmarPedido")).ToBeEnabledAsync();
-                await page.ClickAsync("#btnConfirmarPedido");
-                await page.WaitForURLAsync("**/Checkout/Confirmacion");
-
-                // Pagar: MP falso pre-seleccionado; vuelve con el payment_id aprobado
-                await page.ClickAsync("button:has-text(\"Confirmar Compra\")");
+                await Expect(page.Locator("#btnContinuarAlPago")).ToBeEnabledAsync();
+                await page.ClickAsync("#btnContinuarAlPago");
+                await Expect(page.Locator("#btnConfirmarCompra")).ToBeEnabledAsync();
+                await page.ClickAsync("#btnConfirmarCompra");
                 await page.WaitForURLAsync("**/Pedidos/PagoExitoso*");
                 await Expect(page.GetByText("¡Pago confirmado exitosamente!")).ToBeVisibleAsync();
 

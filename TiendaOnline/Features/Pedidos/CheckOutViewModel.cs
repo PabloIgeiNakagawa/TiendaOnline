@@ -12,7 +12,9 @@ namespace TiendaOnline.Features.Pedidos
         public decimal Total => SubTotal + CostoEnvio;
 
         // Lógica de Entrega
-        [Required(ErrorMessage = "Seleccioná un método de entrega")]
+        // El guard server-side real es la exigencia de dirección cuando la entrega
+        // es envío a domicilio (FinalizarCompra); [Required] sobre un enum no
+        // valida nada en el binding (default 0 = RetiroLocal).
         public MetodoEntrega MetodoEntrega { get; set; }
 
         // Direcciones
@@ -22,6 +24,11 @@ namespace TiendaOnline.Features.Pedidos
 
         // Si decide cargar una nueva, usamos tu ViewModel actual
         public CheckOutDatosViewModel NuevaDireccion { get; set; } = new();
+
+        // Método de pago (era del paso de Confirmación: el wizard funde ambos pasos
+        // en un solo POST). El guard server-side exige MercadoPago o Transferencia:
+        // el default del enum (0) no es un método válido.
+        public MetodoPagoId MetodoPagoId { get; set; }
     }
 
     public class DireccionGuardadaViewModel

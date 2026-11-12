@@ -1,5 +1,7 @@
 ﻿@model int
-@* Model representa el paso actual: 1, 2, 3 o 4 *@
+@* Model representa el paso actual: 1, 2 o 3 (Carrito → Checkout → Pago).
+   El checkout es un wizard de una sola página: entrega y pago quedaron fundidos
+   en el paso 2, así que el pago directo pasa a ser el paso final. *@
 
 <div class="mb-5 px-3">
     <div class="d-flex align-items-center justify-content-between position-relative">
@@ -26,7 +28,7 @@
         <div class="flex-grow-1 border-top mx-2 @(Model > 1 ? "border-success" : "border-secondary-subtle")"
              style="margin-top: -20px; border-width: 2px !important;"></div>
 
-        @* PASO 2: CHECKOUT *@
+        @* PASO 2: CHECKOUT (entrega + pago en una sola página) *@
         <div class="text-center" style="z-index: 2;">
             <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center shadow-sm
                         @(Model > 2 ? "bg-success text-white" :
@@ -49,15 +51,14 @@
         <div class="flex-grow-1 border-top mx-2 @(Model > 2 ? "border-success" : "border-secondary-subtle")"
              style="margin-top: -20px; border-width: 2px !important;"></div>
 
-        @* PASO 3: CONFIRMACIÓN *@
+        @* PASO 3: PAGO *@
         <div class="text-center" style="z-index: 2;">
             <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center shadow-sm
-                        @(Model > 3 ? "bg-success text-white" :
-                                           Model == 3 ? "bg-primary text-white" : "bg-body-secondary text-secondary")"
+                        @(Model == 3 ? "bg-success text-white shadow" : "bg-body-secondary text-secondary")"
                  style="width:2.8rem; height:2.8rem;">
-                @if (Model > 3)
+                @if (Model == 3)
                 {
-                    <i class="bi bi-check-lg"></i>
+                    <i class="bi bi-credit-card"></i>
                 }
                 else
                 {
@@ -65,29 +66,7 @@
                     <span class="fw-bold">3</span>
                 }
             </div>
-            <h6 class="m-0 small @(Model == 3 ? "fw-bold text-primary" : "fw-semibold text-muted")">Confirmación</h6>
-        </div>
-
-        @* LÍNEA 3 *@
-        <div class="flex-grow-1 border-top mx-2 @(Model > 3 ? "border-success" : "border-secondary-subtle")"
-             style="margin-top: -20px; border-width: 2px !important;"></div>
-
-        @* PASO 4: PAGO *@
-        <div class="text-center" style="z-index: 2;">
-            <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center shadow-sm
-                        @(Model == 4 ? "bg-success text-white shadow" : "bg-body-secondary text-secondary")"
-                 style="width:2.8rem; height:2.8rem;">
-                @if (Model == 4)
-                {
-                    <i class="bi bi-credit-card"></i>
-                }
-                else
-                {
-
-                    <span class="fw-bold">4</span>
-                }
-            </div>
-            <h6 class="m-0 small @(Model == 4 ? "fw-bold text-success" : "fw-semibold text-muted")">Pago</h6>
+            <h6 class="m-0 small @(Model == 3 ? "fw-bold text-success" : "fw-semibold text-muted")">Pago</h6>
         </div>
 
     </div>

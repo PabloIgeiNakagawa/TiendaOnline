@@ -9,8 +9,5 @@ namespace TiendaOnline.Features.Shared
     {
         /// <summary>Mensaje flash (MensajeFlash) — escrito por TempDataExtensions y leído por el parcial.</summary>
         public const string FlashMessage = "FlashMessage";
-
-        /// <summary>Roundtrip del ViewModel del checkout entre ProcesarCheckout y Confirmacion (JSON).</summary>
-        public const string CheckOutTemp = "CheckOutTemp";
     }
 }
