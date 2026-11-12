@@ -33,8 +33,22 @@ jobs:
     - name: 5. Formato (dotnet format)
       run: dotnet format --verify-no-changes
 
-    - name: 6. Compilar proyecto
+    # Gate de CVEs: falla el build si algún paquete (directo o transitivo) de la
+    # sln tiene vulnerabilidad publicada. Hoy los CVEs se cazaban a mano (el PKCS
+    # #13 se vio por aviso del build); acá sale en cada push. Requiere restore.
+    - name: 6. Audit de paquetes vulnerables
+      run: |
+        dotnet list TiendaOnline.sln package --vulnerable --include-transitive --format json > audit.json
+        CVES=$(jq '[.projects[].packages[]? | .vulnerabilities[]?] | length' audit.json)
+        if [ "$CVES" -gt 0 ]; then
+          echo "::error::$CVES paquete(s) vulnerable(s) en la sln — actualizar o limitar"
+          jq -c '.projects[].packages[]? | select((.vulnerabilities // []) | length > 0)' audit.json
+          exit 1
+        fi
+        echo "OK: sin CVEs en la sln"
+
+    - name: 7. Compilar proyecto
       run: dotnet build --no-restore
 
-    - name: 7. Ejecutar Tests
+    - name: 8. Ejecutar Tests
       run: dotnet test --no-build --verbosity normal

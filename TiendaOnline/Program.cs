@@ -3,6 +3,7 @@ using System.Globalization;
 using TiendaOnline.Extensions;
 using TiendaOnline.Filters;
 using TiendaOnline.Hangfire;
+using TiendaOnline.Health;
 using TiendaOnline.Infrastructure.Persistence;
 using Hangfire;
 using TiendaOnline.Application.Pedidos.Commands;
@@ -13,9 +14,7 @@ using Serilog.Events;
 var builder = WebApplication.CreateBuilder(args);
 
 // Cultura única es-AR para TODO el server: la plata y las fechas vierten igual
-// en cualquier pantalla (antes coexistían es-CO escrito a mano en algunas vistas
-// y la cultura por defecto del server en otras). El JS usa es-AR explícito, hoy
-// y siempre, sin depender de esta línea.
+// en cualquier pantalla. El JS usa es-AR explícito, hoy y siempre, sin depender de esta línea.
 var culturaArgentina = new CultureInfo("es-AR");
 CultureInfo.DefaultThreadCurrentCulture = culturaArgentina;
 CultureInfo.DefaultThreadCurrentUICulture = culturaArgentina;
@@ -62,6 +61,11 @@ builder.Services.AddCustomSecurity(builder.Configuration); // Configura Cookies 
 builder.Services.AddBusinessServices(builder.Configuration); // Registra todos tus Services
 builder.Services.AddMemoryCache();
 builder.Services.AddRateLimitingConfig(builder.Environment); // Rate limiting para endpoints críticos
+
+// Health check de /health: app viva = puede leer la base. Lo golpea el paso
+// final del deploy (publish.yml) y cualquier monitor externo.
+builder.Services.AddHealthChecks()
+    .AddCheck<ChequeoDeBaseDeDatos>("db");
 
 // Hash de contraseñas y protección de datos (para tokens, etc.)
 // Llaves de DataProtection persistidas en App_Data del sitio: sobreviven recycles y deploys.
@@ -158,6 +162,10 @@ catch (Exception ex)
 {
     app.Logger.LogError(ex, "No se pudo registrar el job 'cancelar-pedidos-vencidos' (DB no disponible al arrancar). Se re-registra en el próximo boot.");
 }
+
+// Health check del deploy/monitor: GET /health → 200 "Healthy" (con SELECT 1
+// contra la DB) o 503 "Unhealthy". Anónimo a propósito; va antes de las rutas MVC.
+app.MapHealthChecks("/health");
 
 // Ruta por defecto
 app.MapControllerRoute(
