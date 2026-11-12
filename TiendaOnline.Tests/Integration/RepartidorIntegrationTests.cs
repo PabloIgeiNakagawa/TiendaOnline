@@ -35,14 +35,28 @@ namespace TiendaOnline.Tests.Integration
             return coincidencia.Groups[1].Value;
         }
 
-        private static (int PedidoId, int ClienteId, int RepartidorId) SembrarPedido(TestApp app, EstadoPedido estado, string sufijo)
+        private static (int PedidoId, int ClienteId, int RepartidorId) SembrarPedido(TestApp app, EstadoPedido estado, string sufijo,
+            bool envioADomicilio = false, string? telefono = null, DateTime? fechaEnvio = null, DateTime? fechaEntrega = null)
         {
             return app.WithDb(ctx =>
             {
-                var cliente = TestDatabase.SeedUsuario(ctx, $"cliente-reparto-{sufijo}@test.local");
+                var cliente = TestDatabase.SeedUsuario(ctx, $"cliente-reparto-{sufijo}@test.local", telefono: telefono);
                 var repartidor = TestDatabase.SeedUsuario(ctx, $"repartidor-{sufijo}@test.local");
                 var producto = TestDatabase.SeedProducto(ctx);
-                var pedido = TestDatabase.SeedPedido(ctx, cliente, producto, 1, estado: estado);
+                var pedido = TestDatabase.SeedPedido(ctx, cliente, producto, 1, estado: estado,
+                    fechaEnvio: fechaEnvio, fechaEntrega: fechaEntrega);
+
+                if (envioADomicilio)
+                {
+                    // Snapshot de envío cargado en el checkout (el seed por defecto
+                    // arma retiro en local).
+                    pedido.EsEnvioADomicilio = true;
+                    pedido.EnvioCalle = "Calle Falsa";
+                    pedido.EnvioNumero = "123";
+                    pedido.EnvioLocalidad = "La Plata";
+                    pedido.EnvioProvincia = "Buenos Aires";
+                    ctx.SaveChanges();
+                }
 
                 return (pedido.PedidoId, cliente.UsuarioId, repartidor.UsuarioId);
             });
@@ -190,6 +204,91 @@ namespace TiendaOnline.Tests.Integration
             Assert.Equal(HttpStatusCode.Forbidden, fueraDeReparto.StatusCode);
             Assert.Equal(HttpStatusCode.OK, duenoNuevo.StatusCode);
             Assert.Equal(HttpStatusCode.OK, duenoEnviado.StatusCode);
+        }
+
+        // El home del reparto es la herramienta de trabajo del rol: dirección
+        // siempre visible (en móvil vive bajo el cliente), ruta con el GPS del
+        // teléfono, WhatsApp del cliente, items con miniatura y el resumen del día.
+
+        [Fact]
+        public async Task Repartidor_EnvioADomicilio_MuestraDireccionRutaYWhatsApp()
+        {
+            _app.ResetMocks();
+            var s = SembrarPedido(_app, EstadoPedido.Enviado, "envio",
+                envioADomicilio: true, telefono: "+54 9 11 5555-1234");
+
+            var client = _app.CreateClientAs(s.RepartidorId, new[] { "Repartidor" });
+            var html = await (await client.GetAsync("/Repartidor")).Content.ReadAsStringAsync();
+
+            // Dirección armada sin ruido (sin "Piso: N/A")...
+            Assert.Contains("Calle Falsa 123, La Plata, Buenos Aires", html);
+            // ...ruta con GPS del teléfono (destination, sin origin) y chat directo.
+            Assert.Contains("maps/dir/?api=1&amp;destination=Calle%20Falsa", html);
+            Assert.Contains("wa.me/5491155551234", html);
+            // El header de la tabla hereda el tema: sin gris fijo que rompe el modo oscuro.
+            Assert.DoesNotContain("table-light", html);
+        }
+
+        [Fact]
+        public async Task Repartidor_RetiroLocal_MuestraEtiqueta()
+        {
+            // La columna "Entregar en" nunca queda vacía: el retiro tiene su
+            // etiqueta. Que NO ofrezca ruta ni WhatsApp lo cubre el unit test
+            // de RepartidorFilaViewModel (acá la cola comparte DB entre tests).
+            _app.ResetMocks();
+            var s = SembrarPedido(_app, EstadoPedido.Enviado, "retiro");
+
+            var client = _app.CreateClientAs(s.RepartidorId, new[] { "Repartidor" });
+            var html = await (await client.GetAsync("/Repartidor")).Content.ReadAsStringAsync();
+
+            Assert.Contains("Retiro en local", html);
+        }
+
+        [Fact]
+        public async Task Repartidor_Items_MuestranMiniaturaNombreYCantidad()
+        {
+            _app.ResetMocks();
+            var s = SembrarPedido(_app, EstadoPedido.Enviado, "items");
+
+            var client = _app.CreateClientAs(s.RepartidorId, new[] { "Repartidor" });
+            var html = await (await client.GetAsync("/Repartidor")).Content.ReadAsStringAsync();
+
+            Assert.Contains("chip-producto", html);
+            Assert.Contains("https://img.test/producto.png", html);
+            Assert.Contains("× 1", html);
+        }
+
+        [Fact]
+        public async Task Repartidor_ResumenDelDia_CuentaSoloEntregasDeHoy()
+        {
+            _app.ResetMocks();
+            var hoy = SembrarPedido(_app, EstadoPedido.Entregado, "hoy"); // FechaEntrega = ahora
+            var ayer = SembrarPedido(_app, EstadoPedido.Entregado, "ayer",
+                fechaEntrega: DateTime.Now.AddHours(-30));
+            var pendiente = SembrarPedido(_app, EstadoPedido.Enviado, "resumen");
+
+            var client = _app.CreateClientAs(hoy.RepartidorId, new[] { "Repartidor" });
+            var html = await (await client.GetAsync("/Repartidor")).Content.ReadAsStringAsync();
+
+            // El resumen cuenta entregas desde la 00:00, no las últimas 24 h
+            // (el pendiente de la cola varía con el orden de corrida: DB compartida).
+            Assert.Contains("Hoy: 1 entregada · ", html);
+        }
+
+        [Fact]
+        public async Task Repartidor_EnCaminoHace25Horas_SeResalta()
+        {
+            _app.ResetMocks();
+            var colgado = SembrarPedido(_app, EstadoPedido.Enviado, "colgado",
+                fechaEnvio: DateTime.Now.AddHours(-25));
+            var fresco = SembrarPedido(_app, EstadoPedido.Enviado, "fresco"); // salió hace instantes
+
+            var client = _app.CreateClientAs(colgado.RepartidorId, new[] { "Repartidor" });
+            var html = await (await client.GetAsync("/Repartidor")).Content.ReadAsStringAsync();
+
+            Assert.Contains("en camino hace 25 h", html);
+            Assert.Contains("en-camino-colgado", html);
+            Assert.Contains("en camino hace instantes", html);
         }
     }
 }

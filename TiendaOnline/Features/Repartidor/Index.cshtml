@@ -3,76 +3,237 @@
     ViewData[ViewDataKeys.Title] = "Entregas";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h4 class="fw-bold mb-1">Entregas</h4>
-        <p class="text-muted mb-0">Pedidos de la cola de reparto. Entrá al detalle para ver dirección, observaciones e ítems.</p>
+@* Estilos propios de esta página: los chips de producto de la fila y el
+   resaltado de pedidos colgados (en camino hace más de 24 h). *@
+<style>
+    .chip-producto {
+        display: inline-flex;
+        align-items: center;
+        background: var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 2rem;
+        padding: .15rem .5rem .15rem .15rem;
+        gap: .4rem;
+    }
+
+    .chip-producto img {
+        width: 26px;
+        height: 26px;
+        object-fit: cover;
+        border-radius: 1.5rem;
+    }
+
+    .en-camino-colgado {
+        color: var(--bs-danger-text-emphasis);
+        font-weight: 600;
+    }
+</style>
+
+<div class="mb-3">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <h4 class="fw-bold mb-0">Entregas</h4>
+        <span class="badge text-bg-primary rounded-pill px-3 py-2 ms-auto">Hoy: @Model.EntregadasHoy @(Model.EntregadasHoy == 1 ? "entregada" : "entregadas") · @Model.Pendientes.Count @(Model.Pendientes.Count == 1 ? "pendiente" : "pendientes")</span>
     </div>
-    <span class="badge text-bg-primary fs-6">@Model.Pendientes.Count</span>
+    <p class="text-muted small mb-0 mt-1">Tu cola de reparto: primero los más viejos. Tocá el pin para abrir la ruta con tu ubicación.</p>
 </div>
 
 <h6 class="text-uppercase text-muted fw-bold mb-2" style="font-size: .75rem;">Para entregar</h6>
-<div class="card border-0 shadow-sm rounded-3 mb-2">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Pedido</th>
-                    <th>Cliente</th>
-                    <th class="d-none d-md-table-cell">Entregar en</th>
-                    <th class="text-center">Ítems</th>
-                    <th class="text-end">Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Pendientes.Count == 0)
+
+@* Móvil: una tarjeta por pedido, apilada — el reparto trabaja desde el celular
+   y la tabla no entra. La acción principal (Entregado) va full-width. *@
+<div class="d-md-none">
+    @if (Model.Pendientes.Count == 0)
+    {
+        <div class="text-center text-muted py-4">
+            <i class="bi bi-check2-circle me-2"></i>No hay pedidos en camino.
+        </div>
+    }
+    @foreach (var p in Model.Pendientes)
+    {
+        <div class="card mb-3 shadow-sm">
+            <div class="card-header bg-body-tertiary border-bottom-0 py-3 d-flex justify-content-between align-items-start gap-2">
+                <div>
+                    <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@p.PedidoId" class="fw-bold text-decoration-none">#@p.PedidoId.ToString("D6")</a>
+                    <div class="small text-muted">Pedido @p.FechaPedido.ToString("dd/MM/yy HH:mm")</div>
+                </div>
+                @if (p.HaceEnCamino != null)
                 {
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
-                            <i class="bi bi-check2-circle me-2"></i>No hay pedidos en camino. Cuando el panel los marque como "Enviado", aparecen acá.
-                        </td>
-                    </tr>
+                    <span class="badge rounded-pill text-nowrap @(p.EstaColgada ? "text-bg-danger" : "text-bg-secondary")">
+                        <i class="bi bi-clock me-1"></i>@p.HaceEnCamino
+                    </span>
                 }
-                @foreach (var p in Model.Pendientes)
-                {
-                    <tr>
-                        <td>
-                            <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@p.PedidoId" class="fw-bold text-decoration-none">#@p.PedidoId.ToString("D6")</a>
-                            <div class="small text-muted">Pedido @p.FechaPedido.ToString("dd/MM/yyyy HH:mm")</div>
-                        </td>
-                        <td>
-                            @p.NombreCliente
+            </div>
+            <div class="card-body py-3">
+                <!-- Cliente + WhatsApp -->
+                <div class="d-flex justify-content-between align-items-center gap-2">
+                    <div class="lh-sm">
+                        <span class="fw-semibold">@p.NombreCliente</span>
+                        @if (!string.IsNullOrWhiteSpace(p.Telefono))
+                        {
                             <div class="small text-muted"><i class="bi bi-telephone me-1"></i>@p.Telefono</div>
-                        </td>
-                        <td class="d-none d-md-table-cell">
-                            @p.DireccionCompleta
-                            @if (!string.IsNullOrWhiteSpace(p.Observaciones))
-                            {
-                                <div class="small text-muted fst-italic"><i class="bi bi-chat-left-text me-1"></i>@p.Observaciones</div>
-                            }
-                        </td>
-                        <td class="text-center">@p.CantidadItems</td>
-                        <td class="text-end">
-                            <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@p.PedidoId" class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-eye me-1"></i>Ver</a>
-                            <form asp-controller="Repartidor" asp-action="Entregar" asp-route-id="@p.PedidoId" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check-circle me-1"></i>Entregado</button>
-                            </form>
-                        </td>
-                    </tr>
+                        }
+                    </div>
+                    @if (p.LinkWhatsapp != null)
+                    {
+                        <a href="@p.LinkWhatsapp" target="_blank" rel="noopener"
+                           class="btn btn-sm btn-outline-success flex-shrink-0" title="WhatsApp del cliente" aria-label="WhatsApp del cliente">
+                            <i class="bi bi-whatsapp"></i>
+                        </a>
+                    }
+                </div>
+
+                <!-- Dirección + ruta -->
+                <div class="mt-3 d-flex justify-content-between align-items-center gap-2">
+                    <div class="small lh-sm">
+                        <i class="bi bi-geo-alt me-1"></i>@p.DireccionDisplay
+                        @if (!string.IsNullOrWhiteSpace(p.Observaciones))
+                        {
+                            <div class="fst-italic text-muted"><i class="bi bi-chat-left-text me-1"></i>@p.Observaciones</div>
+                        }
+                    </div>
+                    @if (p.LinkComoLlegar != null)
+                    {
+                        <a href="@p.LinkComoLlegar" target="_blank" rel="noopener"
+                           class="btn btn-sm btn-outline-secondary flex-shrink-0" title="Cómo llegar con GPS" aria-label="Cómo llegar con GPS">
+                            <i class="bi bi-geo-alt me-1"></i>Cómo llegar
+                        </a>
+                    }
+                </div>
+
+                <!-- Items -->
+                @if (p.Productos.Count > 0)
+                {
+                    <div class="d-flex flex-wrap gap-1 mt-3">
+                        @foreach (var producto in p.Productos)
+                        {
+                            <span class="chip-producto" title="@producto.Nombre">
+                                <img src="@producto.ImagenUrl" alt="@producto.Nombre">
+                                <span class="small lh-sm">@producto.Nombre <span class="text-muted">× @producto.Cantidad</span></span>
+                            </span>
+                        }
+                    </div>
                 }
-            </tbody>
-        </table>
+            </div>
+            <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                <form asp-controller="Repartidor" asp-action="Entregar" asp-route-id="@p.PedidoId" method="post" class="d-grid">
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-circle me-1"></i>Marcar entregado</button>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+@* Escritorio: la tabla de siempre con todas las columnas. *@
+<div class="d-none d-md-block">
+    <div class="card border-0 shadow-sm rounded-3 mb-2">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Pedido</th>
+                        <th>Cliente</th>
+                        <th>Entregar en</th>
+                        <th>Ítems</th>
+                        <th class="text-end">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Pendientes.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-check2-circle me-2"></i>No hay pedidos en camino. Cuando el panel los marque como "Enviado", aparecen acá.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var p in Model.Pendientes)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@p.PedidoId" class="fw-bold text-decoration-none">#@p.PedidoId.ToString("D6")</a>
+                                <div class="small text-muted">Pedido @p.FechaPedido.ToString("dd/MM/yyyy HH:mm")</div>
+                                @if (p.HaceEnCamino != null)
+                                {
+                                    <div class="small @(p.EstaColgada ? "en-camino-colgado" : "text-muted")">
+                                        <i class="bi bi-clock me-1"></i>en camino @p.HaceEnCamino
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                @p.NombreCliente
+                                <div class="small text-muted"><i class="bi bi-telephone me-1"></i>@p.Telefono</div>
+                            </td>
+                            <td>
+                                @if (p.EsRetiroLocal)
+                                {
+                                    <span class="text-muted"><i class="bi bi-shop me-1"></i>Retiro en local</span>
+                                }
+                                else
+                                {
+                                    <span>@p.DireccionDisplay</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(p.Observaciones))
+                                {
+                                    <div class="small text-muted fst-italic"><i class="bi bi-chat-left-text me-1"></i>@p.Observaciones</div>
+                                }
+                            </td>
+                            <td>
+                                @if (p.Productos.Count == 0)
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                                else
+                                {
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (var producto in p.Productos)
+                                        {
+                                            <span class="chip-producto" title="@producto.Nombre">
+                                                <img src="@producto.ImagenUrl" alt="@producto.Nombre">
+                                                <span class="small lh-sm">@producto.Nombre <span class="text-muted">× @producto.Cantidad</span></span>
+                                            </span>
+                                        }
+                                    </div>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@p.PedidoId"
+                                   class="btn btn-sm btn-outline-secondary" title="Ver detalle del pedido" aria-label="Ver detalle del pedido">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                @if (p.LinkComoLlegar != null)
+                                {
+                                    <a href="@p.LinkComoLlegar" target="_blank" rel="noopener"
+                                       class="btn btn-sm btn-outline-secondary" title="Cómo llegar con GPS" aria-label="Cómo llegar con GPS">
+                                        <i class="bi bi-geo-alt"></i>
+                                    </a>
+                                }
+                                @if (p.LinkWhatsapp != null)
+                                {
+                                    <a href="@p.LinkWhatsapp" target="_blank" rel="noopener"
+                                       class="btn btn-sm btn-outline-success" title="WhatsApp del cliente" aria-label="WhatsApp del cliente">
+                                        <i class="bi bi-whatsapp"></i>
+                                    </a>
+                                }
+                                <form asp-controller="Repartidor" asp-action="Entregar" asp-route-id="@p.PedidoId" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check-circle me-1"></i>Entregado</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<button class="btn btn-link text-decoration-none px-0 mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#historialDelDia" aria-expanded="false" aria-controls="historialDelDia">
+<button class="btn btn-outline-secondary w-100 mt-4" type="button" data-bs-toggle="collapse" data-bs-target="#historialDelDia" aria-expanded="false" aria-controls="historialDelDia">
     <i class="bi bi-chevron-down me-2"></i>Entregados en las últimas 24 horas <span class="badge text-bg-secondary ms-1">@Model.EntregadosUltimoDia.Count</span>
 </button>
 <div class="collapse mt-2" id="historialDelDia">
     <div class="card border-0 shadow-sm rounded-3">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Pedido</th>
                         <th>Cliente</th>
@@ -96,7 +257,10 @@
                             <td>@p.NombreCliente</td>
                             <td class="d-none d-md-table-cell">@p.FechaEntrega?.ToString("dd/MM/yyyy HH:mm")</td>
                             <td class="text-end">
-                                <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@p.PedidoId" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye me-1"></i>Ver</a>
+                                <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@p.PedidoId"
+                                   class="btn btn-sm btn-outline-secondary" title="Ver detalle del pedido" aria-label="Ver detalle del pedido">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                             </td>
                         </tr>
                     }

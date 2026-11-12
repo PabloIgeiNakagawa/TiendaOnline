@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Tests.TestSupport;
+using Hangfire;
 
 namespace TiendaOnline.Tests.Services.Pedidos
 {
@@ -60,6 +61,33 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
             Assert.Equal(EstadoPedido.Entregado, pedidoDb.Estado);
             Assert.NotNull(pedidoDb.FechaEntrega);
+        }
+
+        [Fact]
+        public async Task PedidoEntregado_DesdeEnviado_EncolaAvisoAlCliente()
+        {
+            // Al entregar, el cliente recibe el "Tu pedido fue entregado" por
+            // Hangfire: la cola de email crece en exactamente uno y el job
+            // apunta al caso de uso del aviso de entrega.
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var producto = TestDatabase.SeedProducto(ctx, stock: 5);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 1,
+                estado: EstadoPedido.Enviado);
+            var sut = Sut.EstadosPedido(ctx);
+
+            var api = JobStorage.Current.GetMonitoringApi();
+
+            // Delta contando SOLO los jobs de este aviso: otros tests encolan
+            // otros emails en paralelo, la cola entera no es un contador estable.
+            int jobsDeEntrega() => api.EnqueuedJobs("default", 0, int.MaxValue)
+                .Count(j => j.Value.Job.Method.Name == "EnviarEmailPedidoEntregadoAsync");
+            var antes = jobsDeEntrega();
+
+            await sut.PedidoEntregadoAsync(pedido.PedidoId);
+
+            Assert.Equal(antes + 1, jobsDeEntrega());
         }
 
         [Fact]

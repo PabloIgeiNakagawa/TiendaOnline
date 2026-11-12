@@ -34,14 +34,31 @@ namespace TiendaOnline.Features.Repartidor
         [HttpGet]
         public async Task<IActionResult> Index()
         {
+            var pendientes = await _pedidoQueryService.ObtenerPedidosEnviadosAsync(HttpContext.RequestAborted);
+            var entregadosUltimoDia = await _pedidoQueryService.ObtenerPedidosEntregadosUltimoDiaAsync(HttpContext.RequestAborted);
+
             var model = new RepartidorViewModel
             {
-                Pendientes = await _pedidoQueryService.ObtenerPedidosEnviadosAsync(HttpContext.RequestAborted),
-                EntregadosUltimoDia = await _pedidoQueryService.ObtenerPedidosEntregadosUltimoDiaAsync(HttpContext.RequestAborted)
+                Pendientes = pendientes.Select(MapearFila).ToList(),
+                EntregadosUltimoDia = entregadosUltimoDia.Select(MapearFila).ToList(),
+                EntregadasHoy = entregadosUltimoDia.Count(p => p.FechaEntrega?.Date == DateTime.Today)
             };
 
             return View(model);
         }
+
+        private static RepartidorFilaViewModel MapearFila(PedidoRepartoDto p) => new()
+        {
+            PedidoId = p.PedidoId,
+            NombreCliente = p.NombreCliente,
+            Telefono = p.Telefono,
+            DireccionCompleta = p.DireccionCompleta,
+            Observaciones = p.Observaciones,
+            FechaPedido = p.FechaPedido,
+            FechaEnvio = p.FechaEnvio,
+            FechaEntrega = p.FechaEntrega,
+            Productos = p.Productos
+        };
 
         // El id viaja en la ruta: es el único valor que identifica el pedido a entregar.
         [HttpPost("Entregar/{id:int}")]

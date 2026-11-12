@@ -95,7 +95,8 @@ namespace TiendaOnline.Tests.TestSupport
             return categoria;
         }
 
-        public static Usuario SeedUsuario(TiendaContext ctx, string? email = null, Rol rol = Rol.Usuario)
+        public static Usuario SeedUsuario(TiendaContext ctx, string? email = null, Rol rol = Rol.Usuario,
+            string? telefono = null)
         {
             var usuario = new Usuario
             {
@@ -103,7 +104,8 @@ namespace TiendaOnline.Tests.TestSupport
                 Apellido = "User",
                 Email = email ?? $"user-{Guid.NewGuid():N}@test.local",
                 Contrasena = "hash-fake",
-                Rol = rol
+                Rol = rol,
+                Telefono = telefono
             };
             ctx.Usuarios.Add(usuario);
             ctx.SaveChanges();

@@ -21,7 +21,13 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
         {
             if (p.EsEnvioADomicilio == false) return null;
 
-            return $"{p.EnvioCalle ?? ""} {p.EnvioNumero ?? ""}, Piso: {p.EnvioPiso ?? "N/A"}, Depto: {p.EnvioDepartamento ?? "N/A"}, {p.EnvioLocalidad ?? ""}, {p.EnvioProvincia ?? ""}";
+            // Sin ruido: solo se muestran las partes que el cliente cargó.
+            var calle = $"{p.EnvioCalle ?? ""} {p.EnvioNumero ?? ""}".Trim();
+            var pisoDepto = $"{p.EnvioPiso} {p.EnvioDepartamento}".Trim();
+            var ciudad = $"{p.EnvioLocalidad ?? ""}, {p.EnvioProvincia ?? ""}".Trim(new[] { ' ', ',' });
+
+            var partes = new[] { calle, pisoDepto, ciudad }.Where(x => !string.IsNullOrWhiteSpace(x));
+            return string.Join(", ", partes);
         }
 
         public async Task<List<PedidoListadoUsuarioDto>> ObtenerPedidosDeUsuarioAsync(int id, CancellationToken ct)
@@ -321,12 +327,18 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             {
                 PedidoId = p.PedidoId,
                 FechaPedido = p.FechaPedido,
+                FechaEnvio = p.FechaEnvio,
                 FechaEntrega = p.FechaEntrega,
                 NombreCliente = p.Usuario.Nombre + " " + p.Usuario.Apellido,
                 Telefono = p.Usuario.Telefono,
+                EsEnvioADomicilio = p.EsEnvioADomicilio,
                 DireccionCompleta = FormatearDireccionEnvio(p),
                 Observaciones = p.EnvioObservaciones,
-                CantidadItems = p.DetallesPedido.Sum(d => d.Cantidad)
+                CantidadItems = p.DetallesPedido.Sum(d => d.Cantidad),
+
+                Productos = p.DetallesPedido
+                                .Select(d => new PedidoProductoListadoDto(d.Producto.Nombre, d.Producto.ImagenUrl, d.Cantidad))
+                                .ToList()
             });
         }
 

@@ -1,5 +1,7 @@
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Domain.Entities;
@@ -37,7 +39,9 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
         public async Task PedidoEntregadoAsync(int pedidoId, CancellationToken ct = default)
         {
-            var pedido = await _context.Pedidos.FindAsync(pedidoId, ct);
+            var pedido = await _context.Pedidos
+                .Include(p => p.Usuario) // email y nombre para el aviso de entrega
+                .FirstOrDefaultAsync(p => p.PedidoId == pedidoId, ct);
             if (pedido == null) throw new PedidoNoEncontradoException("Pedido no encontrado.");
 
             if (pedido.Estado != EstadoPedido.Enviado)
@@ -48,6 +52,11 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             // La entrega la marca el reparto (rol Repartidor) o el admin desde el panel;
             // ambos comparten este mismo caso de uso con los mismos guards.
             await _context.SaveChangesAsync(ct);
+
+            // Email tras el save (mismo orden que las transiciones de dinero): el
+            // cliente se entera de que su pedido llegó pase lo que pase después.
+            BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailPedidoEntregadoAsync(
+                pedido.Usuario.Email, pedido.Usuario.Nombre, pedido.PedidoId));
         }
 
         public async Task PedidoCanceladoAsync(int pedidoId, CancellationToken ct = default)
