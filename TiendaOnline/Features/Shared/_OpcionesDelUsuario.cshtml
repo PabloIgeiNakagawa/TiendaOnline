@@ -55,10 +55,12 @@
         </button>
     </li>
     <li>
-        <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger btn-logout">
-            <span class="menu-icono menu-icono-rojo"><i class="bi bi-box-arrow-right"></i></span>
-            Cerrar Sesión
-        </button>
+        <form asp-controller="Accounts" asp-action="Logout" method="post">
+            <button type="submit" class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger btn-logout">
+                <span class="menu-icono menu-icono-rojo"><i class="bi bi-box-arrow-right"></i></span>
+                Cerrar Sesión
+            </button>
+        </form>
     </li>
 }
 else
