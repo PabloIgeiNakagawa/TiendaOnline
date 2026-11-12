@@ -41,9 +41,13 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     p.FechaCancelado,
                     Estado = p.Estado,
                     EstadoPago = p.EstadoPago,
+                    p.MetodoDePagoId,
+                    p.ComprobanteUrl,
+                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio,
+                    CantidadItems = p.DetallesPedido.Sum(d => d.Cantidad),
 
                     Productos = p.DetallesPedido
-                                .Select(d => d.Producto.Nombre)
+                                .Select(d => new PedidoProductoListadoDto(d.Producto.Nombre, d.Producto.ImagenUrl, d.Cantidad))
                                 .ToList()
                 })
                 .ToListAsync(ct);
@@ -57,6 +61,10 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 FechaCancelado = f.FechaCancelado,
                 EstadoId = (int)f.Estado,
                 EstadoPagoId = (int)f.EstadoPago,
+                MetodoPagoId = f.MetodoDePagoId,
+                ComprobanteUrl = f.ComprobanteUrl,
+                Total = f.Total,
+                CantidadItems = f.CantidadItems,
 
                 Productos = f.Productos
             }).ToList();

@@ -5,9 +5,52 @@
     ViewData[ViewDataKeys.Title] = "Mis Pedidos";
 }
 
+@* Estilos propios de esta página: la tarjeta es clickeable entera hacia
+   Detalles (el stretched-link cubre la tarjeta; los links del footer van
+   encima con z-2) y el hover la marca con el azul del tema. *@
+<style>
+    .card-pedido {
+        cursor: pointer;
+        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card-pedido:hover {
+        box-shadow: 0 0.5rem 1.25rem rgba(13, 110, 253, 0.15);
+        border-color: rgba(13, 110, 253, 0.4);
+    }
+</style>
+
 <div class="container-fluid py-4">
     <!-- Titulo -->
     <partial name="_TituloSeccion" model='("Mis pedidos", "Historial completo de tus pedidos")' />
+
+    <!-- Filtro por estado (client-side): MisPedidos.js oculta/muestra sin recargar.
+         El server pre-marca el chip activo (aria-pressed) según ?estado=. -->
+    @if (Model.ConteoTodos > 0)
+    {
+        <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Filtrar pedidos por estado">
+            <button type="button" data-filtro="todos"
+                    class="btn btn-sm rounded-pill fw-semibold px-3 @(string.IsNullOrEmpty(Model.EstadoFiltro) ? "btn-primary" : "btn-outline-primary")"
+                    aria-pressed="@(string.IsNullOrEmpty(Model.EstadoFiltro) ? "true" : "false")">
+                Todos (@Model.ConteoTodos)
+            </button>
+            <button type="button" data-filtro="enCurso"
+                    class="btn btn-sm rounded-pill fw-semibold px-3 @(Model.EstadoFiltro == "enCurso" ? "btn-primary" : "btn-outline-primary")"
+                    aria-pressed="@(Model.EstadoFiltro == "enCurso" ? "true" : "false")">
+                En curso (@Model.ConteoEnCurso)
+            </button>
+            <button type="button" data-filtro="entregados"
+                    class="btn btn-sm rounded-pill fw-semibold px-3 @(Model.EstadoFiltro == "entregados" ? "btn-primary" : "btn-outline-primary")"
+                    aria-pressed="@(Model.EstadoFiltro == "entregados" ? "true" : "false")">
+                Entregados (@Model.ConteoEntregados)
+            </button>
+            <button type="button" data-filtro="cancelados"
+                    class="btn btn-sm rounded-pill fw-semibold px-3 @(Model.EstadoFiltro == "cancelados" ? "btn-primary" : "btn-outline-primary")"
+                    aria-pressed="@(Model.EstadoFiltro == "cancelados" ? "true" : "false")">
+                Cancelados (@Model.ConteoCancelados)
+            </button>
+        </div>
+    }
 
     <!-- Lista de Pedidos -->
     <div class="row">
@@ -17,116 +60,117 @@
                 {
                     @foreach (var pedido in Model.Pedidos)
                     {
-                        <div class="card mb-4 overflow-hidden">
+                        var ocultaPorFiltro = Model.HayFiltroValido && pedido.GrupoEstado != Model.EstadoFiltro;
+                        <div class="card mb-3 overflow-hidden position-relative card-pedido @(ocultaPorFiltro ? "d-none" : "")" data-estado-grupo="@pedido.GrupoEstado">
+                            @* La tarjeta entera lleva a Detalles; los links del footer
+                               van con position-relative para quedar encima del overlay. *@
+                            <a asp-action="Detalles" asp-route-id="@pedido.PedidoId" class="stretched-link" aria-label="Ver detalles del pedido #@pedido.PedidoId"></a>
+
                             <!-- HEADER -->
-                            <div class="card-header bg-body-tertiary border-bottom-0 py-3">
+                            <div class="card-header bg-body-tertiary border-bottom-0 py-2">
                                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <div>
-                                        <h5 class="fw-bold mb-0">Pedido <span class="text-primary">#@pedido.PedidoId</span></h5>
+                                        <h6 class="fw-bold mb-0">Pedido <span class="text-primary">#@pedido.PedidoId</span></h6>
                                         <small class="text-secondary">@pedido.FechaPedido.ToString("D")</small>
                                     </div>
                                     <div class="d-flex gap-2">
-                                        <span class="badge rounded-pill @(pedido.EstaCancelado ? "bg-danger-subtle text-danger" : "bg-primary-subtle text-primary") border border-primary-subtle px-3 py-2">
+                                        @if (pedido.FaltaComprobante)
+                                        {
+                                            <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
+                                                <i class="bi bi-hourglass-split me-1"></i> Falta comprobante
+                                            </span>
+                                        }
+                                        <span class="badge rounded-pill @(pedido.EstaCancelado ? "bg-danger-subtle text-danger" : "bg-primary-subtle text-primary") border border-primary-subtle px-2 py-1">
                                             @pedido.Estado.GetDisplayName()
                                         </span>
-                                        <span class="badge rounded-pill bg-body-secondary text-body-emphasis border px-3 py-2">
+                                        <span class="badge rounded-pill bg-body-secondary text-body-emphasis border px-2 py-1">
                                             <i class="bi bi-credit-card me-1"></i> @pedido.EstadoPago.GetDisplayName()
                                         </span>
                                     </div>
                                 </div>
                             </div>
+
                             <!-- BODY -->
                             <div class="card-body pb-0 mx-2">
                                 <!-- TIMELINE -->
-                                <div class="mb-4">
-                                    <div class="d-flex flex-row align-items-start align-items-md-center justify-content-between">
-
+                                <div class="mb-3">
+                                    <div class="d-flex flex-row align-items-center justify-content-between">
                                         @{
                                             var pasoActual = 1;
 
-                                            if (pedido.EstaCancelado)
+                                            if (pedido.EstaCancelado || pedido.EstaEntregado)
                                                 pasoActual = 3;
-                                            else if (pedido.EstaEntregado)
-                                                pasoActual = 3;
-                                            else if (pedido.FechaEnvio.HasValue)
+                                            else if (pedido.EstaEnviado)
                                                 pasoActual = 2;
                                         }
 
-                                    <!-- PASO 1 -->
-                                    <div class="text-center flex-fill mb-3 mb-md-0">
-                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center
-                                                @(pasoActual > 1 ? "bg-success text-white" :
-                                                pasoActual == 1 ? "bg-primary text-white" :
-                                                "bg-body-secondary text-secondary")"
-                                            style="width:3rem;height:3rem;">
-                                            <i class="bi bi-cart-check"></i>
+                                        <!-- PASO 1 -->
+                                        <div class="text-center flex-fill">
+                                            <div class="rounded-circle mx-auto mb-1 d-flex align-items-center justify-content-center
+                                                        @(pasoActual > 1 ? "bg-success text-white" :
+                                                        pasoActual == 1 ? "bg-primary text-white" :
+                                                        "bg-body-secondary text-secondary")"
+                                                 style="width:2rem;height:2rem;">
+                                                <i class="bi bi-cart-check small"></i>
+                                            </div>
+                                            <h6 class="m-0 small fw-semibold">Pedido realizado</h6>
+                                            <small class="text-muted d-block">
+                                                @pedido.FechaPedido.ToString("dd/MM/yy HH:mm")
+                                            </small>
                                         </div>
-
-                                        <h6 class="m-0 small fw-semibold">Pedido realizado</h6>
-                                        <small class="text-muted d-block">
-                                            @pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")
-                                        </small>
-                                    </div>
-                                    <!-- Línea 1 -->
-                                    <div class="flex-grow-1 border-top mx-3 d-none d-md-block @(pasoActual > 1 ? "border-success" : "border-secondary")">
-                                    </div>
-                                    <!-- PASO 2 -->
-                                    <div class="text-center flex-fill mb-3 mb-md-0">
-                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center
-                                                    @(pasoActual > 2 ? "bg-success text-white" :
-                                                    pasoActual == 2 ? "bg-primary text-white" :
-                                                    "bg-body-secondary text-secondary")"
-                                         style="width:3rem;height:3rem;">
-                                        <i class="bi bi-truck"></i>
-                                    </div>
-
-                                    @if (pedido.FechaEnvio.HasValue)
+                                        <!-- Línea 1 -->
+                                        <div class="flex-grow-1 border-top mx-2 @(pasoActual > 1 ? "border-success" : "border-secondary")"></div>
+                                        <!-- PASO 2 -->
+                                        <div class="text-center flex-fill">
+                                            <div class="rounded-circle mx-auto mb-1 d-flex align-items-center justify-content-center
+                                                        @(pasoActual > 2 ? "bg-success text-white" :
+                                                        pasoActual == 2 ? "bg-primary text-white" :
+                                                        "bg-body-secondary text-secondary")"
+                                                 style="width:2rem;height:2rem;">
+                                                <i class="bi bi-truck small"></i>
+                                            </div>
+                                            @if (pedido.EstaEnviado)
                                             {
                                                 <h6 class="m-0 small fw-semibold">Enviado</h6>
                                                 <small class="text-muted d-block">
-                                                    @pedido.FechaEnvio.Value.ToString("dd/MM/yyyy HH:mm")
+                                                    @pedido.FechaEnvio!.Value.ToString("dd/MM/yy HH:mm")
                                                 </small>
                                             }
                                             else
                                             {
                                                 <h6 class="m-0 small fw-semibold">Pendiente de envío</h6>
                                             }
-                                    </div>
-                                    <!-- Línea 2 -->
-                                    <div class="flex-grow-1 border-top mx-3 d-none d-md-block
-                                                @(pasoActual == 3 ? (pedido.EstaCancelado ? "border-danger" : "border-success") : "border-secondary")">
-                                    </div>
-                                    <!-- PASO 3 -->
-                                    <div class="text-center flex-fill">
-                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center
-                                                    @(pedido.EstaCancelado ? "bg-danger text-white" :
-                                                    pasoActual == 3 ? "bg-success text-white" :
-                                                    "bg-body-secondary text-secondary")"
-                                         style="width:3rem;height:3rem;">
-
-                                        @if (pedido.EstaCancelado)
+                                        </div>
+                                        <!-- Línea 2 -->
+                                        <div class="flex-grow-1 border-top mx-2 @(pasoActual == 3 ? (pedido.EstaCancelado ? "border-danger" : "border-success") : "border-secondary")"></div>
+                                        <!-- PASO 3 -->
+                                        <div class="text-center flex-fill">
+                                            <div class="rounded-circle mx-auto mb-1 d-flex align-items-center justify-content-center
+                                                        @(pedido.EstaCancelado ? "bg-danger text-white" :
+                                                        pasoActual == 3 ? "bg-success text-white" :
+                                                        "bg-body-secondary text-secondary")"
+                                                 style="width:2rem;height:2rem;">
+                                                @if (pedido.EstaCancelado)
                                                 {
-                                                    <i class="bi bi-x-circle"></i>
+                                                    <i class="bi bi-x-circle small"></i>
                                                 }
                                                 else
                                                 {
-                                                    <i class="bi bi-check-circle"></i>
+                                                    <i class="bi bi-check-circle small"></i>
                                                 }
-
                                             </div>
-
                                             @if (pedido.EstaCancelado)
                                             {
                                                 <h6 class="m-0 small fw-semibold text-danger">Cancelado</h6>
                                                 <small class="text-muted d-block">
-                                                    @pedido.FechaCancelado?.ToString("dd/MM/yyyy HH:mm")
+                                                    @pedido.FechaCancelado?.ToString("dd/MM/yy HH:mm")
                                                 </small>
                                             }
                                             else if (pedido.EstaEntregado)
                                             {
                                                 <h6 class="m-0 small fw-semibold text-success">Entregado</h6>
                                                 <small class="text-muted d-block">
-                                                    @pedido.FechaEntrega?.ToString("dd/MM/yyyy HH:mm")
+                                                    @pedido.FechaEntrega?.ToString("dd/MM/yy HH:mm")
                                                 </small>
                                             }
                                             else
@@ -134,46 +178,81 @@
                                                 <h6 class="m-0 small fw-semibold">Pendiente de entrega</h6>
                                             }
                                         </div>
-
                                     </div>
                                 </div>
 
-                                <hr class="my-4 border-secondary opacity-10">
+                                <hr class="my-2 border-secondary opacity-10">
 
-                                <!-- Productos -->
-                                <div class="px-4 py-3 rounded-bottom-3">
-                                    <h6 class="text-uppercase small fw-bold mb-3 text-secondary-emphasis" style="letter-spacing: 1px;">
+                                <!-- Productos con miniatura -->
+                                <div class="px-2 py-2 rounded-bottom-3">
+                                    <h6 class="text-uppercase small fw-bold mb-2 text-secondary-emphasis" style="letter-spacing: 1px;">
                                         <i class="bi bi-box-seam me-2 text-primary"></i>Productos
                                     </h6>
 
-                                    <div class="row g-2">
+                                    <div class="d-flex flex-wrap gap-2">
                                         @foreach (var producto in pedido.Productos)
                                         {
-                                            <div class="col-12 col-md-auto">
-                                                <div class="bg-body border border-secondary-subtle rounded-2 px-3 py-2 d-flex align-items-center h-100 shadow-sm">
-                                                    <i class="bi bi-dot text-primary me-1 flex-shrink-0"></i>
-                                                    <span class="small text-body-emphasis">@producto</span>
+                                            <div class="bg-body border border-secondary-subtle rounded-2 px-2 py-1 d-flex align-items-center shadow-sm">
+                                                <img src="@producto.ImagenUrl" alt="@producto.Nombre"
+                                                     class="rounded me-2 flex-shrink-0"
+                                                     style="width: 32px; height: 32px; object-fit: cover;">
+                                                <div class="lh-sm">
+                                                    <span class="small text-body-emphasis d-block">@producto.Nombre</span>
+                                                    <small class="text-muted">x @producto.Cantidad</small>
                                                 </div>
                                             </div>
                                         }
                                     </div>
                                 </div>
 
-                                <hr class="my-4 border-secondary opacity-10">
-
+                                <hr class="my-2 border-secondary opacity-10">
                             </div>
+
                             <!-- Footer -->
-                            <div class="card-footer bg-transparent border-0 d-flex justify-content-end pt-0 pb-3">
-                                <a asp-action="Detalles"
-                                   asp-route-id="@pedido.PedidoId"
-                                   class="btn border-0 fw-bold">
-                                    Ver detalles <i class="bi bi-arrow-right"></i>
-                                </a>
+                            <div class="card-footer bg-transparent border-0 d-flex justify-content-between align-items-center flex-wrap gap-2 pt-0 pb-2">
+                                <div class="lh-sm">
+                                    <span class="small text-secondary">Total </span>
+                                    <span class="fw-bold text-primary">@pedido.Total.ToString("C0")</span>
+                                    <small class="text-secondary ms-1">· @pedido.CantidadItems @(pedido.CantidadItems == 1 ? "item" : "items")</small>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    @if (pedido.FaltaComprobante)
+                                    {
+                                        <span class="small text-warning-emphasis align-self-center">
+                                            Subilo antes del @pedido.FechaLimiteComprobante.ToString("dd/MM/yy HH:mm")
+                                        </span>
+                                        <a asp-action="Instrucciones" asp-route-id="@pedido.PedidoId" class="btn btn-sm btn-primary position-relative z-2 fw-bold">
+                                            <i class="bi bi-upload me-1"></i> Subir comprobante
+                                        </a>
+                                    }
+                                    <a asp-action="Detalles"
+                                       asp-route-id="@pedido.PedidoId"
+                                       class="btn btn-sm border-0 position-relative z-2 fw-bold">
+                                        Ver detalles <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     }
                 }
-                else
+
+                <!-- Sin resultados en el filtro activo: lo alterna MisPedidos.js
+                     (el server lo deja visible solo si ?estado= apunta a un grupo vacío) -->
+                @{
+                    var conteoDelFiltro = Model.EstadoFiltro switch
+                    {
+                        "enCurso" => Model.ConteoEnCurso,
+                        "entregados" => Model.ConteoEntregados,
+                        "cancelados" => Model.ConteoCancelados,
+                        _ => Model.ConteoTodos
+                    };
+                }
+                <div id="sinPedidosFiltro" class="text-center text-muted py-5 @(Model.HayFiltroValido && conteoDelFiltro == 0 ? "" : "d-none")">
+                    <div class="mb-3"><i class="bi bi-funnel" style="font-size: 3rem;"></i></div>
+                    <p class="mb-0">No hay pedidos en este estado.</p>
+                </div>
+
+                @if (Model.Pedidos.Count == 0)
                 {
                     <div class="text-center py-5">
                         <div class="mb-3">
@@ -190,3 +269,7 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/Features/Pedidos/MisPedidos.js" asp-append-version="true"></script>
+}

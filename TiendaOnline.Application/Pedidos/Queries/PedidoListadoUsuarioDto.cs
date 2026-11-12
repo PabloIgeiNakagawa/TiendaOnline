@@ -9,6 +9,10 @@
         public DateTime? FechaCancelado { get; set; }
         public int EstadoId { get; set; }
         public int EstadoPagoId { get; set; }
-        public List<string> Productos { get; set; } = new();
+        public int MetodoPagoId { get; set; }
+        public string? ComprobanteUrl { get; set; }
+        public decimal Total { get; set; }
+        public int CantidadItems { get; set; }
+        public List<PedidoProductoListadoDto> Productos { get; set; } = new();
     }
 }

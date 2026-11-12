@@ -42,7 +42,7 @@ namespace TiendaOnline.Features.Pedidos
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> MisPedidos()
+        public async Task<IActionResult> MisPedidos(string? estado = null)
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (claim == null)
@@ -54,22 +54,43 @@ namespace TiendaOnline.Features.Pedidos
 
             var pedidos = await _pedidoQueryService.ObtenerPedidosDeUsuarioAsync(usuarioId, HttpContext.RequestAborted);
 
+            var items = pedidos
+                .OrderByDescending(p => p.FechaPedido)
+                .Select(p => new PedidoListaViewModel
+                {
+                    PedidoId = p.PedidoId,
+                    FechaPedido = p.FechaPedido,
+                    FechaEnvio = p.FechaEnvio,
+                    FechaEntrega = p.FechaEntrega,
+                    FechaCancelado = p.FechaCancelado,
+                    Total = p.Total,
+                    CantidadItems = p.CantidadItems,
+                    Productos = p.Productos.Select(x => new PedidoProductoListaViewModel
+                    {
+                        Nombre = x.Nombre,
+                        ImagenUrl = x.ImagenUrl,
+                        Cantidad = x.Cantidad
+                    }).ToList(),
+                    Estado = (EstadoPedido)p.EstadoId,
+                    EstadoPago = (EstadoPago)p.EstadoPagoId,
+                    MetodoPagoId = (MetodoPagoId)p.MetodoPagoId,
+                    ComprobanteUrl = p.ComprobanteUrl
+                })
+                .ToList();
+
+            // El filtro por estado es client-side (MisPedidos.js): TODAS las
+            // tarjetas viajan al DOM con su data-estado-grupo. El ?estado= de la
+            // URL solo pre-marca el chip activo y pre-oculta las tarjetas que no
+            // coinciden — así un refresh o link compartido no muestra un flash
+            // de la lista completa.
             var viewmodel = new MisPedidosViewModel
             {
-                Pedidos = pedidos
-                    .OrderByDescending(p => p.FechaPedido)
-                    .Select(p => new PedidoListaViewModel
-                    {
-                        PedidoId = p.PedidoId,
-                        FechaPedido = p.FechaPedido,
-                        FechaEnvio = p.FechaEnvio,
-                        FechaEntrega = p.FechaEntrega,
-                        FechaCancelado = p.FechaCancelado,
-                        Productos = p.Productos,
-                        Estado = (EstadoPedido)p.EstadoId,
-                        EstadoPago = (EstadoPago)p.EstadoPagoId
-                    })
-                    .ToList()
+                EstadoFiltro = estado,
+                ConteoTodos = items.Count,
+                ConteoEnCurso = items.Count(p => !p.EstaEntregado && !p.EstaCancelado),
+                ConteoEntregados = items.Count(p => p.EstaEntregado),
+                ConteoCancelados = items.Count(p => p.EstaCancelado),
+                Pedidos = items
             };
 
             return View(viewmodel);
