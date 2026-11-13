@@ -39,6 +39,13 @@ namespace TiendaOnline.Features.Home
             return View();
         }
 
+        [AllowAnonymous]
+        [HttpGet("Terminos")]
+        public IActionResult Terminos()
+        {
+            return View();
+        }
+
         [Route("admin")]
         [Authorize(Roles = "Administrador")]
         [HttpGet]
@@ -182,14 +189,16 @@ namespace TiendaOnline.Features.Home
                 var baseUri = $"{Request.Scheme}://{Request.Host}";
                 var ids = await _productoQueryService.ObtenerIdsProductosActivosAsync(HttpContext.RequestAborted);
 
+                // Home y catálogo + las dos páginas legales que existen (los vencidos
+                // dan 404 y ensucian el índice). Las URLs van resueltas por el routing
+                // (Url.Action): un cambio de ruta no deja un link muerto en el índice.
+                // Producto no tiene fecha de alta: el lastmod queda fuera (el schema lo
+                // permite).
                 var sb = new StringBuilder()
                     .AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
                     .AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
 
-                // Home y catálogo + la única página legal que existe (los vencidos
-                // dan 404 y ensucian el índice). Producto no tiene fecha de alta:
-                // el lastmod queda fuera (el schema lo permite).
-                foreach (var ruta in new[] { "/", "/Productos", "/Home/Privacy" })
+                foreach (var ruta in new[] { "/", "/Productos", Url.Action("Privacy"), Url.Action("Terminos") })
                 {
                     sb.AppendLine($"  <url><loc>{baseUri}{ruta}</loc></url>");
                 }

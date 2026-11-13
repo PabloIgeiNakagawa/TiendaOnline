@@ -1,0 +1,59 @@
+@{
+    ViewData[ViewDataKeys.Title] = "Términos y Condiciones";
+}
+
+<div class="container py-5">
+    <partial name="_TituloSeccion" model='("Términos y Condiciones", "Las reglas que rigen el uso del sitio y la compra de productos.")' />
+
+    <h5 class="mt-4">1. Objeto</h5>
+    <p class="text-secondary">
+        Estas condiciones regulan el uso del sitio y la compra de los productos ofrecidos en el
+        catálogo. Al registrarte o realizar una compra, aceptás estos términos y la
+        <a asp-controller="Home" asp-action="Privacy">Política de Privacidad</a>.
+    </p>
+
+    <h5 class="mt-4">2. Cuenta de usuario</h5>
+    <p class="text-secondary">
+        Para comprar necesitás una cuenta con datos verídicos (nombre, email y, si corresponde,
+        dirección de envío). Sos responsable de la confidencialidad de tu contraseña y de toda
+        actividad realizada con tu cuenta. Podés cambiar tu contraseña desde tu perfil en cualquier
+        momento.
+    </p>
+
+    <h5 class="mt-4">3. Precios y pagos</h5>
+    <p class="text-secondary">
+        Los precios del catálogo están expresados en pesos argentinos e incluyen los impuestos
+        aplicables. El precio final se confirma en el checkout, incluyendo el costo de envío según
+        la provincia de entrega (retiro en el local sin costo). Los pagos se procesan a través de
+        Mercado Pago (tarjeta o medios habilitados) o mediante transferencia bancaria con
+        comprobante, sujeta a verificación; el pedido queda reservado al aprobarse el pago.
+    </p>
+
+    <h5 class="mt-4">4. Envíos</h5>
+    <p class="text-secondary">
+        Enviamos a las provincias disponibles en el checkout. El despacho se realiza una vez
+        confirmado el pago; podés seguir el estado de tu pedido desde "Mis Pedidos".
+    </p>
+
+    <h5 class="mt-4">5. Cancelaciones y devoluciones</h5>
+    <p class="text-secondary">
+        Podés cancelar tu pedido desde "Mis Pedidos" mientras no haya entrado en preparación.
+        Si el pago ya fue acreditado, la devolución del dinero se coordina por los canales de
+        contacto del sitio. Los productos con fallas de fábrica o daños en el envío se gestionan
+        por el mismo canal, con el comprobante de compra a mano.
+    </p>
+
+    <h5 class="mt-4">6. Uso del sitio</h5>
+    <p class="text-secondary">
+        No está permitido usar el sitio con fines ilícitos, intentar vulnerar su funcionamiento ni
+        realizar compras automatizadas que afecten al resto de los usuarios. Nos reservamos el
+        derecho de suspender cuentas que incumplan estas reglas.
+    </p>
+
+    <h5 class="mt-4">7. Contacto</h5>
+    <p class="text-secondary">
+        Para cualquier consulta sobre estos términos, usá la
+        <a asp-controller="Soporte" asp-action="Contacto">página de contacto</a> o el botón de
+        WhatsApp de la esquina inferior derecha.
+    </p>
+</div>

@@ -45,9 +45,29 @@ namespace TiendaOnline.Tests.Integration
             var xml = await respuesta.Content.ReadAsStringAsync();
             Assert.Contains("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">", xml);
             Assert.Contains("/Productos</loc>", xml); // el catálogo
+            // Las legales van resueltas por el routing (Url.Action): la ruta real de
+            // Privacidad es /Privacidad (sin prefijo /Home — el sitemap viejo mentía).
+            Assert.Contains("/Privacidad</loc>", xml);
+            Assert.Contains("/Terminos</loc>", xml);
+            Assert.DoesNotContain("/Home/Privacy", xml);
+            Assert.DoesNotContain("/Home/Terminos", xml);
             Assert.Contains($"/Productos/Detalles?id={idActivo}", xml);
             Assert.Contains($"/Productos/Detalles?id={idOtroActivo}", xml);
             Assert.DoesNotContain($"/Productos/Detalles?id={idInactivo}", xml); // los desactivados no se indexan
+        }
+
+        [Fact]
+        public async Task Terminos_RespondeLaPaginaYEntraAlSitemap()
+        {
+            _app.ResetMocks();
+            var client = _app.CreateAnonymousClient();
+
+            // La ruta real es /Terminos (HttpGet("Terminos") sin prefijo /Home).
+            var respuesta = await client.GetAsync("/Terminos");
+
+            Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
+            var html = await respuesta.Content.ReadAsStringAsync();
+            Assert.Contains("rminos y Condiciones", html);
         }
 
         [Fact]
