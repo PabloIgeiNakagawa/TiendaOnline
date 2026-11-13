@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using System.Diagnostics;
+using System.Text;
 using TiendaOnline.Application.AdminOverview;
+using TiendaOnline.Application.Productos.Queries;
 using TiendaOnline.Features.Shared;
 using TiendaOnline.Features.Shared.ViewModels;
 
@@ -10,12 +13,16 @@ namespace TiendaOnline.Features.Home
     public class HomeController : Controller
     {
         private readonly IAdminOverviewService _adminOverviewService;
+        private readonly IProductoQueryService _productoQueryService;
+        private readonly IMemoryCache _cache;
         private readonly ILogger<HomeController> _logger;
 
-        public HomeController(ILogger<HomeController> logger, IAdminOverviewService adminOverviewService)
+        public HomeController(ILogger<HomeController> logger, IAdminOverviewService adminOverviewService, IProductoQueryService productoQueryService, IMemoryCache cache)
         {
             _logger = logger;
             _adminOverviewService = adminOverviewService;
+            _productoQueryService = productoQueryService;
+            _cache = cache;
         }
 
         [AllowAnonymous]
@@ -155,6 +162,70 @@ namespace TiendaOnline.Features.Home
         public IActionResult AccesoDenegado()
         {
             return View();
+        }
+
+        // ------------------------------------------------------------------
+        // SEO: sitemap.xml y robots.txt
+        // ------------------------------------------------------------------
+
+        // Literal "sitemap.xml": los bots lo buscan en la raíz. El contenido vive
+        // 30 min en cache (una query liviana de ids por media hora en vez de por
+        // request); UseStaticFiles corre antes del routing, así que un robots.txt
+        // físico en wwwroot siempre podría pisar esta acción sin deploy.
+        [AllowAnonymous]
+        [HttpGet("sitemap.xml")]
+        public async Task<IActionResult> Sitemap()
+        {
+            var xml = await _cache.GetOrCreateAsync("sitemap-xml", async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30);
+                var baseUri = $"{Request.Scheme}://{Request.Host}";
+                var ids = await _productoQueryService.ObtenerIdsProductosActivosAsync(HttpContext.RequestAborted);
+
+                var sb = new StringBuilder()
+                    .AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+                    .AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
+
+                // Home y catálogo + la única página legal que existe (los vencidos
+                // dan 404 y ensucian el índice). Producto no tiene fecha de alta:
+                // el lastmod queda fuera (el schema lo permite).
+                foreach (var ruta in new[] { "/", "/Productos", "/Home/Privacy" })
+                {
+                    sb.AppendLine($"  <url><loc>{baseUri}{ruta}</loc></url>");
+                }
+
+                foreach (var id in ids)
+                {
+                    // La ficha no lleva {id} en la ruta: es query (ProductosController).
+                    sb.AppendLine($"  <url><loc>{baseUri}/Productos/Detalles?id={id}</loc></url>");
+                }
+
+                sb.Append("</urlset>");
+                return sb.ToString();
+            });
+
+            return Content(xml, "application/xml");
+        }
+
+        [AllowAnonymous]
+        [HttpGet("robots.txt")]
+        public IActionResult Robots()
+        {
+            var baseUri = $"{Request.Scheme}://{Request.Host}";
+            var cuerpo = new StringBuilder()
+                .AppendLine("User-agent: *")
+                .AppendLine("Disallow: /admin")      // panel, ofertas, envíos y secciones
+                .AppendLine("Disallow: /Admin")      // AdminUsuarios y AdminPedidos (matchea por prefijo)
+                .AppendLine("Disallow: /hangfire")
+                .AppendLine("Disallow: /Accounts")   // login/registro/reset no son contenido
+                .AppendLine("Disallow: /Carrito")
+                .AppendLine("Disallow: /Checkout")
+                .AppendLine("Disallow: /Pedidos")
+                .AppendLine("Disallow: /Repartidor")
+                .AppendLine($"Sitemap: {baseUri}/sitemap.xml")
+                .ToString();
+
+            return Content(cuerpo, "text/plain");
         }
 
         [AllowAnonymous]

@@ -86,6 +86,14 @@ namespace TiendaOnline.Extensions
                     opt.QueueLimit = 0;
                 });
 
+                // Recuperación de contraseña: 5 por minuto por IP (pedir reset y aplicar el cambio)
+                options.AddFixedWindowLimiter("olvide-password", opt =>
+                {
+                    opt.PermitLimit = Techo(5);
+                    opt.Window = TimeSpan.FromMinutes(1);
+                    opt.QueueLimit = 0;
+                });
+
                 // Usar IP como clave de rate limiting
                 options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                     RateLimitPartition.GetFixedWindowLimiter(

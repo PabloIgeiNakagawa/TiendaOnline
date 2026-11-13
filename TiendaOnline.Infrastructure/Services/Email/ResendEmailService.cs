@@ -470,5 +470,106 @@ namespace TiendaOnline.Infrastructure.Services.Email
 
             await EnviarEmailAsync(destinoEmail, $"Comprobante recibido - Pedido #{pedidoId:D6}", cuerpoHtml);
         }
+
+        // El link apunta al form de nueva contraseña; el token viaja en la query
+        // (firma de DataProtection, vence en 30 min y muere al usarse).
+        public async Task EnviarEmailResetPasswordAsync(string destinoEmail, string nombreUsuario, string token)
+        {
+            var nombreSitio = _appSettings.GetValue("Diseno:NombreDelSitio") ?? "Tienda";
+            var siteUrl = _globalSettings.SiteUrl.TrimEnd('/');
+            var enlace = $"{siteUrl}/Accounts/ResetPassword?token={Uri.EscapeDataString(token)}";
+
+            var cuerpoHtml = $@"
+        <!DOCTYPE html>
+        <html lang=""es"">
+        <head>
+        <meta charset=""utf-8"">
+        <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+        <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }}
+        .container {{ max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
+        .header {{ background: #0d6efd; color: white; padding: 24px; text-align: center; }}
+        .header h1 {{ margin: 0; font-size: 24px; }}
+        .content {{ padding: 24px; }}
+        .content p {{ color: #333; line-height: 1.6; }}
+        .note {{ background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 14px 16px; margin: 16px 0; font-size: 14px; color: #495057; }}
+        .btn {{ display: inline-block; background: #0d6efd; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500; margin-top: 16px; }}
+        .footer {{ background: #f8f9fa; padding: 16px; text-align: center; color: #6c757d; font-size: 13px; }}
+        </style>
+        </head>
+        <body>
+        <div class=""container"">
+        <div class=""header"">
+            <h1>Recuperar tu contrase&ntilde;a</h1>
+        </div>
+        <div class=""content"">
+            <p>Hola {nombreUsuario},</p>
+            <p>Nos pediste restablecer tu contrase&ntilde;a. Hac&eacute; click en el bot&oacute;n para crear una nueva:</p>
+            <a href=""{enlace}"" class=""btn"">Crear nueva contrase&ntilde;a</a>
+            <div class=""note"">
+                El enlace vence a los <strong>30 minutos</strong> y se usa una sola vez. Si no fuiste vos quien lo pidi&oacute;, ignor&aacute; este email: tu contrase&ntilde;a actual sigue vigente.
+            </div>
+        </div>
+        <div class=""footer"">
+            <p>{nombreSitio} &copy; {DateTime.Now.Year} - Este es un email autom&aacute;tico, por favor no responder.</p>
+        </div>
+        </div>
+        </body>
+        </html>";
+
+            await EnviarEmailAsync(destinoEmail, "Recuperar tu contraseña", cuerpoHtml);
+        }
+
+        // Aviso de seguridad: alguien aplicó un reset (o cambió la contraseña).
+        public async Task EnviarEmailPasswordCambiadaAsync(string destinoEmail, string nombreUsuario)
+        {
+            var nombreSitio = _appSettings.GetValue("Diseno:NombreDelSitio") ?? "Tienda";
+            var siteUrl = _globalSettings.SiteUrl.TrimEnd('/');
+
+            var cuerpoHtml = $@"
+        <!DOCTYPE html>
+        <html lang=""es"">
+        <head>
+        <meta charset=""utf-8"">
+        <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+        <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5; }}
+        .container {{ max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
+        .header {{ background: #dc3545; color: white; padding: 24px; text-align: center; }}
+        .header h1 {{ margin: 0; font-size: 24px; }}
+        .content {{ padding: 24px; }}
+        .content p {{ color: #333; line-height: 1.6; }}
+        .security-box {{ border: 2px solid #dc3545; border-radius: 8px; padding: 20px; text-align: center; margin: 16px 0; background-color: #fff8f8; }}
+        .security-box h2 {{ color: #dc3545; margin-top: 0; }}
+        .btn {{ display: inline-block; background: #0d6efd; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500; margin-top: 16px; }}
+        .footer {{ background: #f8f9fa; padding: 16px; text-align: center; color: #6c757d; font-size: 13px; }}
+        </style>
+        </head>
+        <body>
+        <div class=""container"">
+        <div class=""header"">
+            <h1>Tu contrase&ntilde;a fue cambiada</h1>
+        </div>
+        <div class=""content"">
+            <p>Hola {nombreUsuario},</p>
+            <p>Te confirmamos que la contrase&ntilde;a de tu cuenta fue actualizada correctamente.</p>
+
+            <div class=""security-box"">
+                <h2>&#128274; Contrase&ntilde;a actualizada</h2>
+                <p>Inici&aacute; sesi&oacute;n con la nueva contrase&ntilde;a desde ac&aacute;.</p>
+            </div>
+
+            <p>Si <strong>no fuiste vos</strong>, contactate con soporte urgentemente: alguien m&aacute;s podr&iacute;a tener acceso a tu cuenta.</p>
+            <a href=""{siteUrl}/Accounts/Login"" class=""btn"">Iniciar sesi&oacute;n</a>
+        </div>
+        <div class=""footer"">
+            <p>{nombreSitio} &copy; {DateTime.Now.Year} - Este es un email autom&aacute;tico, por favor no responder.</p>
+        </div>
+        </div>
+        </body>
+        </html>";
+
+            await EnviarEmailAsync(destinoEmail, "Tu contraseña fue cambiada", cuerpoHtml);
+        }
     }
 }

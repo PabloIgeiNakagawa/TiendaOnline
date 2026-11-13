@@ -10,5 +10,7 @@ namespace TiendaOnline.Application.Common.Interfaces
         Task EnviarEmailPedidoVencidoAsync(string destinoEmail, string nombreUsuario, int pedidoId, decimal total);
         Task EnviarEmailPedidoEntregadoAsync(string destinoEmail, string nombreUsuario, int pedidoId);
         Task EnviarEmailComprobanteRecibidoAsync(string destinoEmail, int pedidoId);
+        Task EnviarEmailResetPasswordAsync(string destinoEmail, string nombreUsuario, string token);
+        Task EnviarEmailPasswordCambiadaAsync(string destinoEmail, string nombreUsuario);
     }
 }

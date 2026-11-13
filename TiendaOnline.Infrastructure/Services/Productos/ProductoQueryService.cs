@@ -224,5 +224,15 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 request.Cantidad
             );
         }
+
+        public async Task<List<int>> ObtenerIdsProductosActivosAsync(CancellationToken ct)
+        {
+            return await _context.Productos
+                .AsNoTracking()
+                .Where(p => p.Activo)
+                .OrderBy(p => p.ProductoId)
+                .Select(p => p.ProductoId)
+                .ToListAsync(ct);
+        }
     }
 }

@@ -21,16 +21,18 @@ namespace TiendaOnline.Features.Accounts
     public class AccountsController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly IRecuperacionPasswordService _recuperacionService;
         private readonly IRolQueryService _rolService;
         private readonly ICarritoSesionMigrador _migradorCarrito;
         private readonly ILogger<AccountsController> _logger;
 
-        public AccountsController(IAuthService authService, IRolQueryService rolQueryService, ILogger<AccountsController> logger, ICarritoSesionMigrador migradorCarrito)
+        public AccountsController(IAuthService authService, IRolQueryService rolQueryService, ILogger<AccountsController> logger, ICarritoSesionMigrador migradorCarrito, IRecuperacionPasswordService recuperacionService)
         {
             _authService = authService;
             _rolService = rolQueryService;
             _logger = logger;
             _migradorCarrito = migradorCarrito;
+            _recuperacionService = recuperacionService;
         }
 
         [HttpGet("[action]")]
@@ -135,7 +137,9 @@ namespace TiendaOnline.Features.Accounts
                 new Claim(ClaimTypes.NameIdentifier, usuarioDto.UsuarioId.ToString()),
                 new Claim(ClaimTypes.Name, usuarioDto.Nombre),
                 new Claim(ClaimTypes.Surname, usuarioDto.Apellido),
-                new Claim(ClaimTypes.MobilePhone, usuarioDto.Telefono),
+                // Un usuario puede no tener teléfono (lo de Google, o el reset de
+                // contraseña de una cuenta sin teléfono): el claim con null explota.
+                new Claim(ClaimTypes.MobilePhone, usuarioDto.Telefono ?? ""),
                 new Claim(ClaimTypes.Email, usuarioDto.Email),
                 new Claim(ClaimTypes.Role, usuarioDto.Rol)
             };
@@ -162,6 +166,66 @@ namespace TiendaOnline.Features.Accounts
                 return RedirectToAction(nameof(RepartidorController.Index), "Repartidor");
 
             return RedirectToAction(nameof(HomeController.Index), "Home");
+        }
+
+        // ------------------------------------------------------------------
+        // Recuperación de contraseña
+        // ------------------------------------------------------------------
+
+        [HttpGet("[action]")]
+        public IActionResult OlvideMiPassword()
+        {
+            return View(new OlvideMiPasswordViewModel());
+        }
+
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        [EnableRateLimiting("olvide-password")]
+        public async Task<IActionResult> OlvideMiPassword(OlvideMiPasswordViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            await _recuperacionService.PedirResetPasswordAsync(model.Email, HttpContext.RequestAborted);
+
+            // Respuesta genérica SIEMPRE (anti-enumeración): si el email no existe
+            // el service no envió nada y el usuario ve el mismo mensaje que si
+            // existiera — nunca se revela qué cuentas están registradas.
+            TempData.SetMensajeExito("Si el email está registrado, te enviamos un enlace para recuperar tu contraseña. Revisá también la carpeta de spam.");
+            return RedirectToAction(nameof(Login));
+        }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> ResetPassword(string? token)
+        {
+            var valido = await _recuperacionService.ValidarTokenResetAsync(token ?? "", HttpContext.RequestAborted);
+            if (valido is null)
+            {
+                // Enlace vencido, alterado o ya usado: salida amable al flujo para pedir otro.
+                TempData.SetMensajeError("El enlace no es válido o ya expiró. Pedí uno nuevo.");
+                return RedirectToAction(nameof(OlvideMiPassword));
+            }
+
+            return View(new ResetPasswordViewModel { Token = token! });
+        }
+
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        [EnableRateLimiting("olvide-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var cambio = await _recuperacionService.ResetPasswordAsync(model.Token, model.Contrasena, HttpContext.RequestAborted);
+            if (!cambio)
+            {
+                // El enlace murió mientras completaba el formulario (venció o alguien
+                // ya lo usó): mensaje amable con salida al flujo de pedir otro.
+                TempData.SetMensajeError("El enlace no es válido o ya expiró. Pedí uno nuevo.");
+                return RedirectToAction(nameof(OlvideMiPassword));
+            }
+
+            TempData.SetMensajeExito("¡Listo! Tu contraseña fue actualizada. Iniciá sesión con la nueva.");
+            return RedirectToAction(nameof(Login));
         }
 
         [HttpGet("[action]")]

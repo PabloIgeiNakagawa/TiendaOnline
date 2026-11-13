@@ -121,6 +121,7 @@ namespace TiendaOnline.Extensions
 
             // Autenticación y Sesión de Usuario
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IRecuperacionPasswordService, RecuperacionPasswordService>();
             // Servicio para manejar la sesión del usuario
             services.AddScoped<IUserSessionService, UserSessionService>();
             // El servicio de Cloudinary (Interfaz en Domain, Implementación en Infrastructure)
