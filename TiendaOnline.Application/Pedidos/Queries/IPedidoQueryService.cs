@@ -9,6 +9,7 @@ namespace TiendaOnline.Application.Pedidos.Queries
         Task<ComprobantePedidoDto?> ObtenerComprobanteDtoAsync(int pedidoId, CancellationToken ct = default);
         Task<InstruccionesTransferenciaDto?> ObtenerInstruccionesTransferenciaAsync(int pedidoId, CancellationToken ct = default);
         Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(PedidosFiltroDto filtros, CancellationToken ct = default);
+        Task<List<PedidoListadoDto>> ObtenerPedidosParaExportarAsync(PedidosFiltroDto filtros, CancellationToken ct = default);
         Task<List<PedidoRepartoDto>> ObtenerPedidosEnviadosAsync(CancellationToken ct = default);
         Task<List<PedidoRepartoDto>> ObtenerPedidosEntregadosUltimoDiaAsync(CancellationToken ct = default);
     }

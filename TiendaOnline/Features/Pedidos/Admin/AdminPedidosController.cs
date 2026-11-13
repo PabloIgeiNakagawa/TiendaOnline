@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 using System.Security.Claims;
+using System.Text;
 using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Application.Pedidos.Queries;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Enums;
 using TiendaOnline.Extensions;
 using TiendaOnline.Features.Shared;
 using TiendaOnline.Features.Shared.Controllers;
@@ -36,6 +39,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
             {
                 Busqueda = model.Busqueda,
                 EstadoId = model.EstadoId,
+                EstadoPagoId = model.EstadoPagoId,
                 Desde = model.FechaDesde,
                 Hasta = model.FechaHasta,
                 MontoMin = model.MontoMin,
@@ -63,6 +67,66 @@ namespace TiendaOnline.Features.Pedidos.Admin
             };
 
             return View(viewModel);
+        }
+
+        // Export CSV de los pedidos del listado: mismos filtros del form (los viaja
+        // el mismo GET vía formaction del botón), sin paginación. Descarga con BOM
+        // UTF-8 y separador ";" para que Excel lo abra directo con columna total.
+        [HttpGet("[action]")]
+        public async Task<IActionResult> Exportar(ListadoFiltrosViewModel model)
+        {
+            var filtros = new PedidosFiltroDto
+            {
+                Busqueda = model.Busqueda,
+                EstadoId = model.EstadoId,
+                EstadoPagoId = model.EstadoPagoId,
+                Desde = model.FechaDesde,
+                Hasta = model.FechaHasta,
+                MontoMin = model.MontoMin,
+                MontoMax = model.MontoMax,
+                Pagina = 1,
+                Cantidad = int.MaxValue
+            };
+
+            var pedidos = await _pedidoQueryService.ObtenerPedidosParaExportarAsync(filtros, HttpContext.RequestAborted);
+
+            // Formatos fijos a es-AR (coma decimal, dd/MM): el CSV no depende de la
+            // cultura del server — Excel argentino lo parsea como número siempre.
+            var culturaCsv = new CultureInfo("es-AR");
+            var sb = new StringBuilder();
+            sb.AppendLine("Pedido;Fecha;Cliente;Email;Estado;Estado del pago;Método de pago;Total;Fecha de entrega;Comprobante");
+
+            foreach (var p in pedidos)
+            {
+                sb.AppendLine(string.Join(';',
+                    CeldaCsv(p.PedidoId.ToString()),
+                    CeldaCsv(p.FechaPedido.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)),
+                    CeldaCsv(p.NombreCliente),
+                    CeldaCsv(p.EmailCliente),
+                    CeldaCsv(((EstadoPedido)p.EstadoId).GetDisplayName()),
+                    CeldaCsv(((EstadoPago)p.EstadoPagoId).GetDisplayName()),
+                    CeldaCsv(((MetodoPagoId)p.MetodoPagoId).GetDisplayName()),
+                    CeldaCsv(p.Total.ToString("N2", culturaCsv)),
+                    CeldaCsv(p.FechaEntrega?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) ?? ""),
+                    CeldaCsv(p.TieneComprobante ? "Sí" : "No")));
+            }
+
+            // BOM UTF-8: sin él Excel adivina ANSI y los acentos salen rotos.
+            return File(new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetBytes(sb.ToString()),
+                "text/csv",
+                $"pedidos-{DateTime.Now:yyyyMMdd}.csv");
+        }
+
+        // Escapado CSV: celda con separador, comillas o salto de línea va entre
+        // comillas (doblando las comillas internas), el resto sale pelado.
+        private static string CeldaCsv(string valor)
+        {
+            if (valor.Contains(';') || valor.Contains('"') || valor.Contains('\n') || valor.Contains('\r'))
+            {
+                return $"\"{valor.Replace("\"", "\"\"")}\"";
+            }
+
+            return valor;
         }
 
         [HttpPost("[action]")]

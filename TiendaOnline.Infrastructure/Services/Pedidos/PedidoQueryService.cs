@@ -205,53 +205,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
         public async Task<PagedResult<PedidoListadoDto>> ObtenerPedidosPaginadosAsync(PedidosFiltroDto filtros, CancellationToken ct)
         {
-            var query = _context.Pedidos
-                .AsNoTracking()
-                .AsQueryable();
-
-            // Filtros
-            if (!string.IsNullOrEmpty(filtros.Busqueda))
-            {
-                query = query.Where(p => p.PedidoId.ToString().Contains(filtros.Busqueda) ||
-                                         p.Usuario.Nombre.Contains(filtros.Busqueda) ||
-                                         p.Usuario.Apellido.Contains(filtros.Busqueda));
-            }
-
-            // El valor del filtro nace como int y pasa a enum antes de comparar: la
-            // comparación enum↔columna usa la conversión a texto del modelo; un cast
-            // SQL sobre la columna ya convertida no devuelve nada (o rompe en SQL Server).
-            if (filtros.EstadoId.HasValue)
-            {
-                var estadoFiltro = (Domain.Entities.EstadoPedido)filtros.EstadoId.Value;
-                query = query.Where(p => p.Estado == estadoFiltro);
-            }
-
-            if (filtros.EstadoPagoId.HasValue)
-            {
-                var estadoPagoFiltro = (Domain.Entities.EstadoPago)filtros.EstadoPagoId.Value;
-                query = query.Where(p => p.EstadoPago == estadoPagoFiltro);
-            }
-            if (filtros.Desde.HasValue) query = query.Where(p => p.FechaPedido >= filtros.Desde.Value);
-            if (filtros.Hasta.HasValue) query = query.Where(p => p.FechaPedido <= filtros.Hasta.Value);
-
-            // Filtro de Monto
-            if (filtros.MontoMin.HasValue || filtros.MontoMax.HasValue)
-            {
-                // Proyectamos el total una sola vez para no repetir el cálculo del Sum
-                var qMonto = query.Select(p => new
-                {
-                    p,
-                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
-                });
-
-                if (filtros.MontoMin.HasValue)
-                    qMonto = qMonto.Where(x => x.Total >= filtros.MontoMin.Value);
-
-                if (filtros.MontoMax.HasValue)
-                    qMonto = qMonto.Where(x => x.Total <= filtros.MontoMax.Value);
-
-                query = qMonto.Select(x => x.p);
-            }
+            var query = AplicarFiltrosDeListado(_context.Pedidos.AsNoTracking().AsQueryable(), filtros);
 
             // Conteo Total
             var total = await query.CountAsync(ct);
@@ -294,6 +248,97 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             }).ToList();
 
             return new PagedResult<PedidoListadoDto>(items, total, filtros.Pagina, filtros.Cantidad);
+        }
+
+        // Export CSV del panel: mismos filtros que el Listado, sin paginación.
+        public async Task<List<PedidoListadoDto>> ObtenerPedidosParaExportarAsync(PedidosFiltroDto filtros, CancellationToken ct)
+        {
+            var query = AplicarFiltrosDeListado(_context.Pedidos.AsNoTracking().AsQueryable(), filtros);
+
+            // Misma proyección y mapeo del Listado paginado (el cast a int de los
+            // estados ocurre en memoria tras el fetch, por la regla de columnas en texto).
+            var filas = await query
+                .OrderByDescending(p => p.FechaPedido)
+                .Select(p => new
+                {
+                    p.PedidoId,
+                    NombreCliente = $"{p.Usuario.Nombre} {p.Usuario.Apellido}",
+                    p.Usuario.Email,
+                    p.FechaPedido,
+                    p.FechaEntrega,
+                    Estado = p.Estado,
+                    EstadoPago = p.EstadoPago,
+                    p.MetodoDePagoId,
+                    TieneComprobante = p.ComprobanteUrl != null,
+                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
+                })
+                .ToListAsync(ct);
+
+            return filas.Select(f => new PedidoListadoDto
+            {
+                PedidoId = f.PedidoId,
+                NombreCliente = f.NombreCliente,
+                EmailCliente = f.Email,
+                FechaPedido = f.FechaPedido,
+                FechaEntrega = f.FechaEntrega,
+                EstadoId = (int)f.Estado,
+                EstadoPagoId = (int)f.EstadoPago,
+                MetodoPagoId = f.MetodoDePagoId,
+                TieneComprobante = f.TieneComprobante,
+                Total = f.Total
+            }).ToList();
+        }
+
+        // Filtros del Listado del panel, compartidos por la paginación y el export:
+        // un solo lugar para cambiar la semántica de un filtro.
+        private static IQueryable<Domain.Entities.Pedido> AplicarFiltrosDeListado(IQueryable<Domain.Entities.Pedido> query, PedidosFiltroDto filtros)
+        {
+            if (!string.IsNullOrEmpty(filtros.Busqueda))
+            {
+                query = query.Where(p => p.PedidoId.ToString().Contains(filtros.Busqueda) ||
+                                         p.Usuario.Nombre.Contains(filtros.Busqueda) ||
+                                         p.Usuario.Apellido.Contains(filtros.Busqueda));
+            }
+
+            // El valor del filtro nace como int y pasa a enum antes de comparar: la
+            // comparación enum↔columna usa la conversión a texto del modelo; un cast
+            // SQL sobre la columna ya convertida no devuelve nada (o rompe en SQL Server).
+            if (filtros.EstadoId.HasValue)
+            {
+                var estadoFiltro = (Domain.Entities.EstadoPedido)filtros.EstadoId.Value;
+                query = query.Where(p => p.Estado == estadoFiltro);
+            }
+
+            if (filtros.EstadoPagoId.HasValue)
+            {
+                var estadoPagoFiltro = (Domain.Entities.EstadoPago)filtros.EstadoPagoId.Value;
+                query = query.Where(p => p.EstadoPago == estadoPagoFiltro);
+            }
+            if (filtros.Desde.HasValue) query = query.Where(p => p.FechaPedido >= filtros.Desde.Value);
+            // El día "Hasta" es inclusivo: comparar contra la medianoche dejaba afuera
+            // los pedidos del propio día elegido en el filtro.
+            if (filtros.Hasta.HasValue) query = query.Where(p => p.FechaPedido < filtros.Hasta.Value.AddDays(1));
+
+            // Filtro de Monto
+            if (filtros.MontoMin.HasValue || filtros.MontoMax.HasValue)
+            {
+                // Proyectamos el total una sola vez para no repetir el cálculo del Sum
+                var qMonto = query.Select(p => new
+                {
+                    p,
+                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
+                });
+
+                if (filtros.MontoMin.HasValue)
+                    qMonto = qMonto.Where(x => x.Total >= filtros.MontoMin.Value);
+
+                if (filtros.MontoMax.HasValue)
+                    qMonto = qMonto.Where(x => x.Total <= filtros.MontoMax.Value);
+
+                query = qMonto.Select(x => x.p);
+            }
+
+            return query;
         }
 
         // La cola del reparto: pedidos en camino (Enviado) e historial de las últimas
