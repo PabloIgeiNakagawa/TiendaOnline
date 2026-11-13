@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using TiendaOnline.Application.Direcciones;
 using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Application.Usuarios.Common;
 using TiendaOnline.Application.Usuarios.Queries;
+using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Usuarios
@@ -108,6 +110,55 @@ namespace TiendaOnline.Features.Usuarios
             _logger.LogInformation("Perfil del usuario {UsuarioId} editado", id);
             TempData.SetMensajeExito("Tu información se actualizó correctamente.");
             return RedirectToAction("PerfilUsuario", "Usuarios", new { id });
+        }
+
+        // ------------------------------------------------------------------
+        // Cambio de contraseña desde el perfil
+        // ------------------------------------------------------------------
+
+        [HttpGet("CambiarPassword/{id}")]
+        public async Task<IActionResult> CambiarPassword(int id)
+        {
+            var usuario = await _usuarioQueryService.ObtenerUsuarioAsync(id, HttpContext.RequestAborted);
+            if (usuario == null) return NotFound();
+
+            return View(new CambiarPasswordViewModel());
+        }
+
+        [HttpPost("CambiarPassword/{id}")]
+        [ValidateAntiForgeryToken]
+        // Fuerza bruta contra la contraseña actual: el form verifica el hash viejo
+        // en cada envío, mismo motivo que el limiter del reset.
+        [EnableRateLimiting("cambiar-password")]
+        public async Task<IActionResult> CambiarPassword(int id, CambiarPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // El usuario a cambiar es el id del route (único valor que validó la
+            // política EsDuenioDelPerfil): el POST no firma nada por su cuenta.
+            try
+            {
+                await _usuarioCommandService.CambiarPasswordAsync(id, model.ContrasenaActual, model.ContrasenaNueva, HttpContext.RequestAborted);
+                _logger.LogInformation("Contraseña del usuario {UsuarioId} cambiada desde su perfil", id);
+                TempData.SetMensajeExito("Tu contraseña se cambió correctamente.");
+                return RedirectToAction("PerfilUsuario", "Usuarios", new { id });
+            }
+            catch (DomainException ex)
+            {
+                // Guard de dominio (contraseña actual incorrecta): mensaje curado del service.
+                _logger.LogWarning(ex, "No se pudo cambiar la contraseña del usuario {UsuarioId}: {Motivo}", id, ex.Message);
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fallo el cambio de contraseña del usuario {UsuarioId}", id);
+                ModelState.AddModelError(string.Empty, "No pudimos cambiar la contraseña. Intentá de nuevo en unos minutos.");
+                return View(model);
+            }
         }
 
         [HttpGet("AgregarDireccion/{usuarioId}")]
