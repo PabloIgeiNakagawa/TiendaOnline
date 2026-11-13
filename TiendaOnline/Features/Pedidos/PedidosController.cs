@@ -23,17 +23,19 @@ namespace TiendaOnline.Features.Pedidos
         private readonly IPedidoQueryService _pedidoQueryService;
         private readonly IConfirmacionPagoService _confirmacionPagoService;
         private readonly IGestionTransferenciaService _gestionTransferenciaService;
+        private readonly IEstadosPedidoService _estadosPedidoService;
         private readonly ICarritoService _carritoService;
         private readonly IPaymentService _paymentService;
         private readonly IComprobantePdfService _comprobantePdfService;
         private readonly IAppSettingsService _appSettingsService;
         private readonly ILogger<PedidosController> _logger;
 
-        public PedidosController(IPedidoQueryService pedidoQueryService, IConfirmacionPagoService confirmacionPagoService, IGestionTransferenciaService gestionTransferenciaService, ICarritoService carritoService, IPaymentService paymentService, IComprobantePdfService comprobantePdfService, IAppSettingsService appSettingsService, ILogger<PedidosController> logger)
+        public PedidosController(IPedidoQueryService pedidoQueryService, IConfirmacionPagoService confirmacionPagoService, IGestionTransferenciaService gestionTransferenciaService, IEstadosPedidoService estadosPedidoService, ICarritoService carritoService, IPaymentService paymentService, IComprobantePdfService comprobantePdfService, IAppSettingsService appSettingsService, ILogger<PedidosController> logger)
         {
             _pedidoQueryService = pedidoQueryService;
             _confirmacionPagoService = confirmacionPagoService;
             _gestionTransferenciaService = gestionTransferenciaService;
+            _estadosPedidoService = estadosPedidoService;
             _carritoService = carritoService;
             _paymentService = paymentService;
             _comprobantePdfService = comprobantePdfService;
@@ -218,6 +220,54 @@ namespace TiendaOnline.Features.Pedidos
                 _logger.LogError(ex, "Fallo la subida del comprobante del pedido {PedidoId}", id);
                 TempData.SetMensajeError("No pudimos subir el comprobante. Intentá de nuevo en unos minutos.");
                 return RedirectToAction("Instrucciones", new { id });
+            }
+
+            return RedirectToAction("Detalles", new { id });
+        }
+
+        [Authorize(Policy = "EsDuenioDelPedido")]
+        [HttpPost("Cancelar/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancelar(int id)
+        {
+            var pedido = await _pedidoQueryService.ObtenerPedidoConDetallesAsync(id, HttpContext.RequestAborted);
+            if (pedido == null)
+                return NotFound();
+
+            // Solo el pedido que todavía no entró en preparación se cancela desde
+            // la cuenta: una vez EnPreparacion el pago ya está aprobado y el dinero
+            // cobrado — ese caso es de devoluciones, no de cancelación self-service.
+            if (pedido.EstadoId != (int)EstadoPedido.Nuevo)
+            {
+                TempData.SetMensajeError("Este pedido ya está en proceso. Para cancelarlo o pedir una devolución, contactanos.");
+                return RedirectToAction("Detalles", new { id });
+            }
+
+            // Carrera entre el cliente y el admin: si el pago quedó aprobado en el
+            // medio (pedido todavía Nuevo por un instante), no cancelamos desde acá.
+            if (pedido.EstadoPagoId == (int)EstadoPago.Aprobado)
+            {
+                TempData.SetMensajeError("Este pedido ya está pago. Escribinos y coordinamos la devolución.");
+                return RedirectToAction("Detalles", new { id });
+            }
+
+            try
+            {
+                // Misma maquinaria que el panel: claim interno por estado + devolución
+                // de stock cuando corresponde. Si otro request la ganó, los guards del
+                // service devuelven el motivo curado.
+                await _estadosPedidoService.PedidoCanceladoAsync(id, HttpContext.RequestAborted);
+                _logger.LogInformation("Pedido {PedidoId} cancelado por su dueño", id);
+                TempData.SetMensajeExito("Tu pedido fue cancelado.");
+            }
+            catch (DomainException ex)
+            {
+                TempData.SetMensajeError(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fallo la cancelación del pedido {PedidoId} por su dueño", id);
+                TempData.SetMensajeError("No pudimos cancelar el pedido. Intentá de nuevo en unos minutos.");
             }
 
             return RedirectToAction("Detalles", new { id });

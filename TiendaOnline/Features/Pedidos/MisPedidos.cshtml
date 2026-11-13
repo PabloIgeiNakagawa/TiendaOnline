@@ -1,4 +1,5 @@
 ﻿@using TiendaOnline.Extensions
+@using TiendaOnline.Domain.Entities
 @using TiendaOnline.Features.Pedidos
 @model MisPedidosViewModel
 @{
@@ -224,6 +225,22 @@
                                         <a asp-action="Instrucciones" asp-route-id="@pedido.PedidoId" class="btn btn-sm btn-primary position-relative z-2 fw-bold">
                                             <i class="bi bi-upload me-1"></i> Subir comprobante
                                         </a>
+                                    }
+                                    @if (pedido.Estado == EstadoPedido.Nuevo)
+                                    {
+                                        @* Solo el pedido sin procesar se cancela desde la cuenta;
+                                           los guards del endpoint responden si el pago quedó aprobado
+                                           o el estado cambió entre medio. El form lleva position-relative
+                                           para superar el overlay del stretched-link de la tarjeta. La
+                                           confirmación vive en MisPedidos.js (la CSP bloquea handlers
+                                           inline: item #15 del TECH_DEBT). *@
+                                        <form asp-action="Cancelar" asp-route-id="@pedido.PedidoId" method="post"
+                                              class="position-relative z-2" data-cancelar-pedido="@pedido.PedidoId">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger fw-bold">
+                                                <i class="bi bi-x-circle me-1"></i>Cancelar
+                                            </button>
+                                        </form>
                                     }
                                     <a asp-action="Detalles"
                                        asp-route-id="@pedido.PedidoId"

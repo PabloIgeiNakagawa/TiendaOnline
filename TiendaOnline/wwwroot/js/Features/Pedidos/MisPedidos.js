@@ -45,3 +45,13 @@ document.addEventListener('click', (e) => {
         aplicarFiltroPedidos(filtro);
     }
 })();
+
+// Confirmación de la cancelación self-service: el form del card (solo pedidos
+// Nuevo) la pide con data-cancelar-pedido; la CSP bloquea handlers inline.
+document.addEventListener('submit', (e) => {
+    const form = e.target.closest('[data-cancelar-pedido]');
+    if (!form) return;
+    if (!confirm(`¿Cancelamos el pedido #${form.dataset.cancelarPedido}? Esta acción no se puede deshacer.`)) {
+        e.preventDefault();
+    }
+});
