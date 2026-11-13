@@ -1,0 +1,22 @@
+@* Botón flotante de WhatsApp (solo layout público): el link wa.me se arma con
+   los dígitos de AppSettings > Tienda:Whatsapp; sin valor configurado el botón
+   no se muestra (nada apunta a un número falso). En móvil se eleva sobre la
+   barra de tabs fija (fixed-bottom, z-index 1030); en desktop queda cerca de
+   la esquina inferior derecha. *@
+@{
+    var whatsappTexto = AppSettings.GetValue("Tienda:Whatsapp") ?? "";
+    var whatsappDigits = new string(whatsappTexto.Where(char.IsDigit).ToArray());
+}
+@if (!string.IsNullOrEmpty(whatsappDigits))
+{
+    <style>
+        .btn-whatsapp-flotante { right: 1.5rem; bottom: 5rem; z-index: 1050; }
+        @@media (min-width: 992px) { .btn-whatsapp-flotante { right: 1.5rem; bottom: 1.5rem; } }
+    </style>
+    <a href="https://wa.me/@whatsappDigits" target="_blank" rel="noopener"
+       class="btn btn-success rounded-circle shadow d-flex align-items-center justify-content-center position-fixed btn-whatsapp-flotante"
+       style="width: 3.25rem; height: 3.25rem;"
+       aria-label="Escribinos por WhatsApp" title="Escribinos por WhatsApp">
+        <i class="bi bi-whatsapp" style="font-size: 1.6rem;"></i>
+    </a>
+}

@@ -1,0 +1,76 @@
+@{
+    ViewData[ViewDataKeys.Title] = "Contacto";
+}
+
+@{
+    // Mismo criterio que el FAQ: WhatsApp del panel (AppSettings > Tienda:Whatsapp),
+    // oculto si no hay valor — nada apunta a un número falso.
+    var whatsappTexto = AppSettings.GetValue("Tienda:Whatsapp") ?? "";
+    var whatsappDigits = new string(whatsappTexto.Where(char.IsDigit).ToArray());
+}
+
+<div class="container py-5">
+    <partial name="_TituloSeccion" model='("Contacto", "Escribinos y te respondemos lo antes posible.")' />
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 bg-body-tertiary rounded-4 h-100 text-center">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="mb-3">
+                        <i class="bi bi-whatsapp text-success" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">WhatsApp</h5>
+                    <p class="text-secondary small mb-4">
+                        El camino más rápido para consultas sobre pedidos, envíos o devoluciones.
+                    </p>
+                    @if (!string.IsNullOrEmpty(whatsappDigits))
+                    {
+                        <a href="https://wa.me/@whatsappDigits" target="_blank" rel="noopener" class="btn btn-success rounded-pill px-4 mt-auto align-self-center">
+                            <i class="bi bi-whatsapp me-2"></i>Escribinos por WhatsApp
+                        </a>
+                    }
+                    else
+                    {
+                        <p class="text-secondary small fst-italic mt-auto mb-0">
+                            Todavía no hay número configurado; usá el canal de preguntas frecuentes mientras tanto.
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 bg-body-tertiary rounded-4 h-100 text-center">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="mb-3">
+                        <i class="bi bi-question-circle text-primary" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Preguntas frecuentes</h5>
+                    <p class="text-secondary small mb-4">
+                        Envíos, pagos, devoluciones y garantías: la mayoría de las dudas ya están respondidas acá.
+                    </p>
+                    <a asp-controller="Soporte" asp-action="FAQ" class="btn btn-outline-primary rounded-pill px-4 mt-auto align-self-center">
+                        <i class="bi bi-chat-left-text me-2"></i>Ver preguntas frecuentes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-10">
+            <div class="card border-0 bg-body-tertiary rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-2">
+                        <i class="bi bi-bag-check me-2 text-primary"></i>Estado de tu pedido
+                    </h5>
+                    <p class="text-secondary small mb-3">
+                        El avance de cada compra lo ves en "Mis Pedidos": pago confirmado, envío y entrega. Si el
+                        pedido ya está pago y querés una devolución, escribínos por WhatsApp con el número de pedido.
+                    </p>
+                    <a asp-controller="Pedidos" asp-action="MisPedidos" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-right me-1"></i>Ir a Mis Pedidos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
