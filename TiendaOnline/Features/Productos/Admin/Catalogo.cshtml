@@ -42,7 +42,7 @@
         }
     </button>
 
-    <div class="offcanvas offcanvas-md offcanvas-bottom filtros-panel" id="filtrosCatalogoAdmin">
+    <div class="offcanvas-md offcanvas-bottom filtros-panel" id="filtrosCatalogoAdmin">
         <div class="offcanvas-body">
             <div class="d-md-none text-end mb-2">
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
@@ -53,7 +53,9 @@
                 <div class="card rounded-3 border border-1">
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-1">
+                            @* En md (con la sidebar abierta el ancho útil es angosto) los campos van de a dos por fila;
+                               en lg+ entra la fila única de siempre. *@
+                            <div class="col-md-6 col-lg-1">
                                 <label class="form-label fw-bold text-muted small">Ver</label>
                                 <select name="TamanoPagina" class="form-select">
                                     @{
@@ -67,11 +69,11 @@
                                     }
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-6 col-lg-3">
                                 <label class="form-label fw-semibold"><i class="bi bi-search me-1"></i>Buscar</label>
                                 <input type="text" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="Nombre o descripción...">
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-semibold"><i class="bi bi-funnel me-1"></i>Categoría</label>
                                 <select name="CategoriaId" class="form-select">
                                     <option value="">Todas</option>
@@ -81,7 +83,7 @@
                                     }
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-semibold"><i class="bi bi-boxes me-1"></i>Stock</label>
                                 <select name="Stock" class="form-select">
                                     <option value="">Todos</option>
@@ -90,7 +92,7 @@
                                     <option value="bajo" selected="@(Model.Stock == "bajo")">Stock bajo (≤5)</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-semibold"><i class="bi bi-toggle-on me-1"></i>Estado</label>
                                 <select name="Estado" class="form-select">
                                     <option value="">Todos</option>
@@ -98,7 +100,7 @@
                                     <option value="inactivo" selected="@(Model.Estado == "inactivo")">Inactivos</option>
                                 </select>
                             </div>
-                            <div class="col-md-2 d-flex align-items-end gap-2">
+                            <div class="col-md-6 col-lg-2 d-flex align-items-end gap-2">
                                 <button type="submit" class="btn btn-primary rounded-3 flex-fill">
                                     <i class="bi bi-filter me-1"></i>
                                 </button>
@@ -286,9 +288,12 @@
 
                     <!-- Vista de Cards (Mobile/Tablet) -->
                     <div class="d-lg-none p-3" id="tablaProductos">
+                        @* Tablet (md): grilla de 2 columnas para no estirar las cards de celular *@
+                        <div class="row row-cols-1 row-cols-md-2 g-3">
                         @foreach (var producto in Model.ProductosPaginados.Items)
                         {
-                            <div class="card mb-3 fila-producto @(producto.Activo ? "" : "bg-light")">
+                            <div class="col">
+                            <div class="card h-100 fila-producto @(producto.Activo ? "" : "bg-light")">
                                 <div class="card-body">
                                     <div class="d-flex align-items-start mb-3">
                                         <div class="producto-imagen-mini me-3">
@@ -313,16 +318,16 @@
                                         </div>
                                     </div>
 
-                                    <div class="row g-2 mb-3">
-                                        <div class="col-6">
+                                    <div class="row row-cols-2 row-cols-md-1 g-2 mb-3">
+                                        <div class="col">
                                             <small class="text-muted d-block">
                                                 <i class="bi bi-currency-dollar text-primary me-1"></i>Precio
                                             </small>
-                                            <div class="@(producto.Activo ? "" : "text-muted") fw-semibold">
+                                            <div class="@(producto.Activo ? "" : "text-muted") fw-semibold small text-nowrap">
                                                 @producto.Precio.ToString("C")
                                             </div>
                                         </div>
-                                        <div class="col-6">
+                                        <div class="col">
                                             <small class="text-muted d-block">
                                                 <i class="bi bi-boxes text-primary me-1"></i>Stock
                                             </small>
@@ -350,7 +355,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
                                         <div>
                                             @if (producto.Activo)
                                             {
@@ -403,7 +408,9 @@
                                     </div>
                                 </div>
                             </div>
+                            </div>
                         }
+                        </div>
                     </div>
                 </div>
             </div>

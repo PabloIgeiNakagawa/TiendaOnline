@@ -29,7 +29,7 @@
         }
     </button>
 
-    <div class="offcanvas offcanvas-md offcanvas-bottom filtros-panel" id="filtrosLogs">
+    <div class="offcanvas-md offcanvas-bottom filtros-panel" id="filtrosLogs">
         <div class="offcanvas-body">
             <div class="d-md-none text-end mb-2">
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
@@ -40,7 +40,7 @@
                 <div class="card rounded-3 border">
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-bold text-muted small">Mostrar</label>
                                 <select name="TamanoPagina" class="form-select">
                                     @{
@@ -54,27 +54,27 @@
                                     }
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-6 col-lg-3">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-search me-1"></i>Búsqueda
                                 </label>
                                 <input type="text" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="Usuario, tabla o acción...">
                             </div>
 
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-calendar me-1"></i>Desde
                                 </label>
                                 <input type="date" name="FechaDesde" class="form-control">
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-calendar me-1"></i>Hasta
                                 </label>
                                 <input type="date" name="FechaHasta" class="form-control">
                             </div>
 
-                            <div class="col-md-3 d-flex align-items-end gap-2">
+                            <div class="col-md-6 col-lg-3 d-flex align-items-end gap-2">
                                 <button type="submit" class="btn btn-primary flex-fill">
                                     <i class="bi bi-filter me-1"></i>
                                 </button>

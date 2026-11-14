@@ -51,7 +51,7 @@
         }
     </button>
 
-    <div class="offcanvas offcanvas-md offcanvas-bottom filtros-panel" id="filtrosPedidos">
+    <div class="offcanvas-md offcanvas-bottom filtros-panel" id="filtrosPedidos">
         <div class="offcanvas-body">
             <div class="d-md-none text-end mb-2">
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
@@ -62,7 +62,7 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <form asp-action="Listado" method="get" class="row g-3">
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-bold">Mostrar</label>
                                 <select name="TamanoPagina" class="form-select">
                                     @{
@@ -76,13 +76,13 @@
                                     }
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-6 col-lg-3">
                                 <label for="campoBusqueda" class="form-label fw-semibold">
                                     <i class="bi bi-search me-1"></i>Buscar
                                 </label>
                                 <input type="text" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="ID pedido o cliente...">
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-funnel me-1"></i>Estado
                                 </label>
@@ -90,7 +90,7 @@
                                     <option value="">Todos los estados</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-credit-card me-1"></i>Estado del pago
                                 </label>
@@ -98,7 +98,7 @@
                                     <option value="">Todos los pagos</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6 col-lg-4">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-currency-dollar me-1"></i>Rango de Monto
                                 </label>
@@ -108,7 +108,7 @@
                                     <input type="number" name="MontoMax" value="@Model.MontoMax" class="form-control" placeholder="Máx" step="0.01">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6 col-lg-4">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-calendar-range me-1"></i>Periodo de Fechas
                                 </label>
@@ -124,7 +124,7 @@
                                            class="form-control" title="Fecha Hasta">
                                 </div>
                             </div>
-                            <div class="col-md-3 d-flex align-items-end gap-2">
+                            <div class="col-md-6 col-lg-3 d-flex align-items-end gap-2">
                                 <button type="submit" class="btn btn-primary rounded-3 flex-fill">
                                     <i class="bi bi-filter me-1"></i>
                                 </button>

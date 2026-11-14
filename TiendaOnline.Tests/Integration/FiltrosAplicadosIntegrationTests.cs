@@ -94,7 +94,11 @@ namespace TiendaOnline.Tests.Integration
                 Assert.True(respuesta.IsSuccessStatusCode, $"GET {ruta} → {respuesta.StatusCode}");
                 var html = await respuesta.Content.ReadAsStringAsync();
                 Assert.Contains("data-bs-toggle=\"offcanvas\"", html);
-                Assert.Contains("offcanvas offcanvas-md offcanvas-bottom filtros-panel", html);
+                // La hoja usa SOLO el modificador responsivo: la clase `offcanvas` pelada
+                // es un drawer fijo/oculto en todos los anchos (ocultaba los filtros en
+                // desktop); combinarlas es el bug que este guard no deja volver.
+                Assert.Contains("offcanvas-md offcanvas-bottom filtros-panel", html);
+                Assert.DoesNotContain("offcanvas offcanvas-md", html);
             }
         }
 

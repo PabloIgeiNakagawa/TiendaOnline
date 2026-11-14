@@ -35,7 +35,7 @@
         }
     </button>
 
-    <div class="offcanvas offcanvas-md offcanvas-bottom filtros-panel" id="filtrosMovimientos">
+    <div class="offcanvas-md offcanvas-bottom filtros-panel" id="filtrosMovimientos">
         <div class="offcanvas-body">
             <div class="d-md-none text-end mb-2">
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
@@ -46,7 +46,7 @@
                 <div class="card rounded-3 border">
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-1">
+                            <div class="col-md-6 col-lg-1">
                                 <label class="form-label fw-bold text-muted small">Ver</label>
                                 <select name="RegistrosPorPagina" class="form-select">
                                     @{
@@ -61,12 +61,12 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-6 col-lg-3">
                                 <label class="form-label fw-semibold"><i class="bi bi-search me-1"></i>Producto</label>
                                 <input type="text" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="Nombre del producto...">
                             </div>
 
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-semibold"><i class="bi bi-funnel me-1"></i>Tipo</label>
                                 <select name="TipoMovimientoId" class="form-select">
                                     <option value="">Todos</option>
@@ -77,17 +77,17 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-semibold"><i class="bi bi-calendar-event me-1"></i>Desde</label>
                                 <input type="date" name="Desde" value="@(Model.Desde?.ToString("yyyy-MM-dd"))" class="form-control">
                             </div>
 
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-semibold"><i class="bi bi-calendar-event me-1"></i>Hasta</label>
                                 <input type="date" name="Hasta" value="@(Model.Hasta?.ToString("yyyy-MM-dd"))" class="form-control">
                             </div>
 
-                            <div class="col-md-2 d-flex align-items-end gap-2">
+                            <div class="col-md-6 col-lg-2 d-flex align-items-end gap-2">
                                 <button type="submit" class="btn btn-primary rounded-3 flex-fill">
                                     <i class="bi bi-filter"></i>
                                 </button>

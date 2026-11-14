@@ -89,10 +89,10 @@
     transition: 0.3s;
 }
 
-/* Hojas de filtros del panel en mobile (offcanvas-md offcanvas-bottom):
-   el default de Bootstrap es 30vh y las pilas de campos no entran */
-@media (max-width: 767.98px) {
-    .offcanvas-bottom.filtros-panel {
-        height: 85vh;
-    }
+/* Hojas de filtros del panel (offcanvas-md offcanvas-bottom): en celular ocupan casi
+   toda la pantalla vía la variable oficial --bs-offcanvas-height (el default de
+   Bootstrap es 30vh y las pilas de campos no entran). En desktop la variable queda
+   inerte: el offcanvas-md responsivo solo vuelve a flujo normal (bloque común). */
+.filtros-panel {
+    --bs-offcanvas-height: 85vh;
 }

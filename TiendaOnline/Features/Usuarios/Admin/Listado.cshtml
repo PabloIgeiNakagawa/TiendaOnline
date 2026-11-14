@@ -41,7 +41,7 @@
         }
     </button>
 
-    <div class="offcanvas offcanvas-md offcanvas-bottom filtros-panel" id="filtrosUsuarios">
+    <div class="offcanvas-md offcanvas-bottom filtros-panel" id="filtrosUsuarios">
         <div class="offcanvas-body">
             <div class="d-md-none text-end mb-2">
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
@@ -52,7 +52,7 @@
                 <div class="card rounded-3 border border-1">
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-bold text-muted small">Mostrar</label>
                                 <select name="tamanoPagina" class="form-select">
                                     @{
@@ -66,13 +66,13 @@
                                     }
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label for="busqueda" class="form-label fw-semibold">
                                     <i class="bi bi-search me-1"></i>Buscar
                                 </label>
                                 <input type="text" id="busqueda" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="Buscar por nombre o email...">
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label for="filtroRol" class="form-label fw-semibold">
                                     <i class="bi bi-funnel me-1"></i>Filtrar por Rol
                                 </label>
@@ -86,7 +86,7 @@
                                     }
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-6 col-lg-2">
                                 <label for="filtroEstado" class="form-label fw-semibold">
                                     <i class="bi bi-toggle-on me-1"></i>Estado
                                 </label>
@@ -96,7 +96,7 @@
                                     <option value="inactivo" selected='@(Model.Estado == false ? "selected" : null)'>Inactivos</option>
                                 </select>
                             </div>
-                            <div class="col-md-3 d-flex align-items-end gap-2">
+                            <div class="col-md-6 col-lg-3 d-flex align-items-end gap-2">
                                 <button type="submit" class="btn btn-primary rounded-3 flex-fill">
                                     <i class="bi bi-filter me-1"></i>
                                 </button>
