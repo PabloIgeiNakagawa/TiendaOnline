@@ -95,23 +95,30 @@
                 box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
             }
 
-        /* La hoja de filtros ocupa casi toda la pantalla en el celular (el default de Bootstrap es 30vh)
-           y va por encima del botón flotante de WhatsApp para no taparlo mutuamente */
+        /* La hoja de filtros en el celular ocupa casi toda la pantalla vía la variable
+           oficial de Bootstrap --bs-offcanvas-height (el default es 30vh y las pilas de
+           campos no entran), por encima del botón flotante de WhatsApp, y la cabecera
+           lleva aire extra (el título y la X quedaban apretados contra el borde).
+           El comportamiento hoja/en-flujo del offcanvas-md lo resuelve Bootstrap solo. */
+        #filtrosCatalogo {
+            --bs-offcanvas-height: 85vh;
+        }
+
         @@media (max-width: 767.98px) {
             #filtrosCatalogo.offcanvas-bottom {
-                height: 85vh;
                 z-index: 1055;
+            }
+
+            #filtrosCatalogo .card-header {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
             }
         }
     </style>
 }
 
 <div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <partial name="_TituloSeccion" model='("Productos", "Descubre nuestra amplia gama de productos")' />
-        </div>
-    </div>
+    <h1 class="h5 mb-3">Productos</h1>
 
     <div class="row">
         <div class="col-lg-3 col-md-4">
@@ -125,7 +132,7 @@
                 }
             </button>
 
-            <div class="offcanvas offcanvas-md offcanvas-bottom" tabindex="-1" id="filtrosCatalogo">
+            <div class="offcanvas-md offcanvas-bottom" tabindex="-1" id="filtrosCatalogo">
                 <div class="offcanvas-body p-0">
             <form asp-action="Index" method="get" id="formFiltros">
                 <input type="hidden" name="orden" value="@Model.Orden" />
