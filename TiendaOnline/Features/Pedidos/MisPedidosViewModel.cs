@@ -1,4 +1,5 @@
 ﻿using TiendaOnline.Domain.Entities;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Pedidos
 {
@@ -48,6 +49,11 @@ namespace TiendaOnline.Features.Pedidos
         public string? ComprobanteUrl { get; set; }
 
         public bool EstaEnviado => FechaEnvio.HasValue;
+
+        /// <summary>Cuánto hace que salió ("hace 3 h"), para el paso Enviado de la card.</summary>
+        public string? HaceEnCamino => FechaEnvio == null
+            ? null
+            : TiempoTranscurrido.Formatear(DateTime.Now - FechaEnvio.Value);
         public bool EstaEntregado => FechaEntrega.HasValue;
         public bool EstaCancelado => FechaCancelado.HasValue;
 

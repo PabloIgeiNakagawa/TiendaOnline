@@ -1,4 +1,5 @@
 using TiendaOnline.Application.Pedidos.Queries;
+using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Repartidor
 {
@@ -61,18 +62,9 @@ namespace TiendaOnline.Features.Repartidor
         }
 
         /// <summary>Texto "hace X" desde que el pedido salió de la sucursal.</summary>
-        public string? HaceEnCamino => FechaEnvio == null ? null : FormatearTiempo(DateTime.Now - FechaEnvio.Value);
+        public string? HaceEnCamino => FechaEnvio == null ? null : TiempoTranscurrido.Formatear(DateTime.Now - FechaEnvio.Value);
 
         /// <summary>En camino hace más de 24 h: algo se atascó, la fila se resalta.</summary>
         public bool EstaColgada => FechaEnvio != null && DateTime.Now - FechaEnvio.Value > TimeSpan.FromHours(24);
-
-        private static string FormatearTiempo(TimeSpan delta)
-        {
-            if (delta < TimeSpan.FromMinutes(1)) return "hace instantes";
-            if (delta < TimeSpan.FromHours(1)) return $"hace {(int)delta.TotalMinutes} min";
-            // Más de 48 h ya no se entiende en horas ("hace 6814 h"): se cuenta en días.
-            if (delta < TimeSpan.FromHours(48)) return $"hace {(int)delta.TotalHours} h";
-            return $"hace {(int)delta.TotalDays} días";
-        }
     }
 }
