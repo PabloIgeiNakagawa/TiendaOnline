@@ -16,5 +16,7 @@
         public string Etiqueta { get; set; } // Ej: "Búsqueda"
         public string Valor { get; set; } // Ej: "Zapatos"
         public string Propiedad { get; set; } // Para el botón de eliminar (X)
+        // Parámetros extra que limpia la misma X (la píldora de precio saca precioMin y precioMax juntos)
+        public List<string> PropiedadesAdicionales { get; set; } = new();
     }
 }
