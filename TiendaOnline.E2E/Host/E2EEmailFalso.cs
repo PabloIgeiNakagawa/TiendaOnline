@@ -36,5 +36,14 @@ namespace TiendaOnline.E2E.Host
 
         public Task EnviarEmailComprobanteRecibidoAsync(string destinoEmail, int pedidoId)
             => RegistrarAsync(destinoEmail, $"Comprobante del pedido #{pedidoId:D6} recibido");
+
+        public Task EnviarEmailPedidoEntregadoAsync(string destinoEmail, string nombreUsuario, int pedidoId)
+            => RegistrarAsync(destinoEmail, $"Pedido #{pedidoId:D6} entregado");
+
+        public Task EnviarEmailResetPasswordAsync(string destinoEmail, string nombreUsuario, string token)
+            => RegistrarAsync(destinoEmail, "Recuperación de contraseña");
+
+        public Task EnviarEmailPasswordCambiadaAsync(string destinoEmail, string nombreUsuario)
+            => RegistrarAsync(destinoEmail, "Tu contraseña fue cambiada");
     }
 }
