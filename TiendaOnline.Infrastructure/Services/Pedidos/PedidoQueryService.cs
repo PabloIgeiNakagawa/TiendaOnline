@@ -85,6 +85,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 {
                     p.PedidoId,
                     p.FechaPedido,
+                    p.FechaEnPreparacion,
                     p.FechaEnvio,
                     p.FechaEntrega,
                     p.FechaCancelado,
@@ -122,6 +123,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             {
                 PedidoId = pedido.PedidoId,
                 FechaPedido = pedido.FechaPedido,
+                FechaEnPreparacion = pedido.FechaEnPreparacion,
                 FechaEnvio = pedido.FechaEnvio,
                 FechaEntrega = pedido.FechaEntrega,
                 FechaCancelado = pedido.FechaCancelado,

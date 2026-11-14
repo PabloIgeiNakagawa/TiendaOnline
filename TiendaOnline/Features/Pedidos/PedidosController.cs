@@ -112,6 +112,7 @@ namespace TiendaOnline.Features.Pedidos
             {
                 PedidoId = pedido.PedidoId,
                 FechaPedido = pedido.FechaPedido,
+                FechaEnPreparacion = pedido.FechaEnPreparacion,
                 FechaEnvio = pedido.FechaEnvio,
                 FechaEntrega = pedido.FechaEntrega,
                 FechaCancelado = pedido.FechaCancelado,

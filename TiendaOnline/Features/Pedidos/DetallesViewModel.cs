@@ -9,6 +9,7 @@ namespace TiendaOnline.Features.Pedidos
         public string NumeroPedido => PedidoId.ToString("D6");
 
         public DateTime FechaPedido { get; set; }
+        public DateTime? FechaEnPreparacion { get; set; }
         public DateTime? FechaEnvio { get; set; }
         public DateTime? FechaEntrega { get; set; }
         public DateTime? FechaCancelado { get; set; }

@@ -347,8 +347,27 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="timeline position-relative ps-4">
+                        @{
+                            // El timeline se arma por historia: cada paso aparece si su fecha
+                            // existe (un entregado muestra envío y entrega, cada uno con la
+                            // suya). Verde = paso cumplido; azul = paso actual; gris = no llegó.
+                            var pasoActual = 1;
+                            if (Model.FechaEnPreparacion != null) pasoActual = 2;
+                            if (Model.FechaEnvio != null) pasoActual = 3;
+                            if (Model.FechaEntrega != null) pasoActual = 4;
+                            var entregado = Model.Estado == EstadoPedido.Entregado;
+                            var cancelado = Model.Estado == EstadoPedido.Cancelado;
+
+                            string ClaseDePaso(int indice, bool alcanzado) => cancelado
+                                ? (alcanzado ? "bg-success text-white" : "bg-body-secondary text-secondary")
+                                : alcanzado && (indice < pasoActual || entregado) ? "bg-success text-white"
+                                : indice == pasoActual && !entregado ? "bg-primary text-white"
+                                : "bg-body-secondary text-secondary";
+                        }
+
+                        <!-- Paso 1: realizado (siempre existe) -->
                         <div class="position-relative pb-4">
-                            <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-body-secondary z-1"
+                            <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm @ClaseDePaso(1, true) z-1"
                                  style="left: -2rem; width: 32px; height: 32px;">
                                 <i class="bi bi-plus-circle"></i>
                             </div>
@@ -377,10 +396,36 @@
                             </div>
                         </div>
 
-                        @if (Model.Estado == EstadoPedido.Enviado || Model.Estado == EstadoPedido.Entregado)
+                        <!-- Paso 2: pago confirmado / en preparación -->
+                        @if (Model.FechaEnPreparacion != null)
                         {
                             <div class="position-relative pb-4">
-                                <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-info z-1"
+                                <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm @ClaseDePaso(2, true) z-1"
+                                     style="left: -2rem; width: 32px; height: 32px;">
+                                    <i class="bi bi-cash-coin"></i>
+                                </div>
+                                <div class="ps-2">
+                                    <h6 class="fw-semibold mb-1">Pago confirmado</h6>
+                                    <p class="mb-0 text-muted">@Model.FechaEnPreparacion?.ToString("dd/MM/yyyy HH:mm")</p>
+                                    <small class="text-muted">
+                                        @if (Model.EsAdmin)
+                                        {
+                                            <text>Cambio de estado: Nuevo → En preparación</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Confirmamos tu pago y estamos preparando tu pedido</text>
+                                        }
+                                    </small>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Paso 3: en camino, con su fecha propia (la de envío) -->
+                        @if (Model.FechaEnvio != null)
+                        {
+                            <div class="position-relative pb-4">
+                                <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm @ClaseDePaso(3, true) z-1"
                                      style="left: -2rem; width: 32px; height: 32px;">
                                     <i class="bi bi-truck"></i>
                                 </div>
@@ -395,11 +440,11 @@
                                             <text>Pedido en camino</text>
                                         }
                                     </h6>
-                                    <p class="mb-0 text-muted">@(Model.Estado == EstadoPedido.Enviado ? Model.FechaEnvio?.ToString("dd/MM/yyyy HH:mm") : Model.FechaEntrega?.ToString("dd/MM/yyyy HH:mm"))</p>
+                                    <p class="mb-0 text-muted">@Model.FechaEnvio?.ToString("dd/MM/yyyy HH:mm")</p>
                                     <small class="text-muted">
                                         @if (Model.EsAdmin)
                                         {
-                                            <text>Cambio de estado: Pendiente → Enviado</text>
+                                            <text>Cambio de estado: En preparación → Enviado</text>
                                         }
                                         else
                                         {
@@ -410,10 +455,11 @@
                             </div>
                         }
 
-                        @if (Model.Estado == EstadoPedido.Entregado)
+                        <!-- Paso 4: entregado -->
+                        @if (Model.FechaEntrega != null)
                         {
                             <div class="position-relative pb-4">
-                                <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-success z-1"
+                                <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm @ClaseDePaso(4, true) z-1"
                                      style="left: -2rem; width: 32px; height: 32px;">
                                     <i class="bi bi-check-circle"></i>
                                 </div>
@@ -443,26 +489,18 @@
                             </div>
                         }
 
-                        @if (Model.Estado == EstadoPedido.Cancelado)
+                        <!-- Cancelado: corta la historia en rojo -->
+                        @if (Model.FechaCancelado != null)
                         {
                             <div class="position-relative pb-4">
-                                <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-danger z-1"
+                                <div class="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow-sm bg-danger text-white z-1"
                                      style="left: -2rem; width: 32px; height: 32px;">
                                     <i class="bi bi-x-circle"></i>
                                 </div>
                                 <div class="ps-2">
                                     <h6 class="fw-semibold mb-1">Pedido cancelado</h6>
                                     <p class="mb-0 text-muted">@Model.FechaCancelado?.ToString("dd/MM/yyyy HH:mm")</p>
-                                    <small class="text-muted">
-                                        @if (Model.EsAdmin)
-                                        {
-                                            <text>Cambio de estado: Pendiente → Cancelado</text>
-                                        }
-                                        else
-                                        {
-                                            <text>El pedido ha sido cancelado</text>
-                                        }
-                                    </small>
+                                    <small class="text-muted">El pedido ha sido cancelado</small>
                                 </div>
                             </div>
                         }

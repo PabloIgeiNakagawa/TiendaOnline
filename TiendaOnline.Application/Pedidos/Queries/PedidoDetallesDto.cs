@@ -4,6 +4,7 @@
     {
         public int PedidoId { get; set; }
         public DateTime FechaPedido { get; set; }
+        public DateTime? FechaEnPreparacion { get; set; }
         public DateTime? FechaEnvio { get; set; }
         public DateTime? FechaEntrega { get; set; }
         public DateTime? FechaCancelado { get; set; }
