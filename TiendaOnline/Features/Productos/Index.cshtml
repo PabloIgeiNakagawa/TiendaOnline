@@ -1,4 +1,5 @@
 ﻿@using TiendaOnline.Features.Productos
+@using TiendaOnline.Features.Shared.ViewModels
 @model ProductoIndexViewModel
 
 @{
@@ -17,6 +18,70 @@
 
     // Siempre enviamos el tamaño de página
     filtrosBase.Add("tamanoPagina", Model.Paginacion.RegistrosPorPagina.ToString());
+
+    // Pills de filtros activos: el parcial compartido _FiltrosAplicados arma cada X
+    // (reconstruye la query actual sin SU parámetro y vuelve a la página 1)
+    var pillsFiltros = new List<FiltroPill>();
+
+    if (!string.IsNullOrEmpty(Model.Busqueda))
+    {
+        pillsFiltros.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Búsqueda", Valor = Model.Busqueda, Propiedad = "busqueda" });
+    }
+
+    if (Model.CategoriaId.HasValue)
+    {
+        var catActiva = Model.CategoriasRaiz.FirstOrDefault(c => c.CategoriaId == Model.CategoriaId.Value)
+            ?? Model.CategoriasRaiz.SelectMany(c => c.Subcategorias)
+                .FirstOrDefault(s => s.CategoriaId == Model.CategoriaId.Value);
+
+        if (catActiva != null)
+        {
+            pillsFiltros.Add(new FiltroPill { Icono = "bi-tags", Etiqueta = "Categoría", Valor = catActiva.Nombre, Propiedad = "categoriaId" });
+        }
+    }
+
+    if (Model.PrecioMin.HasValue || Model.PrecioMax.HasValue)
+    {
+        string valorPrecio;
+        if (Model.PrecioMin.HasValue && Model.PrecioMax.HasValue)
+        {
+            valorPrecio = $"${Model.PrecioMin.Value:N0} – ${Model.PrecioMax.Value:N0}";
+        }
+        else if (Model.PrecioMin.HasValue)
+        {
+            valorPrecio = $"desde ${Model.PrecioMin.Value:N0}";
+        }
+        else
+        {
+            valorPrecio = $"hasta ${Model.PrecioMax.Value:N0}";
+        }
+
+        // Una sola X saca los dos extremos del rango
+        pillsFiltros.Add(new FiltroPill
+        {
+            Icono = "bi-currency-dollar",
+            Etiqueta = "Precio",
+            Valor = valorPrecio,
+            Propiedad = "precioMin",
+            PropiedadesAdicionales = { "precioMax" }
+        });
+    }
+
+    if (!string.IsNullOrEmpty(Model.Orden) && Model.Orden != "nombre")
+    {
+        pillsFiltros.Add(new FiltroPill
+        {
+            Icono = "bi-sort-down",
+            Etiqueta = "Orden",
+            Valor = Model.Orden == "precio-desc" ? "Mayor a Menor" : "Menor a Mayor",
+            Propiedad = "orden"
+        });
+    }
+
+    // Contador para el botón Filtros del mobile (el orden no cuenta: nunca filtra resultados)
+    var filtrosActivos = (string.IsNullOrEmpty(Model.Busqueda) ? 0 : 1)
+        + (Model.CategoriaId.HasValue ? 1 : 0)
+        + (Model.PrecioMin.HasValue || Model.PrecioMax.HasValue ? 1 : 0);
 }
 
 @section Styles {
@@ -29,59 +94,48 @@
                 transform: translateY(-5px);
                 box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
             }
+
+        /* La hoja de filtros ocupa casi toda la pantalla en el celular (el default de Bootstrap es 30vh)
+           y va por encima del botón flotante de WhatsApp para no taparlo mutuamente */
+        @@media (max-width: 767.98px) {
+            #filtrosCatalogo.offcanvas-bottom {
+                height: 85vh;
+                z-index: 1055;
+            }
+        }
     </style>
 }
 
 <div class="container-fluid py-4">
     <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
+        <div class="col-12">
             <partial name="_TituloSeccion" model='("Productos", "Descubre nuestra amplia gama de productos")' />
-            <div class="dropdown">
-                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="bi bi-sort-down me-1"></i>
-                    @switch (Model.Orden)
-                    {
-                        case "precio-asc":
-                            <text>Precio: Menor a Mayor</text>
-                            break;
-                        case "precio-desc":
-                            <text>Precio: Mayor a Menor</text>
-                            break;
-                        default:
-                            <text>Nombre A-Z</text>
-                            break;
-                    }
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    @{
-                        var rNombre = new Dictionary<string, string>(filtrosBase) { ["orden"] = "nombre", ["pagina"] = "1" };
-                    }
-                    <li><a class="dropdown-item" asp-action="Index" asp-all-route-data="rNombre">Nombre A-Z</a></li>
-
-                    @{
-                        var rAsc = new Dictionary<string, string>(filtrosBase) { ["orden"] = "precio-asc", ["pagina"] = "1" };
-                    }
-                    <li><a class="dropdown-item" asp-action="Index" asp-all-route-data="rAsc">Precio: Menor a Mayor</a></li>
-
-                    @{
-                        var rDesc = new Dictionary<string, string>(filtrosBase) { ["orden"] = "precio-desc", ["pagina"] = "1" };
-                    }
-                    <li><a class="dropdown-item" asp-action="Index" asp-all-route-data="rDesc">Precio: Mayor a Menor</a></li>
-                </ul>
-            </div>
         </div>
     </div>
 
     <div class="row">
         <div class="col-lg-3 col-md-4">
+            <button class="btn btn-outline-primary w-100 mb-3 d-md-none" type="button"
+                    data-bs-toggle="offcanvas" data-bs-target="#filtrosCatalogo"
+                    aria-controls="filtrosCatalogo">
+                <i class="bi bi-funnel me-1"></i>Filtros
+                @if (filtrosActivos > 0)
+                {
+                    <span class="badge bg-primary rounded-pill ms-1">@filtrosActivos</span>
+                }
+            </button>
+
+            <div class="offcanvas offcanvas-md offcanvas-bottom" tabindex="-1" id="filtrosCatalogo">
+                <div class="offcanvas-body p-0">
             <form asp-action="Index" method="get" id="formFiltros">
                 <input type="hidden" name="orden" value="@Model.Orden" />
                 <input type="hidden" name="categoriaId" value="@Model.CategoriaId" />
                 <input type="hidden" name="tamanoPagina" value="@Model.Paginacion.RegistrosPorPagina" />
 
                 <div class="card rounded-3 shadow-sm border-0 mb-4">
-                    <div class="card-header border-bottom">
+                    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 fw-semibold"><i class="bi bi-funnel me-2 text-primary"></i>Filtros</h5>
+                        <button type="button" class="btn-close d-md-none" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
                     </div>
 
                     <div class="card-body p-0">
@@ -90,7 +144,7 @@
                                 <i class="bi bi-search me-2"></i>Buscar
                             </div>
                             <div class="p-3">
-                                <input type="text" name="busqueda" id="busquedaProducto" class="form-control"
+                                <input type="search" name="busqueda" id="busquedaProducto" class="form-control"
                                        placeholder="Buscar productos..." value="@Model.Busqueda">
                             </div>
                         </div>
@@ -179,21 +233,66 @@
                     </div>
                 </div>
             </form>
+                </div>
+            </div>
         </div>
 
         <div class="col-lg-9 col-md-8">
-            <div class="p-3 rounded-3 border mb-4 shadow-sm d-flex justify-content-between align-items-center">
+            @if (pillsFiltros.Count > 0)
+            {
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <partial name="_FiltrosAplicados" model='new FiltrosAplicadosViewModel { Filtros = pillsFiltros, ActionName = "Index" }' />
+                </div>
+            }
+
+            <div class="p-3 rounded-3 border mb-4 shadow-sm d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <span class="text-muted small">
                     Mostrando <strong>@Model.Paginacion.Items.Count()</strong> de <strong>@Model.Paginacion.TotalRegistros</strong>
                 </span>
-                <div class="btn-group btn-group-sm">
-                    <button id="btnGrid" class="btn btn-outline-secondary">
-                        <i class="bi bi-grid-3x3-gap"></i>
-                    </button>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-sort-down me-1"></i>
+                            @switch (Model.Orden)
+                            {
+                                case "precio-asc":
+                                    <text>Precio: Menor a Mayor</text>
+                                    break;
+                                case "precio-desc":
+                                    <text>Precio: Mayor a Menor</text>
+                                    break;
+                                default:
+                                    <text>Nombre A-Z</text>
+                                    break;
+                            }
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            @{
+                                var rNombre = new Dictionary<string, string>(filtrosBase) { ["orden"] = "nombre", ["pagina"] = "1" };
+                            }
+                            <li><a class="dropdown-item" asp-action="Index" asp-all-route-data="rNombre">Nombre A-Z</a></li>
 
-                    <button id="btnList" class="btn btn-outline-secondary">
-                        <i class="bi bi-list"></i>
-                    </button>
+                            @{
+                                var rAsc = new Dictionary<string, string>(filtrosBase) { ["orden"] = "precio-asc", ["pagina"] = "1" };
+                            }
+                            <li><a class="dropdown-item" asp-action="Index" asp-all-route-data="rAsc">Precio: Menor a Mayor</a></li>
+
+                            @{
+                                var rDesc = new Dictionary<string, string>(filtrosBase) { ["orden"] = "precio-desc", ["pagina"] = "1" };
+                            }
+                            <li><a class="dropdown-item" asp-action="Index" asp-all-route-data="rDesc">Precio: Mayor a Menor</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="btn-group btn-group-sm">
+                        <button id="btnGrid" class="btn btn-outline-secondary">
+                            <i class="bi bi-grid-3x3-gap"></i>
+                        </button>
+
+                        <button id="btnList" class="btn btn-outline-secondary">
+                            <i class="bi bi-list"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
