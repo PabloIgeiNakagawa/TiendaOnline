@@ -43,6 +43,19 @@
     <partial name="_TituloSeccion" model='("Gestión de pedidos", "Administra todos los pedidos del sistema")' />
 
     <!-- Filtros y Búsqueda -->
+    <button class="btn btn-outline-primary w-100 mb-3 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#filtrosPedidos" aria-controls="filtrosPedidos">
+        <i class="bi bi-funnel me-1"></i>Filtros
+        @if (filtrosActivos.Count > 0)
+        {
+            <span class="badge bg-primary rounded-pill ms-1">@filtrosActivos.Count</span>
+        }
+    </button>
+
+    <div class="offcanvas offcanvas-md offcanvas-bottom filtros-panel" id="filtrosPedidos">
+        <div class="offcanvas-body">
+            <div class="d-md-none text-end mb-2">
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+            </div>
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border">
@@ -127,6 +140,8 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
         </div>
     </div>
 

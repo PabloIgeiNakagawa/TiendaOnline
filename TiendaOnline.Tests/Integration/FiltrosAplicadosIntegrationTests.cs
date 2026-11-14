@@ -68,6 +68,36 @@ namespace TiendaOnline.Tests.Integration
             Assert.DoesNotContain("estadoId=1", hrefs[1]);
         }
 
+        [Fact]
+        public async Task ListadosAdmin_ConFiltros_EnvuelvenElFormularioEnBottomSheet()
+        {
+            // Guard del patrón mobile: los 6 listados del panel abren sus filtros
+            // como bottom sheet (offcanvas-md offcanvas-bottom) con el botón Filtros
+            _app.ResetMocks();
+            var adminId = _app.WithDb(ctx =>
+                TestDatabase.SeedUsuario(ctx, "pills-panel@test.local", Rol.Administrador).UsuarioId);
+
+            var client = _app.CreateClientAs(adminId, new[] { "Administrador" });
+            var rutas = new[]
+            {
+                "/Admin/MovimientosStock/Movimientos",
+                "/admin/pedidos/Listado",
+                "/admin/categorias/Listado",
+                "/admin/usuarios/Listado",
+                "/admin/auditorias/Logs",
+                "/admin/productos/Catalogo",
+            };
+
+            foreach (var ruta in rutas)
+            {
+                var respuesta = await client.GetAsync(ruta);
+                Assert.True(respuesta.IsSuccessStatusCode, $"GET {ruta} → {respuesta.StatusCode}");
+                var html = await respuesta.Content.ReadAsStringAsync();
+                Assert.Contains("data-bs-toggle=\"offcanvas\"", html);
+                Assert.Contains("offcanvas offcanvas-md offcanvas-bottom filtros-panel", html);
+            }
+        }
+
         // href de los anchors con title="Quitar filtro" (una píldora = un anchor)
         private static List<string> HrefsDePills(string html)
         {

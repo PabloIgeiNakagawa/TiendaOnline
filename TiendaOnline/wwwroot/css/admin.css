@@ -88,3 +88,11 @@
 .bi-chevron-down {
     transition: 0.3s;
 }
+
+/* Hojas de filtros del panel en mobile (offcanvas-md offcanvas-bottom):
+   el default de Bootstrap es 30vh y las pilas de campos no entran */
+@media (max-width: 767.98px) {
+    .offcanvas-bottom.filtros-panel {
+        height: 85vh;
+    }
+}
