@@ -15,6 +15,9 @@ namespace TiendaOnline.Features.Carritos
             _carritoService = carritoService;
         }
 
+        // Ruta corta y con [action]: la barra y los redirects van a /Carrito/Index,
+        // pero un /Carrito tipeado a mano también responde (antes daba 404 en blanco).
+        [HttpGet]
         [HttpGet("[action]")]
         public async Task<IActionResult> Index()
         {
