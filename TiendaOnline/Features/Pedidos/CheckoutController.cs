@@ -9,6 +9,7 @@ using TiendaOnline.Application.Envios;
 using TiendaOnline.Application.Payment;
 using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Application.Usuarios.Common;
+using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Enums;
 using TiendaOnline.Features.Shared;
@@ -43,6 +44,11 @@ namespace TiendaOnline.Features.Pedidos
             return Ok(new { cotizacion.Costo, cotizacion.Permitida });
         }
 
+        // Logueado: el checkout lee direcciones del perfil y crea pedidos con
+        // UsuarioId. Sin esto, un anónimo con carrito en session llegaba a la
+        // lectura del claim y explotaba en un 500: el [Authorize] lo manda al
+        // login con ReturnUrl (el migrador le espera el carrito al volver).
+        [Authorize]
         [HttpGet("[action]")]
         public async Task<IActionResult> CheckOut()
         {
@@ -77,7 +83,7 @@ namespace TiendaOnline.Features.Pedidos
                 Items = MapearItems(items),
                 SubTotal = items.Sum(i => i.Precio * i.Cantidad),
                 CostoEnvio = 0, // display: el JS lo cotiza en vivo; el server re-cotiza al POST
-                MetodoPagoId = MetodoPagoId.MercadoPago // pre-seleccionado como en la vista
+                MetodoPagoId = MetodoPago.MercadoPago // pre-seleccionado como en la vista
             };
 
             return View(viewModel);
@@ -139,7 +145,7 @@ namespace TiendaOnline.Features.Pedidos
             }
 
             // El default del enum (0) no es un método real: exigimos uno conocido.
-            if (model.MetodoPagoId is not (MetodoPagoId.MercadoPago or MetodoPagoId.Transferencia))
+            if (model.MetodoPagoId is not (MetodoPago.MercadoPago or MetodoPago.Transferencia))
             {
                 ModelState.AddModelError(nameof(model.MetodoPagoId), "Seleccioná un método de pago.");
             }
@@ -224,7 +230,7 @@ namespace TiendaOnline.Features.Pedidos
                 }
 
                 // Mercado Pago: generamos link y salimos
-                if (model.MetodoPagoId == MetodoPagoId.MercadoPago)
+                if (model.MetodoPagoId == MetodoPago.MercadoPago)
                 {
                     var urlPago = await _paymentService.GenerarPreferenciaPagoAsync(pedido, HttpContext.RequestAborted);
                     return Redirect(urlPago);

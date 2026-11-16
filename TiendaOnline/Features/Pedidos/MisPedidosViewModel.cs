@@ -44,7 +44,7 @@ namespace TiendaOnline.Features.Pedidos
 
         public EstadoPago EstadoPago { get; set; }
 
-        public TiendaOnline.Enums.MetodoPagoId MetodoPagoId { get; set; }
+        public MetodoPago MetodoPagoId { get; set; }
 
         public string? ComprobanteUrl { get; set; }
 
@@ -74,7 +74,7 @@ namespace TiendaOnline.Features.Pedidos
         /// memoria (el job de vencimiento corre cada 5 min).
         /// </summary>
         public bool FaltaComprobante =>
-            MetodoPagoId == TiendaOnline.Enums.MetodoPagoId.Transferencia
+            MetodoPagoId == MetodoPago.Transferencia
             && Estado == EstadoPedido.Nuevo
             && EstadoPago == EstadoPago.Pendiente
             && ComprobanteUrl == null

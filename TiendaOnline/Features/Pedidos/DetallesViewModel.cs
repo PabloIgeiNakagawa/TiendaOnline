@@ -1,5 +1,4 @@
 ﻿using TiendaOnline.Domain.Entities;
-using TiendaOnline.Enums;
 
 namespace TiendaOnline.Features.Pedidos
 {
@@ -16,7 +15,7 @@ namespace TiendaOnline.Features.Pedidos
 
         public EstadoPedido Estado { get; set; }
         public EstadoPago EstadoPago { get; set; }
-        public MetodoPagoId MetodoPagoId { get; set; }
+        public MetodoPago MetodoPagoId { get; set; }
 
         // Usuario
         public string? UsuarioNombre { get; set; }

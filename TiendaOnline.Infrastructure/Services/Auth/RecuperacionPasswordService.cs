@@ -48,7 +48,7 @@ namespace TiendaOnline.Infrastructure.Services.Auth
 
         public async Task PedirResetPasswordAsync(string email, CancellationToken ct = default)
         {
-            var emailLimpio = email.Trim().ToLower();
+            var emailLimpio = email.Trim().ToLowerInvariant();
             var usuario = await _context.Usuarios
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Email == emailLimpio && u.Activo, ct);

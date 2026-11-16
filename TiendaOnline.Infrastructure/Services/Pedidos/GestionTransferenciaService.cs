@@ -19,9 +19,6 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
         private readonly IAppSettingsService _appSettings;
         private readonly ILogger<GestionTransferenciaService> _logger;
 
-        // Id de "Transferencia Bancaria" en la tabla MetodoDePago (ver migration MetodoDePagoYCambiosPedido)
-        private const int MetodoPagoTransferenciaId = 2;
-
         public GestionTransferenciaService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, IImagenService imagenService, IAppSettingsService appSettings, ILogger<GestionTransferenciaService> logger)
         {
             _context = context;
@@ -36,7 +33,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             var pedido = await _context.Pedidos.FindAsync(pedidoId, ct);
             if (pedido == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
 
-            if (pedido.MetodoDePagoId != MetodoPagoTransferenciaId)
+            if (pedido.MetodoDePagoId != (int)MetodoPago.Transferencia)
                 throw new ComprobanteNoValidoException("Este pedido no paga por transferencia bancaria.");
 
             if (pedido.Estado != EstadoPedido.Nuevo || pedido.EstadoPago != EstadoPago.Pendiente)
@@ -84,7 +81,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 if (pedido == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
 
-                if (pedido.MetodoDePagoId != MetodoPagoTransferenciaId)
+                if (pedido.MetodoDePagoId != (int)MetodoPago.Transferencia)
                     throw new ComprobanteNoValidoException("Este pedido no paga por transferencia bancaria.");
 
                 if (pedido.EstadoPago == EstadoPago.Aprobado)
@@ -201,7 +198,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 if (pedido == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
 
-                if (pedido.MetodoDePagoId != MetodoPagoTransferenciaId)
+                if (pedido.MetodoDePagoId != (int)MetodoPago.Transferencia)
                     throw new ComprobanteNoValidoException("Este pedido no paga por transferencia bancaria.");
 
                 if (string.IsNullOrEmpty(pedido.ComprobanteUrl))

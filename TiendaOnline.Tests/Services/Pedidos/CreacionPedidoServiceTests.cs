@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Infrastructure.Services.Ofertas;
 using TiendaOnline.Tests.TestSupport;
 
@@ -22,7 +23,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             await using var ctx = db.CreateContext();
             var sut = Sut.CreacionPedido(ctx);
 
-            await Assert.ThrowsAsync<Exception>(
+            await Assert.ThrowsAsync<PedidoNoValidoException>(
                 () => sut.CrearPedidoYPrepararPagoAsync(Dto(1, 1)));
         }
 
@@ -34,7 +35,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var usuario = TestDatabase.SeedUsuario(ctx);
             var sut = Sut.CreacionPedido(ctx);
 
-            await Assert.ThrowsAsync<Exception>(
+            await Assert.ThrowsAsync<ProductoNoEncontradoException>(
                 () => sut.CrearPedidoYPrepararPagoAsync(Dto(
                     usuario.UsuarioId, 1,
                     new CrearPedidoDetalleDto { ProductoId = 99999, Cantidad = 1, PrecioUnitario = 10m })));

@@ -163,12 +163,15 @@
                                     <i class="bi bi-pencil"></i>
                                 </a>
 
+                                @* Disabled solo si tiene productos o subcategorías: el service
+                                   rechaza el borrado con Restrict (el estado anterior lo
+                                   invertía — habilitaba el borrado justo cuando fallaba) *@
                                 <button type="button"
                                         class="btn btn-outline-danger btn-sm btn-eliminar-categoria"
                                         data-id="@item.CategoriaId"
                                         data-nombre="@item.Nombre"
                                         title="Eliminar"
-                                        @(item.CantidadProductos == 0 || item.CantidadSubcategorias == 0 ? "disabled" : "")>
+                                        @(item.CantidadProductos > 0 || item.CantidadSubcategorias > 0 ? "disabled" : "")>
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>

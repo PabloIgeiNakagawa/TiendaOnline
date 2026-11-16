@@ -1,5 +1,4 @@
-﻿@using TiendaOnline.Domain.Entities
-@using TiendaOnline.Enums
+@using TiendaOnline.Domain.Entities
 @using TiendaOnline.Extensions
 @using TiendaOnline.Features.Pedidos
 @model PedidoDetalleViewModel
@@ -220,7 +219,7 @@
                                     @Model.EstadoPago.GetDisplayName()
                                 </div>
                             </div>
-                            @if (Model.MetodoPagoId == MetodoPagoId.Transferencia)
+                            @if (Model.MetodoPagoId == MetodoPago.Transferencia)
                             {
                                 <div class="mb-3">
                                     <div class="small text-secondary mb-1">Comprobante de Pago</div>

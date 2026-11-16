@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
@@ -8,7 +8,6 @@ using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Application.Pedidos.Queries;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Enums;
 using TiendaOnline.Extensions;
 using TiendaOnline.Features.Shared;
 using TiendaOnline.Features.Shared.Controllers;
@@ -105,7 +104,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
                     CeldaCsv(p.EmailCliente),
                     CeldaCsv(((EstadoPedido)p.EstadoId).GetDisplayName()),
                     CeldaCsv(((EstadoPago)p.EstadoPagoId).GetDisplayName()),
-                    CeldaCsv(((MetodoPagoId)p.MetodoPagoId).GetDisplayName()),
+                    CeldaCsv(((MetodoPago)p.MetodoPagoId).GetDisplayName()),
                     CeldaCsv(p.Total.ToString("N2", culturaCsv)),
                     CeldaCsv(p.FechaEntrega?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) ?? ""),
                     CeldaCsv(p.TieneComprobante ? "Sí" : "No")));

@@ -29,10 +29,13 @@ namespace TiendaOnline.Features.Carritos
 
             if (validacion.IsSuccess && !validacion.Value.TodoOK)
             {
-                foreach (var item in validacion.Value.ItemsSinStock)
-                {
-                    TempData.SetMensajeError($"Stock insuficiente para {item.Nombre}: solicitaste {item.CantidadSolicitada} pero hay {item.StockDisponible} disponibles.");
-                }
+                // Un solo mensaje flash (la API de TempData es de un solo key:
+                // escribir en loop pisa los avisos anteriores).
+                var avisos = validacion.Value.ItemsSinStock.Select(i => i.StockDisponible == 0
+                    ? $"{i.Nombre} (sin stock)"
+                    : $"{i.Nombre} (quedan {i.StockDisponible})");
+
+                TempData.SetMensajeError("Stock insuficiente: " + string.Join(", ", avisos) + ". Ajustá las cantidades.");
             }
 
             var carrito = await _carritoService.ObtenerAsync();

@@ -12,7 +12,6 @@ using TiendaOnline.Application.Pedidos.Common;
 using TiendaOnline.Application.Pedidos.Queries;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Domain.Entities;
-using TiendaOnline.Enums;
 using TiendaOnline.Features.Shared;
 
 namespace TiendaOnline.Features.Pedidos
@@ -75,7 +74,7 @@ namespace TiendaOnline.Features.Pedidos
                     }).ToList(),
                     Estado = (EstadoPedido)p.EstadoId,
                     EstadoPago = (EstadoPago)p.EstadoPagoId,
-                    MetodoPagoId = (MetodoPagoId)p.MetodoPagoId,
+                    MetodoPagoId = (MetodoPago)p.MetodoPagoId,
                     ComprobanteUrl = p.ComprobanteUrl
                 })
                 .ToList();
@@ -118,7 +117,7 @@ namespace TiendaOnline.Features.Pedidos
                 FechaCancelado = pedido.FechaCancelado,
                 Estado = (EstadoPedido)pedido.EstadoId,
                 EstadoPago = (EstadoPago)pedido.EstadoPagoId,
-                MetodoPagoId = (MetodoPagoId)pedido.MetodoPagoId,
+                MetodoPagoId = (MetodoPago)pedido.MetodoPagoId,
 
                 UsuarioNombre = pedido.UsuarioNombre,
                 UsuarioEmail = pedido.UsuarioEmail,

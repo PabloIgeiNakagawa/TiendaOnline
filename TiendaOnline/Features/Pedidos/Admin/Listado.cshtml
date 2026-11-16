@@ -1,5 +1,4 @@
-﻿@using TiendaOnline.Domain.Entities
-@using TiendaOnline.Enums
+@using TiendaOnline.Domain.Entities
 @using TiendaOnline.Extensions
 @using TiendaOnline.Features.Pedidos.Admin
 @using TiendaOnline.Features.Shared.ViewModels
@@ -266,7 +265,7 @@
                                                 <i class="bi @icono me-1"></i>
                                                 @texto
                                             </span>
-                                            @if (pedido.MetodoPagoId == (int)MetodoPagoId.Transferencia && pedido.EstadoId == (int)EstadoPedido.Nuevo)
+                                            @if (pedido.MetodoPagoId == (int)MetodoPago.Transferencia && pedido.EstadoId == (int)EstadoPedido.Nuevo)
                                             {
                                                 @if (pedido.TieneComprobante)
                                                 {
@@ -310,7 +309,7 @@
                                                 </a>
                                                 @if (pedido.EstadoId == (int)EstadoPedido.Nuevo)
                                                 {
-                                                    @if (pedido.MetodoPagoId == (int)MetodoPagoId.Transferencia && pedido.TieneComprobante)
+                                                    @if (pedido.MetodoPagoId == (int)MetodoPago.Transferencia && pedido.TieneComprobante)
                                                     {
                                                         <button type="button"
                                                                 class="btn btn-outline-primary btn-sm rounded-2 shadow-sm btn-cambio-estado"

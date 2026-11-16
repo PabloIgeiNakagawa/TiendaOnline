@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using TiendaOnline.Domain.Entities;
 using TiendaOnline.Enums;
 
 namespace TiendaOnline.Features.Pedidos
@@ -28,7 +29,7 @@ namespace TiendaOnline.Features.Pedidos
         // Método de pago (era del paso de Confirmación: el wizard funde ambos pasos
         // en un solo POST). El guard server-side exige MercadoPago o Transferencia:
         // el default del enum (0) no es un método válido.
-        public MetodoPagoId MetodoPagoId { get; set; }
+        public MetodoPago MetodoPagoId { get; set; }
     }
 
     public class DireccionGuardadaViewModel

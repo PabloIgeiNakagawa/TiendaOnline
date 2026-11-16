@@ -6,6 +6,7 @@ using TiendaOnline.Application.Ofertas;
 using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Application.Payment;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Infrastructure.Services.Pedidos
@@ -26,7 +27,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
         public async Task<PedidoPagoDto> CrearPedidoYPrepararPagoAsync(CrearPedidoDto dto, CancellationToken ct = default)
         {
             if (dto.Items == null || !dto.Items.Any())
-                throw new Exception("El pedido no tiene ítems.");
+                throw new PedidoNoValidoException("El pedido no tiene ítems.");
 
             using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
@@ -68,7 +69,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     // Guardamos el snapshot del pedido, pero el stock se reservará recién cuando el pago sea aprobado.
                     var producto = await _context.Productos.FindAsync(itemDto.ProductoId, ct);
                     if (producto == null)
-                        throw new Exception($"No se encontró el producto con ID {itemDto.ProductoId}.");
+                        throw new ProductoNoEncontradoException("Uno de los productos del carrito ya no está disponible.");
 
                     // Precio efectivo del cobro: misma regla que vio el cliente
                     // en carrito/checkout — mejor oferta vigente ?? precio de lista.
@@ -94,7 +95,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                         .ThenInclude(d => d.Producto) // Traemos los datos del producto (Nombre)
                     .FirstOrDefaultAsync(p => p.PedidoId == pedido.PedidoId, ct);
 
-                if (pedidoCompleto == null) throw new Exception("Error al recuperar el pedido creado.");
+                if (pedidoCompleto == null) throw new InvalidOperationException("El pedido no se pudo recuperar tras crearse.");
 
                 // Enviar email de confirmación usando Hangfire (Persistente y con reintentos)
                 var subtotal = pedidoCompleto.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario);

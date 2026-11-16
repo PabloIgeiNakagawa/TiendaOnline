@@ -40,7 +40,7 @@ namespace TiendaOnline.Infrastructure.Services.Auth
 
         public async Task RegisterAsync(RegisterDto model, bool permitirRolPersonalizado = false, CancellationToken ct = default)
         {
-            model.Email = model.Email.Trim().ToLower();
+            model.Email = model.Email.Trim().ToLowerInvariant();
 
             if (await _context.Usuarios.AnyAsync(u => u.Email == model.Email, ct))
                 throw new EmailDuplicadoException(model.Email);

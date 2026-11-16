@@ -1,4 +1,5 @@
-﻿@using TiendaOnline.Enums
+﻿@using TiendaOnline.Domain.Entities
+@using TiendaOnline.Enums
 @model TiendaOnline.Features.Pedidos.CheckOutViewModel
 
 @* Wizard de una sola página: entrega y pago en un acordeón, un único POST a
@@ -193,7 +194,7 @@
                                     <div class="bg-body-tertiary rounded-2 p-3">
                                         <div class="form-check m-0">
                                             <input class="form-check-input" type="radio" asp-for="MetodoPagoId"
-                                                   value="@MetodoPagoId.MercadoPago" id="metodoMp" />
+                                                   value="@MetodoPago.MercadoPago" id="metodoMp" />
                                             <label class="form-check-label fw-semibold" for="metodoMp">
                                                 Mercado Pago
                                                 <small class="d-block text-muted fw-normal">Tarjeta, d&eacute;bito y cuotas con proceso autom&aacute;tico</small>
@@ -203,7 +204,7 @@
                                     <div class="bg-body-tertiary rounded-2 p-3">
                                         <div class="form-check m-0">
                                             <input class="form-check-input" type="radio" asp-for="MetodoPagoId"
-                                                   value="@MetodoPagoId.Transferencia" id="metodoTransferencia" />
+                                                   value="@MetodoPago.Transferencia" id="metodoTransferencia" />
                                             <label class="form-check-label fw-semibold" for="metodoTransferencia">
                                                 Transferencia bancaria
                                                 <small class="d-block text-muted fw-normal">Te mostramos el CBU y sub&iacute;s el comprobante</small>

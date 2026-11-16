@@ -108,7 +108,7 @@ namespace TiendaOnline.Infrastructure.Services.Email
         </body>
         </html>";
 
-            await EnviarEmailAsync(destinoEmail, $"Confirmaci&oacute;n de pedido #{pedidoId:D6}", cuerpoHtml);
+            await EnviarEmailAsync(destinoEmail, $"Confirmación de pedido #{pedidoId:D6}", cuerpoHtml);
         }
 
         public async Task EnviarEmailPagoExitosoAsync(string destinoEmail, string nombreUsuario, int pedidoId, decimal total)

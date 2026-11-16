@@ -76,40 +76,6 @@ namespace TiendaOnline.Features.Categorias
             return View(categoria);
         }
 
-        /*[HttpGet("[action]")]
-        public async Task<IActionResult> Editar(int id)
-        {
-            var categoria = await _categoriaQueryService.ObtenerCategoriaAsync(id);
-            if (categoria == null) return NotFound();
-
-            // Filtramos para que no pueda elegirse a sí misma como padre en el Select de la vista
-            var todas = await _categoriaQueryService.ObtenerCategoriasAsync();
-            ViewBag.Categorias = new SelectList(todas.Where(c => c.CategoriaId != id), "CategoriaId", "Nombre", categoria.CategoriaPadreId);
-
-            return View(categoria);
-        }
-
-        [HttpPost("[action]")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Editar(EditarCategoriaViewModel categoria)
-        {
-            try
-            {
-                await _categoriaCommandService.EditarCategoriaAsync(categoria.CategoriaId, categoria.Nombre);
-
-                await _categoriaCommandService.CambiarCategoriaPadre(categoria.CategoriaId, categoria.CategoriaPadreId);
-
-                return RedirectToAction(nameof(Listado));
-            }
-            catch (InvalidOperationException ex)
-            {
-                ModelState.AddModelError(string.Empty, ex.Message);
-                var todas = await _categoriaQueryService.ObtenerCategoriasAsync();
-                ViewBag.Categorias = new SelectList(todas.Where(c => c.CategoriaId != categoria.CategoriaId), "CategoriaId", "Nombre");
-                return View(categoria);
-            }
-        }*/
-
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Eliminar(int id)

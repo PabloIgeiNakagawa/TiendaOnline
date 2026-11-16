@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Common;
 using TiendaOnline.Application.Pedidos.Queries;
+using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Infrastructure.Services.Pedidos
@@ -8,9 +9,6 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
     public class PedidoQueryService : IPedidoQueryService
     {
         private readonly TiendaContext _context;
-
-        // Id de "Transferencia Bancaria" en la tabla MetodoDePago (ver migration MetodoDePagoYCambiosPedido)
-        private const int MetodoPagoTransferenciaId = 2;
 
         public PedidoQueryService(TiendaContext context)
         {
@@ -420,7 +418,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 Vencido = vencido,
                 PuedeSubirComprobante = pedido.Estado == Domain.Entities.EstadoPedido.Nuevo
                     && pedido.EstadoPago == Domain.Entities.EstadoPago.Pendiente
-                    && pedido.MetodoDePagoId == MetodoPagoTransferenciaId
+                    && pedido.MetodoDePagoId == (int)MetodoPago.Transferencia
                     && pedido.ComprobanteUrl == null
                     && !vencido
             };

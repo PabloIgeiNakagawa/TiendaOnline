@@ -22,7 +22,7 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
         public async Task RegistrarEntradaAsync(RegistroStockDto dto, CancellationToken ct = default)
         {
             var producto = await _context.Productos.FindAsync(dto.ProductoId, ct);
-            if (producto == null) throw new Exception("Producto no encontrado");
+            if (producto == null) throw new ProductoNoEncontradoException("El producto indicado no existe.");
 
             // Solo entradas positivas: una cantidad no positiva inventaría o deshace stock.
             if (dto.Cantidad <= 0)
@@ -40,7 +40,7 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
         public async Task RegistrarAjusteManualAsync(AjusteManualDto dto, CancellationToken ct = default)
         {
             var producto = await _context.Productos.FindAsync(dto.ProductoId, ct);
-            if (producto == null) throw new Exception("Producto no encontrado");
+            if (producto == null) throw new ProductoNoEncontradoException("El producto indicado no existe.");
 
             // La cantidad en el DTO puede ser negativa (ej: -2 por rotura), pero el
             // resultado tiene el piso en 0: el inventario no queda negativo.
@@ -73,7 +73,7 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
                     throw new MovimientoStockNoValidoException("La devolución solo aplica a pedidos enviados o entregados.");
 
                 var producto = await _context.Productos.FindAsync(dto.ProductoId, ct);
-                if (producto == null) throw new Exception("Producto no encontrado");
+                if (producto == null) throw new ProductoNoEncontradoException("El producto indicado no existe.");
 
                 // Validación de integridad: ¿El producto estaba en ese pedido?
                 var cantidadComprada = await _context.DetallesPedido

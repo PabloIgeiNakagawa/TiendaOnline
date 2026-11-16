@@ -10,9 +10,10 @@ namespace TiendaOnline.Tests.Integration
 {
     /// <summary>
     /// Rutas del front de pedidos/checkout contra la app real: la policy
-    /// EsDuenioDelPedido con su handler real (consulta SQLite) y los redirects
-    /// del checkout vacío y con stock agotado. Cubre las rutas que movió el
-    /// split del controller (el carrito vive en /Carrito, ver CarritosController).
+    /// EsDuenioDelPedido con su handler real (consulta SQLite), el guard de auth
+    /// del GET de checkout (anónimo → login) y los redirects del checkout vacío
+    /// y con stock agotado. Cubre las rutas que movió el split del controller
+    /// (el carrito vive en /Carrito, ver CarritosController).
     /// </summary>
     [Collection("Integracion")] // un host por vez: los hosts comparten App_Data/Serilog del proceso
     public class PedidosFrontendIntegrationTests : IClassFixture<TestApp>
@@ -47,13 +48,31 @@ namespace TiendaOnline.Tests.Integration
         }
 
         [Fact]
+        public async Task Checkout_Anonimo_RedirigeAlLogin()
+        {
+            // El [Authorize] del GET: el anónimo con carrito en session NO ejecuta
+            // el action (antes llegaba a la lectura del claim y explotaba en un 500).
+            // En producción el challenge del scheme CookieAuth redirige al login con
+            // ReturnUrl (el migrador le espera el carrito al volver); en el host de
+            // test el scheme fake reemplaza el DefaultChallengeScheme y responde 401.
+            // Lo que el test fija: el corte ANTES del action (no 200, no 500).
+            _app.ResetMocks();
+            var client = _app.CreateAnonymousClient();
+
+            var response = await client.GetAsync("/Checkout/CheckOut");
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
         public async Task Checkout_SinCarrito_RedirigeAlCarrito()
         {
-            // Arrange: carrito vacío (default del mock de TestApp tras el reset).
+            // Arrange: usuario logueado con carrito vacío (default del mock de TestApp tras el reset).
             _app.ResetMocks();
             _app.Carrito.Setup(x => x.ValidarStockAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result<ValidacionStockDto>.Success(new ValidacionStockDto { TodoOK = true }));
-            var client = _app.CreateAnonymousClient();
+            var usuarioId = _app.WithDb(ctx => TestDatabase.SeedUsuario(ctx, "checkout-vacio@test.local").UsuarioId);
+            var client = _app.CreateClientAs(usuarioId);
 
             // Act
             var response = await client.GetAsync("/Checkout/CheckOut");
@@ -74,7 +93,8 @@ namespace TiendaOnline.Tests.Integration
                     TodoOK = false,
                     ItemsSinStock = { new StockInsuficienteDto { ProductoId = 1, Nombre = "Prod", CantidadSolicitada = 2, StockDisponible = 0 } }
                 }));
-            var client = _app.CreateAnonymousClient();
+            var usuarioId = _app.WithDb(ctx => TestDatabase.SeedUsuario(ctx, "checkout-agotado@test.local").UsuarioId);
+            var client = _app.CreateClientAs(usuarioId);
 
             // Act
             var response = await client.GetAsync("/Checkout/CheckOut");
