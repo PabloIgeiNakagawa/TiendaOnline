@@ -28,6 +28,22 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
                 .ToListAsync(ct);
         }
 
+        // La ficha puntual para el form de edición: al no existir, el controller
+        // responde 404 antes de intentar escribir.
+        public async Task<CategoriaDto?> ObtenerCategoriaPorIdAsync(int id, CancellationToken ct = default)
+        {
+            return await _context.Categorias
+                .AsNoTracking()
+                .Where(c => c.CategoriaId == id)
+                .Select(c => new CategoriaDto
+                {
+                    CategoriaId = c.CategoriaId,
+                    Nombre = c.Nombre,
+                    CategoriaPadreId = c.CategoriaPadreId
+                })
+                .FirstOrDefaultAsync(ct);
+        }
+
         public async Task<IEnumerable<CategoriaDto>> ObtenerCategoriasRaizAsync(CancellationToken ct = default)
         {
             var categoriasRaiz = await _context.Categorias
@@ -127,6 +143,12 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
         {
             return await _context.Categorias
                 .AnyAsync(c => c.Nombre.ToLower() == nombre.ToLower(), ct);
+        }
+
+        public async Task<bool> ExisteNombreEnOtraCategoriaAsync(string nombre, int categoriaId, CancellationToken ct = default)
+        {
+            return await _context.Categorias
+                .AnyAsync(c => c.Nombre.ToLower() == nombre.ToLower() && c.CategoriaId != categoriaId, ct);
         }
     }
 }

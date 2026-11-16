@@ -55,5 +55,8 @@ namespace TiendaOnline.Tests.TestSupport
             TiendaContext ctx,
             Mock<IImagenService>? imagen = null)
             => new(ctx, imagen?.Object ?? Mock.Of<IImagenService>());
+
+        public static Infrastructure.Services.Categorias.CategoriaCommandService CategoriaCommand(TiendaContext ctx)
+            => new(ctx);
     }
 }

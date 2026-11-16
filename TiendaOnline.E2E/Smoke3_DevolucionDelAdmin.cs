@@ -41,11 +41,10 @@ namespace TiendaOnline.E2E
                 ctx.Productos.Add(producto);
 
                 var usuario = ctx.Usuarios.First(u => u.Email == E2EFixture.EmailClienteSeed);
-                var pago = ctx.Set<MetodoDePago>().First();
                 var pedido = new Pedido
                 {
                     UsuarioId = usuario.UsuarioId,
-                    MetodoDePagoId = pago.MetodoDePagoId,
+                    MetodoPago = MetodoPago.MercadoPago,
                     EsEnvioADomicilio = false,
                     Estado = EstadoPedido.Enviado,
                     EstadoPago = EstadoPago.Aprobado,

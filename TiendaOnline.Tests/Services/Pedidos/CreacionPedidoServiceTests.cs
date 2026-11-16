@@ -13,8 +13,8 @@ namespace TiendaOnline.Tests.Services.Pedidos
     /// </summary>
     public class CreacionPedidoServiceTests
     {
-        private static CrearPedidoDto Dto(int usuarioId, int metodoPagoId, params CrearPedidoDetalleDto[] items)
-            => new() { UsuarioId = usuarioId, MetodoDePagoId = metodoPagoId, Items = items.ToList() };
+        private static CrearPedidoDto Dto(int usuarioId, MetodoPago metodoPago, params CrearPedidoDetalleDto[] items)
+            => new() { UsuarioId = usuarioId, MetodoPago = metodoPago, Items = items.ToList() };
 
         [Fact]
         public async Task CrearPedido_SinItems_LanzaExcepcion()
@@ -24,7 +24,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             var sut = Sut.CreacionPedido(ctx);
 
             await Assert.ThrowsAsync<PedidoNoValidoException>(
-                () => sut.CrearPedidoYPrepararPagoAsync(Dto(1, 1)));
+                () => sut.CrearPedidoYPrepararPagoAsync(Dto(1, MetodoPago.MercadoPago)));
         }
 
         [Fact]
@@ -37,7 +37,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
 
             await Assert.ThrowsAsync<ProductoNoEncontradoException>(
                 () => sut.CrearPedidoYPrepararPagoAsync(Dto(
-                    usuario.UsuarioId, 1,
+                    usuario.UsuarioId, MetodoPago.MercadoPago,
                     new CrearPedidoDetalleDto { ProductoId = 99999, Cantidad = 1, PrecioUnitario = 10m })));
 
             using var verify = db.CreateContext();
@@ -50,12 +50,11 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var usuario = TestDatabase.SeedUsuario(ctx);
-            var metodo = TestDatabase.SeedMetodoDePago(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 10);
             var sut = Sut.CreacionPedido(ctx);
 
             var pago = await sut.CrearPedidoYPrepararPagoAsync(Dto(
-                usuario.UsuarioId, metodo.MetodoDePagoId,
+                usuario.UsuarioId, MetodoPago.MercadoPago,
                 new CrearPedidoDetalleDto { ProductoId = producto.ProductoId, Cantidad = 1, PrecioUnitario = 100m },
                 new CrearPedidoDetalleDto { ProductoId = producto.ProductoId, Cantidad = 2, PrecioUnitario = 100m }));
 
@@ -75,13 +74,12 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var usuario = TestDatabase.SeedUsuario(ctx);
-            var metodo = TestDatabase.SeedMetodoDePago(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 10); // precio real en BD
             var sut = Sut.CreacionPedido(ctx);
 
             // El cliente envía un precio manipulado (manipulación del carrito)
             var pago = await sut.CrearPedidoYPrepararPagoAsync(Dto(
-                usuario.UsuarioId, metodo.MetodoDePagoId,
+                usuario.UsuarioId, MetodoPago.MercadoPago,
                 new CrearPedidoDetalleDto { ProductoId = producto.ProductoId, Cantidad = 1, PrecioUnitario = 0.01m }));
 
             using var verify = db.CreateContext();
@@ -95,13 +93,12 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var usuario = TestDatabase.SeedUsuario(ctx);
-            var metodo = TestDatabase.SeedMetodoDePago(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 10);
             TestDatabase.SeedOferta(ctx, producto, precioOferta: 79.9m);
             var sut = Sut.CreacionPedido(ctx, ofertas: new OfertaQueryService(ctx)); // resolver real sobre la DB de test
 
             var pago = await sut.CrearPedidoYPrepararPagoAsync(Dto(
-                usuario.UsuarioId, metodo.MetodoDePagoId,
+                usuario.UsuarioId, MetodoPago.MercadoPago,
                 new CrearPedidoDetalleDto { ProductoId = producto.ProductoId, Cantidad = 2, PrecioUnitario = 0.01m }));
 
             using var verify = db.CreateContext();
@@ -115,14 +112,13 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var usuario = TestDatabase.SeedUsuario(ctx);
-            var metodo = TestDatabase.SeedMetodoDePago(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 10);
             TestDatabase.SeedOferta(ctx, producto, precioOferta: 40m,
                 inicio: DateTime.Now.AddDays(-5), fin: DateTime.Now.AddDays(-1)); // expirada: no aplica
             var sut = Sut.CreacionPedido(ctx, ofertas: new OfertaQueryService(ctx));
 
             var pago = await sut.CrearPedidoYPrepararPagoAsync(Dto(
-                usuario.UsuarioId, metodo.MetodoDePagoId,
+                usuario.UsuarioId, MetodoPago.MercadoPago,
                 new CrearPedidoDetalleDto { ProductoId = producto.ProductoId, Cantidad = 1, PrecioUnitario = 0.01m }));
 
             using var verify = db.CreateContext();
@@ -136,11 +132,10 @@ namespace TiendaOnline.Tests.Services.Pedidos
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var usuario = TestDatabase.SeedUsuario(ctx);
-            var metodo = TestDatabase.SeedMetodoDePago(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 10);
             var sut = Sut.CreacionPedido(ctx);
 
-            var dto = Dto(usuario.UsuarioId, metodo.MetodoDePagoId,
+            var dto = Dto(usuario.UsuarioId, MetodoPago.MercadoPago,
                 new CrearPedidoDetalleDto { ProductoId = producto.ProductoId, Cantidad = 1, PrecioUnitario = 100m });
             dto.EsEnvioADomicilio = true;
             dto.CostoEnvio = 50m;

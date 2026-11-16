@@ -237,27 +237,6 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                     b.ToTable("Direcciones");
                 });
 
-            modelBuilder.Entity("TiendaOnline.Domain.Entities.MetodoDePago", b =>
-                {
-                    b.Property<int>("MetodoDePagoId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MetodoDePagoId"));
-
-                    b.Property<bool>("Activo")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("MetodoDePagoId");
-
-                    b.ToTable("MetodoDePago");
-                });
-
             modelBuilder.Entity("TiendaOnline.Domain.Entities.MovimientoStock", b =>
                 {
                     b.Property<int>("MovimientoStockId")
@@ -410,8 +389,10 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("FechaPedido")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("MetodoDePagoId")
-                        .HasColumnType("int");
+                    b.Property<string>("MetodoPago")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("TransaccionPagoId")
                         .HasMaxLength(100)
@@ -421,8 +402,6 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("PedidoId");
-
-                    b.HasIndex("MetodoDePagoId");
 
                     b.HasIndex("UsuarioId");
 
@@ -673,19 +652,11 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Pedido", b =>
                 {
-                    b.HasOne("TiendaOnline.Domain.Entities.MetodoDePago", "MetodoDePago")
-                        .WithMany()
-                        .HasForeignKey("MetodoDePagoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("TiendaOnline.Domain.Entities.Usuario", "Usuario")
                         .WithMany("Pedidos")
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("MetodoDePago");
 
                     b.Navigation("Usuario");
                 });

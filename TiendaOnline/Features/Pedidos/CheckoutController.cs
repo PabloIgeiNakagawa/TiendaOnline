@@ -188,7 +188,7 @@ namespace TiendaOnline.Features.Pedidos
             var dto = new CrearPedidoDto
             {
                 UsuarioId = usuarioId,
-                MetodoDePagoId = (int)model.MetodoPagoId,
+                MetodoPago = model.MetodoPagoId,
                 EsEnvioADomicilio = model.MetodoEntrega == MetodoEntrega.EnvioDomicilio,
                 EnvioCalle = entrega?.Calle,
                 EnvioNumero = entrega?.Numero,

@@ -112,14 +112,6 @@ namespace TiendaOnline.Tests.TestSupport
             return usuario;
         }
 
-        public static MetodoDePago SeedMetodoDePago(TiendaContext ctx, string nombre = "Mercado Pago")
-        {
-            var metodo = new MetodoDePago { Nombre = nombre };
-            ctx.Set<MetodoDePago>().Add(metodo);
-            ctx.SaveChanges();
-            return metodo;
-        }
-
         public static Producto SeedProducto(TiendaContext ctx, decimal precio = 100m, int stock = 5,
             string? nombre = null)
         {
@@ -190,13 +182,13 @@ namespace TiendaOnline.Tests.TestSupport
             DateTime? fechaEntrega = null,
             decimal costoEnvio = 0,
             string? transaccionId = null,
-            int? metodoDePagoId = null,
+            MetodoPago metodoPago = MetodoPago.MercadoPago,
             string? comprobanteUrl = null)
         {
             var pedido = new Pedido
             {
                 UsuarioId = usuario.UsuarioId,
-                MetodoDePagoId = metodoDePagoId ?? SeedMetodoDePago(ctx).MetodoDePagoId,
+                MetodoPago = metodoPago,
                 EsEnvioADomicilio = false,
                 Estado = estado,
                 EstadoPago = estadoPago,

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Common;
 using TiendaOnline.Application.Pedidos.Queries;
+using TiendaOnline.Application.Pedidos.Common;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
 
@@ -45,7 +46,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     p.FechaCancelado,
                     Estado = p.Estado,
                     EstadoPago = p.EstadoPago,
-                    p.MetodoDePagoId,
+                    MetodoPago = p.MetodoPago,
                     p.ComprobanteUrl,
                     Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio,
                     CantidadItems = p.DetallesPedido.Sum(d => d.Cantidad),
@@ -65,7 +66,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 FechaCancelado = f.FechaCancelado,
                 EstadoId = (int)f.Estado,
                 EstadoPagoId = (int)f.EstadoPago,
-                MetodoPagoId = f.MetodoDePagoId,
+                MetodoPagoId = (int)f.MetodoPago,
                 ComprobanteUrl = f.ComprobanteUrl,
                 Total = f.Total,
                 CantidadItems = f.CantidadItems,
@@ -89,7 +90,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     p.FechaCancelado,
                     Estado = p.Estado,
                     EstadoPago = p.EstadoPago,
-                    p.MetodoDePagoId,
+                    MetodoPago = p.MetodoPago,
 
                     UsuarioId = p.Usuario.UsuarioId,
                     UsuarioNombre = p.Usuario.Nombre,
@@ -127,7 +128,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 FechaCancelado = pedido.FechaCancelado,
                 EstadoId = (int)pedido.Estado,
                 EstadoPagoId = (int)pedido.EstadoPago,
-                MetodoPagoId = pedido.MetodoDePagoId,
+                MetodoPagoId = (int)pedido.MetodoPago,
 
                 UsuarioId = pedido.UsuarioId,
                 UsuarioNombre = pedido.UsuarioNombre,
@@ -166,7 +167,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     UsuarioEmail = p.Usuario.Email,
                     UsuarioTelefono = p.Usuario.Telefono,
                     DireccionCompleta = FormatearDireccionEnvio(p),
-                    MetodoPago = p.MetodoDePago.Nombre,
+                    MetodoPago = p.MetodoPago,
                     EstadoPago = p.EstadoPago,
                     p.TransaccionPagoId,
                     Items = p.DetallesPedido.Select(d => new
@@ -193,7 +194,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 pedido.UsuarioEmail,
                 pedido.UsuarioTelefono ?? "N/A",
                 pedido.DireccionCompleta,
-                pedido.MetodoPago,
+                MetodoPagoLegible.Nombre(pedido.MetodoPago),
                 (int)pedido.EstadoPago,
                 pedido.TransaccionPagoId,
                 pedido.Items.Select(i => new ComprobanteItemDto(i.Nombre, i.Cantidad, i.PrecioUnitario, i.Subtotal)).ToList(),
@@ -227,7 +228,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     p.FechaEntrega,
                     Estado = p.Estado,
                     EstadoPago = p.EstadoPago,
-                    p.MetodoDePagoId,
+                    MetodoPago = p.MetodoPago,
                     TieneComprobante = p.ComprobanteUrl != null,
                     Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
                 })
@@ -242,7 +243,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 FechaEntrega = f.FechaEntrega,
                 EstadoId = (int)f.Estado,
                 EstadoPagoId = (int)f.EstadoPago,
-                MetodoPagoId = f.MetodoDePagoId,
+                MetodoPagoId = (int)f.MetodoPago,
                 TieneComprobante = f.TieneComprobante,
                 Total = f.Total
             }).ToList();
@@ -268,7 +269,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     p.FechaEntrega,
                     Estado = p.Estado,
                     EstadoPago = p.EstadoPago,
-                    p.MetodoDePagoId,
+                    MetodoPago = p.MetodoPago,
                     TieneComprobante = p.ComprobanteUrl != null,
                     Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
                 })
@@ -283,7 +284,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 FechaEntrega = f.FechaEntrega,
                 EstadoId = (int)f.Estado,
                 EstadoPagoId = (int)f.EstadoPago,
-                MetodoPagoId = f.MetodoDePagoId,
+                MetodoPagoId = (int)f.MetodoPago,
                 TieneComprobante = f.TieneComprobante,
                 Total = f.Total
             }).ToList();
@@ -399,7 +400,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     p.FechaPedido,
                     p.Estado,
                     p.EstadoPago,
-                    p.MetodoDePagoId,
+                    MetodoPago = p.MetodoPago,
                     p.ComprobanteUrl,
                     Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
                 })
@@ -418,7 +419,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 Vencido = vencido,
                 PuedeSubirComprobante = pedido.Estado == Domain.Entities.EstadoPedido.Nuevo
                     && pedido.EstadoPago == Domain.Entities.EstadoPago.Pendiente
-                    && pedido.MetodoDePagoId == (int)MetodoPago.Transferencia
+                    && pedido.MetodoPago == Domain.Entities.MetodoPago.Transferencia
                     && pedido.ComprobanteUrl == null
                     && !vencido
             };

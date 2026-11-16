@@ -26,7 +26,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         /// real: "Mercado Pago" (id 1) y "Transferencia Bancaria" (id 2), porque el
         /// servicio usa la constante 2 para identificar transferencia.
         /// </summary>
-        private static (Usuario Usuario, Producto Producto, Pedido Pedido, int MercadoPagoId, int TransferenciaId) SeedEscenario(
+        private static (Usuario Usuario, Producto Producto, Pedido Pedido) SeedEscenario(
             TiendaContext ctx,
             int stock = 5,
             int cantidad = 2,
@@ -34,11 +34,9 @@ namespace TiendaOnline.Tests.Services.Pedidos
             DateTime? fechaPedido = null,
             EstadoPedido estado = EstadoPedido.Nuevo,
             EstadoPago estadoPago = EstadoPago.Pendiente,
-            int? metodoDePagoId = null,
+            MetodoPago metodoPago = MetodoPago.Transferencia,
             decimal costoEnvio = 0)
         {
-            var mp = TestDatabase.SeedMetodoDePago(ctx, "Mercado Pago");              // id 1, como en la migration
-            var transferencia = TestDatabase.SeedMetodoDePago(ctx, "Transferencia Bancaria"); // id 2
             var usuario = TestDatabase.SeedUsuario(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: stock);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad,
@@ -46,10 +44,10 @@ namespace TiendaOnline.Tests.Services.Pedidos
                 estadoPago: estadoPago,
                 fechaPedido: fechaPedido,
                 costoEnvio: costoEnvio,
-                metodoDePagoId: metodoDePagoId ?? transferencia.MetodoDePagoId,
+                metodoPago: metodoPago,
                 comprobanteUrl: comprobanteUrl);
 
-            return (usuario, producto, pedido, mp.MetodoDePagoId, transferencia.MetodoDePagoId);
+            return (usuario, producto, pedido);
         }
 
         // ------------------------------------------------------------------
@@ -61,7 +59,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, _, pedido, _, _) = SeedEscenario(ctx, comprobanteUrl: null);
+            var (_, _, pedido) = SeedEscenario(ctx, comprobanteUrl: null);
 
             var imagen = new Mock<IImagenService>();
             imagen.Setup(x => x.SubirComprobanteAsync(It.IsAny<Stream>(), It.IsAny<string>()))
@@ -97,7 +95,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, _, pedido, _, _) = SeedEscenario(ctx, comprobanteUrl: null);
+            var (_, _, pedido) = SeedEscenario(ctx, comprobanteUrl: null);
 
             var imagen = new Mock<IImagenService>();
             imagen.Setup(x => x.SubirComprobanteAsync(It.IsAny<Stream>(), It.IsAny<string>()))
@@ -118,13 +116,11 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            // Pedido de Mercado Pago (id 1): la subida de comprobante no le aplica
-            var mp = TestDatabase.SeedMetodoDePago(ctx, "Mercado Pago");
-            TestDatabase.SeedMetodoDePago(ctx, "Transferencia Bancaria");
+            // Pedido de Mercado Pago: la subida de comprobante no le aplica
             var usuario = TestDatabase.SeedUsuario(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2,
-                metodoDePagoId: mp.MetodoDePagoId);
+                metodoPago: MetodoPago.MercadoPago);
 
             var imagen = new Mock<IImagenService>();
             var sut = Sut.GestionTransferencia(ctx, imagen: imagen);
@@ -140,7 +136,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, _, pedido, _, _) = SeedEscenario(ctx, comprobanteUrl: UrlComprobante);
+            var (_, _, pedido) = SeedEscenario(ctx, comprobanteUrl: UrlComprobante);
 
             var imagen = new Mock<IImagenService>();
             var sut = Sut.GestionTransferencia(ctx, imagen: imagen);
@@ -156,7 +152,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, _, pedido, _, _) = SeedEscenario(ctx,
+            var (_, _, pedido) = SeedEscenario(ctx,
                 estado: EstadoPedido.EnPreparacion, estadoPago: EstadoPago.Aprobado,
                 comprobanteUrl: null);
 
@@ -178,7 +174,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, producto, pedido, _, _) = SeedEscenario(ctx, stock: 5, cantidad: 2, costoEnvio: 50m);
+            var (_, producto, pedido) = SeedEscenario(ctx, stock: 5, cantidad: 2, costoEnvio: 50m);
             var sut = Sut.GestionTransferencia(ctx);
 
             await sut.AprobarPagoTransferenciaAsync(pedido.PedidoId);
@@ -207,7 +203,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, producto, pedido, _, _) = SeedEscenario(ctx, comprobanteUrl: null);
+            var (_, producto, pedido) = SeedEscenario(ctx, comprobanteUrl: null);
             var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
@@ -229,7 +225,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, producto, pedido, _, _) = SeedEscenario(ctx,
+            var (_, producto, pedido) = SeedEscenario(ctx,
                 estado: EstadoPedido.EnPreparacion, estadoPago: EstadoPago.Aprobado);
             var sut = Sut.GestionTransferencia(ctx);
 
@@ -249,7 +245,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, producto, pedido, _, _) = SeedEscenario(ctx, fechaPedido: DateTime.Now.AddHours(-25));
+            var (_, producto, pedido) = SeedEscenario(ctx, fechaPedido: DateTime.Now.AddHours(-25));
             var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<PedidoNoCancelableException>(
@@ -269,7 +265,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, producto, pedido, _, _) = SeedEscenario(ctx, stock: 1, cantidad: 2);
+            var (_, producto, pedido) = SeedEscenario(ctx, stock: 1, cantidad: 2);
             var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<StockInsuficienteException>(
@@ -292,13 +288,11 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            // Pedido de Mercado Pago (id 1): la aprobación manual de transferencia no le aplica
-            var mp = TestDatabase.SeedMetodoDePago(ctx, "Mercado Pago");
-            TestDatabase.SeedMetodoDePago(ctx, "Transferencia Bancaria");
+            // Pedido de Mercado Pago: la aprobación manual de transferencia no le aplica
             var usuario = TestDatabase.SeedUsuario(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2,
-                metodoDePagoId: mp.MetodoDePagoId);
+                metodoPago: MetodoPago.MercadoPago);
             var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
@@ -322,7 +316,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, _, pedido, _, _) = SeedEscenario(ctx);
+            var (_, _, pedido) = SeedEscenario(ctx);
 
             var imagen = new Mock<IImagenService>();
             imagen.Setup(x => x.ExtraerPublicIdDesdeUrl(UrlComprobante)).Returns(PublicIdComprobante);
@@ -345,7 +339,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, _, pedido, _, _) = SeedEscenario(ctx, comprobanteUrl: null);
+            var (_, _, pedido) = SeedEscenario(ctx, comprobanteUrl: null);
             var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
@@ -364,7 +358,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, _, pedido, _, _) = SeedEscenario(ctx, estado: EstadoPedido.Cancelado, estadoPago: EstadoPago.Rechazado);
+            var (_, _, pedido) = SeedEscenario(ctx, estado: EstadoPedido.Cancelado, estadoPago: EstadoPago.Rechazado);
             var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<PedidoNoCancelableException>(
@@ -376,13 +370,11 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            // Pedido de Mercado Pago (id 1): el rechazo de comprobante no le aplica
-            var mp = TestDatabase.SeedMetodoDePago(ctx, "Mercado Pago");
-            TestDatabase.SeedMetodoDePago(ctx, "Transferencia Bancaria");
+            // Pedido de Mercado Pago: el rechazo de comprobante no le aplica
             var usuario = TestDatabase.SeedUsuario(ctx);
             var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
             var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 2,
-                metodoDePagoId: mp.MetodoDePagoId);
+                metodoPago: MetodoPago.MercadoPago);
             var sut = Sut.GestionTransferencia(ctx);
 
             await Assert.ThrowsAsync<ComprobanteNoValidoException>(
@@ -394,7 +386,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, producto, pedido, _, _) = SeedEscenario(ctx, stock: 5, cantidad: 2);
+            var (_, producto, pedido) = SeedEscenario(ctx, stock: 5, cantidad: 2);
             var sut = Sut.GestionTransferencia(ctx);
 
             await sut.AprobarPagoTransferenciaAsync(pedido.PedidoId);
@@ -417,7 +409,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
-            var (_, _, pedido, _, _) = SeedEscenario(ctx,
+            var (_, _, pedido) = SeedEscenario(ctx,
                 estado: EstadoPedido.EnPreparacion, estadoPago: EstadoPago.Aprobado);
 
             var imagen = new Mock<IImagenService>();

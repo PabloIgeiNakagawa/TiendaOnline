@@ -2,6 +2,7 @@
 using TiendaOnline.Application.Categorias.Commands;
 using TiendaOnline.Application.Categorias.Common;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Infrastructure.Services.Categorias
@@ -28,30 +29,23 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
             await _context.SaveChangesAsync(ct);
         }
 
-        public async Task EditarCategoriaAsync(int categoriaId, string nombre, CancellationToken ct = default)
+        public async Task EditarCategoriaAsync(int categoriaId, string nombre, int? categoriaPadreId, CancellationToken ct = default)
         {
             var categoria = await _context.Categorias.FindAsync(categoriaId, ct);
-            if (categoria != null)
-            {
-                categoria.Nombre = nombre;
-                await _context.SaveChangesAsync(ct);
-            }
-        }
+            if (categoria == null)
+                return;
 
-        public async Task CambiarCategoriaPadre(int categoriaId, int? nuevaCategoriaPadreId, CancellationToken ct = default)
-        {
-            // Validación de seguridad básica
-            if (await VerificarSiCausaBucleAsync(categoriaId, nuevaCategoriaPadreId, ct))
+            // El guard corre ANTES de mutar: si el nuevo padre generaría un bucle,
+            // nada se guarda (ni el nombre) y el admin ve el aviso con el form vivo.
+            if (await VerificarSiCausaBucleAsync(categoriaId, categoriaPadreId, ct))
             {
-                throw new InvalidOperationException("No se puede asignar este padre porque generaría una referencia circular (bucle infinito).");
+                throw new CategoriaNoValidaException(
+                    "No se puede asignar esa categoría superior: generaría una referencia circular en la jerarquía.");
             }
 
-            var categoria = await _context.Categorias.FindAsync(categoriaId, ct);
-            if (categoria != null)
-            {
-                categoria.CategoriaPadreId = nuevaCategoriaPadreId;
-                await _context.SaveChangesAsync(ct);
-            }
+            categoria.Nombre = nombre;
+            categoria.CategoriaPadreId = categoriaPadreId;
+            await _context.SaveChangesAsync(ct);
         }
 
         // Activar

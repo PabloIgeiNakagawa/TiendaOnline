@@ -1,10 +1,12 @@
-﻿namespace TiendaOnline.Application.Pedidos.Commands
+﻿using TiendaOnline.Domain.Entities;
+
+namespace TiendaOnline.Application.Pedidos.Commands
 {
     public class CrearPedidoDto
     {
         // Datos del pedido
         public int UsuarioId { get; set; }
-        public int MetodoDePagoId { get; set; }
+        public MetodoPago MetodoPago { get; set; }
 
         // Datos de envío
         public bool EsEnvioADomicilio { get; set; }

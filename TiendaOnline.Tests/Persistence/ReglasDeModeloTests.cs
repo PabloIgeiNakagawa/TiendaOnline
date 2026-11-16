@@ -44,6 +44,7 @@ namespace TiendaOnline.Tests.Persistence
             var pedido = context.Model.FindEntityType(typeof(Pedido))!;
             AssertConversionATexto(pedido.FindProperty(nameof(Pedido.Estado))!);
             AssertConversionATexto(pedido.FindProperty(nameof(Pedido.EstadoPago))!);
+            AssertConversionATexto(pedido.FindProperty(nameof(Pedido.MetodoPago))!);
 
             var usuario = context.Model.FindEntityType(typeof(Usuario))!;
             AssertConversionATexto(usuario.FindProperty(nameof(Usuario.Rol))!);

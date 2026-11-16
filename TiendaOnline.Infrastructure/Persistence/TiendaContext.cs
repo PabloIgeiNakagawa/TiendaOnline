@@ -289,6 +289,14 @@ namespace TiendaOnline.Infrastructure.Persistence
                       .HasMaxLength(30)
                       .IsRequired();
 
+                // El método de pago viaja como texto: el enum MetodoPago es la única
+                // fuente de verdad (la tabla MetodoDePago se retiró con la migration
+                // MetodoPagoComoTexto).
+                entity.Property(p => p.MetodoPago)
+                      .HasConversion<string>()
+                      .HasMaxLength(30)
+                      .IsRequired();
+
                 // Relación con Usuario
                 entity.HasOne(p => p.Usuario)
                       .WithMany(u => u.Pedidos)

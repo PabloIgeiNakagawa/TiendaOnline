@@ -9,7 +9,9 @@ namespace TiendaOnline.Application.Categorias.Queries
         Task<IEnumerable<CategoriaDto>> ObtenerCategoriasRaizAsync(CancellationToken ct = default);
         Task<IEnumerable<CategoriaDto>> ObtenerCategoriasHojaAsync(CancellationToken ct = default);
         Task<bool> EsCategoriaHojaAsync(int id, CancellationToken ct = default);
+        Task<CategoriaDto?> ObtenerCategoriaPorIdAsync(int id, CancellationToken ct = default);
         Task<PagedResult<CategoriaListadoDto>> ObtenerCategoriasPaginadasAsync(int pagina, int cantidad, string? buscar, string? nivel, CancellationToken ct = default);
         Task<bool> ExisteNombreAsync(string nombre, CancellationToken ct = default); // Para evitar duplicados
+        Task<bool> ExisteNombreEnOtraCategoriaAsync(string nombre, int categoriaId, CancellationToken ct = default); // Duplicado excluyendo a la propia (edición)
     }
 }

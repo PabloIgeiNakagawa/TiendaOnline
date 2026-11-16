@@ -140,7 +140,7 @@ namespace TiendaOnline.Tests.Integration
 
             Assert.NotNull(_dtoCapturado);
             Assert.Equal(usuario.UsuarioId, _dtoCapturado.UsuarioId);
-            Assert.Equal(2, _dtoCapturado.MetodoDePagoId);
+            Assert.Equal(MetodoPago.Transferencia, _dtoCapturado.MetodoPago);
             Assert.False(_dtoCapturado.EsEnvioADomicilio);
             Assert.Equal(0m, _dtoCapturado.CostoEnvio); // retiro = $0, no el 999 del form
 

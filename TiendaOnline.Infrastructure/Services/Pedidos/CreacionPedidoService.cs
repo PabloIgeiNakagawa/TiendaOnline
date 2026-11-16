@@ -47,7 +47,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 var pedido = new Pedido
                 {
                     UsuarioId = dto.UsuarioId,
-                    MetodoDePagoId = dto.MetodoDePagoId,
+                    MetodoPago = dto.MetodoPago,
                     EsEnvioADomicilio = dto.EsEnvioADomicilio,
                     EnvioCalle = dto.EnvioCalle,
                     EnvioNumero = dto.EnvioNumero,

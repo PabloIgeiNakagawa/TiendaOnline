@@ -62,9 +62,10 @@ namespace TiendaOnline.Domain.Entities
         public EstadoPago EstadoPago { get; set; } = EstadoPago.Pendiente;
 
         // --- Pagos ---
+        // El método de pago es el enum MetodoPago: única fuente de verdad, la
+        // base lo guarda como texto (misma regla que Estado/EstadoPago).
         [Required]
-        public int MetodoDePagoId { get; set; }
-        public MetodoDePago MetodoDePago { get; set; } // Propiedad de navegación
+        public MetodoPago MetodoPago { get; set; } = MetodoPago.MercadoPago;
 
         [MaxLength(100)]
         public string? TransaccionPagoId { get; set; } // Acá guardás el ID que te devuelve MP o Stripe

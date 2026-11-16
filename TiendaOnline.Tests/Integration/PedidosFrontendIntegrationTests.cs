@@ -168,19 +168,9 @@ namespace TiendaOnline.Tests.Integration
             // ReintentarPago (flujo de PagoFallido), no sube comprobante.
             var ids = _app.WithDb(ctx =>
             {
-                // FK Pedido→MetodoDePago: si el row id 1 no existe lo siembro
-                // explícito (el guard compara contra el id fijo 2 de transferencia).
-                var mp = ctx.Set<MetodoDePago>().FirstOrDefault(m => m.MetodoDePagoId == 1);
-                if (mp == null)
-                {
-                    mp = new MetodoDePago { MetodoDePagoId = 1, Nombre = "Mercado Pago" };
-                    ctx.Set<MetodoDePago>().Add(mp);
-                    ctx.SaveChanges();
-                }
-
                 var dueno = TestDatabase.SeedUsuario(ctx, "dueno-mp@test.local");
                 var producto = TestDatabase.SeedProducto(ctx);
-                var pedido = TestDatabase.SeedPedido(ctx, dueno, producto, 1, metodoDePagoId: mp.MetodoDePagoId);
+                var pedido = TestDatabase.SeedPedido(ctx, dueno, producto, 1, metodoPago: MetodoPago.MercadoPago);
                 return (PedidoId: pedido.PedidoId, UsuarioId: dueno.UsuarioId);
             });
 
@@ -257,19 +247,10 @@ namespace TiendaOnline.Tests.Integration
         {
             return _app.WithDb(ctx =>
             {
-                // El guard compara contra el id fijo 2 de la tabla MetodoDePago.
-                var transferencia = ctx.Set<MetodoDePago>().FirstOrDefault(m => m.MetodoDePagoId == 2);
-                if (transferencia == null)
-                {
-                    transferencia = new MetodoDePago { MetodoDePagoId = 2, Nombre = "Transferencia" };
-                    ctx.Set<MetodoDePago>().Add(transferencia);
-                    ctx.SaveChanges();
-                }
-
                 var dueno = TestDatabase.SeedUsuario(ctx, duenoEmail);
                 var producto = TestDatabase.SeedProducto(ctx);
                 var pedido = TestDatabase.SeedPedido(ctx, dueno, producto, 1,
-                    metodoDePagoId: transferencia.MetodoDePagoId,
+                    metodoPago: MetodoPago.Transferencia,
                     comprobanteUrl: comprobanteUrl,
                     fechaPedido: fechaPedido);
                 return (PedidoId: pedido.PedidoId, UsuarioId: dueno.UsuarioId);

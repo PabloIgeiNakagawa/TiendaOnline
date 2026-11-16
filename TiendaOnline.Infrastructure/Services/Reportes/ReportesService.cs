@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Globalization;
+using TiendaOnline.Application.Pedidos.Common;
 using TiendaOnline.Application.Reportes;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
@@ -447,18 +448,29 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
 
         private async Task<List<VentaPorMetodoDePagoDto>> ObtenerVentasPorMetodoDePagoAsync(CancellationToken ct)
         {
-            var ventas = await _context.Pedidos
+            // Fetch del enum (la columna es texto) y agrupación en memoria: los
+            // GroupBy sobre columnas con converter son frágiles de traducir y el
+            // volumen lo permite (el dashboard cachea 60 s).
+            var filas = await _context.Pedidos
                 .AsNoTracking()
                 .Where(p => p.EstadoPago == EstadoPago.Aprobado)
-                .GroupBy(p => p.MetodoDePago.Nombre)
+                .Select(p => new
+                {
+                    p.MetodoPago,
+                    Total = p.DetallesPedido.Sum(dp => dp.Cantidad * dp.PrecioUnitario) + p.CostoEnvio
+                })
+                .ToListAsync(ct);
+
+            var ventas = filas
+                .GroupBy(f => MetodoPagoLegible.Nombre(f.MetodoPago))
                 .Select(g => new VentaPorMetodoDePagoDto
                 {
                     MetodoDePago = g.Key,
                     CantidadPedidos = g.Count(),
-                    TotalVentas = g.SelectMany(p => p.DetallesPedido).Sum(dp => dp.Cantidad * dp.PrecioUnitario) + g.Sum(p => p.CostoEnvio)
+                    TotalVentas = g.Sum(f => f.Total)
                 })
                 .OrderByDescending(v => v.TotalVentas)
-                .ToListAsync(ct);
+                .ToList();
 
             var totalVentas = ventas.Sum(v => v.TotalVentas);
             foreach (var venta in ventas)

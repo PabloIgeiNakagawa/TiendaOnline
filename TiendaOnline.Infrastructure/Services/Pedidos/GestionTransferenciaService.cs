@@ -33,7 +33,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             var pedido = await _context.Pedidos.FindAsync(pedidoId, ct);
             if (pedido == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
 
-            if (pedido.MetodoDePagoId != (int)MetodoPago.Transferencia)
+            if (pedido.MetodoPago != MetodoPago.Transferencia)
                 throw new ComprobanteNoValidoException("Este pedido no paga por transferencia bancaria.");
 
             if (pedido.Estado != EstadoPedido.Nuevo || pedido.EstadoPago != EstadoPago.Pendiente)
@@ -81,7 +81,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 if (pedido == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
 
-                if (pedido.MetodoDePagoId != (int)MetodoPago.Transferencia)
+                if (pedido.MetodoPago != MetodoPago.Transferencia)
                     throw new ComprobanteNoValidoException("Este pedido no paga por transferencia bancaria.");
 
                 if (pedido.EstadoPago == EstadoPago.Aprobado)
@@ -198,7 +198,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 if (pedido == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
 
-                if (pedido.MetodoDePagoId != (int)MetodoPago.Transferencia)
+                if (pedido.MetodoPago != MetodoPago.Transferencia)
                     throw new ComprobanteNoValidoException("Este pedido no paga por transferencia bancaria.");
 
                 if (string.IsNullOrEmpty(pedido.ComprobanteUrl))

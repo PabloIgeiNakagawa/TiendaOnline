@@ -66,17 +66,6 @@ namespace TiendaOnline.E2E
             DbInitializer.SeedSettings(context);
             DbInitializer.SeedZonasEnvio(context);
 
-            // Métodos de pago: el checkout arma el pedido con el id elegido
-            // (la seed del sistema no los cria; en producción existen desde el inicio).
-            var metodos = context.Set<MetodoDePago>();
-            if (!metodos.Any())
-            {
-                metodos.Add(new MetodoDePago { Nombre = "Mercado Pago" });
-                metodos.Add(new MetodoDePago { Nombre = "Transferencia" });
-                metodos.Add(new MetodoDePago { Nombre = "Efectivo" });
-                context.SaveChanges();
-            }
-
             // Un solo producto en la tienda: el "primer botón Agregar al carrito"
             // de /Productos es determinísticamente este. La categoría se guarda
             // primero: el id real hace falta en la FK del producto.
