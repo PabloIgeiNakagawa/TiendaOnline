@@ -59,8 +59,13 @@
     document.querySelectorAll(".btn-cancelar").forEach(btn => {
         btn.addEventListener("click", function () {
             const id = this.dataset.pedidoId;
+            // El server decide si el click va a reembolsar plata: el modal del
+            // cobrado nombra el efecto (pago Reembolsado, stock devuelto, aviso).
+            const esCobrado = this.dataset.cobrado === "true";
             configurarAccion(id, {
-                mensaje: (id) => `¿Estás seguro de cancelar el pedido #${id.padStart(6, "0")}?`,
+                mensaje: (id) => esCobrado
+                    ? `El pago del pedido #${id.padStart(6, "0")} ya está cobrado. Al cancelarlo, el pago queda Reembolsado, el stock se devuelve y el cliente recibe el aviso por email. ¿Cancelamos?`
+                    : `¿Estás seguro de cancelar el pedido #${id.padStart(6, "0")}?`,
                 icono: "bi bi-x-circle text-danger display-4",
                 botonClase: "btn btn-danger",
                 texto: "Cancelar Pedido",

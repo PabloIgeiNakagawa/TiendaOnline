@@ -256,9 +256,11 @@ namespace TiendaOnline.Features.Pedidos
                 // Misma maquinaria que el panel: claim interno por estado + devolución
                 // de stock cuando corresponde. Si otro request la ganó, los guards del
                 // service devuelven el motivo curado.
-                await _estadosPedidoService.PedidoCanceladoAsync(id, HttpContext.RequestAborted);
+                var quedoReembolsado = await _estadosPedidoService.PedidoCanceladoAsync(id, HttpContext.RequestAborted);
                 _logger.LogInformation("Pedido {PedidoId} cancelado por su dueño", id);
-                TempData.SetMensajeExito("Tu pedido fue cancelado.");
+                TempData.SetMensajeExito(quedoReembolsado
+                    ? "Tu pedido fue cancelado y el pago quedó Reembolsado. Te contactamos para coordinar la devolución."
+                    : "Tu pedido fue cancelado.");
             }
             catch (DomainException ex)
             {

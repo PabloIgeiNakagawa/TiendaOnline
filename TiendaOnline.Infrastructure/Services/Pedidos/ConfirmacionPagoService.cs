@@ -133,6 +133,11 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                             );
                         }
 
+                        // Guardia: estas cuatro líneas DEBEN espejar exactamente el
+                        // claim de arriba. La entidad quedó tracked con los valores
+                        // previos y el SaveChanges de abajo re-escribe lo que ella
+                        // diga: si un editor deja de espejar el claim acá, revierte
+                        // en silencio lo que el UPDATE condicional ya escribió.
                         pedido.EstadoPago = EstadoPago.Aprobado;
                         pedido.Estado = EstadoPedido.EnPreparacion;
                         pedido.FechaEnPreparacion = DateTime.Now;
@@ -307,19 +312,15 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
         /// <summary>
         /// Motivo del resultado cuando el UPDATE condicional de la aprobación
-        /// perdió la carrera: recarga el estado real del pedido desde la DB,
-        /// porque la entidad del request perdedor quedó desactualizada. Pedido
-        /// ya aprobado → YaConfirmado (un reintento repetido no repite la
-        /// reserva); vencido → PedidoVencido; cualquier otro estado →
-        /// EstadoIncoherente.
+        /// perdió la carrera: el estado real sale del snapshot compartido
+        /// EstadoRealDelPedido (la entidad del request perdedor quedó
+        /// desactualizada). Pedido ya aprobado → YaConfirmado (un reintento
+        /// repetido no repite la reserva); vencido → PedidoVencido; cualquier
+        /// otro estado → EstadoIncoherente.
         /// </summary>
         private async Task<ResultadoPago> ResolverMotivoDeCarreraAsync(int pedidoId, CancellationToken ct)
         {
-            var estadoReal = await _context.Pedidos
-                .AsNoTracking()
-                .Where(p => p.PedidoId == pedidoId)
-                .Select(p => new { p.Estado, p.EstadoPago, p.FechaPedido })
-                .FirstOrDefaultAsync(ct);
+            var estadoReal = await EstadoRealDelPedido.LeerAsync(_context, pedidoId, ct);
 
             if (estadoReal == null)
             {

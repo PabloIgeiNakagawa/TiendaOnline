@@ -165,9 +165,13 @@ namespace TiendaOnline.Features.Pedidos.Admin
             {
                 return NotFound();
             }
-            await _estadosPedidoService.PedidoCanceladoAsync(pedidoId, HttpContext.RequestAborted);
+            // Devuelve true cuando el pedido estaba cobrado: quedó Reembolsado y
+            // el stock se devolvió — el admin lo tiene que leer en el aviso.
+            var quedoReembolsado = await _estadosPedidoService.PedidoCanceladoAsync(pedidoId, HttpContext.RequestAborted);
             _logger.LogInformation("Pedido {PedidoId} cancelado por {Admin} (con devolución de stock si estaba pagado)", pedidoId, User.FindFirstValue(ClaimTypes.NameIdentifier));
-            TempData.SetMensajeExito("Estado del pedido actualizado a Cancelado");
+            TempData.SetMensajeExito(quedoReembolsado
+                ? "Pedido cancelado: el pago quedó Reembolsado y el stock se devolvió"
+                : "Estado del pedido actualizado a Cancelado");
             return RedirectToAction("Detalles", new { id = pedidoId });
         }
 

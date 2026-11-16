@@ -114,11 +114,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 if (filasAprobado == 0)
                 {
-                    var estadoReal = await _context.Pedidos
-                        .AsNoTracking()
-                        .Where(p => p.PedidoId == pedidoId)
-                        .Select(p => new { p.Estado, p.EstadoPago, p.FechaPedido })
-                        .FirstOrDefaultAsync(ct);
+                    var estadoReal = await EstadoRealDelPedido.LeerAsync(_context, pedidoId, ct);
 
                     if (estadoReal == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
                     if (estadoReal.Estado == EstadoPedido.Cancelado)
@@ -220,11 +216,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 if (filasRechazo == 0)
                 {
-                    var estadoReal = await _context.Pedidos
-                        .AsNoTracking()
-                        .Where(p => p.PedidoId == pedidoId)
-                        .Select(p => new { p.Estado, p.EstadoPago })
-                        .FirstOrDefaultAsync(ct);
+                    var estadoReal = await EstadoRealDelPedido.LeerAsync(_context, pedidoId, ct);
 
                     if (estadoReal == null) throw new PedidoNoEncontradoException("No se encontró el pedido.");
                     if (estadoReal.Estado == EstadoPedido.Cancelado)
