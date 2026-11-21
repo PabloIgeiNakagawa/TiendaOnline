@@ -132,40 +132,7 @@ namespace TiendaOnline.Features.Accounts
                 return View(model);
             }
 
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, usuarioDto.UsuarioId.ToString()),
-                new Claim(ClaimTypes.Name, usuarioDto.Nombre),
-                new Claim(ClaimTypes.Surname, usuarioDto.Apellido),
-                // Un usuario puede no tener teléfono (lo de Google, o el reset de
-                // contraseña de una cuenta sin teléfono): el claim con null explota.
-                new Claim(ClaimTypes.MobilePhone, usuarioDto.Telefono ?? ""),
-                new Claim(ClaimTypes.Email, usuarioDto.Email),
-                new Claim(ClaimTypes.Role, usuarioDto.Rol)
-            };
-
-            var identity = new ClaimsIdentity(claims, "CookieAuth");
-            var principal = new ClaimsPrincipal(identity);
-
-            // Prevenir session fixation: limpiar sesión anterior antes de crear nueva
-            await HttpContext.SignOutAsync("CookieAuth");
-            await HttpContext.SignInAsync("CookieAuth", principal, new AuthenticationProperties
-            {
-                IsPersistent = true
-            });
-
-            await FusionarCarritoDeSesionAsync(usuarioDto.UsuarioId);
-
-            var role = principal.FindFirstValue(ClaimTypes.Role);
-
-            if (role == "Administrador")
-                return RedirectToAction(nameof(HomeController.IndexAdmin), "Home");
-
-            // El personal de reparto va a su cola: la tienda es el destino del cliente.
-            if (role == "Repartidor")
-                return RedirectToAction(nameof(RepartidorController.Index), "Repartidor");
-
-            return RedirectToAction(nameof(HomeController.Index), "Home");
+            return await IniciarSesionAsync(usuarioDto);
         }
 
         // ------------------------------------------------------------------
@@ -292,39 +259,7 @@ namespace TiendaOnline.Features.Accounts
                 return RedirectToAction(nameof(Login));
             }
 
-            // Armamos los claims
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, usuarioDto.UsuarioId.ToString()),
-                new Claim(ClaimTypes.Name, usuarioDto.Nombre),
-                new Claim(ClaimTypes.Surname, usuarioDto.Apellido ?? ""),
-                new Claim(ClaimTypes.MobilePhone, usuarioDto.Telefono ?? ""),
-                new Claim(ClaimTypes.Email, usuarioDto.Email),
-                new Claim(ClaimTypes.Role, usuarioDto.Rol)
-            };
-
-            var identity = new ClaimsIdentity(claims, "CookieAuth");
-            var principal = new ClaimsPrincipal(identity);
-
-            // Prevenir session fixation: limpiar sesión anterior antes de crear nueva
-            await HttpContext.SignOutAsync("CookieAuth");
-            // Iniciamos sesión y borramos la temporal
-            await HttpContext.SignInAsync("CookieAuth", principal, new AuthenticationProperties
-            {
-                IsPersistent = true
-            });
-            await HttpContext.SignOutAsync("ExternalCookie");
-
-            await FusionarCarritoDeSesionAsync(usuarioDto.UsuarioId);
-
-            if (usuarioDto.Rol == "Administrador")
-                return RedirectToAction(nameof(HomeController.IndexAdmin), "Home");
-
-            // El personal de reparto va a su cola: la tienda es el destino del cliente.
-            if (usuarioDto.Rol == "Repartidor")
-                return RedirectToAction(nameof(RepartidorController.Index), "Repartidor");
-
-            return RedirectToAction(nameof(HomeController.Index), "Home");
+            return await IniciarSesionAsync(usuarioDto, cerrarCookieExterna: true);
         }
 
         [HttpPost]
@@ -333,6 +268,56 @@ namespace TiendaOnline.Features.Accounts
         {
             await HttpContext.SignOutAsync("CookieAuth");
             return RedirectToAction(nameof(Login));
+        }
+
+        /// <summary>
+        /// El final de ambos caminos de login (password y Google): claims, cambio
+        /// de sesión y destino según el rol viven en un único lugar — dos copias
+        /// ya se habían desincronizado (el claim de teléfono con null explotaba
+        /// solo por uno de los caminos, 12/11).
+        /// </summary>
+        private async Task<IActionResult> IniciarSesionAsync(UsuarioDto usuarioDto, bool cerrarCookieExterna = false)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, usuarioDto.UsuarioId.ToString()),
+                new Claim(ClaimTypes.Name, usuarioDto.Nombre),
+                new Claim(ClaimTypes.Surname, usuarioDto.Apellido),
+                // Un usuario puede no tener teléfono (lo de Google, o el reset de
+                // contraseña de una cuenta sin teléfono): el claim con null explota.
+                new Claim(ClaimTypes.MobilePhone, usuarioDto.Telefono ?? ""),
+                new Claim(ClaimTypes.Email, usuarioDto.Email),
+                new Claim(ClaimTypes.Role, usuarioDto.Rol)
+            };
+
+            var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "CookieAuth"));
+
+            // Prevenir session fixation: limpiar sesión anterior antes de crear nueva
+            await HttpContext.SignOutAsync("CookieAuth");
+            await HttpContext.SignInAsync("CookieAuth", principal, new AuthenticationProperties
+            {
+                IsPersistent = true
+            });
+
+            // Google deja una cookie temporal (ExternalCookie) que conviene cerrar.
+            if (cerrarCookieExterna)
+                await HttpContext.SignOutAsync("ExternalCookie");
+
+            await FusionarCarritoDeSesionAsync(usuarioDto.UsuarioId);
+
+            return RedirigirSegunRol(usuarioDto.Rol);
+        }
+
+        private IActionResult RedirigirSegunRol(string rol)
+        {
+            if (rol == "Administrador")
+                return RedirectToAction(nameof(HomeController.IndexAdmin), "Home");
+
+            // El personal de reparto va a su cola: la tienda es el destino del cliente.
+            if (rol == "Repartidor")
+                return RedirectToAction(nameof(RepartidorController.Index), "Repartidor");
+
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         /// <summary>

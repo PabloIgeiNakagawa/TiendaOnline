@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Common;
-using TiendaOnline.Application.Usuarios.Commands;
 using TiendaOnline.Application.Usuarios.Queries;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Infrastructure.Persistence;
@@ -16,15 +15,30 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
             _context = context;
         }
 
-        public async Task<UsuarioPerfilDto> ObtenerPerfil(int usuarioId, CancellationToken ct = default)
+        public async Task<UsuarioPerfilDto?> ObtenerPerfil(int usuarioId, CancellationToken ct = default)
         {
             var usuario = await _context.Usuarios
+                .AsNoTracking()
                 .Include(u => u.Direcciones)
                 .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId, ct);
 
-            if (usuario == null) throw new Exception("Usuario no encontrado.");
+            if (usuario == null) return null;
 
-            var direccionPrincipal = usuario.Direcciones.FirstOrDefault(d => d.EsPrincipal);
+            // Una sola pasada por los pedidos del usuario; las dos estadísticas se
+            // computan en memoria (mismo patrón que ReportesService con columnas de
+            // texto, y los pedidos de un usuario son una lista chiquita).
+            var pedidos = await _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.UsuarioId == usuarioId)
+                .Select(p => new
+                {
+                    p.Estado,
+                    p.EstadoPago,
+                    TotalItems = p.DetallesPedido.Sum(d => (decimal?)(d.Cantidad * d.PrecioUnitario)),
+                    p.CostoEnvio
+                })
+                .ToListAsync(ct);
+
             return new UsuarioPerfilDto
             {
                 UsuarioId = usuario.UsuarioId,
@@ -32,41 +46,38 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
                 Apellido = usuario.Apellido,
                 Email = usuario.Email,
                 Telefono = usuario.Telefono ?? string.Empty,
-                Direccion = direccionPrincipal != null ? $"{direccionPrincipal.Calle} {direccionPrincipal.Numero}, {direccionPrincipal.Localidad}" : "Sin dirección",
+                Direccion = DireccionPrincipalLegible(usuario.Direcciones),
                 FechaNacimiento = usuario.FechaNacimiento,
                 FechaCreacion = usuario.FechaCreacion,
                 Activo = usuario.Activo,
                 UltimaFechaAlta = usuario.UltimaFechaAlta,
                 UltimaFechaBaja = usuario.UltimaFechaBaja,
-                CantidadPedidos = _context.Pedidos.Count(p => p.UsuarioId == usuarioId && p.Estado != EstadoPedido.Cancelado),
-                TotalGastado = _context.Pedidos
-                    .Where(p => p.UsuarioId == usuarioId && p.Estado != EstadoPedido.Cancelado)
-                    .SelectMany(p => p.DetallesPedido)
-                    .Sum(d => d.Cantidad * d.PrecioUnitario)
+                CantidadPedidos = pedidos.Count(p => p.Estado != EstadoPedido.Cancelado),
+                // Dinero con la regla de la casa (misma que ReportesService):
+                // solo pago Aprobado suma — un pedido Pendiente/Rechazado nunca
+                // entró y uno Reembolsado ya volvió. El envío también lo pagó
+                // (el top clientes del dashboard lo suma igual).
+                TotalGastado = pedidos
+                    .Where(p => p.EstadoPago == EstadoPago.Aprobado)
+                    .Sum(p => (p.TotalItems ?? 0m) + p.CostoEnvio)
             };
         }
 
-        public async Task<UsuarioUpdateDto> ObtenerUsuarioParaEdicionAsync(int usuarioId, CancellationToken ct = default)
+        private static string DireccionPrincipalLegible(IEnumerable<Direccion> direcciones)
         {
-            var usuario = await _context.Usuarios
-                .Include(u => u.Direcciones)
-                .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId, ct);
-
-            if (usuario == null) throw new Exception("Usuario no encontrado.");
-
-            var direccionPrincipal = usuario.Direcciones.FirstOrDefault(d => d.EsPrincipal);
-            return new UsuarioUpdateDto
-            {
-                UsuarioId = usuario.UsuarioId,
-                Nombre = usuario.Nombre,
-                Apellido = usuario.Apellido,
-                Telefono = usuario.Telefono ?? string.Empty
-            };
+            var principal = direcciones.FirstOrDefault(d => d.EsPrincipal);
+            return principal != null ? $"{principal.Calle} {principal.Numero}, {principal.Localidad}" : "Sin dirección";
         }
 
-        public async Task<Usuario?> ObtenerUsuarioAsync(int usuarioId, CancellationToken ct = default)
+        public async Task<UsuarioResumenDto?> ObtenerUsuarioAsync(int usuarioId, CancellationToken ct = default)
         {
-            return await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
+            // Proyección mínima: los dos forms del perfil solo necesitan
+            // identidad — la entidad completa (hash, fechas, estado) no cruza.
+            return await _context.Usuarios
+                .AsNoTracking()
+                .Where(u => u.UsuarioId == usuarioId)
+                .Select(u => new UsuarioResumenDto(u.UsuarioId, u.Nombre, u.Apellido, u.Telefono ?? string.Empty))
+                .FirstOrDefaultAsync(ct);
         }
 
         public async Task<PagedResult<UsuarioListadoDto>> ObtenerUsuariosPaginadosAsync(int pagina, int cantidad, string? buscar, string? rol, bool? activo, CancellationToken ct = default)

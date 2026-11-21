@@ -41,16 +41,12 @@ namespace TiendaOnline.Authorization
             var direccionIdStr = routeData?.Values["direccionId"]?.ToString();
             if (direccionIdStr != null && int.TryParse(direccionIdStr, out var direccionId))
             {
-                try
+                // null = la dirección no existe: el requirement no se satisface
+                // y la autorización niega (el recurso válido siempre responde).
+                var direccion = await _direccionService.ObtenerPorIdAsync(direccionId, httpContext?.RequestAborted ?? default);
+                if (direccion != null && direccion.UsuarioId.ToString() == userId)
                 {
-                    var direccion = await _direccionService.ObtenerPorIdAsync(direccionId, httpContext?.RequestAborted ?? default);
-                    if (direccion.UsuarioId.ToString() == userId)
-                    {
-                        context.Succeed(requirement);
-                    }
-                }
-                catch
-                {
+                    context.Succeed(requirement);
                 }
             }
         }

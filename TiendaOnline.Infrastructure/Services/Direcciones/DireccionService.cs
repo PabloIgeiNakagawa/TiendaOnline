@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using TiendaOnline.Application.Direcciones;
 using TiendaOnline.Application.Usuarios.Common;
 using TiendaOnline.Domain.Entities;
+using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Infrastructure.Persistence;
 
 namespace TiendaOnline.Infrastructure.Services.Direcciones
@@ -41,12 +42,13 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
                 .ToListAsync(ct);
         }
 
-        public async Task<DireccionDto> ObtenerPorIdAsync(int? id, CancellationToken ct = default)
+        public async Task<DireccionDto?> ObtenerPorIdAsync(int direccionId, CancellationToken ct = default)
         {
-            if (id == null) throw new ArgumentNullException(nameof(id));
-
-            var direccion = await _context.Direcciones
-                .Where(d => d.DireccionId == id)
+            // Lectura: null = inexistente (los controllers responden 404, y el
+            // policy handler de ownership niega). El mensaje curado va en los
+            // writes, que sí son DomainException.
+            return await _context.Direcciones
+                .Where(d => d.DireccionId == direccionId)
                 .Select(d => new DireccionDto
                 {
                     DireccionId = d.DireccionId,
@@ -64,8 +66,6 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
                     Activo = d.Activo
                 })
                 .FirstOrDefaultAsync(ct);
-
-            return direccion ?? throw new InvalidOperationException($"No se encontró la dirección con ID {id}.");
         }
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
         {
             var direccionExistente = await _context.Direcciones.FindAsync(direccionId, ct);
             if (direccionExistente == null)
-                throw new InvalidOperationException($"No se encontró la dirección con ID {direccionId}.");
+                throw new DireccionNoEncontradaException("La dirección indicada no existe.");
 
             if (direccion.EsPrincipal && !direccionExistente.EsPrincipal)
             {
@@ -170,7 +170,7 @@ namespace TiendaOnline.Infrastructure.Services.Direcciones
         {
             var direccion = await _context.Direcciones.FindAsync(direccionId, ct);
             if (direccion == null)
-                throw new InvalidOperationException($"No se encontró la dirección con ID {direccionId}.");
+                throw new DireccionNoEncontradaException("La dirección indicada no existe.");
 
             direccion.Activo = false;
             await _context.SaveChangesAsync(ct);

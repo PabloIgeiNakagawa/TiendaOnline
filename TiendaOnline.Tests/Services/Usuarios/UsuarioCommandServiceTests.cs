@@ -96,5 +96,34 @@ namespace TiendaOnline.Tests.Services.Usuarios
             Assert.Equal(PasswordVerificationResult.Success,
                 new PasswordHasher<Usuario>().VerifyHashedPassword(guardado, guardado.Contrasena, Nueva));
         }
+
+        [Fact]
+        public async Task EditarUsuarioAsync_UsuarioInexistente_LanzaUsuarioNoEncontrado()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var servicio = CrearServicio(ctx);
+            var dto = new Application.Usuarios.Commands.UsuarioUpdateDto { Nombre = "N", Apellido = "A", Telefono = "" };
+
+            var excepcion = await Assert.ThrowsAsync<UsuarioNoEncontradoException>(
+                () => servicio.EditarUsuarioAsync(9999, dto));
+
+            // Mensaje curado para UI (regla de las DomainException): el filtro
+            // global lo muestra amable en vez de la 500 de KeyNotFoundException.
+            Assert.Equal("El usuario indicado no existe.", excepcion.Message);
+        }
+
+        [Fact]
+        public async Task DarBajaUsuarioAsync_UsuarioInexistente_LanzaUsuarioNoEncontrado()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var servicio = CrearServicio(ctx);
+
+            var excepcion = await Assert.ThrowsAsync<UsuarioNoEncontradoException>(
+                () => servicio.DarBajaUsuarioAsync(9999));
+
+            Assert.Equal("El usuario indicado no existe.", excepcion.Message);
+        }
     }
 }

@@ -4,7 +4,8 @@ namespace TiendaOnline.Application.Direcciones
 {
     public interface IDireccionService
     {
-        Task<DireccionDto> ObtenerPorIdAsync(int? id, CancellationToken ct = default);
+        /// <summary>Dirección por id; null = no existe (los controllers responden 404).</summary>
+        Task<DireccionDto?> ObtenerPorIdAsync(int direccionId, CancellationToken ct = default);
 
         /// <summary>
         /// Dirección solo si pertenece al usuario (null si no existe o es ajena).

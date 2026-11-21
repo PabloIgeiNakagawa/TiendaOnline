@@ -6,7 +6,6 @@ using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Infrastructure.Persistence;
-
 namespace TiendaOnline.Infrastructure.Services.Usuarios
 {
     public class UsuarioCommandService : IUsuarioCommandService
@@ -27,7 +26,7 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
         public async Task DarBajaUsuarioAsync(int usuarioId, CancellationToken ct = default)
         {
             var usuario = await _context.Usuarios.FindAsync(usuarioId, ct);
-            if (usuario == null) throw new Exception("Usuario no encontrado.");
+            if (usuario == null) throw new UsuarioNoEncontradoException("El usuario indicado no existe.");
 
             var estadoAnterior = new
             {
@@ -46,7 +45,7 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
         public async Task DarAltaUsuarioAsync(int usuarioId, CancellationToken ct = default)
         {
             var usuario = await _context.Usuarios.FindAsync(usuarioId, ct);
-            if (usuario == null) throw new Exception("Usuario no encontrado.");
+            if (usuario == null) throw new UsuarioNoEncontradoException("El usuario indicado no existe.");
 
             var estadoAnterior = new
             {
@@ -70,7 +69,7 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
             var usuario = await _context.Usuarios
                         .FirstOrDefaultAsync(u => u.UsuarioId == usuarioId, ct);
 
-            if (usuario == null) throw new KeyNotFoundException($"No se encontró el usuario con ID {usuarioId}");
+            if (usuario == null) throw new UsuarioNoEncontradoException("El usuario indicado no existe.");
 
             usuario.Nombre = dto.Nombre;
             usuario.Apellido = dto.Apellido;
@@ -82,7 +81,7 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
         public async Task CambiarPasswordAsync(int usuarioId, string contrasenaActual, string contrasenaNueva, CancellationToken ct = default)
         {
             var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == usuarioId, ct);
-            if (usuario == null) throw new KeyNotFoundException($"No se encontró el usuario con ID {usuarioId}");
+            if (usuario == null) throw new UsuarioNoEncontradoException("El usuario indicado no existe.");
 
             // La actual se verifica contra el hash guardado: sin este check, quien
             // deje la sesión abierta podría robar la cuenta a su dueño.
