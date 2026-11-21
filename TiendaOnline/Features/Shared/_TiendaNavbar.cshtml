@@ -196,8 +196,8 @@
 
             <div class="col-auto col-lg-3 d-flex justify-content-start align-items-center">
                 <a class="d-flex align-items-center text-decoration-none gap-2" asp-controller="Home" asp-action="Index" title="Ir al inicio">
-                    <img src="@AppSettings.GetValue("Diseno:LogoUrl")" alt="@AppSettings.GetValue("Diseno:NombreDelSitio") Logo" width="50" height="50" asp-append-version="true" loading="eager" class="img-fluid" />
-                    <span class="fw-bold fs-4 text-body d-none d-sm-inline">@AppSettings.GetValue("Diseno:NombreDelSitio")</span>
+                    <img src="@AppSettings.GetValue(AppSettingsKeys.LogoUrl)" alt="@AppSettings.GetValue(AppSettingsKeys.NombreDelSitio) Logo" width="50" height="50" asp-append-version="true" loading="eager" class="img-fluid" />
+                    <span class="fw-bold fs-4 text-body d-none d-sm-inline">@AppSettings.GetValue(AppSettingsKeys.NombreDelSitio)</span>
                 </a>
             </div>
 

@@ -11,9 +11,7 @@ namespace TiendaOnline.Application.Categorias.Commands
         // jerarquía (un padre que haría bucle rechaza ANTES de guardar el nombre).
         Task EditarCategoriaAsync(int categoriaId, string nombre, int? categoriaPadreId, CancellationToken ct = default);
 
-        // Estado y Borrado
-        Task ActivarCategoriaAsync(int categoriaId, CancellationToken ct = default);
-        Task DesactivarCategoriaAsync(int categoriaId, CancellationToken ct = default);
-        Task<bool> EliminarCategoriaAsync(int categoriaId, CancellationToken ct = default); // Solo si no tiene dependencias
+        // Baja física solo si no tiene dependencias; el resto lanza CategoriaNoValidaException.
+        Task EliminarCategoriaAsync(int categoriaId, CancellationToken ct = default);
     }
 }

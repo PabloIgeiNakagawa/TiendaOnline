@@ -6,7 +6,7 @@ using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.Reportes
 {
-    [Route("Admin/[controller]")]
+    [Route("admin/[controller]")]
     [Authorize(Roles = "Administrador")]
     public class AdminReportesController : AdminControllerBase
     {

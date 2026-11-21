@@ -6,7 +6,7 @@ namespace TiendaOnline.Domain.Entities
     {
         [Key]
         [MaxLength(100)]
-        public string Key { get; set; } = null!; // Ej: "Tienda:WhatsApp"
+        public string Key { get; set; } = null!; // Ej: "Tienda:Whatsapp" (ver AppSettingsKeys)
 
         [MaxLength(500)]
         public string? Value { get; set; } // Puede ser nulo si el admin lo deja vacío

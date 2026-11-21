@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -65,7 +65,6 @@ namespace TiendaOnline.Features.Accounts
         {
             if (!ModelState.IsValid)
             {
-                // Recargar roles si el modelo no es válido
                 var roles = await _rolService.ObtenerTodosAsync(HttpContext.RequestAborted);
                 model.RolesDisponibles = roles.Select(r => new SelectListItem
                 {
@@ -134,10 +133,6 @@ namespace TiendaOnline.Features.Accounts
 
             return await IniciarSesionAsync(usuarioDto);
         }
-
-        // ------------------------------------------------------------------
-        // Recuperación de contraseña
-        // ------------------------------------------------------------------
 
         [HttpGet("[action]")]
         public IActionResult OlvideMiPassword()
@@ -215,10 +210,8 @@ namespace TiendaOnline.Features.Accounts
 
             var email = result.Principal.FindFirstValue(ClaimTypes.Email);
 
-            // Buscamos si ya existe en la DB
             var usuarioDto = await _authService.ObtenerUsuarioPorEmailAsync(email, HttpContext.RequestAborted);
 
-            // SI NO EXISTE: Lo registramos automáticamente
             if (usuarioDto == null)
             {
                 var nombre = result.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "Usuario";
@@ -230,14 +223,13 @@ namespace TiendaOnline.Features.Accounts
                     Apellido = apellido,
                     Email = email,
                     RolId = (int)Rol.Usuario,
-                    // Generamos una contraseña criptográficamente aleatoria
-                    // El usuario nunca la va a usar, porque entrará con Google
+                    // La cuenta de Google no usa contraseña; el hash aleatorio evita
+                    // una columna vacía si algún día se agrega login por password.
                     Contrasena = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32))
                 };
 
                 await _authService.RegisterAsync(nuevoUsuario, ct: HttpContext.RequestAborted);
 
-                // Lo volvemos a buscar ahora que ya se guardó en la DB y tiene un UsuarioId asignado
                 usuarioDto = await _authService.ObtenerUsuarioPorEmailAsync(email, HttpContext.RequestAborted);
             }
 
@@ -272,9 +264,8 @@ namespace TiendaOnline.Features.Accounts
 
         /// <summary>
         /// El final de ambos caminos de login (password y Google): claims, cambio
-        /// de sesión y destino según el rol viven en un único lugar — dos copias
-        /// ya se habían desincronizado (el claim de teléfono con null explotaba
-        /// solo por uno de los caminos, 12/11).
+        /// de sesión y destino según el rol viven en un único lugar. El claim de
+        /// teléfono viaja vacío cuando es null para no romper uno de los caminos.
         /// </summary>
         private async Task<IActionResult> IniciarSesionAsync(UsuarioDto usuarioDto, bool cerrarCookieExterna = false)
         {

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Application.Productos.Commands;
 using TiendaOnline.Domain.Entities;
@@ -74,14 +74,12 @@ namespace TiendaOnline.Infrastructure.Services.Productos
 
             if (dto.ImagenStream != null)
             {
-                // Borrar la vieja si existe
                 if (!string.IsNullOrEmpty(producto.ImagenUrl) && !producto.ImagenUrl.Contains("no-image.png"))
                 {
                     string publicIdViejo = _imagenService.ExtraerPublicIdDesdeUrl(producto.ImagenUrl);
                     await _imagenService.BorrarImagenAsync(publicIdViejo, ct);
                 }
 
-                // Subir la nueva
                 producto.ImagenUrl = await _imagenService.SubirImagenAsync(dto.ImagenStream, dto.NombreArchivo ?? "producto", "Productos", 800, 800, ct);
             }
 
@@ -101,7 +99,6 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 }
             }
 
-            // Actualización de campos
             producto.Nombre = dto.Nombre;
             producto.Descripcion = dto.Descripcion;
             producto.Precio = dto.Precio;

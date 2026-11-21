@@ -49,7 +49,7 @@
                                 @* Lo que la página de confirmación mostraba para retiro: dónde retirar. *@
                                 <div id="infoRetiro" class="d-none alert alert-info border-0 shadow-sm d-flex align-items-center mt-4 mb-0" role="alert">
                                     <i class="bi bi-info-circle-fill fs-4 me-3"></i>
-                                    <span>Te esperamos en nuestra sucursal, <b>@AppSettings.GetValue("Ubicacion:Direccion"), @AppSettings.GetValue("Ubicacion:Ciudad"), @AppSettings.GetValue("Ubicacion:Provincia")</b></span>
+                                    <span>Te esperamos en nuestra sucursal, <b>@AppSettings.GetValue(AppSettingsKeys.UbicacionDireccion), @AppSettings.GetValue(AppSettingsKeys.UbicacionCiudad), @AppSettings.GetValue(AppSettingsKeys.UbicacionProvincia)</b></span>
                                 </div>
 
                                 <div id="seccionDireccion" class="d-none mt-4 border-top pt-3">

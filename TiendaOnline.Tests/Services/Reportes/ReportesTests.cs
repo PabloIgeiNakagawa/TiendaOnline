@@ -23,7 +23,7 @@ namespace TiendaOnline.Tests.Services.Reportes
         {
             // Seed en un contexto y lectura en OTRO: si el fetch del armado no
             // Include a la categoría, p.Categoria queda NULL y p.Categoria.Nombre
-            // tira NullReferenceException (fue el 500 del dashboard en producción).
+            // tira NullReferenceException.
             using (var seed = _db.CreateContext())
             {
                 TestDatabase.SeedProducto(seed, stock: 5);
@@ -74,9 +74,9 @@ namespace TiendaOnline.Tests.Services.Reportes
         [Fact]
         public async Task ObtenerDatosAsync_LaVentaEsSubtotalMasEnvio_YElTicketPromedioDividePorCobrados()
         {
-            // Regla de la tanda 08/11: la venta es la plata REAL cobrada (MP cobra
-            // subtotal + envío) y el ticket promedio reparte entre pedidos QUE
-            // PAGARON — el pendiente con su envío imaginario no infla nada.
+            // La venta es la plata REAL cobrada (MP cobra subtotal + envío) y el
+            // ticket promedio reparte entre pedidos QUE PAGARON - el pendiente con
+            // su envío imaginario no infla nada.
             using (var seed = _db.CreateContext())
             {
                 var cliente = TestDatabase.SeedUsuario(seed);

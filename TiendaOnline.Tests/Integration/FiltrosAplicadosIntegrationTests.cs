@@ -29,7 +29,7 @@ namespace TiendaOnline.Tests.Integration
                 TestDatabase.SeedUsuario(ctx, "pills-movimientos@test.local", Rol.Administrador).UsuarioId);
 
             var client = _app.CreateClientAs(adminId, new[] { "Administrador" });
-            var respuesta = await client.GetAsync("/Admin/MovimientosStock/Movimientos?busqueda=algo");
+            var respuesta = await client.GetAsync("/admin/MovimientosStock/Movimientos?busqueda=algo");
 
             Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
             var html = await respuesta.Content.ReadAsStringAsync();
@@ -39,7 +39,7 @@ namespace TiendaOnline.Tests.Integration
 
             // La X de la única píldora navega sin el parámetro de búsqueda y a la página 1
             var href = HrefsDePills(html).Single();
-            Assert.Equal("/Admin/MovimientosStock/Movimientos?pagina=1", href);
+            Assert.Equal("/admin/MovimientosStock/Movimientos?pagina=1", href);
         }
 
         [Fact]
@@ -80,7 +80,7 @@ namespace TiendaOnline.Tests.Integration
             var client = _app.CreateClientAs(adminId, new[] { "Administrador" });
             var rutas = new[]
             {
-                "/Admin/MovimientosStock/Movimientos",
+                "/admin/MovimientosStock/Movimientos",
                 "/admin/pedidos/Listado",
                 "/admin/categorias/Listado",
                 "/admin/usuarios/Listado",

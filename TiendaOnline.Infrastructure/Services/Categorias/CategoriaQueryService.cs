@@ -89,7 +89,6 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
 
         public async Task<bool> EsCategoriaHojaAsync(int id, CancellationToken ct = default)
         {
-            // Buscamos la categoría específica
             var categoria = await _context.Categorias
                 .Include(c => c.Subcategorias)
                 .FirstOrDefaultAsync(c => c.CategoriaId == id, ct);

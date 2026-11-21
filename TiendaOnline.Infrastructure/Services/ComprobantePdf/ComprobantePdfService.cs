@@ -26,12 +26,12 @@ namespace TiendaOnline.Infrastructure.Services.ComprobantePdf
         public async Task<byte[]> GenerarComprobanteAsync(ComprobantePedidoDto datos)
         {
             // Leer datos de la empresa desde AppSettings
-            var razonSocial = _appSettings.GetValue("Empresa:RazonSocial");
-            var cuit = _appSettings.GetValue("Empresa:Cuit");
-            var condicionIva = _appSettings.GetValue("Empresa:CondicionIva");
-            var ingresosBrutos = _appSettings.GetValue("Empresa:IngresosBrutos");
-            var inicioActividades = _appSettings.GetValue("Empresa:InicioActividades");
-            var logoUrl = _appSettings.GetValue("Diseno:LogoUrl");
+            var razonSocial = _appSettings.GetValue(AppSettingsKeys.EmpresaRazonSocial);
+            var cuit = _appSettings.GetValue(AppSettingsKeys.EmpresaCuit);
+            var condicionIva = _appSettings.GetValue(AppSettingsKeys.EmpresaCondicionIva);
+            var ingresosBrutos = _appSettings.GetValue(AppSettingsKeys.EmpresaIngresosBrutos);
+            var inicioActividades = _appSettings.GetValue(AppSettingsKeys.EmpresaInicioActividades);
+            var logoUrl = _appSettings.GetValue(AppSettingsKeys.LogoUrl);
 
             // Cargar logo si existe
             Image? logoImage = null;

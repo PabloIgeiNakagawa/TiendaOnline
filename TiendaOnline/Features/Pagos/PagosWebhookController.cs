@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using TiendaOnline.Application.Payment;
@@ -48,39 +48,29 @@ namespace TiendaOnline.Features.Pagos
                 Request.Headers["x-request-id"].ToString(),
                 body != null ? JsonSerializer.Serialize(body) : "null");
 
-            // Unificamos el ID: Puede venir por Query String (id) o por el Body (data.id)
             var finalId = resourceId ?? body?.Data?.Id;
 
-            // Unificamos el Tipo: Puede venir como 'topic' (v1) o como 'type' (v2/JSON body)
             var finalType = topic ?? body?.Type;
 
             _logger.LogInformation("Notificación de MP recibida - Tipo: {Type}, ResourceId: {Id}", finalType, finalId);
 
-            // --- VALIDACIÓN DE SEGURIDAD (Firma de Mercado Pago) ---
-            // Obtenemos los encabezados necesarios para validar que la petición sea auténtica
             var signature = Request.Headers["x-signature"].ToString();
             var requestId = Request.Headers["x-request-id"].ToString();
 
-            // Validamos la firma usando el servicio (importante tener cargado el WebhookSecret en appsettings)
-            // Usamos string.Empty para los valores nulos - la validación fallará gracefully
             if (!_paymentService.ValidarFirma(signature, requestId, finalId ?? string.Empty, finalType ?? string.Empty))
             {
                 _logger.LogWarning("Firma de webhook inválida - Rechazando petición para el recurso {Id}", finalId);
-                // Devolvemos Unauthorized para que quede registro de que la firma falló
                 return Unauthorized();
             }
 
-            // Validamos que tengamos un ID para trabajar
             if (string.IsNullOrEmpty(finalId))
             {
                 _logger.LogWarning("Se recibió una notificación de MP sin ID de recurso.");
                 return Ok();
             }
 
-            // Procesamos solo si es un pago (payment)
             if (finalType == "payment" || string.IsNullOrEmpty(finalType))
             {
-                // Le pedimos al servicio de MP que traiga la data real usando el ID unificado
                 var infoPago = await _paymentService.ObtenerDetallesPagoAsync(finalId, HttpContext.RequestAborted);
 
                 if (infoPago != null)

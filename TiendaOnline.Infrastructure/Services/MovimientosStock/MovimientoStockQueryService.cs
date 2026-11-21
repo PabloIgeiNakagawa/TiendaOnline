@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Common;
 using TiendaOnline.Application.MovimientosStock.Queries;
 using TiendaOnline.Domain.Entities;
@@ -23,15 +23,11 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
                 .Include(m => m.Pedido)
                 .AsQueryable();
 
-            // --- Filtros ---
-
-            // Búsqueda por nombre de producto
             if (!string.IsNullOrEmpty(filtros.Busqueda))
             {
                 query = query.Where(m => m.Producto.Nombre.Contains(filtros.Busqueda));
             }
 
-            // Filtro por Tipo de Movimiento (Enum)
             if (filtros.TipoMovimientoId.HasValue)
             {
                 // La columna Tipo es texto en la BD (estados como texto): la
@@ -41,7 +37,6 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
                 query = query.Where(m => m.Tipo == tipoFiltro);
             }
 
-            // Filtro por Rango de Fechas
             if (filtros.Desde.HasValue)
             {
                 query = query.Where(m => m.Fecha >= filtros.Desde.Value);
@@ -54,7 +49,6 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
                 query = query.Where(m => m.Fecha < fechaHasta);
             }
 
-            // --- Paginación ---
             int totalElementos = await query.CountAsync(ct);
 
             var items = await query
@@ -80,7 +74,6 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
 
         public async Task<IEnumerable<TipoMovimientoDto>> ObtenerTiposMovimientoAsync(CancellationToken ct = default)
         {
-            // Obtenemos todos los valores del Enum 'TipoMovimiento'
             var tipos = Enum.GetValues(typeof(Domain.Entities.TipoMovimiento))
                             .Cast<Domain.Entities.TipoMovimiento>()
                             .Select(t => new TipoMovimientoDto
@@ -93,7 +86,6 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
             return await Task.FromResult(tipos);
         }
 
-        // OBTENER HISTORIAL (Para reportes del Admin)
         public async Task<List<MovimientosDto>> ObtenerHistorialPorProductoAsync(int productoId, CancellationToken ct = default)
         {
             var movimientos = await _context.MovimientosStock

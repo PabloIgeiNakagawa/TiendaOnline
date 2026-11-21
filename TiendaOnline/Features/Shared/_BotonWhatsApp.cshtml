@@ -4,7 +4,7 @@
    barra de tabs fija (fixed-bottom, z-index 1030); en desktop queda cerca de
    la esquina inferior derecha. *@
 @{
-    var whatsappTexto = AppSettings.GetValue("Tienda:Whatsapp") ?? "";
+    var whatsappTexto = AppSettings.GetValue(AppSettingsKeys.TiendaWhatsapp) ?? "";
     var whatsappDigits = new string(whatsappTexto.Where(char.IsDigit).ToArray());
 }
 @if (!string.IsNullOrEmpty(whatsappDigits))

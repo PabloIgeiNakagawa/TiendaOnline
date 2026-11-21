@@ -37,14 +37,12 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                         .ThenInclude(d => d.Producto)
                     .FirstOrDefaultAsync(p => p.PedidoId == infoPago.PedidoId, ct);
 
-                // Idempotencia y existencia: Si no existe o ya está pagado, cortamos acá
                 if (pedido == null)
                 {
                     _logger.LogWarning("No se encontró el pedido {PedidoId} para confirmar pago.", infoPago.PedidoId);
                     return ResultadoPago.Fallo(MotivoPago.PedidoNoEncontrado);
                 }
 
-                // Calculamos el total real (Subtotal + Envío) con precisión decimal
                 decimal subtotal = pedido.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario);
                 decimal totalCalculado = subtotal + pedido.CostoEnvio;
                 var estadoNormalizado = infoPago.Estado?.Trim().ToLowerInvariant();
@@ -287,7 +285,6 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
             if (pedido == null) return null;
 
-            // Solo permitimos reintentar si el pedido sigue pendiente
             if (pedido.EstadoPago == EstadoPago.Aprobado)
                 throw new PedidoNoCancelableException("Este pedido ya ha sido pagado.");
 

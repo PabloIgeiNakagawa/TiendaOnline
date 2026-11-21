@@ -6,7 +6,6 @@
         {
             return builder.AddRazorOptions(options =>
             {
-                // El expander personalizado
                 options.ViewLocationExpanders.Add(new FeatureViewLocationExpander());
             });
         }

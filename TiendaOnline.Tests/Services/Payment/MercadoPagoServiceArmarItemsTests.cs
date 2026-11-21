@@ -1,5 +1,6 @@
 using MercadoPago.Client.Preference;
 using TiendaOnline.Application.Payment;
+using TiendaOnline.Infrastructure.Services.MercadoPago;
 using Xunit;
 
 namespace TiendaOnline.Tests.Services.Payment

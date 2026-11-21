@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage;
 using Newtonsoft.Json;
@@ -189,7 +189,6 @@ namespace TiendaOnline.Infrastructure.Persistence
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configuración de Dirección
             modelBuilder.Entity<Direccion>(entity =>
             {
                 entity.HasOne(d => d.Usuario)
@@ -198,12 +197,10 @@ namespace TiendaOnline.Infrastructure.Persistence
                       .OnDelete(DeleteBehavior.Cascade); // Si borro un usuario, mueren sus direcciones
             });
 
-            // Índice único para el Email en la entidad Usuario
             modelBuilder.Entity<Usuario>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
-            // Configuración para evitar ciclos de cascada en Categorías
             modelBuilder.Entity<Categoria>()
                 .HasOne(c => c.CategoriaPadre)
                 .WithMany(c => c.Subcategorias)
@@ -220,9 +217,8 @@ namespace TiendaOnline.Infrastructure.Persistence
                 .HasForeignKey(p => p.CategoriaId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Precisión decimal del dinero: completa la config de tabla que en Domain
-            // iba como atributo propio de EF. EF ya mapea decimal a (18,2) por default;
-            // explicitarlo en un solo lugar (el contexto) deja al Domain sin dependencias.
+            // Precisión decimal del dinero en un solo lugar (el fluent): el Domain
+            // queda sin atributos propios de EF.
             modelBuilder.Entity<Producto>()
                 .Property(p => p.Precio)
                 .HasPrecision(18, 2);
@@ -244,10 +240,8 @@ namespace TiendaOnline.Infrastructure.Persistence
                 entity.HasIndex(i => i.ProductoId);
             });
 
-            //  Configuración de MovimientoStock
             modelBuilder.Entity<MovimientoStock>(entity =>
             {
-                // Guardar el Enum como String para que la DB sea legible (Desnormalización controlada)
                 entity.Property(m => m.Tipo)
                     .HasConversion<string>()
                     .HasMaxLength(30)
@@ -256,7 +250,6 @@ namespace TiendaOnline.Infrastructure.Persistence
                 entity.Property(m => m.Fecha)
                     .HasDefaultValueSql("GETDATE()"); // El servidor pone la fecha
 
-                // Relación con Producto: Un producto tiene muchos movimientos
                 entity.HasOne(m => m.Producto)
                     .WithMany(p => p.Movimientos)
                     .HasForeignKey(m => m.ProductoId)
@@ -267,12 +260,10 @@ namespace TiendaOnline.Infrastructure.Persistence
                     .HasForeignKey(m => m.PedidoId)
                     .OnDelete(DeleteBehavior.SetNull); // Si se borra el pedido, el movimiento queda como historial
 
-                // Índice para que los reportes de stock por producto vuelen
                 entity.HasIndex(m => m.ProductoId);
                 entity.HasIndex(m => m.Fecha);
             });
 
-            // Configuración de Pedido
             modelBuilder.Entity<Pedido>(entity =>
             {
                 entity.ToTable("Pedidos");
@@ -297,11 +288,13 @@ namespace TiendaOnline.Infrastructure.Persistence
                       .HasMaxLength(30)
                       .IsRequired();
 
-                // Relación con Usuario
                 entity.HasOne(p => p.Usuario)
                       .WithMany(u => u.Pedidos)
                       .HasForeignKey(p => p.UsuarioId)
                       .OnDelete(DeleteBehavior.Restrict); // Si borro un usuario, NO se borran sus pedidos
+
+                entity.Property(p => p.CostoEnvio)
+                      .HasPrecision(18, 2);
             });
 
             // Rol del usuario: también texto, regla única para los estados del negocio.
@@ -311,37 +304,31 @@ namespace TiendaOnline.Infrastructure.Persistence
                       .HasConversion<string>()
                       .HasMaxLength(30)
                       .IsRequired();
+
+                entity.Property(u => u.FechaNacimiento)
+                      .HasColumnType("date");
             });
 
-            // Configuración de DetallePedido
             modelBuilder.Entity<DetallePedido>(entity =>
             {
-                entity.Property(dp => dp.PrecioUnitario)
-                    .HasPrecision(18, 2);
-
-                // Relación con Pedido
                 entity.HasOne(dp => dp.Pedido)
                     .WithMany(p => p.DetallesPedido)
                     .HasForeignKey(dp => dp.PedidoId)
                     .OnDelete(DeleteBehavior.Cascade); // Si borras el pedido, se borran sus líneas
 
-                // Relación con Producto
                 entity.HasOne(dp => dp.Producto)
                     .WithMany()
                     .HasForeignKey(dp => dp.ProductoId)
                     .OnDelete(DeleteBehavior.Restrict); // No se borra un producto que está en un pedido
             });
 
-            // Configuración adicional para OfertaProducto
             modelBuilder.Entity<OfertaProducto>(entity =>
             {
                 entity.ToTable("OfertaProducto");
 
-                // Aseguramos la precisión decimal
                 entity.Property(e => e.PrecioOferta)
                       .HasPrecision(18, 2);
 
-                // Relación: Un producto puede tener muchas ofertas (historial)
                 entity.HasOne(d => d.Producto)
                       .WithMany(p => p.Ofertas)
                       .HasForeignKey(d => d.ProductoId)

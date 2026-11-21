@@ -129,8 +129,7 @@ namespace TiendaOnline.Tests.Integration
         {
             // El panel administrativo entero queda fuera del alcance del rol (su
             // controller pide Administrador a nivel de clase): el POST de "Entregar"
-            // que la auditoría vio permisivo en el action está doblemente bloqueado
-            // por ese atributo de clase.
+            // queda doblemente bloqueado por ese atributo de clase.
             _app.ResetMocks();
             var s = SembrarPedido(_app, EstadoPedido.Enviado, "perimetro");
 

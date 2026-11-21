@@ -1,10 +1,8 @@
 namespace TiendaOnline.Application.Ofertas
 {
     /// <summary>
-    /// <summary>
     /// Lecturas de ofertas de productos. El precio efectivo con el que se cobra sale acá:
     /// mejor oferta vigente ?? precio de lista.
-    /// </summary>
     /// </summary>
     public interface IOfertaQueryService
     {
@@ -22,6 +20,9 @@ namespace TiendaOnline.Application.Ofertas
 
         /// <summary>Listado completo para el panel admin (con estado calculado: Vigente/Futura/Expirada/Inactiva).</summary>
         Task<List<OfertaDto>> ObtenerTodasAsync(CancellationToken ct = default);
+
+        /// <summary>Oferta puntual para el formulario de edición. Null si no existe.</summary>
+        Task<OfertaDto?> ObtenerPorIdAsync(int ofertaId, CancellationToken ct = default);
 
         /// <summary>Productos activos con su precio de lista (select del ABM de ofertas).</summary>
         Task<List<ProductoParaOfertaDto>> ObtenerProductosParaOfertaAsync(CancellationToken ct = default);

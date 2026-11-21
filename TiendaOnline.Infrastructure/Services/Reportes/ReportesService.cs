@@ -62,9 +62,9 @@ namespace TiendaOnline.Infrastructure.Services.Reportes
             var inicioMesSiguiente = inicioMesActual.AddMonths(1);
             var inicioMesAnterior = inicioMesActual.AddMonths(-1);
 
-            // Regla de la venta (08/11): solo pagos aprobados, y la venta es la
-            // plata REAL cobrada = subtotal de ítems + costo de envío (MercadoPago
-            // cobra ambos en el mismo pago; sumar solo ítems desentendería el total).
+            // Regla de la venta: solo pagos aprobados, y la venta es la plata REAL
+            // cobrada = subtotal de ítems + costo de envío (MercadoPago cobra ambos
+            // en el mismo pago; sumar solo ítems desentendería el total).
             var ventasSubtotales = await _context.DetallesPedido
                 .AsNoTracking()
                 .Where(dp => dp.Pedido.EstadoPago == EstadoPago.Aprobado)

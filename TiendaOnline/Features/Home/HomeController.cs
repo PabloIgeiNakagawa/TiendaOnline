@@ -171,9 +171,6 @@ namespace TiendaOnline.Features.Home
             return View();
         }
 
-        // ------------------------------------------------------------------
-        // SEO: sitemap.xml y robots.txt
-        // ------------------------------------------------------------------
 
         // Literal "sitemap.xml": los bots lo buscan en la raíz. El contenido vive
         // 30 min en cache (una query liviana de ids por media hora en vez de por

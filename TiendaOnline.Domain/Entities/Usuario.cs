@@ -1,12 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TiendaOnline.Domain.Entities
 {
     public enum Rol
     {
+        [Display(Name = "Usuario")]
         Usuario,
+        [Display(Name = "Administrador")]
         Administrador,
+        [Display(Name = "Repartidor")]
         Repartidor
     }
 
@@ -31,9 +33,7 @@ namespace TiendaOnline.Domain.Entities
         [MaxLength(50)]
         public string Apellido { get; set; }
 
-        [Column(TypeName = "date")]
         public DateTime? FechaNacimiento { get; set; }
-
         [MaxLength(25)]
         public string? Telefono { get; set; }
 

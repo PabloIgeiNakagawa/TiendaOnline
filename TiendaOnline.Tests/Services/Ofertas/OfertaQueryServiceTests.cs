@@ -168,5 +168,41 @@ namespace TiendaOnline.Tests.Services.Ofertas
 
             Assert.Empty(ofertas);
         }
+
+        // ------------------------------------------------------------------
+        // Edición (oferta por id)
+        // ------------------------------------------------------------------
+
+        [Fact]
+        public async Task ObtenerPorId_OfertaExistente_RetornaFilaConEstado()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var producto = TestDatabase.SeedProducto(ctx, precio: 100m, stock: 5);
+            var oferta = TestDatabase.SeedOferta(ctx, producto, precioOferta: 80m);
+            var sut = Sut(ctx);
+
+            var fila = await sut.ObtenerPorIdAsync(oferta.OfertaId);
+
+            Assert.NotNull(fila);
+            Assert.Equal(oferta.OfertaId, fila!.OfertaId);
+            Assert.Equal(producto.ProductoId, fila.ProductoId);
+            Assert.Equal(producto.Nombre, fila.NombreProducto);
+            Assert.Equal(100m, fila.PrecioLista);
+            Assert.Equal(80m, fila.PrecioOferta);
+            Assert.Equal("Vigente", fila.Estado);
+        }
+
+        [Fact]
+        public async Task ObtenerPorId_OfertaInexistente_RetornaNull()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var sut = Sut(ctx);
+
+            var fila = await sut.ObtenerPorIdAsync(999);
+
+            Assert.Null(fila);
+        }
     }
 }

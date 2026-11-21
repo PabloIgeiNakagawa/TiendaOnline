@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Common;
 using TiendaOnline.Application.Pedidos.Queries;
 using TiendaOnline.Application.Pedidos.Common;
@@ -208,73 +208,48 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
         {
             var query = AplicarFiltrosDeListado(_context.Pedidos.AsNoTracking().AsQueryable(), filtros);
 
-            // Conteo Total
             var total = await query.CountAsync(ct);
 
-            // Paginación y Mapeo a DTO
-            // Estado/EstadoPago viajan como columnas ya convertidas a texto; el cast
-            // al int del DTO ocurre en memoria tras el fetch (el CAST SQL sobre el
-            // texto entregaba 0 en SQLite y rompería en SQL Server).
-            var filas = await query
+            var filas = await ProyectarListado(query
                 .OrderByDescending(p => p.FechaPedido)
                 .Skip((filtros.Pagina - 1) * filtros.Cantidad)
-                .Take(filtros.Cantidad)
-                .Select(p => new
-                {
-                    p.PedidoId,
-                    NombreCliente = $"{p.Usuario.Nombre} {p.Usuario.Apellido}",
-                    p.Usuario.Email,
-                    p.FechaPedido,
-                    p.FechaEntrega,
-                    Estado = p.Estado,
-                    EstadoPago = p.EstadoPago,
-                    MetodoPago = p.MetodoPago,
-                    TieneComprobante = p.ComprobanteUrl != null,
-                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
-                })
+                .Take(filtros.Cantidad))
                 .ToListAsync(ct);
 
-            var items = filas.Select(f => new PedidoListadoDto
-            {
-                PedidoId = f.PedidoId,
-                NombreCliente = f.NombreCliente,
-                EmailCliente = f.Email,
-                FechaPedido = f.FechaPedido,
-                FechaEntrega = f.FechaEntrega,
-                EstadoId = (int)f.Estado,
-                EstadoPagoId = (int)f.EstadoPago,
-                MetodoPagoId = (int)f.MetodoPago,
-                TieneComprobante = f.TieneComprobante,
-                Total = f.Total
-            }).ToList();
-
-            return new PagedResult<PedidoListadoDto>(items, total, filtros.Pagina, filtros.Cantidad);
+            return new PagedResult<PedidoListadoDto>(MapearListado(filas), total, filtros.Pagina, filtros.Cantidad);
         }
 
-        // Export CSV del panel: mismos filtros que el Listado, sin paginación.
         public async Task<List<PedidoListadoDto>> ObtenerPedidosParaExportarAsync(PedidosFiltroDto filtros, CancellationToken ct)
         {
             var query = AplicarFiltrosDeListado(_context.Pedidos.AsNoTracking().AsQueryable(), filtros);
 
-            // Misma proyección y mapeo del Listado paginado (el cast a int de los
-            // estados ocurre en memoria tras el fetch, por la regla de columnas en texto).
-            var filas = await query
-                .OrderByDescending(p => p.FechaPedido)
-                .Select(p => new
-                {
-                    p.PedidoId,
-                    NombreCliente = $"{p.Usuario.Nombre} {p.Usuario.Apellido}",
-                    p.Usuario.Email,
-                    p.FechaPedido,
-                    p.FechaEntrega,
-                    Estado = p.Estado,
-                    EstadoPago = p.EstadoPago,
-                    MetodoPago = p.MetodoPago,
-                    TieneComprobante = p.ComprobanteUrl != null,
-                    Total = p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio
-                })
-                .ToListAsync(ct);
+            var filas = await ProyectarListado(query.OrderByDescending(p => p.FechaPedido)).ToListAsync(ct);
+            return MapearListado(filas);
+        }
 
+        /// <summary>
+        /// Proyección común del Listado (paginado y export). Estado, EstadoPago y
+        /// MetodoPago viajan como texto; su cast al int ocurre en memoria en
+        /// <see cref="MapearListado"/>: un CAST SQL sobre la columna convertida
+        /// devolvería 0 en SQLite y rompería en SQL Server.
+        /// </summary>
+        private static IQueryable<FilaListadoDePedido> ProyectarListado(IQueryable<Pedido> query)
+        {
+            return query.Select(p => new FilaListadoDePedido(
+                p.PedidoId,
+                $"{p.Usuario.Nombre} {p.Usuario.Apellido}",
+                p.Usuario.Email,
+                p.FechaPedido,
+                p.FechaEntrega,
+                p.Estado,
+                p.EstadoPago,
+                p.MetodoPago,
+                p.ComprobanteUrl != null,
+                p.DetallesPedido.Sum(d => d.PrecioUnitario * d.Cantidad) + p.CostoEnvio));
+        }
+
+        private static List<PedidoListadoDto> MapearListado(IEnumerable<FilaListadoDePedido> filas)
+        {
             return filas.Select(f => new PedidoListadoDto
             {
                 PedidoId = f.PedidoId,
@@ -290,8 +265,18 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             }).ToList();
         }
 
-        // Filtros del Listado del panel, compartidos por la paginación y el export:
-        // un solo lugar para cambiar la semántica de un filtro.
+        private sealed record FilaListadoDePedido(
+            int PedidoId,
+            string NombreCliente,
+            string Email,
+            DateTime FechaPedido,
+            DateTime? FechaEntrega,
+            EstadoPedido Estado,
+            EstadoPago EstadoPago,
+            MetodoPago MetodoPago,
+            bool TieneComprobante,
+            decimal Total);
+
         private static IQueryable<Domain.Entities.Pedido> AplicarFiltrosDeListado(IQueryable<Domain.Entities.Pedido> query, PedidosFiltroDto filtros)
         {
             if (!string.IsNullOrEmpty(filtros.Busqueda))
@@ -320,7 +305,6 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             // los pedidos del propio día elegido en el filtro.
             if (filtros.Hasta.HasValue) query = query.Where(p => p.FechaPedido < filtros.Hasta.Value.AddDays(1));
 
-            // Filtro de Monto
             if (filtros.MontoMin.HasValue || filtros.MontoMax.HasValue)
             {
                 // Proyectamos el total una sola vez para no repetir el cálculo del Sum

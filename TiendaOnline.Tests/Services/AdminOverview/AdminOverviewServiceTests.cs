@@ -78,9 +78,9 @@ namespace TiendaOnline.Tests.Services.AdminOverview
         [Fact]
         public async Task ObtenerResumenHomeAsync_SumaLaPlataCobrada_StockBajoSaleDeUnaConsulta()
         {
-            // Regla de la tanda 08/11: la venta del panel es la cobrada (subtotal +
-            // envío, coherente con el dashboard) y el stock bajo alimenta el número
-            // del resumen y el listado desde UNA consulta (antes eran dos).
+            // La venta del panel es la cobrada (subtotal + envío, coherente con el
+            // dashboard) y el stock bajo alimenta el número del resumen y el listado
+            // desde UNA consulta.
             using (var seed = _db.CreateContext())
             {
                 var cliente = TestDatabase.SeedUsuario(seed);

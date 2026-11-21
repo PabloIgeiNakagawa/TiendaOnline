@@ -165,9 +165,9 @@ namespace TiendaOnline.Features.Pedidos
                 ComprobanteUrl = datos.ComprobanteUrl,
                 PuedeSubirComprobante = datos.PuedeSubirComprobante,
                 Vencido = datos.Vencido,
-                Cbu = _appSettingsService.GetValue("Transferencia:Cbu") ?? string.Empty,
-                Alias = _appSettingsService.GetValue("Transferencia:Alias") ?? string.Empty,
-                Titular = _appSettingsService.GetValue("Transferencia:Titular") ?? string.Empty
+                Cbu = _appSettingsService.GetValue(AppSettingsKeys.TransferenciaCbu) ?? string.Empty,
+                Alias = _appSettingsService.GetValue(AppSettingsKeys.TransferenciaAlias) ?? string.Empty,
+                Titular = _appSettingsService.GetValue(AppSettingsKeys.TransferenciaTitular) ?? string.Empty
             };
 
             return View(viewModel);
@@ -210,7 +210,6 @@ namespace TiendaOnline.Features.Pedidos
             }
             catch (DomainException ex)
             {
-                // Guard de dominio (pedido equivocado, comprobante repetido, etc.): mensaje curado del service.
                 _logger.LogWarning(ex, "No se pudo registrar el comprobante del pedido {PedidoId}: {Motivo}", id, ex.Message);
                 TempData.SetMensajeError(ex.Message);
                 return RedirectToAction("Instrucciones", new { id });
@@ -289,7 +288,6 @@ namespace TiendaOnline.Features.Pedidos
         [HttpGet("[action]")]
         public async Task<IActionResult> PagoExitoso([FromQuery] string external_reference, [FromQuery] string payment_id)
         {
-            // Confirmar el pago manualmente si el webhook no llegó
             if (!string.IsNullOrEmpty(payment_id))
             {
                 var infoPago = await _paymentService.ObtenerDetallesPagoAsync(payment_id, HttpContext.RequestAborted);
@@ -336,10 +334,8 @@ namespace TiendaOnline.Features.Pedidos
 
             if (pedidoDto == null) return NotFound();
 
-            // Generamos un nuevo link de Mercado Pago
             var urlPago = await _paymentService.GenerarPreferenciaPagoAsync(pedidoDto, HttpContext.RequestAborted);
 
-            // Mandamos al usuario a pagar otra vez
             return Redirect(urlPago);
         }
 

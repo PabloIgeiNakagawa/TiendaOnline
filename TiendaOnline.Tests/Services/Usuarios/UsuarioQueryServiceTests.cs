@@ -7,10 +7,9 @@ using Xunit;
 namespace TiendaOnline.Tests.Services.Usuarios
 {
     /// <summary>
-    /// El TotalGastado del perfil usa la regla del dinero de la casa (solo pago
-    /// Aprobado, ítems + envío): misma definición que el top clientes del
-    /// dashboard — antes contaba Estado != Cancelado y un pedido Pendiente
-    /// aparecía como plata gastada.
+    /// El TotalGastado del perfil usa la regla del dinero de la casa: solo pago
+    /// Aprobado, ítems + envío, misma definición que el top clientes del
+    /// dashboard — un pedido Pendiente no es plata gastada.
     /// </summary>
     public class UsuarioQueryServiceTests
     {

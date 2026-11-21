@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -76,7 +76,6 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                 dto.PedidosEstancados = await MapearPedidosQuePidenAtencionAsync(
                     PedidosQuePidenAtencion(ahora), ahora, ct);
 
-                // Últimos 10 Movimientos de Stock
                 var movimientos = await _context.MovimientosStock
                     .AsNoTracking()
                     .Include(m => m.Producto)
@@ -118,7 +117,6 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                 var pedidosHoy = resumenDinero.Count(v => v.DeHoy);
                 var pedidosAyer = resumenDinero.Count - pedidosHoy;
 
-                // Enviados de hoy y ayer en una consulta liviana (solo fechas).
                 var fechasEnvio = await _context.Pedidos
                     .AsNoTracking()
                     .Where(p => p.Estado == EstadoPedido.Enviado && p.FechaEnvio >= ayer && p.FechaEnvio < manana)
@@ -161,7 +159,6 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
 
                 dto.ProductosBajoStock = bajoStock.Take(5).ToList();
 
-                // Pedidos recientes
                 var pedidosRecientesQuery = await _context.Pedidos
                     .AsNoTracking()
                     .Include(p => p.Usuario)

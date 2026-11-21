@@ -10,7 +10,7 @@ using TiendaOnline.Features.Shared.Controllers;
 
 namespace TiendaOnline.Features.MovimientosStock
 {
-    [Route("Admin/[controller]")]
+    [Route("admin/[controller]")]
     [Authorize(Roles = "Administrador")]
     public class MovimientosStockController : AdminControllerBase
     {

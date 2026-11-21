@@ -3,19 +3,19 @@
         <div class="row gy-4">
             <div class="col-lg-4 col-md-6">
                 <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3">
-                    <img src="@AppSettings.GetValue("Diseno:LogoUrl")" alt="@AppSettings.GetValue("Diseno:NombreDelSitio") Logo" loading="lazy" width="30" height="30" asp-append-version="true" class="img-fluid me-2" />
+                    <img src="@AppSettings.GetValue(AppSettingsKeys.LogoUrl)" alt="@AppSettings.GetValue(AppSettingsKeys.NombreDelSitio) Logo" loading="lazy" width="30" height="30" asp-append-version="true" class="img-fluid me-2" />
                     <small class="fw-bold small text-uppercase text-center text-md-start" style="letter-spacing: 1px;">Expertos en componentes de PC</small>
                 </div>
                 <p class="text-secondary small mb-4 text-center text-md-start">
                     Tu tienda de confianza para armar la PC de tus sueños. Componentes de alto rendimiento y asesoramiento especializado.
                 </p>
                 <div class="d-flex gap-3 justify-content-center justify-content-md-start">
-                    <a href="@AppSettings.GetValue("RedesSociales:Facebook")" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-facebook"></i></a>
-                    <a href="@AppSettings.GetValue("RedesSociales:Instagram")" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-instagram"></i></a>
-                    <a href="@AppSettings.GetValue("RedesSociales:X")" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-twitter-x"></i></a>
-                    <a href="@AppSettings.GetValue("RedesSociales:Linkedin")" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-linkedin"></i></a>
-                    <a href="@AppSettings.GetValue("RedesSociales:Tiktok")" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-tiktok"></i></a>
-                    <a href="@AppSettings.GetValue("RedesSociales:Youtube")" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-youtube"></i></a>
+                    <a href="@AppSettings.GetValue(AppSettingsKeys.RedesFacebook)" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-facebook"></i></a>
+                    <a href="@AppSettings.GetValue(AppSettingsKeys.RedesInstagram)" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-instagram"></i></a>
+                    <a href="@AppSettings.GetValue(AppSettingsKeys.RedesX)" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-twitter-x"></i></a>
+                    <a href="@AppSettings.GetValue(AppSettingsKeys.RedesLinkedin)" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-linkedin"></i></a>
+                    <a href="@AppSettings.GetValue(AppSettingsKeys.RedesTiktok)" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-tiktok"></i></a>
+                    <a href="@AppSettings.GetValue(AppSettingsKeys.RedesYoutube)" class="btn btn-sm rounded-circle shadow-sm"><i class="bi bi-youtube"></i></a>
                 </div>
             </div>
 
@@ -49,25 +49,25 @@
                 <ul class="list-unstyled footer-contact">
                     <li class="d-flex align-items-center mb-3 justify-content-center justify-content-md-start">
                         <div class="contact-icon me-2"><i class="bi bi-envelope text-info "></i></div>
-                        <span class="small">@AppSettings.GetValue("Tienda:EmailDeContacto")</span>
+                        <span class="small">@AppSettings.GetValue(AppSettingsKeys.TiendaEmailDeContacto)</span>
                     </li>
                     <li class="d-flex align-items-center mb-3 justify-content-center justify-content-md-start">
                         <div class="contact-icon me-2"><i class="bi bi-whatsapp text-success"></i></div>
-                        <span class="small">@AppSettings.GetValue("Tienda:Whatsapp")</span>
+                        <span class="small">@AppSettings.GetValue(AppSettingsKeys.TiendaWhatsapp)</span>
                     </li>
                     <li class="d-flex align-items-center justify-content-center justify-content-md-start">
                         <div class="contact-icon me-2"><i class="bi bi-geo-alt"></i></div>
-                        <span class="small">@AppSettings.GetValue("Ubicacion:Direccion"), @AppSettings.GetValue("Ubicacion:Ciudad"), @AppSettings.GetValue("Ubicacion:Provincia"), @AppSettings.GetValue("Ubicacion:CodigoPostal").</span>
+                        <span class="small">@AppSettings.GetValue(AppSettingsKeys.UbicacionDireccion), @AppSettings.GetValue(AppSettingsKeys.UbicacionCiudad), @AppSettings.GetValue(AppSettingsKeys.UbicacionProvincia), @AppSettings.GetValue(AppSettingsKeys.UbicacionCodigoPostal).</span>
                     </li>
                 </ul>
             </div>
 
-            @if (!string.IsNullOrWhiteSpace(AppSettings.GetValue("Ubicacion:Direccion")))
+            @if (!string.IsNullOrWhiteSpace(AppSettings.GetValue(AppSettingsKeys.UbicacionDireccion)))
             {
                 <iframe height="350"
                         style="border:0; width:100%;"
                         loading="lazy"
-                        src="https://maps.google.com/maps?q=@Uri.EscapeDataString(AppSettings.GetValue("Ubicacion:Direccion"))&output=embed">
+                        src="https://maps.google.com/maps?q=@Uri.EscapeDataString(AppSettings.GetValue(AppSettingsKeys.UbicacionDireccion))&output=embed">
                 </iframe>
             }
         </div>

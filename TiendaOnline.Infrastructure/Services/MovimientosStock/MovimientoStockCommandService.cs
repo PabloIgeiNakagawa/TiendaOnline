@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TiendaOnline.Application.MovimientosStock.Commands;
 using TiendaOnline.Domain.Entities;
@@ -125,7 +125,6 @@ namespace TiendaOnline.Infrastructure.Services.MovimientosStock
             }
         }
 
-        // MÉTODO PARA OTROS SERVICES (PedidoService usa este)
         // No hace SaveChanges para permitir que el otro servicio maneje la transacción.
         public void GenerarMovimiento(Producto producto, int cantidad, TipoMovimiento tipo, int? pedidoId, string observaciones)
         {

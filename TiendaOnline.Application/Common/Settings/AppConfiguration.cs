@@ -41,4 +41,11 @@ namespace TiendaOnline.Application.Common.Settings
     {
         public string SiteUrl { get; set; } = string.Empty;
     }
+
+    public class GeorefSettings
+    {
+        public const string BaseUrlPorDefecto = "https://apis.datos.gob.ar/georef/api/";
+
+        public string BaseUrl { get; set; } = BaseUrlPorDefecto;
+    }
 }

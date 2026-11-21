@@ -72,12 +72,12 @@ namespace TiendaOnline.Features.AppSettings
         {
             var model = new EsteticaViewModel
             {
-                NombreDelSitio = _appSettingsService.GetValue("Diseno:NombreDelSitio"),
-                LogoUrl = _appSettingsService.GetValue("Diseno:LogoUrl"),
-                FavIconUrl = _appSettingsService.GetValue("Diseno:FavIconUrl"),
-                ColorPrimary = _appSettingsService.GetValue("Diseno:ColorPrimary", "#0d6efd"),
-                FuenteTitulo = _appSettingsService.GetValue("Diseno:FuenteTitulo", "Poppins"),
-                FuenteBody = _appSettingsService.GetValue("Diseno:FuenteBody", "Roboto")
+                NombreDelSitio = _appSettingsService.GetValue(AppSettingsKeys.NombreDelSitio),
+                LogoUrl = _appSettingsService.GetValue(AppSettingsKeys.LogoUrl),
+                FavIconUrl = _appSettingsService.GetValue(AppSettingsKeys.FavIconUrl),
+                ColorPrimary = _appSettingsService.GetValue(AppSettingsKeys.ColorPrimary, "#0d6efd"),
+                FuenteTitulo = _appSettingsService.GetValue(AppSettingsKeys.FuenteTitulo, "Poppins"),
+                FuenteBody = _appSettingsService.GetValue(AppSettingsKeys.FuenteBody, "Roboto")
             };
 
             return View(model);
@@ -111,12 +111,12 @@ namespace TiendaOnline.Features.AppSettings
 
             var settingsToUpdate = new List<SettingDto>
             {
-                new() { Key = "Diseno:NombreDelSitio", Value = model.NombreDelSitio, Group = "Estetica" },
-                new() { Key = "Diseno:LogoUrl", Value = logoUrl, Group = "Estetica" },
-                new() { Key = "Diseno:FavIconUrl", Value = favIconUrl, Group = "Estetica" },
-                new() { Key = "Diseno:ColorPrimary", Value = model.ColorPrimary, Group = "Estetica" },
-                new() { Key = "Diseno:FuenteTitulo", Value = model.FuenteTitulo, Group = "Estetica" },
-                new() { Key = "Diseno:FuenteBody", Value = model.FuenteBody, Group = "Estetica" }
+                new() { Key = AppSettingsKeys.NombreDelSitio, Value = model.NombreDelSitio, Group = "Estetica" },
+                new() { Key = AppSettingsKeys.LogoUrl, Value = logoUrl, Group = "Estetica" },
+                new() { Key = AppSettingsKeys.FavIconUrl, Value = favIconUrl, Group = "Estetica" },
+                new() { Key = AppSettingsKeys.ColorPrimary, Value = model.ColorPrimary, Group = "Estetica" },
+                new() { Key = AppSettingsKeys.FuenteTitulo, Value = model.FuenteTitulo, Group = "Estetica" },
+                new() { Key = AppSettingsKeys.FuenteBody, Value = model.FuenteBody, Group = "Estetica" }
             };
 
             await _appSettingsService.SaveMultipleSettingsAsync(settingsToUpdate, HttpContext.RequestAborted);

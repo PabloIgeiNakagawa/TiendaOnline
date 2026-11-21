@@ -20,7 +20,6 @@ namespace TiendaOnline.Extensions
 
             services.AddRateLimiter(options =>
             {
-                // Login: 10 intentos por minuto por IP
                 options.AddFixedWindowLimiter("login", opt =>
                 {
                     opt.PermitLimit = Techo(10);
@@ -28,7 +27,6 @@ namespace TiendaOnline.Extensions
                     opt.QueueLimit = 0;
                 });
 
-                // Registro: 5 por minuto por IP (evitar spam)
                 options.AddFixedWindowLimiter("registro", opt =>
                 {
                     opt.PermitLimit = Techo(5);
@@ -36,7 +34,6 @@ namespace TiendaOnline.Extensions
                     opt.QueueLimit = 0;
                 });
 
-                // Checkout: 5 por minuto por IP (evitar pedidos falsos)
                 options.AddFixedWindowLimiter("checkout", opt =>
                 {
                     opt.PermitLimit = Techo(5);
@@ -44,7 +41,6 @@ namespace TiendaOnline.Extensions
                     opt.QueueLimit = 0;
                 });
 
-                // Carrito: 30 por minuto por IP (uso normal del sitio)
                 options.AddFixedWindowLimiter("carrito", opt =>
                 {
                     opt.PermitLimit = Techo(30);
@@ -52,7 +48,6 @@ namespace TiendaOnline.Extensions
                     opt.QueueLimit = 0;
                 });
 
-                // Respuesta personalizada cuando se excede el límite
                 options.RejectionStatusCode = 429;
                 options.OnRejected = (context, token) =>
                 {
@@ -70,7 +65,6 @@ namespace TiendaOnline.Extensions
                     return new ValueTask();
                 };
 
-                // Comprobante PDF: 10 por minuto por IP (evitar abuso de generación de PDFs)
                 options.AddFixedWindowLimiter("comprobante", opt =>
                 {
                     opt.PermitLimit = Techo(10);
@@ -78,7 +72,6 @@ namespace TiendaOnline.Extensions
                     opt.QueueLimit = 0;
                 });
 
-                // Subida de comprobante de transferencia: 5 por minuto por IP (la subida dispara email al admin)
                 options.AddFixedWindowLimiter("subir-comprobante", opt =>
                 {
                     opt.PermitLimit = Techo(5);
@@ -86,7 +79,6 @@ namespace TiendaOnline.Extensions
                     opt.QueueLimit = 0;
                 });
 
-                // Recuperación de contraseña: 5 por minuto por IP (pedir reset y aplicar el cambio)
                 options.AddFixedWindowLimiter("olvide-password", opt =>
                 {
                     opt.PermitLimit = Techo(5);
@@ -103,7 +95,6 @@ namespace TiendaOnline.Extensions
                     opt.QueueLimit = 0;
                 });
 
-                // Usar IP como clave de rate limiting
                 options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                     RateLimitPartition.GetFixedWindowLimiter(
                         httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",

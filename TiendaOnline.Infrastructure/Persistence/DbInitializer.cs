@@ -1,4 +1,5 @@
-﻿using TiendaOnline.Domain.Entities;
+﻿using TiendaOnline.Application.AppSettings;
+using TiendaOnline.Domain.Entities;
 
 namespace TiendaOnline.Infrastructure.Persistence
 {
@@ -6,56 +7,50 @@ namespace TiendaOnline.Infrastructure.Persistence
     {
         public static void SeedSettings(TiendaContext context)
         {
-            // Lista de configuraciones iniciales necesarias para que la web funcione
             var defaultSettings = new List<AppSetting>
             {
-                // === Pagos ===
-                new AppSetting { Key = "Transferencia:Cbu", Group = "Pagos", IsSensitive = false, Description = "Número de CBU para transferencias bancarias.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Transferencia:Alias", Group = "Pagos", IsSensitive = false, Description = "Alias del CBU para recibir pagos.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Transferencia:Titular", Group = "Pagos", IsSensitive = false, Description = "Nombre del titular de la cuenta para transferencias.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Pagos:EmailNotificaciones", Group = "Pagos", IsSensitive = true, Description = "Email interno que recibe el aviso cuando un cliente sube el comprobante de transferencia.", Type = "text", LastModified = null },
-                
-                // === SEO ===
-                new AppSetting { Key = "Seo:Titulo", Group = "Seo", IsSensitive = false, Description = "Título por defecto para SEO del sitio.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Seo:Descripcion", Group = "Seo", IsSensitive = false, Description = "Descripción por defecto para la meta descripción del sitio.", Type = "textarea", LastModified = null },
-                new AppSetting { Key = "Seo:Palabras claves", Group = "Seo", IsSensitive = false, Description = "Palabras clave separadas por comas para SEO.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Seo:Autor", Group = "Seo", IsSensitive = false, Description = "Nombre del autor o entidad responsable del sitio.", Type = "text", LastModified = null },
-            
-                // === Contacto, Ubicación y Redes sociales ===
-                new AppSetting { Key = "Tienda:Telefono", Group = "Contacto", IsSensitive = false, Description = "Número de teléfono de la tienda.", Type = "tel", LastModified = null },
-                new AppSetting { Key = "Tienda:EmailDeContacto", Group = "Contacto", IsSensitive = false, Description = "Correo electrónico de contacto principal.", Type = "email", LastModified = null },
-                new AppSetting { Key = "Tienda:Whatsapp", Group = "Contacto", IsSensitive = false, Description = "Número de WhatsApp para atención al cliente.", Type = "tel", LastModified = null },
-                new AppSetting { Key = "Tienda:HorarioDeAtencion", Group = "Contacto", IsSensitive = false, Description = "Horario de atención al cliente.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Ubicacion:Direccion", Group = "Contacto", IsSensitive = false, Description = "Dirección física de la tienda.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Ubicacion:Ciudad", Group = "Contacto", IsSensitive = false, Description = "Ciudad donde se ubica la tienda.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Ubicacion:Provincia", Group = "Contacto", IsSensitive = false, Description = "Provincia o estado de la tienda.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Ubicacion:CodigoPostal", Group = "Contacto", IsSensitive = false, Description = "Código postal de la ubicación de la tienda.", Type = "text", LastModified = null },
-                new AppSetting { Key = "RedesSociales:Instagram", Group = "Contacto", IsSensitive = false, Description = "URL del perfil de Instagram.", Type = "url", LastModified = null },
-                new AppSetting { Key = "RedesSociales:Linkedin", Group = "Contacto", IsSensitive = false, Description = "URL del perfil de LinkedIn.", Type = "url", LastModified = null },
-                new AppSetting { Key = "RedesSociales:Youtube", Group = "Contacto", IsSensitive = false, Description = "URL del canal de YouTube.",     Type = "url", LastModified = null },
-                new AppSetting { Key = "RedesSociales:Tiktok", Group = "Contacto", IsSensitive = false, Description = "URL del perfil de TikTok.", Type = "url", LastModified = null },
-                new AppSetting { Key = "RedesSociales:Facebook", Group = "Contacto", IsSensitive = false, Description = "URL de la página de Facebook.", Type = "url", LastModified = null },
-                new AppSetting { Key = "RedesSociales:X", Group = "Contacto", IsSensitive = false, Description = "URL del perfil en X (antes Twitter).", Type = "url", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.TransferenciaCbu, Group = "Pagos", IsSensitive = false, Description = "Número de CBU para transferencias bancarias.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.TransferenciaAlias, Group = "Pagos", IsSensitive = false, Description = "Alias del CBU para recibir pagos.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.TransferenciaTitular, Group = "Pagos", IsSensitive = false, Description = "Nombre del titular de la cuenta para transferencias.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.PagosEmailNotificaciones, Group = "Pagos", IsSensitive = true, Description = "Email interno que recibe el aviso cuando un cliente sube el comprobante de transferencia.", Type = "text", LastModified = null },
 
-                // === Branding & Estética ===
-                new AppSetting { Key = "Diseno:NombreDelSitio", Group = "Estetica", IsSensitive = false, Description = "Nombre público del sitio o tienda.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Diseno:LogoUrl", Group = "Estetica", IsSensitive = false, Description = "URL del logo principal del sitio.", Type = "url", LastModified = null },
-                new AppSetting { Key = "Diseno:FavIconUrl", Group = "Estetica", IsSensitive = false, Description = "URL del favicon del sitio.", Type = "url", LastModified = null },
-                new AppSetting { Key = "Diseno:ColorPrimary", Group = "Estetica", IsSensitive = false, Description = "Color primario para la interfaz.", Type = "color", LastModified = null },
-                new AppSetting { Key = "Diseno:FuenteTitulo", Group = "Estetica", IsSensitive = false, Description = "Fuente tipográfica utilizada para títulos.", Type = "select", LastModified = null },
-                new AppSetting { Key = "Diseno:FuenteBody", Group = "Estetica", IsSensitive = false, Description = "Fuente tipográfica utilizada para el cuerpo del contenido.", Type = "select", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.SeoTitulo, Group = "Seo", IsSensitive = false, Description = "Título por defecto para SEO del sitio.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.SeoDescripcion, Group = "Seo", IsSensitive = false, Description = "Descripción por defecto para la meta descripción del sitio.", Type = "textarea", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.SeoPalabrasClaves, Group = "Seo", IsSensitive = false, Description = "Palabras clave separadas por comas para SEO.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.SeoAutor, Group = "Seo", IsSensitive = false, Description = "Nombre del autor o entidad responsable del sitio.", Type = "text", LastModified = null },
 
-                // === Datos Fiscales de la Empresa (para comprobantes) ===
-                new AppSetting { Key = "Empresa:Cuit", Group = "Empresa", IsSensitive = false, Description = "CUIT de la empresa para comprobantes.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Empresa:RazonSocial", Group = "Empresa", IsSensitive = false, Description = "Razón social de la empresa.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Empresa:CondicionIva", Group = "Empresa", IsSensitive = false, Description = "Condición frente al IVA (Responsable Inscripto, Monotributista, Exento, etc.).", Type = "text", LastModified = null },
-                new AppSetting { Key = "Empresa:IngresosBrutos", Group = "Empresa", IsSensitive = false, Description = "Número de Ingresos Brutos.", Type = "text", LastModified = null },
-                new AppSetting { Key = "Empresa:InicioActividades", Group = "Empresa", IsSensitive = false, Description = "Fecha de inicio de actividades.", Type = "text", LastModified = null }
+                new AppSetting { Key = AppSettingsKeys.TiendaTelefono, Group = "Contacto", IsSensitive = false, Description = "Número de teléfono de la tienda.", Type = "tel", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.TiendaEmailDeContacto, Group = "Contacto", IsSensitive = false, Description = "Correo electrónico de contacto principal.", Type = "email", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.TiendaWhatsapp, Group = "Contacto", IsSensitive = false, Description = "Número de WhatsApp para atención al cliente.", Type = "tel", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.TiendaHorarioDeAtencion, Group = "Contacto", IsSensitive = false, Description = "Horario de atención al cliente.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.UbicacionDireccion, Group = "Contacto", IsSensitive = false, Description = "Dirección física de la tienda.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.UbicacionCiudad, Group = "Contacto", IsSensitive = false, Description = "Ciudad donde se ubica la tienda.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.UbicacionProvincia, Group = "Contacto", IsSensitive = false, Description = "Provincia o estado de la tienda.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.UbicacionCodigoPostal, Group = "Contacto", IsSensitive = false, Description = "Código postal de la ubicación de la tienda.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.RedesInstagram, Group = "Contacto", IsSensitive = false, Description = "URL del perfil de Instagram.", Type = "url", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.RedesLinkedin, Group = "Contacto", IsSensitive = false, Description = "URL del perfil de LinkedIn.", Type = "url", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.RedesYoutube, Group = "Contacto", IsSensitive = false, Description = "URL del canal de YouTube.", Type = "url", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.RedesTiktok, Group = "Contacto", IsSensitive = false, Description = "URL del perfil de TikTok.", Type = "url", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.RedesFacebook, Group = "Contacto", IsSensitive = false, Description = "URL de la página de Facebook.", Type = "url", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.RedesX, Group = "Contacto", IsSensitive = false, Description = "URL del perfil en X (antes Twitter).", Type = "url", LastModified = null },
+
+                new AppSetting { Key = AppSettingsKeys.NombreDelSitio, Group = "Estetica", IsSensitive = false, Description = "Nombre público del sitio o tienda.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.LogoUrl, Group = "Estetica", IsSensitive = false, Description = "URL del logo principal del sitio.", Type = "url", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.FavIconUrl, Group = "Estetica", IsSensitive = false, Description = "URL del favicon del sitio.", Type = "url", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.ColorPrimary, Group = "Estetica", IsSensitive = false, Description = "Color primario para la interfaz.", Type = "color", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.FuenteTitulo, Group = "Estetica", IsSensitive = false, Description = "Fuente tipográfica utilizada para títulos.", Type = "select", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.FuenteBody, Group = "Estetica", IsSensitive = false, Description = "Fuente tipográfica utilizada para el cuerpo del contenido.", Type = "select", LastModified = null },
+
+                new AppSetting { Key = AppSettingsKeys.EmpresaCuit, Group = "Empresa", IsSensitive = false, Description = "CUIT de la empresa para comprobantes.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.EmpresaRazonSocial, Group = "Empresa", IsSensitive = false, Description = "Razón social de la empresa.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.EmpresaCondicionIva, Group = "Empresa", IsSensitive = false, Description = "Condición frente al IVA (Responsable Inscripto, Monotributista, Exento, etc.).", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.EmpresaIngresosBrutos, Group = "Empresa", IsSensitive = false, Description = "Número de Ingresos Brutos.", Type = "text", LastModified = null },
+                new AppSetting { Key = AppSettingsKeys.EmpresaInicioActividades, Group = "Empresa", IsSensitive = false, Description = "Fecha de inicio de actividades.", Type = "text", LastModified = null }
             };
 
             foreach (var setting in defaultSettings)
             {
-                // Solo la agregamos si no existe ya en la DB
+                // Semilla idempotente: solo agrega la clave que todavía no existe.
                 if (!context.AppSettings.Any(s => s.Key == setting.Key))
                 {
                     context.AppSettings.Add(setting);
@@ -95,8 +90,8 @@ namespace TiendaOnline.Infrastructure.Persistence
             "Tucumán"
         };
 
-        // Arranca coincidiendo con el costo que acababa hardcodeado en el checkout,
-        // así que el deploy no cambia nada hasta que el admin toque los precios.
+        // Costo con el que se siembran las 24 zonas; el admin lo edita desde /admin/envios
+        // y el checkout siempre re-cotiza contra la tabla.
         public const decimal CostoEnvioInicial = 500m;
 
         public static void SeedZonasEnvio(TiendaContext context)

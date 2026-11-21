@@ -1,12 +1,11 @@
-﻿<meta name="description" content="@AppSettings.GetValue("Seo:Descripcion")">
-<meta name="keywords" content="@AppSettings.GetValue("Seo:Palabras claves")">
-<meta name="author" content="@AppSettings.GetValue("Seo:Autor")">
-<meta name="description" content="@AppSettings.GetValue("Seo:Descripcion")">
+﻿<meta name="description" content="@AppSettings.GetValue(AppSettingsKeys.SeoDescripcion)">
+<meta name="keywords" content="@AppSettings.GetValue(AppSettingsKeys.SeoPalabrasClaves)">
+<meta name="author" content="@AppSettings.GetValue(AppSettingsKeys.SeoAutor)">
 <meta name="robots" content="index" />
 
-<meta property="og:site_name" content="@AppSettings.GetValue("Diseno:NombreDelSitio")" />
-<meta property="og:title" content="@AppSettings.GetValue("Seo:Titulo")">
-<meta property="og:description" content="@AppSettings.GetValue("Seo:Descripcion")">
-<meta property="og:image" content="@AppSettings.GetValue("Diseno:FavIconUrl")>
+<meta property="og:site_name" content="@AppSettings.GetValue(AppSettingsKeys.NombreDelSitio)" />
+<meta property="og:title" content="@AppSettings.GetValue(AppSettingsKeys.SeoTitulo)">
+<meta property="og:description" content="@AppSettings.GetValue(AppSettingsKeys.SeoDescripcion)">
+<meta property="og:image" content="@AppSettings.GetValue(AppSettingsKeys.FavIconUrl)">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="es_AR">

@@ -32,27 +32,7 @@ namespace TiendaOnline.Authorization
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null) return;
 
-            // Mismo contrato que OrderOwnerHandler: el id de la RUTA manda. Query
-            // y external_reference cubren los retornos de MercadoPago (el id de
-            // un form/body no interpreta nada).
-            var pedidoIdStr = httpContext.GetRouteData()?.Values["id"]?.ToString();
-
-            if (string.IsNullOrEmpty(pedidoIdStr))
-            {
-                pedidoIdStr = httpContext.Request.Query["id"].ToString();
-            }
-
-            if (string.IsNullOrEmpty(pedidoIdStr))
-            {
-                pedidoIdStr = httpContext.Request.Query["external_reference"].ToString();
-            }
-
-            if (string.IsNullOrEmpty(pedidoIdStr) || !int.TryParse(pedidoIdStr, out int pedidoId))
-            {
-                return; // Sin id de pedido en la ruta: acceso denegado.
-            }
-
-            var pedido = await _pedidoQueryService.ObtenerPedidoConDetallesAsync(pedidoId, httpContext.RequestAborted);
+            var pedido = await PedidoDelRequest.ObtenerAsync(httpContext, _pedidoQueryService);
             if (pedido == null) return;
 
             var usuarioId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);

@@ -67,7 +67,6 @@ namespace TiendaOnline.Features.Pedidos
                 return RedirectToAction("Index", "Carritos");
             }
 
-            // Recién acá leemos el carrito YA refrescado: subtotal con el precio vigente
             var items = await _carritoService.ObtenerAsync();
 
             if (items == null || items.Count == 0)
@@ -122,7 +121,6 @@ namespace TiendaOnline.Features.Pedidos
                 return RedirectToAction("Index", "Carritos");
             }
 
-            // Recién acá leemos el carrito YA refrescado por la validación (precio vigente)
             carritoItems = await _carritoService.ObtenerAsync();
 
             // Retiro en local no exige dirección; envío a domicilio exige una guardada
@@ -209,7 +207,6 @@ namespace TiendaOnline.Features.Pedidos
 
             try
             {
-                // Crear el pedido en BD
                 var pedido = await _creacionPedidoService.CrearPedidoYPrepararPagoAsync(dto, HttpContext.RequestAborted);
 
                 // Solo la dirección cargada nueva se guarda en el perfil; la guardada ya vive ahí.
@@ -229,14 +226,12 @@ namespace TiendaOnline.Features.Pedidos
                     }, HttpContext.RequestAborted);
                 }
 
-                // Mercado Pago: generamos link y salimos
                 if (model.MetodoPagoId == MetodoPago.MercadoPago)
                 {
                     var urlPago = await _paymentService.GenerarPreferenciaPagoAsync(pedido, HttpContext.RequestAborted);
                     return Redirect(urlPago);
                 }
 
-                // Transferencia: directo a la página con CBU/alias y la subida del comprobante
                 await _carritoService.VaciarAsync();
                 TempData.SetMensajeExito("¡Pedido realizado con éxito!");
                 return RedirectToAction("Instrucciones", "Pedidos", new { id = pedido.PedidoId });
@@ -364,7 +359,6 @@ namespace TiendaOnline.Features.Pedidos
 
         private int ObtenerUsuarioId()
         {
-            // Buscamos el claim de tipo NameIdentifier (que es el ID en Identity)
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
 
             if (claim == null) throw new UnauthorizedAccessException();

@@ -8,7 +8,7 @@ using Xunit;
 namespace TiendaOnline.Tests.Services.Categorias
 {
     /// <summary>
-    /// Reglas de la edición de categorías (reactivada 14/11): el nombre y el
+    /// Reglas de la edición de categorías: el nombre y el
     /// padre viajan juntos y el guard de jerarquía corre ANTES de guardar — un
     /// bucle rechaza la edición completa (no queda un nombre nuevo bajo el
     /// padre viejo, ni media categoría reinsertada en el árbol).
@@ -56,13 +56,16 @@ namespace TiendaOnline.Tests.Services.Categorias
         }
 
         [Fact]
-        public async Task EditarCategoria_CategoriaInexistente_NoExplota()
+        public async Task EditarCategoria_CategoriaInexistente_LanzaCategoriaNoValida()
         {
             using var db = new TestDatabase();
             await using var ctx = db.CreateContext();
             var sut = Sut.CategoriaCommand(ctx);
 
-            await sut.EditarCategoriaAsync(999, "Fantasma", null);
+            var ex = await Assert.ThrowsAsync<CategoriaNoValidaException>(
+                () => sut.EditarCategoriaAsync(999, "Fantasma", null));
+
+            Assert.Equal("La categoría indicada no existe.", ex.Message);
         }
 
         [Fact]
@@ -123,6 +126,73 @@ namespace TiendaOnline.Tests.Services.Categorias
             using var verify = db.CreateContext();
             var movida = await verify.Categorias.FirstAsync(c => c.CategoriaId == hija1.CategoriaId);
             Assert.Equal(hija2.CategoriaId, movida.CategoriaPadreId);
+        }
+
+        // ------------------------------------------------------------------
+        // Eliminar
+        // ------------------------------------------------------------------
+
+        [Fact]
+        public async Task EliminarCategoria_SinDependencias_BorraLaFila()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var categoria = TestDatabase.SeedCategoria(ctx, "Sola");
+            var sut = Sut.CategoriaCommand(ctx);
+
+            await sut.EliminarCategoriaAsync(categoria.CategoriaId);
+
+            using var verify = db.CreateContext();
+            Assert.False(await verify.Categorias.AnyAsync(c => c.CategoriaId == categoria.CategoriaId));
+        }
+
+        [Fact]
+        public async Task EliminarCategoria_ConProductos_LanzaYCategoriaIntacta()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var categoria = TestDatabase.SeedCategoria(ctx, "Con productos");
+            var producto = TestDatabase.SeedProducto(ctx);
+            producto.CategoriaId = categoria.CategoriaId;
+            ctx.SaveChanges();
+            var sut = Sut.CategoriaCommand(ctx);
+
+            var ex = await Assert.ThrowsAsync<CategoriaNoValidaException>(
+                () => sut.EliminarCategoriaAsync(categoria.CategoriaId));
+
+            Assert.Equal("No se puede eliminar: la categoría tiene productos o subcategorías.", ex.Message);
+            using var verify = db.CreateContext();
+            Assert.True(await verify.Categorias.AnyAsync(c => c.CategoriaId == categoria.CategoriaId));
+        }
+
+        [Fact]
+        public async Task EliminarCategoria_ConSubcategorias_LanzaYCategoriaIntacta()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var madre = TestDatabase.SeedCategoria(ctx, "Madre");
+            var hija = TestDatabase.SeedCategoria(ctx, "Hija");
+            Colgar(ctx, hija.CategoriaId, madre.CategoriaId);
+            var sut = Sut.CategoriaCommand(ctx);
+
+            await Assert.ThrowsAsync<CategoriaNoValidaException>(
+                () => sut.EliminarCategoriaAsync(madre.CategoriaId));
+
+            using var verify = db.CreateContext();
+            Assert.True(await verify.Categorias.AnyAsync(c => c.CategoriaId == madre.CategoriaId));
+        }
+
+        [Fact]
+        public async Task EliminarCategoria_CategoriaInexistente_LanzaCategoriaNoValida()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var sut = Sut.CategoriaCommand(ctx);
+
+            var ex = await Assert.ThrowsAsync<CategoriaNoValidaException>(
+                () => sut.EliminarCategoriaAsync(999));
+
+            Assert.Equal("La categoría indicada no existe.", ex.Message);
         }
     }
 }

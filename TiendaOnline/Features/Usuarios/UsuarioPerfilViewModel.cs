@@ -14,7 +14,6 @@
         public DateTime? UltimaFechaBaja { get; set; }
         public DateTime? UltimaFechaAlta { get; set; }
 
-        // Aquí puedes agregar los datos que antes estaban hardcodeados
         public int CantidadPedidos { get; set; }
         public decimal TotalGastado { get; set; }
 

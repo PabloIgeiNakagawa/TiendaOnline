@@ -1,5 +1,7 @@
 ﻿using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using TiendaOnline.Application.Common.Settings;
 using TiendaOnline.Application.Geo;
 
 namespace TiendaOnline.Infrastructure.Services.Geo
@@ -7,17 +9,22 @@ namespace TiendaOnline.Infrastructure.Services.Geo
     public class GeoService : IGeoService
     {
         private readonly HttpClient _httpClient;
+        private readonly string _baseUrl;
         private readonly ILogger<GeoService> _logger;
 
-        public GeoService(IHttpClientFactory httpClientFactory, ILogger<GeoService> logger)
+        public GeoService(IHttpClientFactory httpClientFactory, IOptions<GeorefSettings> settings, ILogger<GeoService> logger)
         {
             _httpClient = httpClientFactory.CreateClient();
+            var baseUrl = string.IsNullOrWhiteSpace(settings.Value.BaseUrl)
+                ? GeorefSettings.BaseUrlPorDefecto
+                : settings.Value.BaseUrl;
+            _baseUrl = baseUrl.TrimEnd('/');
             _logger = logger;
         }
 
         public async Task<IEnumerable<LocationDto>> GetProvinciasAsync(CancellationToken ct = default)
         {
-            var response = await _httpClient.GetFromJsonAsync<GeorefResponse>("https://apis.datos.gob.ar/georef/api/provincias?campos=id,nombre", ct);
+            var response = await _httpClient.GetFromJsonAsync<GeorefResponse>($"{_baseUrl}/provincias?campos=id,nombre", ct);
             return response?.Provincias.OrderBy(p => p.Nombre) ?? Enumerable.Empty<LocationDto>();
         }
 
@@ -28,7 +35,7 @@ namespace TiendaOnline.Infrastructure.Services.Geo
 
             var provinciaEscapada = Uri.EscapeDataString(provinciaNombre);
 
-            var url = $"https://apis.datos.gob.ar/georef/api/localidades?provincia={provinciaEscapada}&max=1000&campos=id,nombre";
+            var url = $"{_baseUrl}/localidades?provincia={provinciaEscapada}&max=1000&campos=id,nombre";
 
             try
             {

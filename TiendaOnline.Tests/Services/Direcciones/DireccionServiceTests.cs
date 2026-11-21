@@ -86,8 +86,8 @@ namespace TiendaOnline.Tests.Services.Direcciones
     /// <summary>
     /// Contrato de lectura/escritura del resto del ABM: ObtenerPorIdAsync responde
     /// null para lo inexistente (los controllers 404 y el policy handler niega) y
-    /// los writes lanzan la DomainException con mensaje curado — antes eran
-    /// InvalidOperationException que solo producían una 500 sin explicación.
+    /// los writes lanzan la DomainException con mensaje curado, nunca una
+    /// excepción genérica que termine en un 500 sin explicación.
     /// </summary>
     public class DireccionContratosTests
     {

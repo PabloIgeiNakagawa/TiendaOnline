@@ -58,7 +58,7 @@ namespace TiendaOnline.Infrastructure.Services.Email
 
         public async Task EnviarConfirmacionPedidoAsync(string destinoEmail, string nombreUsuario, int pedidoId, decimal total)
         {
-            var nombreSitio = _appSettings.GetValue("Diseno:NombreDelSitio") ?? "Tienda";
+            var nombreSitio = _appSettings.GetValue(AppSettingsKeys.NombreDelSitio) ?? "Tienda";
             var siteUrl = _globalSettings.SiteUrl.TrimEnd('/');
             var nombre = EmailTemplates.CodificarHtml(nombreUsuario);
 
@@ -85,7 +85,7 @@ namespace TiendaOnline.Infrastructure.Services.Email
 
         public async Task EnviarEmailPagoExitosoAsync(string destinoEmail, string nombreUsuario, int pedidoId, decimal total)
         {
-            var nombreSitio = _appSettings.GetValue("Diseno:NombreDelSitio") ?? "Tienda";
+            var nombreSitio = _appSettings.GetValue(AppSettingsKeys.NombreDelSitio) ?? "Tienda";
             var siteUrl = _globalSettings.SiteUrl.TrimEnd('/');
             var nombre = EmailTemplates.CodificarHtml(nombreUsuario);
 
@@ -116,7 +116,7 @@ namespace TiendaOnline.Infrastructure.Services.Email
 
         public async Task EnviarEmailPagoRechazadoAsync(string destinoEmail, string nombreUsuario, int pedidoId, decimal total)
         {
-            var nombreSitio = _appSettings.GetValue("Diseno:NombreDelSitio") ?? "Tienda";
+            var nombreSitio = _appSettings.GetValue(AppSettingsKeys.NombreDelSitio) ?? "Tienda";
             var siteUrl = _globalSettings.SiteUrl.TrimEnd('/');
             var nombre = EmailTemplates.CodificarHtml(nombreUsuario);
 
@@ -147,7 +147,7 @@ namespace TiendaOnline.Infrastructure.Services.Email
 
         public async Task EnviarEmailPagoReembolsadoAsync(string destinoEmail, string nombreUsuario, int pedidoId, decimal total)
         {
-            var nombreSitio = _appSettings.GetValue("Diseno:NombreDelSitio") ?? "Tienda";
+            var nombreSitio = _appSettings.GetValue(AppSettingsKeys.NombreDelSitio) ?? "Tienda";
             var siteUrl = _globalSettings.SiteUrl.TrimEnd('/');
             var nombre = EmailTemplates.CodificarHtml(nombreUsuario);
 
@@ -178,7 +178,7 @@ namespace TiendaOnline.Infrastructure.Services.Email
 
         public async Task EnviarEmailPedidoVencidoAsync(string destinoEmail, string nombreUsuario, int pedidoId, decimal total)
         {
-            var nombreSitio = _appSettings.GetValue("Diseno:NombreDelSitio") ?? "Tienda";
+            var nombreSitio = _appSettings.GetValue(AppSettingsKeys.NombreDelSitio) ?? "Tienda";
             var siteUrl = _globalSettings.SiteUrl.TrimEnd('/');
             var nombre = EmailTemplates.CodificarHtml(nombreUsuario);
 
@@ -210,7 +210,7 @@ namespace TiendaOnline.Infrastructure.Services.Email
         // de que su pedido llegó (cierra el loop de "¿dónde está mi pedido?").
         public async Task EnviarEmailPedidoEntregadoAsync(string destinoEmail, string nombreUsuario, int pedidoId)
         {
-            var nombreSitio = _appSettings.GetValue("Diseno:NombreDelSitio") ?? "Tienda";
+            var nombreSitio = _appSettings.GetValue(AppSettingsKeys.NombreDelSitio) ?? "Tienda";
             var siteUrl = _globalSettings.SiteUrl.TrimEnd('/');
             var nombre = EmailTemplates.CodificarHtml(nombreUsuario);
 
@@ -237,7 +237,7 @@ namespace TiendaOnline.Infrastructure.Services.Email
         // Aviso interno: le llega al dueño cuando un cliente sube comprobante de transferencia.
         public async Task EnviarEmailComprobanteRecibidoAsync(string destinoEmail, int pedidoId)
         {
-            var nombreSitio = _appSettings.GetValue("Diseno:NombreDelSitio") ?? "Tienda";
+            var nombreSitio = _appSettings.GetValue(AppSettingsKeys.NombreDelSitio) ?? "Tienda";
             var siteUrl = _globalSettings.SiteUrl.TrimEnd('/');
 
             var contenido = $@"
@@ -255,7 +255,7 @@ namespace TiendaOnline.Infrastructure.Services.Email
         // (firma de DataProtection, vence en 30 min y muere al usarse).
         public async Task EnviarEmailResetPasswordAsync(string destinoEmail, string nombreUsuario, string token)
         {
-            var nombreSitio = _appSettings.GetValue("Diseno:NombreDelSitio") ?? "Tienda";
+            var nombreSitio = _appSettings.GetValue(AppSettingsKeys.NombreDelSitio) ?? "Tienda";
             var siteUrl = _globalSettings.SiteUrl.TrimEnd('/');
             var enlace = $"{siteUrl}/Accounts/ResetPassword?token={Uri.EscapeDataString(token)}";
             var nombre = EmailTemplates.CodificarHtml(nombreUsuario);
@@ -276,7 +276,7 @@ namespace TiendaOnline.Infrastructure.Services.Email
         // Aviso de seguridad: alguien aplicó un reset (o cambió la contraseña).
         public async Task EnviarEmailPasswordCambiadaAsync(string destinoEmail, string nombreUsuario)
         {
-            var nombreSitio = _appSettings.GetValue("Diseno:NombreDelSitio") ?? "Tienda";
+            var nombreSitio = _appSettings.GetValue(AppSettingsKeys.NombreDelSitio) ?? "Tienda";
             var siteUrl = _globalSettings.SiteUrl.TrimEnd('/');
             var nombre = EmailTemplates.CodificarHtml(nombreUsuario);
 

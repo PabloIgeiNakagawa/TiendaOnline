@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
@@ -32,10 +32,8 @@ namespace TiendaOnline.Features.Productos.Admin
         [HttpGet("[action]")]
         public async Task<IActionResult> Catalogo([FromQuery] ObtenerProductosAdminRequest request)
         {
-            // Obtenemos los productos paginados y filtrados
             var pagedResult = await _productoQueryService.ObtenerProductosAdminAsync(request, HttpContext.RequestAborted);
 
-            // Obtenemos las categorías para el select (usando DTO)
             var categoriasEntidad = await _categoriaQueryService.ObtenerCategoriasHojaAsync(HttpContext.RequestAborted);
             var categoriasDto = categoriasEntidad.Select(c => new CategoriaDto
             {
@@ -88,7 +86,6 @@ namespace TiendaOnline.Features.Productos.Admin
                 // en un toast de la casa para que nadie envíe a ciegas.
                 TempData.SetMensajeError(PrimerErrorDeModelState());
 
-                // RE-CARGAMOS las categorías antes de volver a la vista
                 model.Categorias = await ObtenerListaCategoriasAsync();
                 return View(model);
             }
@@ -147,7 +144,6 @@ namespace TiendaOnline.Features.Productos.Admin
                 // en un toast de la casa para que nadie envíe a ciegas.
                 TempData.SetMensajeError(PrimerErrorDeModelState());
 
-                // IMPORTANTE: Si volvemos a la vista, hay que rellenar la lista
                 model.Categorias = await ObtenerListaCategoriasAsync();
                 return View(model);
             }

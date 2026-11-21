@@ -2,7 +2,7 @@ namespace TiendaOnline.Application.Pedidos.Common
 {
     /// <summary>
     /// Motivo del resultado de procesar un pago externo (webhook MP o retorno del comprador).
-    /// Cada valor explica por qué el pedido arranca en ese estado: los.logs y los mensajes
+    /// Cada valor explica por qué el pedido arranca en ese estado: los logs y los mensajes
     /// del front nacen de acá, no de un bool indistinguible.
     /// </summary>
     public enum MotivoPago
@@ -28,7 +28,7 @@ namespace TiendaOnline.Application.Pedidos.Common
         /// <summary>La señal contradictoria con el estado actual del pedido: se ignora (ya cancelado / reembolsado / etc.).</summary>
         EstadoIncoherente,
 
-        /// <summary>Estado de MP sin accion asociada en el sistema (p. ej. in_process / desconocido).</summary>
+        /// <summary>Estado de MP sin acción asociada en el sistema (p. ej. in_process / desconocido).</summary>
         EstadoNoManejado
     }
 

@@ -5,7 +5,7 @@
 @{
     // Mismo criterio que el FAQ: WhatsApp del panel (AppSettings > Tienda:Whatsapp),
     // oculto si no hay valor — nada apunta a un número falso.
-    var whatsappTexto = AppSettings.GetValue("Tienda:Whatsapp") ?? "";
+    var whatsappTexto = AppSettings.GetValue(AppSettingsKeys.TiendaWhatsapp) ?? "";
     var whatsappDigits = new string(whatsappTexto.Where(char.IsDigit).ToArray());
 }
 

@@ -15,7 +15,6 @@ namespace TiendaOnline.Domain.Entities
         public virtual Producto Producto { get; set; }
 
         [Required]
-        [Column(TypeName = "decimal(18,2)")]
         public decimal PrecioOferta { get; set; }
 
         [Required]

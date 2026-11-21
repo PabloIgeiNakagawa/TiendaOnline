@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TiendaOnline.Application.Common;
 using TiendaOnline.Application.Ofertas;
 using TiendaOnline.Application.Productos.Queries;
@@ -68,7 +68,6 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 .Include(p => p.Categoria)
                 .AsQueryable();
 
-            // --- Filtros ---
             if (!string.IsNullOrWhiteSpace(request.Busqueda))
             {
                 query = query.Where(p =>
@@ -134,7 +133,6 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 .Where(p => p.Activo)
                 .AsQueryable();
 
-            // Filtros
             if (!string.IsNullOrWhiteSpace(request.Busqueda))
             {
                 // Búsqueda case-insensitive explícita (lower por ambos lados):
@@ -174,7 +172,6 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                         .Min(o => (decimal?)o.PrecioOferta) ?? p.Precio)
                     <= request.PrecioMax.Value);
 
-            // Orden
             query = request.Orden switch
             {
                 "precio-asc" => query.OrderBy(p =>

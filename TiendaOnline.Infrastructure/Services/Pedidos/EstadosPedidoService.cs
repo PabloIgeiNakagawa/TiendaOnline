@@ -85,8 +85,8 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
             try
             {
-                // Traemos el pedido con sus detalles y su dueño (Importante usar
-                // .Include; el Usuario alimenta el aviso de reembolso)
+                // Traemos el pedido con sus detalles y su dueño: el Usuario alimenta
+                // el aviso de reembolso, los detalles la devolución de stock.
                 var pedido = await _context.Pedidos
                     .Include(p => p.Usuario)
                     .Include(p => p.DetallesPedido)
@@ -95,7 +95,6 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 if (pedido == null) throw new PedidoNoEncontradoException("Pedido no encontrado.");
 
-                // Validaciones de negocio
                 if (pedido.Estado == EstadoPedido.Cancelado)
                     throw new PedidoNoCancelableException("El pedido ya estaba cancelado.");
 

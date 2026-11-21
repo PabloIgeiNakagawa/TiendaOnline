@@ -53,8 +53,8 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
             _logger.LogInformation("Comprobante subido para el pedido {PedidoId}", pedidoId);
 
-            // Aviso al dueño después del save; la dirección vive en AppSettings (Pagos:EmailNotificaciones).
-            var emailNotificaciones = _appSettings.GetValue("Pagos:EmailNotificaciones");
+            // Aviso al dueño después del save; la dirección vive en AppSettings.
+            var emailNotificaciones = _appSettings.GetValue(AppSettingsKeys.PagosEmailNotificaciones);
             if (!string.IsNullOrWhiteSpace(emailNotificaciones))
             {
                 BackgroundJob.Enqueue<IEmailService>(x => x.EnviarEmailComprobanteRecibidoAsync(emailNotificaciones, pedidoId));

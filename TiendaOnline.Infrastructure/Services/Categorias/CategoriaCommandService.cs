@@ -33,7 +33,7 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
         {
             var categoria = await _context.Categorias.FindAsync(categoriaId, ct);
             if (categoria == null)
-                return;
+                throw new CategoriaNoValidaException("La categoría indicada no existe.");
 
             // El guard corre ANTES de mutar: si el nuevo padre generaría un bucle,
             // nada se guarda (ni el nombre) y el admin ve el aviso con el form vivo.
@@ -48,76 +48,48 @@ namespace TiendaOnline.Infrastructure.Services.Categorias
             await _context.SaveChangesAsync(ct);
         }
 
-        // Activar
-        public async Task ActivarCategoriaAsync(int categoriaId, CancellationToken ct = default)
-        {
-            var categoria = await _context.Categorias.FindAsync(categoriaId, ct);
-            if (categoria != null)
-            {
-                categoria.Activa = true;
-                await _context.SaveChangesAsync(ct);
-            }
-        }
-
-        // Desactivar
-        public async Task DesactivarCategoriaAsync(int categoriaId, CancellationToken ct = default)
-        {
-            var categoria = await _context.Categorias.FindAsync(categoriaId, ct);
-            if (categoria != null)
-            {
-                categoria.Activa = false;
-                await _context.SaveChangesAsync(ct);
-            }
-        }
-
-        // Eliminar (Solo si está vacía)
-        public async Task<bool> EliminarCategoriaAsync(int categoriaId, CancellationToken ct = default)
+        public async Task EliminarCategoriaAsync(int categoriaId, CancellationToken ct = default)
         {
             var categoria = await _context.Categorias
                 .Include(c => c.Subcategorias)
                 .Include(c => c.Productos)
                 .FirstOrDefaultAsync(c => c.CategoriaId == categoriaId, ct);
 
-            if (categoria == null) return false;
+            if (categoria == null)
+                throw new CategoriaNoValidaException("La categoría indicada no existe.");
 
-            // Si tiene hijos o productos, no permitimos borrar (Restrict)
+            // La baja física no puede arrastrar hijos ni productos (Restrict en la base).
             if (categoria.Subcategorias.Count != 0 || categoria.Productos.Count != 0)
-                return false;
+                throw new CategoriaNoValidaException("No se puede eliminar: la categoría tiene productos o subcategorías.");
 
             _context.Categorias.Remove(categoria);
             await _context.SaveChangesAsync(ct);
-            return true;
         }
 
         private async Task<bool> VerificarSiCausaBucleAsync(int categoriaId, int? nuevoPadreId, CancellationToken ct)
         {
-            // 1. Si no tiene padre, no hay bucle posible.
             if (nuevoPadreId == null) return false;
 
-            // 2. No puede ser hija de sí misma.
             if (categoriaId == nuevoPadreId) return true;
 
-            // 3. Empezamos a subir desde el nuevo padre propuesto hacia arriba.
             int? idActual = nuevoPadreId;
 
             while (idActual != null)
             {
-                // Buscamos el registro del padre actual.
                 var padre = await _context.Categorias
-                    .AsNoTracking() // Importante para rendimiento
+                    .AsNoTracking()
                     .Select(c => new { c.CategoriaId, c.CategoriaPadreId })
                     .FirstOrDefaultAsync(c => c.CategoriaId == idActual, ct);
 
                 if (padre == null) break;
 
-                // Si en el camino hacia la raíz encontramos el ID de la categoría que estamos moviendo...
-                // ¡Hay un bucle! (Porque estaríamos poniendo al abuelo como hijo del nieto).
+                // Si el ancestro propuesto ya cuelga de la categoría que movemos, el
+                // movimiento crearía un ciclo (el abuelo quedaría bajo el nieto).
                 if (padre.CategoriaPadreId == categoriaId)
                 {
                     return true;
                 }
 
-                // Seguimos subiendo.
                 idActual = padre.CategoriaPadreId;
             }
 

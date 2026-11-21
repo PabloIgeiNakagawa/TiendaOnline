@@ -80,13 +80,10 @@ namespace TiendaOnline.Features.Categorias
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Eliminar(int id)
         {
-            bool eliminado = await _categoriaCommandService.EliminarCategoriaAsync(id, HttpContext.RequestAborted);
-            _logger.LogInformation("Eliminación de categoría {CategoriaId} por {Admin} (resultado: {Eliminado})",
-                id, User.FindFirstValue(ClaimTypes.NameIdentifier), eliminado);
-            if (!eliminado)
-            {
-                TempData.SetMensajeError("No se puede eliminar: la categoría tiene productos o subcategorías.");
-            }
+            await _categoriaCommandService.EliminarCategoriaAsync(id, HttpContext.RequestAborted);
+            _logger.LogInformation("Categoría {CategoriaId} eliminada por {Admin}",
+                id, User.FindFirstValue(ClaimTypes.NameIdentifier));
+            TempData.SetMensajeExito("La categoría se eliminó correctamente.");
             return RedirectToAction(nameof(Listado));
         }
 

@@ -65,7 +65,7 @@ namespace TiendaOnline.Tests.Services.Pedidos
             imagen.Setup(x => x.SubirComprobanteAsync(It.IsAny<Stream>(), It.IsAny<string>()))
                   .ReturnsAsync(UrlComprobante);
             var settings = new Mock<IAppSettingsService>();
-            settings.Setup(x => x.GetValue("Pagos:EmailNotificaciones")).Returns("dueno@techstore.com");
+            settings.Setup(x => x.GetValue(AppSettingsKeys.PagosEmailNotificaciones)).Returns("dueno@techstore.com");
             var sut = Sut.GestionTransferencia(ctx, imagen: imagen, settings: settings);
 
             var url = await sut.GuardarComprobanteAsync(pedido.PedidoId, Stream.Null, "Pedido-000001.jpg");

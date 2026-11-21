@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TiendaOnline.Domain.Entities
 {
@@ -103,7 +102,6 @@ namespace TiendaOnline.Domain.Entities
         [MaxLength(15)]
         public string? EnvioCodigoPostal { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
         public decimal CostoEnvio { get; set; }
 
         // ---- Relaciones ----

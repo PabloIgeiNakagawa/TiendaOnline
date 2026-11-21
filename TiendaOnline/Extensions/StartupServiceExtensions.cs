@@ -38,6 +38,7 @@ using TiendaOnline.Infrastructure.Services.Email;
 using TiendaOnline.Infrastructure.Services.Envios;
 using TiendaOnline.Infrastructure.Services.Geo;
 using Resend;
+using TiendaOnline.Infrastructure.Services.MercadoPago;
 using TiendaOnline.Infrastructure.Services.MovimientosStock;
 using TiendaOnline.Infrastructure.Services.Ofertas;
 using TiendaOnline.Infrastructure.Services.Pedidos;
@@ -61,6 +62,7 @@ namespace TiendaOnline.Extensions
             services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
             services.Configure<MercadoPagoSettings>(configuration.GetSection("MercadoPago"));
             services.Configure<GoogleKeys>(configuration.GetSection("GoogleKeys"));
+            services.Configure<GeorefSettings>(configuration.GetSection("Georef"));
             services.Configure<GlobalSettings>(o => o.SiteUrl = configuration["SiteUrl"] ?? "");
 
             // Hangfire

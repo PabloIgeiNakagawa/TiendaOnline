@@ -121,9 +121,7 @@ namespace TiendaOnline.Infrastructure.Services.Auth
             return true;
         }
 
-        // ------------------------------------------------------------------
         // Payload: "{expiración utc ticks}:{usuarioId}:{huella del hash vigente}"
-        // ------------------------------------------------------------------
 
         private (long ExpiraUtcTicks, int UsuarioId, string Huella)? DesarmarPayload(string? token)
         {

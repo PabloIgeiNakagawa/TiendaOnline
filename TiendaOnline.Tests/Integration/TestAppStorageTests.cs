@@ -7,7 +7,7 @@ namespace TiendaOnline.Tests.Integration
     /// El AddHangfire del host pisa el JobStorage.Current global con su storage:
     /// si el fixture no lo repone al desbotear, ese storage queda dispuesto como
     /// Current y los tests unitarios que encolan después de los de integración
-    /// revientan según el orden de corrida (el flaky de CI del 08/11).
+    /// revientan según el orden de corrida.
     /// </summary>
     [Collection("Integracion")] // un host por vez: los hosts comparten App_Data/Serilog del proceso
     public class TestAppStorageTests

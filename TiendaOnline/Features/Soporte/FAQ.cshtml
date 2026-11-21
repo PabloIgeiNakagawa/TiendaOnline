@@ -225,7 +225,7 @@
                             // WhatsApp del panel (AppSettings > Tienda:Whatsapp): el link wa.me
                             // se arma con los dígitos del valor; sin valor configurado el
                             // botón no se muestra (nada apunta a un número falso).
-                            var whatsappTexto = AppSettings.GetValue("Tienda:Whatsapp") ?? "";
+                            var whatsappTexto = AppSettings.GetValue(AppSettingsKeys.TiendaWhatsapp) ?? "";
                             var whatsappDigits = new string(whatsappTexto.Where(char.IsDigit).ToArray());
                         }
                         @if (!string.IsNullOrEmpty(whatsappDigits))

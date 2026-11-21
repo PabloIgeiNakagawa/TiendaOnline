@@ -13,7 +13,6 @@ namespace TiendaOnline.Features.Home
         public ResumenDiarioViewModel ResumenDiario { get; set; } = new();
 
         // --- SECCIÓN: TIMELINE DE AUDITORÍA ---
-        // Usamos una lista de una clase interna para que sea fácil de iterar
         public List<AuditoriaItemViewModel> UltimosCambios { get; set; } = new();
 
         // --- SECCIÓN: ALERTAS DE PEDIDOS ---
@@ -56,7 +55,6 @@ namespace TiendaOnline.Features.Home
         public string Accion { get; set; }
         public DateTime Fecha { get; set; }
 
-        // Helper para mostrar "hace 5 minutos" en la vista si querés
         public string FechaRelativa => CalcularFechaRelativa(Fecha);
 
         private static string CalcularFechaRelativa(DateTime fecha)
@@ -78,7 +76,6 @@ namespace TiendaOnline.Features.Home
         public DateTime Fecha { get; set; }
         public double HorasTranscurridas { get; set; }
 
-        // Para definir el color de la alerta en Bootstrap dinámicamente
         public string ClaseColor => HorasTranscurridas > 72 ? "danger" : "warning";
     }
 

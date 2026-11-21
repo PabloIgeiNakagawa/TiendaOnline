@@ -11,8 +11,7 @@ namespace TiendaOnline.Tests.Integration
     /// La edición de categorías de punta a punta contra la app real: form con los
     /// datos precargados, POST de nombre+padre con antiforgery, guard de nombre
     /// duplicado en el form y el bucle de jerarquía convertido en aviso amable
-    /// (DomainExceptionFilter) sin grabar nada. El lápiz del Listado apunta acá:
-    /// era una action inexistente (404) antes de la reactivación.
+    /// (DomainExceptionFilter) sin grabar nada.
     /// </summary>
     [Collection("Integracion")] // un host por vez: los hosts comparten App_Data/Serilog del proceso
     public class CategoriasEdicionIntegrationTests : IClassFixture<TestApp>

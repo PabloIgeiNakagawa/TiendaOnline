@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TiendaOnline.Domain.Entities
 {
@@ -18,7 +17,6 @@ namespace TiendaOnline.Domain.Entities
         public string Provincia { get; set; }
 
         [Required]
-        [Column(TypeName = "decimal(18,2)")]
         public decimal Costo { get; set; }
 
         /// <summary>Deshabilitada = no despachamos a esa provincia (el checkout lo bloquea).</summary>

@@ -1,16 +1,15 @@
 ﻿@{
-    // 1. Fuentes
-    var fontTitle = AppSettings.GetValue("Diseno:FuenteTitulo", "Inter");
-    var fontBody = AppSettings.GetValue("Diseno:FuenteBody", "Inter");
+    // Fuentes del panel; vacías caen a Inter.
+    var fontTitle = AppSettings.GetValue(AppSettingsKeys.FuenteTitulo, "Inter");
+    var fontBody = AppSettings.GetValue(AppSettingsKeys.FuenteBody, "Inter");
     if (string.IsNullOrWhiteSpace(fontTitle)) fontTitle = "Inter";
     if (string.IsNullOrWhiteSpace(fontBody)) fontBody = "Inter";
     var fontUrl = $"https://fonts.googleapis.com/css2?family={fontTitle.Replace(" ", "+")}:wght@600;700&family={fontBody.Replace(" ", "+")}:wght@300;400;500&display=swap";
 
-    // 2. Colores Base (Extraídos exactamente de tus AppSettings)
-    var primary = AppSettings.GetValue("Diseno:ColorPrimary", "#0d6efd");
+    // Color primario del panel.
+    var primary = AppSettings.GetValue(AppSettingsKeys.ColorPrimary, "#0d6efd");
 
-    // 3. Colores Modo Oscuro (Calculados al vuelo mediante la función)
-    // El 'true' es para fondos (los oscurece), el 'false' es para textos/links (los aclara)
+    // Variante oscura del primario: el segundo argumento indica fondos (true) vs textos/links (false).
     var primaryDark = GenerateDarkColor(primary, false);
 }
 

@@ -10,11 +10,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>@ViewData[ViewDataKeys.Title] - @AppSettings.GetValue("Diseno:NombreDelSitio")</title>
+    <title>@ViewData[ViewDataKeys.Title] - @AppSettings.GetValue(AppSettingsKeys.NombreDelSitio)</title>
 
     <partial name="_TiendaSeoMeta" />
 
-    <link rel="icon" type="image/x-icon" href="@AppSettings.GetValue("Diseno:FavIconUrl")" asp-append-version="true">
+    <link rel="icon" type="image/x-icon" href="@AppSettings.GetValue(AppSettingsKeys.FavIconUrl)" asp-append-version="true">
     <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" asp-append-version="true" />
 

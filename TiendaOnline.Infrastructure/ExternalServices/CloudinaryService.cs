@@ -1,4 +1,4 @@
-﻿using CloudinaryDotNet.Actions;
+using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
 using TiendaOnline.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -35,7 +35,6 @@ namespace TiendaOnline.Infrastructure.ExternalServices
             var uploadParams = new ImageUploadParams()
             {
                 File = new FileDescription(nombreArchivo, archivoStream),
-                // Carpeta dinámica: TechStore/Productos o TechStore/Branding
                 Folder = $"TechStore/{subCarpeta}",
 
                 Transformation = new Transformation()
@@ -136,7 +135,6 @@ namespace TiendaOnline.Infrastructure.ExternalServices
             if (string.IsNullOrEmpty(url)) return string.Empty;
 
             // Las URLs de Cloudinary tienen este formato: 
-            // https://res.cloudinary.com/demo/image/upload/v12345/carpeta/nombre_imagen.jpg
 
             try
             {

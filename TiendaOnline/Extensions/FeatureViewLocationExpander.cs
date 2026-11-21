@@ -27,12 +27,11 @@ namespace TiendaOnline.Extensions
                         // Resultado: "Usuarios/Admin"
                         var featurePath = string.Join("/", parts.Skip(featureIndex + 1));
 
-                        // 1. Ruta basada estrictamente en el Namespace (La más segura para vos)
-                        // Esto buscará en: /Features/Usuarios/Admin/CrearUsuario.cshtml
+                        // Dos convenciones de carpeta, en orden de preferencia: por
+                        // namespace (/Features/Usuarios/Admin/CrearUsuario.cshtml) y
+                        // por namespace + controlador
+                        // (/Features/Usuarios/Admin/AdminUsuarios/CrearUsuario.cshtml).
                         locations.Add($"/Features/{featurePath}/{{0}}.cshtml");
-
-                        // 2. Ruta basada en Namespace + Nombre del Controlador
-                        // Esto buscará en: /Features/Usuarios/Admin/AdminUsuarios/CrearUsuario.cshtml
                         locations.Add($"/Features/{featurePath}/{{1}}/{{0}}.cshtml");
                     }
                 }

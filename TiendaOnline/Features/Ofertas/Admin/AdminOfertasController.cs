@@ -69,8 +69,7 @@ namespace TiendaOnline.Features.Ofertas.Admin
         [HttpGet("[action]/{id}")]
         public async Task<IActionResult> Editar(int id)
         {
-            var ofertas = await _ofertaQueryService.ObtenerTodasAsync(HttpContext.RequestAborted);
-            var oferta = ofertas.FirstOrDefault(o => o.OfertaId == id);
+            var oferta = await _ofertaQueryService.ObtenerPorIdAsync(id, HttpContext.RequestAborted);
             if (oferta is null)
                 return NotFound();
 

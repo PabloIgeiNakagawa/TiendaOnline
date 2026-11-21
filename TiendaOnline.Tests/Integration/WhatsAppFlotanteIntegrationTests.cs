@@ -1,4 +1,5 @@
 using System.Net;
+using TiendaOnline.Application.AppSettings;
 using TiendaOnline.Tests.TestSupport;
 using Xunit;
 
@@ -25,7 +26,7 @@ namespace TiendaOnline.Tests.Integration
             _app.ResetMocks();
             // El número del panel puede venir con espacios, guiones y prefijo: el
             // parcial lo limpia a dígitos (igual que el botón del FAQ).
-            _app.Settings.Setup(x => x.GetValue("Tienda:Whatsapp")).Returns("+54 9 351 555-1234");
+            _app.Settings.Setup(x => x.GetValue(AppSettingsKeys.TiendaWhatsapp)).Returns("+54 9 351 555-1234");
 
             var client = _app.CreateAnonymousClient();
             var respuesta = await client.GetAsync("/");
@@ -41,7 +42,7 @@ namespace TiendaOnline.Tests.Integration
         {
             _app.ResetMocks();
             // Sin setup: GetValue devuelve null (el botón no apunta a un número falso).
-            _app.Settings.Setup(x => x.GetValue("Tienda:Whatsapp")).Returns((string?)null);
+            _app.Settings.Setup(x => x.GetValue(AppSettingsKeys.TiendaWhatsapp)).Returns((string?)null);
 
             var client = _app.CreateAnonymousClient();
             var respuesta = await client.GetAsync("/");

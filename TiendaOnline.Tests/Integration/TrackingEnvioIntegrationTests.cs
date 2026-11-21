@@ -23,8 +23,8 @@ namespace TiendaOnline.Tests.Integration
         [Fact]
         public async Task Detalles_Entregado_MuestraLaFechaDeEnvioYLaDeEntrega()
         {
-            // El bug que fija este test: el paso "en camino" de un pedido
-            // entregado mostraba la fecha de ENTREGA y la de envío se perdía.
+            // El paso "en camino" de un pedido entregado lleva la fecha de ENVÍO;
+            // la de ENTREGA vive en su propio hito, no reemplaza la anterior.
             var ids = _app.WithDb(ctx =>
             {
                 var dueno = TestDatabase.SeedUsuario(ctx, "dueno-entregado@test.local");
@@ -59,8 +59,8 @@ namespace TiendaOnline.Tests.Integration
         [Fact]
         public async Task Detalles_EnPreparacion_MuestraElHitoDePagoConfirmado()
         {
-            // Antes un pedido en preparación solo veía "Pedido realizado" en el
-            // timeline (la fecha de preparación se guardaba pero no viajaba).
+            // El hito de preparación viaja con su fecha: sin FechaEnPreparacion en
+            // el DTO, el timeline de un pedido en preparación salta ese paso.
             var ids = _app.WithDb(ctx =>
             {
                 var dueno = TestDatabase.SeedUsuario(ctx, "dueno-preparacion@test.local");

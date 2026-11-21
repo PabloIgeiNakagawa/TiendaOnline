@@ -46,17 +46,14 @@ builder.Services.AddControllersWithViews(o => o.Filters.Add<DomainExceptionFilte
 
 // HttpContext  
 builder.Services.AddHttpContextAccessor();
-// REGISTRO PARA LA API DE PROVINCIAS
 builder.Services.AddHttpClient();
 
-// Base de datos
 builder.Services.AddDbContext<TiendaContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         b => b.MigrationsAssembly("TiendaOnline.Infrastructure")
     ));
 
-// Extensiones personalizadas para organizar la configuración
 builder.Services.AddCustomSecurity(builder.Configuration); // Configura Cookies y Session
 builder.Services.AddBusinessServices(builder.Configuration); // Registra todos tus Services
 builder.Services.AddMemoryCache();
@@ -67,7 +64,6 @@ builder.Services.AddRateLimitingConfig(builder.Environment); // Rate limiting pa
 builder.Services.AddHealthChecks()
     .AddCheck<ChequeoDeBaseDeDatos>("db");
 
-// Hash de contraseñas y protección de datos (para tokens, etc.)
 // Llaves de DataProtection persistidas en App_Data del sitio: sobreviven recycles y deploys.
 builder.Services.AddDataProtection()
     .SetApplicationName("TiendaOnline")
@@ -75,7 +71,6 @@ builder.Services.AddDataProtection()
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -167,7 +162,6 @@ catch (Exception ex)
 // contra la DB) o 503 "Unhealthy". Anónimo a propósito; va antes de las rutas MVC.
 app.MapHealthChecks("/health");
 
-// Ruta por defecto
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

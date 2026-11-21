@@ -73,33 +73,54 @@ namespace TiendaOnline.Infrastructure.Services.Ofertas
         {
             var ahora = DateTime.Now;
 
-            var ofertas = await _context.OfertasProducto
+            var ofertas = await ProyectarOfertas(_context.OfertasProducto
                 .AsNoTracking()
                 .OrderByDescending(o => o.FechaInicio)
-                .ThenByDescending(o => o.OfertaId)
-                .Select(o => new OfertaDto
-                {
-                    OfertaId = o.OfertaId,
-                    ProductoId = o.ProductoId,
-                    NombreProducto = o.Producto.Nombre,
-                    PrecioLista = o.Producto.Precio,
-                    PrecioOferta = o.PrecioOferta,
-                    FechaInicio = o.FechaInicio,
-                    FechaFin = o.FechaFin,
-                    Activa = o.Activa
-                })
+                .ThenByDescending(o => o.OfertaId))
                 .ToListAsync(ct);
 
-            // El estado es regla de presentación: no se puede traducir a SQL
             foreach (var oferta in ofertas)
-            {
-                oferta.Estado = !oferta.Activa ? "Inactiva"
-                    : oferta.FechaFin < ahora ? "Expirada"
-                    : oferta.FechaInicio > ahora ? "Futura"
-                    : "Vigente";
-            }
+                AplicarEstado(oferta, ahora);
 
             return ofertas;
+        }
+
+        public async Task<OfertaDto?> ObtenerPorIdAsync(int ofertaId, CancellationToken ct = default)
+        {
+            var oferta = await ProyectarOfertas(_context.OfertasProducto
+                .AsNoTracking()
+                .Where(o => o.OfertaId == ofertaId))
+                .FirstOrDefaultAsync(ct);
+
+            if (oferta is null)
+                return null;
+
+            AplicarEstado(oferta, DateTime.Now);
+            return oferta;
+        }
+
+        private static IQueryable<OfertaDto> ProyectarOfertas(IQueryable<Domain.Entities.OfertaProducto> query)
+        {
+            return query.Select(o => new OfertaDto
+            {
+                OfertaId = o.OfertaId,
+                ProductoId = o.ProductoId,
+                NombreProducto = o.Producto.Nombre,
+                PrecioLista = o.Producto.Precio,
+                PrecioOferta = o.PrecioOferta,
+                FechaInicio = o.FechaInicio,
+                FechaFin = o.FechaFin,
+                Activa = o.Activa
+            });
+        }
+
+        // El estado es regla de presentación: se calcula en memoria, no en SQL.
+        private static void AplicarEstado(OfertaDto oferta, DateTime ahora)
+        {
+            oferta.Estado = !oferta.Activa ? "Inactiva"
+                : oferta.FechaFin < ahora ? "Expirada"
+                : oferta.FechaInicio > ahora ? "Futura"
+                : "Vigente";
         }
     }
 }
