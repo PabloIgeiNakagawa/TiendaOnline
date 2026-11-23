@@ -98,34 +98,22 @@ namespace TiendaOnline.Features.Pedidos.Admin
             foreach (var p in pedidos)
             {
                 sb.AppendLine(string.Join(';',
-                    CeldaCsv(p.PedidoId.ToString()),
-                    CeldaCsv(p.FechaPedido.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)),
-                    CeldaCsv(p.NombreCliente),
-                    CeldaCsv(p.EmailCliente),
-                    CeldaCsv(((EstadoPedido)p.EstadoId).GetDisplayName()),
-                    CeldaCsv(((EstadoPago)p.EstadoPagoId).GetDisplayName()),
-                    CeldaCsv(((MetodoPago)p.MetodoPagoId).GetDisplayName()),
-                    CeldaCsv(p.Total.ToString("N2", culturaCsv)),
-                    CeldaCsv(p.FechaEntrega?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) ?? ""),
-                    CeldaCsv(p.TieneComprobante ? "Sí" : "No")));
+                    Csv.Celda(p.PedidoId.ToString()),
+                    Csv.Celda(p.FechaPedido.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)),
+                    Csv.Celda(p.NombreCliente),
+                    Csv.Celda(p.EmailCliente),
+                    Csv.Celda(((EstadoPedido)p.EstadoId).GetDisplayName()),
+                    Csv.Celda(((EstadoPago)p.EstadoPagoId).GetDisplayName()),
+                    Csv.Celda(((MetodoPago)p.MetodoPagoId).GetDisplayName()),
+                    Csv.Celda(p.Total.ToString("N2", culturaCsv)),
+                    Csv.Celda(p.FechaEntrega?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) ?? ""),
+                    Csv.Celda(p.TieneComprobante ? "Sí" : "No")));
             }
 
             // BOM UTF-8: sin él Excel adivina ANSI y los acentos salen rotos.
             return File(new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetBytes(sb.ToString()),
                 "text/csv",
                 $"pedidos-{DateTime.Now:yyyyMMdd}.csv");
-        }
-
-        // Escapado CSV: celda con separador, comillas o salto de línea va entre
-        // comillas (doblando las comillas internas), el resto sale pelado.
-        private static string CeldaCsv(string valor)
-        {
-            if (valor.Contains(';') || valor.Contains('"') || valor.Contains('\n') || valor.Contains('\r'))
-            {
-                return $"\"{valor.Replace("\"", "\"\"")}\"";
-            }
-
-            return valor;
         }
 
         [HttpPost("[action]")]

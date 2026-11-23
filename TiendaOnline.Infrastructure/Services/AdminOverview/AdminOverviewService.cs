@@ -64,7 +64,9 @@ namespace TiendaOnline.Infrastructure.Services.AdminOverview
                     .Take(5)
                     .Select(a => new AuditoriaEntryDto
                     {
-                        UsuarioNombre = $"{a.Usuario.Nombre} {a.Usuario.Apellido}",
+                        // Las filas de jobs/webhooks no tienen usuario: el timeline
+                        // las nombra Sistema igual que el panel de auditoría.
+                        UsuarioNombre = a.Usuario == null ? "Sistema" : $"{a.Usuario.Nombre} {a.Usuario.Apellido}",
                         Accion = a.Accion,
                         Fecha = a.Fecha
                     }).ToListAsync(ct);

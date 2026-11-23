@@ -9,6 +9,12 @@
     if (!string.IsNullOrEmpty(Model.Busqueda))
         filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Auditorías", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
 
+    if (!string.IsNullOrEmpty(Model.TablaAfectada))
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-table", Etiqueta = "Entidad", Valor = Model.TablaAfectada, Propiedad = nameof(Model.TablaAfectada) });
+
+    if (!string.IsNullOrEmpty(Model.EntidadId))
+        filtrosActivos.Add(new FiltroPill { Icono = "bi-hash", Etiqueta = "ID", Valor = Model.EntidadId, Propiedad = nameof(Model.EntidadId) });
+
     if (Model.FechaDesde.HasValue)
         filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Desde", Valor = Model.FechaDesde.Value.ToShortDateString(), Propiedad = nameof(Model.FechaDesde) });
 
@@ -35,6 +41,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
             </div>
     <form method="get" asp-action="Logs">
+        @* El historial de una entidad viaja oculto: buscar o mover fechas no lo pierde. *@
+        @if (!string.IsNullOrEmpty(Model.TablaAfectada))
+        {
+            <input type="hidden" name="TablaAfectada" value="@Model.TablaAfectada" />
+        }
+        @if (!string.IsNullOrEmpty(Model.EntidadId))
+        {
+            <input type="hidden" name="EntidadId" value="@Model.EntidadId" />
+        }
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card rounded-3 border">
@@ -58,28 +73,34 @@
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-search me-1"></i>Búsqueda
                                 </label>
-                                <input type="text" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="Usuario, tabla o acción...">
+                                <input type="text" name="Busqueda" value="@Model.Busqueda" class="form-control" placeholder="Usuario, tabla, acción o ID...">
                             </div>
 
                             <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-calendar me-1"></i>Desde
                                 </label>
-                                <input type="date" name="FechaDesde" class="form-control">
+                                <input type="date" name="FechaDesde" value="@(Model.FechaDesde?.ToString("yyyy-MM-dd"))" class="form-control">
                             </div>
                             <div class="col-md-6 col-lg-2">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-calendar me-1"></i>Hasta
                                 </label>
-                                <input type="date" name="FechaHasta" class="form-control">
+                                <input type="date" name="FechaHasta" value="@(Model.FechaHasta?.ToString("yyyy-MM-dd"))" class="form-control">
                             </div>
 
                             <div class="col-md-6 col-lg-3 d-flex align-items-end gap-2">
-                                <button type="submit" class="btn btn-primary flex-fill">
+                                <button type="submit" class="btn btn-primary flex-fill" title="Aplicar filtros">
                                     <i class="bi bi-filter me-1"></i>
                                 </button>
 
-                                <a asp-action="Logs" class="btn btn-outline-secondary flex-fill">
+                                <button type="submit" class="btn btn-outline-success flex-fill"
+                                        formaction="@Url.Action("Exportar")" formmethod="get"
+                                        title="Exportar este historial a CSV">
+                                    <i class="bi bi-filetype-csv me-1"></i>
+                                </button>
+
+                                <a asp-action="Logs" class="btn btn-outline-secondary flex-fill" title="Limpiar filtros">
                                     <i class="bi bi-arrow-clockwise me-1"></i>
                                 </a>
                             </div>
@@ -130,6 +151,12 @@
                                             Acción
                                         </div>
                                     </th>
+                                    <th class="border-0 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-table me-2 text-primary"></i>
+                                            Entidad
+                                        </div>
+                                    </th>
                                     <th class="border-0 py-3 text-center">
                                         <i class="bi bi-gear me-1 text-primary"></i>Acciones
                                     </th>
@@ -155,10 +182,23 @@
                                             <span class="badge bg-info px-3 py-2 rounded-pill small fw-medium">@item.Accion</span>
                                         </td>
                                         <td class="py-3">
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-semibold">@item.TablaAfectada</span>
+                                                <small class="text-muted">#@item.EntidadId</small>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
                                             <div class="d-flex justify-content-center gap-1">
                                                 <button class="btn btn-sm btn-primary btn-ver-detalle" data-id="@item.AuditoriaId">
                                                     <i class="bi bi-eye me-1"></i> Ver Cambios
                                                 </button>
+                                                <a class="btn btn-sm btn-outline-secondary"
+                                                   asp-action="Logs"
+                                                   asp-route-TablaAfectada="@item.TablaAfectada"
+                                                   asp-route-EntidadId="@item.EntidadId"
+                                                   title="Ver el historial completo de esta entidad">
+                                                    <i class="bi bi-clock-history"></i>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -173,7 +213,7 @@
 
     <partial name="_Paginacion" model="@(new PaginacionViewModel { 
         PaginaActual = Model.Paginacion.PaginaActual, 
-        TotalPaginas = Model.Paginacion.TotalPaginas,
+        TotalPaginas = Model.Paginacion.TotalPaginas, 
         Accion = "Logs" 
     })" />
 </div>
@@ -183,18 +223,41 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="etiquetaModalCambios">
-                    <i class="bi bi-file-diff me-2"></i>Detalles de los Cambios
-                </h5>
+                <div class="me-auto">
+                    <h5 class="modal-title" id="etiquetaModalCambios">
+                        <i class="bi bi-file-diff me-2"></i>Detalles de los Cambios
+                    </h5>
+                    <div id="subtituloCambios" class="small text-muted"></div>
+                </div>
+                <div class="btn-group btn-group-sm me-3" role="group" aria-label="Vista de los cambios">
+                    <button type="button" class="btn btn-outline-secondary active" data-vista-cambios="diff">Campos</button>
+                    <button type="button" class="btn btn-outline-secondary" data-vista-cambios="json">JSON</button>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-                <div class="row">
+                <div id="vistaDiffCambios">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">Campo</th>
+                                    <th style="width: 37.5%;">Anterior</th>
+                                    <th style="width: 37.5%;">Nuevo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpoDiffCambios"></tbody>
+                        </table>
+                    </div>
+                    <p id="diffSinDatos" class="text-muted small mb-0 d-none">Sin datos registrados.</p>
+                </div>
+
+                <div id="vistaJsonCambios" class="row d-none">
                     <div class="col-md-6">
                         <h6 class="text-muted mb-3">
                             <i class="bi bi-arrow-left-circle me-2"></i>Datos Anteriores
                         </h6>
-                        <div class="bg-body-secondary p-3 rounded"> 
+                        <div class="bg-body-secondary p-3 rounded">
                             <pre id="datosAnteriores" class="small lh-sm mb-0" style="white-space: pre-wrap;"></pre>
                         </div>
                     </div>

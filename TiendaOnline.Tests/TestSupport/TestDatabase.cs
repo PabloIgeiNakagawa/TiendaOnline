@@ -168,6 +168,31 @@ namespace TiendaOnline.Tests.TestSupport
             return zona;
         }
 
+        public static Auditoria SeedAuditoria(
+            TiendaContext ctx,
+            Usuario? usuario = null,
+            string accion = "Actualizó Pedido",
+            string tablaAfectada = "Pedido",
+            string entidadId = "1",
+            DateTime? fecha = null,
+            string datosAnteriores = "{}",
+            string datosNuevos = "{}")
+        {
+            var auditoria = new Auditoria
+            {
+                UsuarioId = usuario?.UsuarioId,
+                Accion = accion,
+                TablaAfectada = tablaAfectada,
+                EntidadId = entidadId,
+                DatosAnteriores = datosAnteriores,
+                DatosNuevos = datosNuevos,
+                Fecha = fecha ?? DateTime.Now
+            };
+            ctx.Auditorias.Add(auditoria);
+            ctx.SaveChanges();
+            return auditoria;
+        }
+
         public static Pedido SeedPedido(
             TiendaContext ctx,
             Usuario usuario,

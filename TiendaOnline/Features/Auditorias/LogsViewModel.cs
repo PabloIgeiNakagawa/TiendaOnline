@@ -9,6 +9,8 @@ namespace TiendaOnline.Features.Auditorias
 
         // Filtros
         public string? Busqueda { get; set; }
+        public string? TablaAfectada { get; set; }
+        public string? EntidadId { get; set; }
         public int Pagina { get; set; }
         public int TamanoPagina { get; set; }
         public DateTime? FechaDesde { get; set; }

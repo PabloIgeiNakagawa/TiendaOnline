@@ -152,5 +152,25 @@ namespace TiendaOnline.Tests.Services.AdminOverview
             Assert.NotSame(primero, fresco);
             Assert.Single(fresco.PedidosEstancados); // el pedido nuevo ahora está en la lista
         }
+
+        [Fact]
+        public async Task ObtenerResumenHomeAsync_TimelineSinUsuario_LoNombraSistema()
+        {
+            // Las filas de jobs/webhooks no tienen usuario: el timeline del panel
+            // las muestra como Sistema, no en blanco (el nombre se armaba con
+            // a.Usuario.Nombre y quedaba null).
+            using (var seed = _db.CreateContext())
+            {
+                TestDatabase.SeedAuditoria(seed, usuario: null,
+                    accion: "Sistema: Canceló Pedido por vencimiento", entidadId: "9");
+            }
+
+            using var context = _db.CreateContext();
+            var resultado = await new AdminOverviewService(context).ObtenerResumenHomeAsync();
+
+            var entrada = Assert.Single(resultado.UltimosCambios);
+            Assert.Equal("Sistema", entrada.UsuarioNombre);
+            Assert.Equal("Sistema: Canceló Pedido por vencimiento", entrada.Accion);
+        }
     }
 }
