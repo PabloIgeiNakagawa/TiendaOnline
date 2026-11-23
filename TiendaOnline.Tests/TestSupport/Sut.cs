@@ -18,9 +18,19 @@ namespace TiendaOnline.Tests.TestSupport
         public static CreacionPedidoService CreacionPedido(
             TiendaContext ctx,
             IOfertaQueryService? ofertas = null)
-            => new(ctx,
-                ofertas ?? Mock.Of<IOfertaQueryService>(),
-                NullLogger<CreacionPedidoService>.Instance);
+        {
+            if (ofertas is null)
+            {
+                // El mock pelado devuelve null para el diccionario del batch;
+                // el servicio real siempre entrega un dict (vacío = sin ofertas).
+                var mock = new Mock<IOfertaQueryService>();
+                mock.Setup(x => x.ObtenerOfertasVigentesAsync(It.IsAny<IEnumerable<int>>(), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(new Dictionary<int, OfertaVigenteDto>());
+                ofertas = mock.Object;
+            }
+
+            return new(ctx, ofertas, NullLogger<CreacionPedidoService>.Instance);
+        }
 
         public static ConfirmacionPagoService ConfirmacionPago(TiendaContext ctx)
             => new(ctx,

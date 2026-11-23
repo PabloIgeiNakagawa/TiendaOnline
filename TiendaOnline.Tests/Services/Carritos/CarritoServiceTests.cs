@@ -40,6 +40,13 @@ namespace TiendaOnline.Tests.Services.Carritos
         {
             var mock = new Mock<IProductoQueryService>();
             mock.Setup(x => x.ObtenerProductoAsync(productoId)).ReturnsAsync(producto!);
+            mock.Setup(x => x.ObtenerStockPorProductosAsync(It.Is<IEnumerable<int>>(ids => ids.Contains(productoId))))
+                .ReturnsAsync(producto is null
+                    ? new Dictionary<int, ProductoStockDto>()
+                    : new Dictionary<int, ProductoStockDto>
+                    {
+                        [productoId] = new(productoId, producto.Precio, producto.Stock)
+                    });
             return mock;
         }
 
@@ -325,6 +332,33 @@ namespace TiendaOnline.Tests.Services.Carritos
 
             Assert.True(resultado.Value.TodoOK);
             Assert.Empty(resultado.Value.ItemsSinStock);
+        }
+
+        [Fact]
+        public async Task ValidarStock_ConVariosItems_LeeProductosEnUnaSolaQuery()
+        {
+            // El refresco corre en cada GET del carrito: no debe pedir la ficha
+            // completa de cada producto (con categoría e imágenes) por separado.
+            var items = new[]
+            {
+                new ItemCarrito { ProductoId = 1, Nombre = "Uno", Precio = 100m, Cantidad = 1 },
+                new ItemCarrito { ProductoId = 2, Nombre = "Dos", Precio = 200m, Cantidad = 2 }
+            };
+            var storage = MockStorage(items);
+            var productos = new Mock<IProductoQueryService>();
+            productos.Setup(x => x.ObtenerStockPorProductosAsync(It.IsAny<IEnumerable<int>>()))
+                .ReturnsAsync(new Dictionary<int, ProductoStockDto>
+                {
+                    [1] = new(1, 100m, 5),
+                    [2] = new(2, 200m, 5)
+                });
+            var sut = new CarritoService(storage.Object, productos.Object, MockOfertasVacias().Object);
+
+            var resultado = await sut.ValidarStockAsync();
+
+            Assert.True(resultado.Value.TodoOK);
+            productos.Verify(x => x.ObtenerStockPorProductosAsync(It.IsAny<IEnumerable<int>>()), Times.Once);
+            productos.Verify(x => x.ObtenerProductoAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         // ------------------------------------------------------------------

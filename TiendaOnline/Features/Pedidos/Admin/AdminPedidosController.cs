@@ -144,7 +144,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
 
         [HttpPost("[action]")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador, Repartidor")]
+        [Authorize(Roles = "Administrador,Repartidor")]
         public async Task<IActionResult> Entregar(int pedidoId)
         {
             if (pedidoId <= 0)

@@ -231,5 +231,20 @@ namespace TiendaOnline.Infrastructure.Services.Productos
                 .Select(p => p.ProductoId)
                 .ToListAsync(ct);
         }
+
+        public async Task<Dictionary<int, ProductoStockDto>> ObtenerStockPorProductosAsync(IEnumerable<int> productoIds, CancellationToken ct)
+        {
+            var ids = productoIds.Distinct().ToList();
+            if (ids.Count == 0)
+                return new Dictionary<int, ProductoStockDto>();
+
+            var filas = await _context.Productos
+                .AsNoTracking()
+                .Where(p => p.Activo && ids.Contains(p.ProductoId))
+                .Select(p => new ProductoStockDto(p.ProductoId, p.Precio, p.Stock))
+                .ToListAsync(ct);
+
+            return filas.ToDictionary(p => p.ProductoId);
+        }
     }
 }

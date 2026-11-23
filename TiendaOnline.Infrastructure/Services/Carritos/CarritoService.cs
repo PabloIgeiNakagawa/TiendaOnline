@@ -105,16 +105,16 @@ namespace TiendaOnline.Infrastructure.Services.Carritos
         {
             var carrito = await _storage.ObtenerAsync();
             var itemsSinStock = new List<StockInsuficienteDto>();
+            var ids = carrito.Select(x => x.ProductoId);
 
-            // Una única query de ofertas para todo el carrito (evita N+1:
-            // el refresco corre en el GET del carrito, del checkout y pre-crear pedido).
-            var ofertasVigentes = await _ofertaQueryService.ObtenerOfertasVigentesAsync(
-                carrito.Select(x => x.ProductoId), ct);
+            // Dos lecturas para todo el carrito: stock+precio y ofertas vigentes.
+            // El refresco corre en cada GET y no debe escalar con los ítems.
+            var productos = await _productoQueryService.ObtenerStockPorProductosAsync(ids, ct);
+            var ofertasVigentes = await _ofertaQueryService.ObtenerOfertasVigentesAsync(ids, ct);
 
             foreach (var item in carrito)
             {
-                var producto = await _productoQueryService.ObtenerProductoAsync(item.ProductoId, ct);
-                if (producto == null)
+                if (!productos.TryGetValue(item.ProductoId, out var producto))
                 {
                     itemsSinStock.Add(new StockInsuficienteDto
                     {

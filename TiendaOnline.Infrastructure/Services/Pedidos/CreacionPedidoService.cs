@@ -64,16 +64,23 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     DetallesPedido = new List<DetallePedido>()
                 };
 
+                // Dos lecturas para todo el pedido (productos y ofertas vigentes):
+                // el snapshot no depende de una query por ítem.
+                var productoIds = itemsAgrupados.Select(i => i.ProductoId).ToList();
+                var productosPorId = await _context.Productos
+                    .Where(p => productoIds.Contains(p.ProductoId))
+                    .ToDictionaryAsync(p => p.ProductoId, ct);
+                var ofertasVigentes = await _ofertaQueryService.ObtenerOfertasVigentesAsync(productoIds, ct);
+
                 foreach (var itemDto in itemsAgrupados)
                 {
                     // Guardamos el snapshot del pedido, pero el stock se reservará recién cuando el pago sea aprobado.
-                    var producto = await _context.Productos.FindAsync(itemDto.ProductoId, ct);
-                    if (producto == null)
+                    if (!productosPorId.TryGetValue(itemDto.ProductoId, out var producto))
                         throw new ProductoNoEncontradoException("Uno de los productos del carrito ya no está disponible.");
 
                     // Precio efectivo del cobro: misma regla que vio el cliente
                     // en carrito/checkout — mejor oferta vigente ?? precio de lista.
-                    var oferta = await _ofertaQueryService.ObtenerOfertaVigenteAsync(producto.ProductoId, ct);
+                    ofertasVigentes.TryGetValue(producto.ProductoId, out var oferta);
 
                     pedido.DetallesPedido.Add(new DetallePedido
                     {

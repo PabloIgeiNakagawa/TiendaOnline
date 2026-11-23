@@ -89,24 +89,18 @@ namespace TiendaOnline.Features.AppSettings
         {
             if (!ModelState.IsValid) return View(nameof(Estetica), model);
 
-            string logoUrl = model.LogoUrl ?? "";
+            var imagenesFallidas = new List<string>();
 
+            string logoUrl = model.LogoUrl ?? "";
             if (model.LogoFile != null && model.LogoFile.Length > 0)
             {
-                using (var stream = model.LogoFile.OpenReadStream())
-                {
-                    logoUrl = await _imagenService.SubirImagenAsync(stream, model.LogoFile.FileName, "Branding", ct: HttpContext.RequestAborted);
-                }
+                logoUrl = await SubirConservandoLaAnteriorAsync(model.LogoFile, logoUrl, "el logo", imagenesFallidas);
             }
 
             string favIconUrl = model.FavIconUrl ?? "";
-
             if (model.FavIconFile != null && model.FavIconFile.Length > 0)
             {
-                using (var stream = model.FavIconFile.OpenReadStream())
-                {
-                    favIconUrl = await _imagenService.SubirImagenAsync(stream, model.FavIconFile.FileName, "Branding", ct: HttpContext.RequestAborted);
-                }
+                favIconUrl = await SubirConservandoLaAnteriorAsync(model.FavIconFile, favIconUrl, "el favicon", imagenesFallidas);
             }
 
             var settingsToUpdate = new List<SettingDto>
@@ -124,8 +118,48 @@ namespace TiendaOnline.Features.AppSettings
             await _appSettingsService.RefreshCache();
 
             _logger.LogInformation("Estética del sitio actualizada por {Admin}", User.FindFirstValue(ClaimTypes.NameIdentifier));
-            TempData.SetMensajeExito("Apariencia actualizada correctamente.");
+
+            if (imagenesFallidas.Count > 0)
+            {
+                TempData.SetMensajeError(
+                    $"No se pudo subir {string.Join(" ni ", imagenesFallidas)}: se mantienen las imágenes actuales. Los demás cambios se guardaron.");
+            }
+            else
+            {
+                TempData.SetMensajeExito("Apariencia actualizada correctamente.");
+            }
+
             return RedirectToAction(nameof(Estetica));
+        }
+
+        /// <summary>
+        /// Sube la imagen y devuelve la URL nueva. Si la subida falla o no devuelve
+        /// URL, conserva la anterior y anota el nombre de la imagen para el aviso:
+        /// un logo vacío dejaría la tienda sin identidad sin que el admin se entere.
+        /// </summary>
+        private async Task<string> SubirConservandoLaAnteriorAsync(
+            IFormFile archivo, string urlActual, string descripcion, List<string> fallidas)
+        {
+            try
+            {
+                using var stream = archivo.OpenReadStream();
+                var url = await _imagenService.SubirImagenAsync(
+                    stream, archivo.FileName, "Branding", ct: HttpContext.RequestAborted);
+
+                if (!string.IsNullOrWhiteSpace(url))
+                    return url;
+
+                _logger.LogWarning("La subida de {Imagen} ({Archivo}) no devolvió URL; se conserva la anterior.",
+                    descripcion, archivo.FileName);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogError(ex, "Falló la subida de {Imagen} ({Archivo}); se conserva la anterior.",
+                    descripcion, archivo.FileName);
+            }
+
+            fallidas.Add(descripcion);
+            return urlActual;
         }
     }
 }
