@@ -81,5 +81,30 @@ namespace TiendaOnline.Tests.Services.Pedidos
             Assert.Equal(EstadoPedido.EnPreparacion,
                 (await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == aprobado.PedidoId)).Estado);
         }
+
+        [Fact]
+        public async Task CancelarPedidosVencidos_DejaFilaDeAuditoriaDeSistema()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext(); // sin sesión: job de Hangfire
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var producto = TestDatabase.SeedProducto(ctx, stock: 5);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 1,
+                fechaPedido: DateTime.Now.AddHours(-25));
+            var sut = Sut.PedidoVencimiento(ctx);
+
+            await sut.CancelarPedidosVencidosAsync();
+
+            using var verify = db.CreateContext();
+            var fila = Assert.Single(await verify.Auditorias.AsNoTracking()
+                .Where(a => a.TablaAfectada == "Pedido"
+                    && a.EntidadId == pedido.PedidoId.ToString()
+                    && a.Accion == "Sistema: Canceló Pedido por vencimiento")
+                .ToListAsync());
+
+            Assert.Null(fila.UsuarioId);
+            Assert.Contains("\"EstadoPago\":\"Pendiente\"", fila.DatosAnteriores);
+            Assert.Contains("\"Estado\":\"Cancelado\"", fila.DatosNuevos);
+        }
     }
 }

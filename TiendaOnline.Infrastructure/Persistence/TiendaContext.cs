@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Application.Common.Interfaces;
 
@@ -99,7 +97,11 @@ namespace TiendaOnline.Infrastructure.Persistence
                 if (entry.Entity is Auditoria or CarritoUsuario ||
                     entry.State is EntityState.Detached or EntityState.Unchanged)
                     continue;
-                if (entry.State == EntityState.Modified && !entry.Properties.Any(p => p.IsModified))
+                // Un Modified cuyas únicas columnas tocadas están excluidas (el hash de
+                // contraseña) no tiene datos auditables: el evento de negocio se registra
+                // explícito, no como un update vacío. También cubre el fix-up de navegaciones.
+                if (entry.State == EntityState.Modified &&
+                    !entry.Properties.Any(p => p.IsModified && !PropiedadesExcluidas.Contains(p.Metadata.Name)))
                     continue;
 
                 var nombreTabla = entry.Entity.GetType().Name;
@@ -167,10 +169,7 @@ namespace TiendaOnline.Infrastructure.Persistence
 
             // Enums legibles en la auditoría: "Estado": "EnPreparacion" en el JSON,
             // misma regla que las columnas de estados desde EstadosEnTexto.
-            return JsonConvert.SerializeObject(propiedades, new JsonSerializerSettings
-            {
-                Converters = { new StringEnumConverter() }
-            });
+            return AuditoriaJson.Serializar(propiedades);
         }
 
         public DbSet<Auditoria> Auditorias { get; set; }

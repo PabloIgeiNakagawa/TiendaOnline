@@ -13,13 +13,15 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
         private readonly TiendaContext _context;
         private readonly IPasswordHasher<Usuario> _passwordHasher;
         private readonly IEmailService _emailService;
+        private readonly IAuditoriaWriter _auditoriaWriter;
         private readonly ILogger<UsuarioCommandService> _logger;
 
-        public UsuarioCommandService(TiendaContext context, IPasswordHasher<Usuario> passwordHasher, IEmailService emailService, ILogger<UsuarioCommandService> logger)
+        public UsuarioCommandService(TiendaContext context, IPasswordHasher<Usuario> passwordHasher, IEmailService emailService, IAuditoriaWriter auditoriaWriter, ILogger<UsuarioCommandService> logger)
         {
             _context = context;
             _passwordHasher = passwordHasher;
             _emailService = emailService;
+            _auditoriaWriter = auditoriaWriter;
             _logger = logger;
         }
 
@@ -92,8 +94,32 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
             // SuccessRehashNeeded: el hash viejo quedó débil (formato anterior) — se
             // rehashea con la nueva igual que en el caso feliz, así que el uso cae en
             // el mismo HashPassword de siempre.
-            usuario.Contrasena = _passwordHasher.HashPassword(usuario, contrasenaNueva);
-            await _context.SaveChangesAsync(ct);
+            // El hash y su evento de auditoría comparten transacción: el cambio de
+            // credencial no puede quedar sin registro.
+            using var transaction = await _context.Database.BeginTransactionAsync(ct);
+
+            try
+            {
+                usuario.Contrasena = _passwordHasher.HashPassword(usuario, contrasenaNueva);
+                await _context.SaveChangesAsync(ct);
+
+                // El hash está excluido del JSON de auditoría: se registra el evento
+                // explícito sin datos para que el panel no muestre un update vacío.
+                _auditoriaWriter.Registrar(
+                    "Cambió contraseña",
+                    nameof(Usuario),
+                    usuarioId.ToString(),
+                    new { },
+                    new { });
+
+                await _context.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+            }
+            catch (Exception)
+            {
+                await TransaccionSegura.RevertirAsync(transaction, _logger, ct);
+                throw;
+            }
 
             // El cambio ya está en la base: el aviso es best-effort (regla de la
             // casa — el email va después del commit, un fallo no deshace nada).

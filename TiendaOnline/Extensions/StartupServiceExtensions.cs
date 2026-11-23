@@ -116,6 +116,9 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IAdminOverviewService, AdminOverviewService>();
             services.AddScoped<IReportesService, ReportesService>();
             services.AddScoped<IAuditoriaService, AuditoriaService>();
+            // Las transiciones con ExecuteUpdateAsync no pasan por el ChangeTracker:
+            // el writer escribe su fila en la misma transacción del cambio.
+            services.AddScoped<IAuditoriaWriter, AuditoriaWriter>();
             services.AddScoped<IMovimientoStockCommandService, MovimientoStockCommandService>();
             services.AddScoped<IMovimientoStockQueryService, MovimientoStockQueryService>();
             services.AddScoped<IAppSettingsService, AppSettingsService>();

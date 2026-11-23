@@ -11,11 +11,13 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
     public class PedidoVencimientoService : IPedidoVencimientoService
     {
         private readonly TiendaContext _context;
+        private readonly IAuditoriaWriter _auditoriaWriter;
         private readonly ILogger<PedidoVencimientoService> _logger;
 
-        public PedidoVencimientoService(TiendaContext context, ILogger<PedidoVencimientoService> logger)
+        public PedidoVencimientoService(TiendaContext context, IAuditoriaWriter auditoriaWriter, ILogger<PedidoVencimientoService> logger)
         {
             _context = context;
+            _auditoriaWriter = auditoriaWriter;
             _logger = logger;
         }
 
@@ -35,6 +37,7 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 .Select(p => new
                 {
                     p.PedidoId,
+                    p.EstadoPago,
                     Email = p.Usuario.Email,
                     Nombre = p.Usuario.Nombre,
                     Apellido = p.Usuario.Apellido,
@@ -49,25 +52,48 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
             foreach (var candidato in candidatos)
             {
-                // El UPDATE condicional repite todas las precondiciones del
-                // snapshot: si entre el snapshot y acá el pedido ganó un pago o
-                // cambió de estado, 0 filas y el pedido queda intacto.
-                var filas = await _context.Pedidos
-                    .Where(p => p.PedidoId == candidato.PedidoId
-                        && p.Estado == EstadoPedido.Nuevo
-                        && p.EstadoPago != EstadoPago.Aprobado
-                        && p.FechaPedido <= fechaLimite)
-                    .ExecuteUpdateAsync(s => s
-                        .SetProperty(p => p.Estado, EstadoPedido.Cancelado)
-                        .SetProperty(p => p.FechaCancelado, p => p.FechaCancelado ?? DateTime.Now));
+                // Cada cancelación y su fila de auditoría comparten transacción:
+                // si la auditoría falla, el pedido no queda cancelado sin rastro.
+                using var transaction = await _context.Database.BeginTransactionAsync();
 
-                if (filas == 0)
+                try
                 {
-                    _logger.LogInformation("El pedido {PedidoId} ya no está cancelable (pudo haberse pagado durante la corrida del job): no se cancela.", candidato.PedidoId);
-                    continue;
-                }
+                    // El UPDATE condicional repite todas las precondiciones del
+                    // snapshot: si entre el snapshot y acá el pedido ganó un pago o
+                    // cambió de estado, 0 filas y el pedido queda intacto.
+                    var filas = await _context.Pedidos
+                        .Where(p => p.PedidoId == candidato.PedidoId
+                            && p.Estado == EstadoPedido.Nuevo
+                            && p.EstadoPago != EstadoPago.Aprobado
+                            && p.FechaPedido <= fechaLimite)
+                        .ExecuteUpdateAsync(s => s
+                            .SetProperty(p => p.Estado, EstadoPedido.Cancelado)
+                            .SetProperty(p => p.FechaCancelado, p => p.FechaCancelado ?? DateTime.Now));
 
-                emailsVencidos.Add((candidato.Email, candidato.PedidoId, candidato.Total));
+                    if (filas == 0)
+                    {
+                        _logger.LogInformation("El pedido {PedidoId} ya no está cancelable (pudo haberse pagado durante la corrida del job): no se cancela.", candidato.PedidoId);
+                        continue;
+                    }
+
+                    // El job corre sin sesión: la fila queda marcada como Sistema.
+                    _auditoriaWriter.Registrar(
+                        "Canceló Pedido por vencimiento",
+                        nameof(Pedido),
+                        candidato.PedidoId.ToString(),
+                        new { Estado = EstadoPedido.Nuevo, EstadoPago = candidato.EstadoPago },
+                        new { Estado = EstadoPedido.Cancelado });
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    emailsVencidos.Add((candidato.Email, candidato.PedidoId, candidato.Total));
+                }
+                catch (Exception)
+                {
+                    await TransaccionSegura.RevertirAsync(transaction, _logger, default);
+                    throw;
+                }
             }
 
             // Emails recién DESPUÉS de que la escritura ganó, y por pedido ganado:

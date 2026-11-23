@@ -6,6 +6,7 @@ using TiendaOnline.Application.Common.Interfaces;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Infrastructure.Persistence;
+using TiendaOnline.Infrastructure.Services.Auditoria;
 using TiendaOnline.Infrastructure.Services.Usuarios;
 using TiendaOnline.Tests.TestSupport;
 using Xunit;
@@ -24,9 +25,14 @@ namespace TiendaOnline.Tests.Services.Usuarios
 
         private readonly Mock<IEmailService> _email = new();
 
-        private UsuarioCommandService CrearServicio(TiendaContext ctx)
-            => new(ctx, new PasswordHasher<Usuario>(), _email.Object,
-                NullLogger<UsuarioCommandService>.Instance);
+        private UsuarioCommandService CrearServicio(TiendaContext ctx, int? userId = null)
+        {
+            var session = new Mock<IUserSessionService>();
+            session.Setup(x => x.GetUserId()).Returns(userId);
+
+            return new(ctx, new PasswordHasher<Usuario>(), _email.Object,
+                new AuditoriaWriter(ctx, session.Object), NullLogger<UsuarioCommandService>.Instance);
+        }
 
         /// <summary>Siembra un usuario con la contraseña actual hasheada de verdad.</summary>
         private static Usuario SeedConHash(TiendaContext ctx, string contrasenaActual)
@@ -95,6 +101,30 @@ namespace TiendaOnline.Tests.Services.Usuarios
             // Regla de la casa: el email es best-effort y va después del commit.
             Assert.Equal(PasswordVerificationResult.Success,
                 new PasswordHasher<Usuario>().VerifyHashedPassword(guardado, guardado.Contrasena, Nueva));
+        }
+
+        [Fact]
+        public async Task CambiarPassword_DejaEventoExplicitoSinDatos()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = SeedConHash(ctx, Actual);
+
+            await CrearServicio(ctx, usuario.UsuarioId)
+                .CambiarPasswordAsync(usuario.UsuarioId, Actual, Nueva);
+
+            using var verify = db.CreateContext();
+            var filas = await verify.Auditorias.AsNoTracking()
+                .Where(a => a.TablaAfectada == "Usuario" && a.EntidadId == usuario.UsuarioId.ToString())
+                .ToListAsync();
+
+            // El hash está excluido del JSON: el cambio se ve como evento de negocio,
+            // no como un "Actualizó Usuario" con {} / {}.
+            var evento = Assert.Single(filas.Where(a => a.Accion == "Cambió contraseña"));
+            Assert.Equal("{}", evento.DatosAnteriores);
+            Assert.Equal("{}", evento.DatosNuevos);
+            Assert.Equal(usuario.UsuarioId, evento.UsuarioId);
+            Assert.DoesNotContain(filas, a => a.Accion.EndsWith("Actualizó Usuario"));
         }
 
         [Fact]

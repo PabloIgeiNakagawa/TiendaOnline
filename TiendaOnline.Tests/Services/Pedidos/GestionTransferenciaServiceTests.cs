@@ -335,6 +335,32 @@ namespace TiendaOnline.Tests.Services.Pedidos
         }
 
         [Fact]
+        public async Task RechazarComprobante_DejaFilaDeAuditoriaConUsuario()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var (usuario, _, pedido) = SeedEscenario(ctx);
+
+            var imagen = new Mock<IImagenService>();
+            imagen.Setup(x => x.ExtraerPublicIdDesdeUrl(UrlComprobante)).Returns(PublicIdComprobante);
+            var sut = Sut.GestionTransferencia(ctx, imagen: imagen, userId: usuario.UsuarioId);
+
+            await sut.RechazarComprobanteTransferenciaAsync(pedido.PedidoId);
+
+            using var verify = db.CreateContext();
+            var fila = Assert.Single(await verify.Auditorias.AsNoTracking()
+                .Where(a => a.TablaAfectada == "Pedido"
+                    && a.EntidadId == pedido.PedidoId.ToString()
+                    && a.Accion == "Rechazó comprobante de Pedido")
+                .ToListAsync());
+
+            Assert.Equal(usuario.UsuarioId, fila.UsuarioId);
+            Assert.Contains("\"EstadoPago\":\"Pendiente\"", fila.DatosAnteriores);
+            Assert.Contains("\"Estado\":\"Cancelado\"", fila.DatosNuevos);
+            Assert.Contains("\"EstadoPago\":\"Rechazado\"", fila.DatosNuevos);
+        }
+
+        [Fact]
         public async Task RechazarComprobante_SinComprobante_LanzaYNoCambiaEstado()
         {
             using var db = new TestDatabase();

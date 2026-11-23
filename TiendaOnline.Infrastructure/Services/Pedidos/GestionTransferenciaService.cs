@@ -17,14 +17,16 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
         private readonly IMovimientoStockCommandService _movimientoStockCommandService;
         private readonly IImagenService _imagenService;
         private readonly IAppSettingsService _appSettings;
+        private readonly IAuditoriaWriter _auditoriaWriter;
         private readonly ILogger<GestionTransferenciaService> _logger;
 
-        public GestionTransferenciaService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, IImagenService imagenService, IAppSettingsService appSettings, ILogger<GestionTransferenciaService> logger)
+        public GestionTransferenciaService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, IImagenService imagenService, IAppSettingsService appSettings, IAuditoriaWriter auditoriaWriter, ILogger<GestionTransferenciaService> logger)
         {
             _context = context;
             _movimientoStockCommandService = movimientoStockCommandService;
             _imagenService = imagenService;
             _appSettings = appSettings;
+            _auditoriaWriter = auditoriaWriter;
             _logger = logger;
         }
 
@@ -233,6 +235,16 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                     .Where(x => !string.IsNullOrWhiteSpace(x)));
                 totalCalculado = pedido.DetallesPedido.Sum(d => d.Cantidad * d.PrecioUnitario) + pedido.CostoEnvio;
 
+                // El pedido se leyó sin tracking y la transición va por ExecuteUpdate:
+                // la fila de auditoría se escribe a mano en la misma transacción.
+                _auditoriaWriter.Registrar(
+                    "Rechazó comprobante de Pedido",
+                    nameof(Pedido),
+                    pedidoId.ToString(),
+                    new { Estado = pedido.Estado, EstadoPago = EstadoPago.Pendiente },
+                    new { Estado = EstadoPedido.Cancelado, EstadoPago = EstadoPago.Rechazado });
+
+                await _context.SaveChangesAsync(ct);
                 await transaction.CommitAsync(ct);
             }
             catch (Exception)

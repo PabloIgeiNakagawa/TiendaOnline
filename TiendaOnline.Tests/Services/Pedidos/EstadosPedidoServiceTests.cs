@@ -189,6 +189,82 @@ namespace TiendaOnline.Tests.Services.Pedidos
         }
 
         [Fact]
+        public async Task PedidoEnviado_DejaFilaDeAuditoriaConUsuarioYEstados()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var producto = TestDatabase.SeedProducto(ctx, stock: 5);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 1,
+                estado: EstadoPedido.EnPreparacion);
+            var sut = Sut.EstadosPedido(ctx, usuario.UsuarioId);
+
+            await sut.PedidoEnviadoAsync(pedido.PedidoId);
+
+            using var verify = db.CreateContext();
+            var fila = Assert.Single(await verify.Auditorias.AsNoTracking()
+                .Where(a => a.TablaAfectada == "Pedido"
+                    && a.EntidadId == pedido.PedidoId.ToString()
+                    && a.Accion == "Envió Pedido")
+                .ToListAsync());
+
+            Assert.Equal(usuario.UsuarioId, fila.UsuarioId);
+            Assert.Contains("\"Estado\":\"EnPreparacion\"", fila.DatosAnteriores);
+            Assert.Contains("\"Estado\":\"Enviado\"", fila.DatosNuevos);
+            Assert.Contains("\"FechaEnvio\"", fila.DatosNuevos);
+        }
+
+        [Fact]
+        public async Task PedidoEntregado_DejaFilaDeAuditoriaConUsuarioYEstados()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var producto = TestDatabase.SeedProducto(ctx, stock: 5);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 1,
+                estado: EstadoPedido.Enviado);
+            var sut = Sut.EstadosPedido(ctx, usuario.UsuarioId);
+
+            await sut.PedidoEntregadoAsync(pedido.PedidoId);
+
+            using var verify = db.CreateContext();
+            var fila = Assert.Single(await verify.Auditorias.AsNoTracking()
+                .Where(a => a.TablaAfectada == "Pedido"
+                    && a.EntidadId == pedido.PedidoId.ToString()
+                    && a.Accion == "Entregó Pedido")
+                .ToListAsync());
+
+            Assert.Equal(usuario.UsuarioId, fila.UsuarioId);
+            Assert.Contains("\"Estado\":\"Enviado\"", fila.DatosAnteriores);
+            Assert.Contains("\"Estado\":\"Entregado\"", fila.DatosNuevos);
+            Assert.Contains("\"FechaEntrega\"", fila.DatosNuevos);
+        }
+
+        [Fact]
+        public async Task PedidoEnviado_DobleClick_DejaUnaSolaFilaDeAuditoria()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var producto = TestDatabase.SeedProducto(ctx, stock: 5);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, cantidad: 1,
+                estado: EstadoPedido.EnPreparacion);
+            var sut = Sut.EstadosPedido(ctx, usuario.UsuarioId);
+
+            await sut.PedidoEnviadoAsync(pedido.PedidoId);
+            await Assert.ThrowsAsync<PedidoNoCancelableException>(
+                () => sut.PedidoEnviadoAsync(pedido.PedidoId));
+
+            using var verify = db.CreateContext();
+            var filas = await verify.Auditorias.AsNoTracking()
+                .Where(a => a.TablaAfectada == "Pedido"
+                    && a.EntidadId == pedido.PedidoId.ToString()
+                    && a.Accion == "Envió Pedido")
+                .ToListAsync();
+            Assert.Single(filas); // el que pierde el claim no escribe auditoría
+        }
+
+        [Fact]
         public async Task PedidoEntregado_DobleClick_EncolaElAvisoUnaSolaVez()
         {
             using var db = new TestDatabase();

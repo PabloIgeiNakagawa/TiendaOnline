@@ -14,32 +14,57 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
     {
         private readonly TiendaContext _context;
         private readonly IMovimientoStockCommandService _movimientoStockCommandService;
+        private readonly IAuditoriaWriter _auditoriaWriter;
         private readonly ILogger<EstadosPedidoService> _logger;
 
-        public EstadosPedidoService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, ILogger<EstadosPedidoService> logger)
+        public EstadosPedidoService(TiendaContext context, IMovimientoStockCommandService movimientoStockCommandService, IAuditoriaWriter auditoriaWriter, ILogger<EstadosPedidoService> logger)
         {
             _context = context;
             _movimientoStockCommandService = movimientoStockCommandService;
+            _auditoriaWriter = auditoriaWriter;
             _logger = logger;
         }
 
         public async Task PedidoEnviadoAsync(int pedidoId, CancellationToken ct = default)
         {
-            // Guard por escritura: el UPDATE condicional adjudica la transición
-            // una sola vez; 0 filas = otro request ya cambió el estado y se
-            // informa con el estado real, sin re-escribir encima de él.
-            var filasEnviado = await _context.Pedidos
-                .Where(p => p.PedidoId == pedidoId && p.Estado == EstadoPedido.EnPreparacion)
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(p => p.Estado, EstadoPedido.Enviado)
-                    .SetProperty(p => p.FechaEnvio, DateTime.Now), ct);
+            // La transición y su fila de auditoría comparten transacción: no puede
+            // quedar un pedido enviado sin el registro de quién lo hizo.
+            using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
-            if (filasEnviado == 0)
+            try
             {
-                var estadoReal = await EstadoRealDelPedido.LeerAsync(_context, pedidoId, ct);
-                if (estadoReal == null) throw new PedidoNoEncontradoException("Pedido no encontrado.");
+                // Guard por escritura: el UPDATE condicional adjudica la transición
+                // una sola vez; 0 filas = otro request ya cambió el estado y se
+                // informa con el estado real, sin re-escribir encima de él.
+                var fechaEnvio = DateTime.Now;
+                var filasEnviado = await _context.Pedidos
+                    .Where(p => p.PedidoId == pedidoId && p.Estado == EstadoPedido.EnPreparacion)
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(p => p.Estado, EstadoPedido.Enviado)
+                        .SetProperty(p => p.FechaEnvio, fechaEnvio), ct);
 
-                throw new PedidoNoCancelableException($"El pedido no se puede enviar porque no está en preparación (Estado actual: {estadoReal.Estado}).");
+                if (filasEnviado == 0)
+                {
+                    var estadoReal = await EstadoRealDelPedido.LeerAsync(_context, pedidoId, ct);
+                    if (estadoReal == null) throw new PedidoNoEncontradoException("Pedido no encontrado.");
+
+                    throw new PedidoNoCancelableException($"El pedido no se puede enviar porque no está en preparación (Estado actual: {estadoReal.Estado}).");
+                }
+
+                _auditoriaWriter.Registrar(
+                    "Envió Pedido",
+                    nameof(Pedido),
+                    pedidoId.ToString(),
+                    new { Estado = EstadoPedido.EnPreparacion },
+                    new { Estado = EstadoPedido.Enviado, FechaEnvio = fechaEnvio });
+
+                await _context.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+            }
+            catch (Exception)
+            {
+                await TransaccionSegura.RevertirAsync(transaction, _logger, ct);
+                throw;
             }
         }
 
@@ -53,23 +78,44 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 .Select(p => new { Email = p.Usuario.Email, p.Usuario.Nombre, p.Usuario.Apellido })
                 .FirstOrDefaultAsync(ct);
 
-            var filasEntregado = await _context.Pedidos
-                .Where(p => p.PedidoId == pedidoId && p.Estado == EstadoPedido.Enviado)
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(p => p.Estado, EstadoPedido.Entregado)
-                    .SetProperty(p => p.FechaEntrega, DateTime.Now), ct);
+            using var transaction = await _context.Database.BeginTransactionAsync(ct);
 
-            if (filasEntregado == 0)
+            try
             {
-                var estadoReal = await EstadoRealDelPedido.LeerAsync(_context, pedidoId, ct);
-                if (estadoReal == null) throw new PedidoNoEncontradoException("Pedido no encontrado.");
+                var fechaEntrega = DateTime.Now;
+                var filasEntregado = await _context.Pedidos
+                    .Where(p => p.PedidoId == pedidoId && p.Estado == EstadoPedido.Enviado)
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(p => p.Estado, EstadoPedido.Entregado)
+                        .SetProperty(p => p.FechaEntrega, fechaEntrega), ct);
 
-                throw new PedidoNoCancelableException($"No se puede entregar: el pedido aún figura como {estadoReal.Estado}.");
+                if (filasEntregado == 0)
+                {
+                    var estadoReal = await EstadoRealDelPedido.LeerAsync(_context, pedidoId, ct);
+                    if (estadoReal == null) throw new PedidoNoEncontradoException("Pedido no encontrado.");
+
+                    throw new PedidoNoCancelableException($"No se puede entregar: el pedido aún figura como {estadoReal.Estado}.");
+                }
+
+                _auditoriaWriter.Registrar(
+                    "Entregó Pedido",
+                    nameof(Pedido),
+                    pedidoId.ToString(),
+                    new { Estado = EstadoPedido.Enviado },
+                    new { Estado = EstadoPedido.Entregado, FechaEntrega = fechaEntrega });
+
+                await _context.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+            }
+            catch (Exception)
+            {
+                await TransaccionSegura.RevertirAsync(transaction, _logger, ct);
+                throw;
             }
 
             // La entrega la marca el reparto (rol Repartidor) o el admin desde el panel;
             // ambos comparten este mismo caso de uso con los mismos guards.
-            // Email del ganador del claim, recién después de la escritura: el que
+            // Email del ganador del claim, recién después del commit: el que
             // pierde un doble click no encola un segundo aviso de entrega.
             var nombreCompletoUsuario = string.Join(" ", new[] { aviso?.Nombre, aviso?.Apellido }
                 .Where(x => !string.IsNullOrWhiteSpace(x)));
