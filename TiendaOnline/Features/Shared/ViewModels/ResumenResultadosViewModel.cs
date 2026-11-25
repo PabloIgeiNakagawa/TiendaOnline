@@ -12,9 +12,18 @@
 
     public class FiltroPill
     {
+        public FiltroPill(string icono, string etiqueta, string? valor, string propiedad, params string[] propiedadesAdicionales)
+        {
+            Icono = icono;
+            Etiqueta = etiqueta;
+            Valor = valor;
+            Propiedad = propiedad;
+            PropiedadesAdicionales = propiedadesAdicionales.ToList();
+        }
+
         public string Icono { get; set; } // Ej: "bi-search"
         public string Etiqueta { get; set; } // Ej: "Búsqueda"
-        public string Valor { get; set; } // Ej: "Zapatos"
+        public string? Valor { get; set; } // Ej: "Zapatos"; null/vacío = filtro inactivo
         public string Propiedad { get; set; } // Para el botón de eliminar (X)
         // Parámetros extra que limpia la misma X (la píldora de precio saca precioMin y precioMax juntos)
         public List<string> PropiedadesAdicionales { get; set; } = new();

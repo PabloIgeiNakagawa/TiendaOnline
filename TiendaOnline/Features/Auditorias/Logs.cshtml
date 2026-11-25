@@ -4,22 +4,17 @@
 @{
     ViewData[ViewDataKeys.Title] = "Auditoría del Sistema";
 
-    var filtrosActivos = new List<FiltroPill>();
-
-    if (!string.IsNullOrEmpty(Model.Busqueda))
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Auditorías", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
-
-    if (!string.IsNullOrEmpty(Model.TablaAfectada))
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-table", Etiqueta = "Entidad", Valor = Model.TablaAfectada, Propiedad = nameof(Model.TablaAfectada) });
-
-    if (!string.IsNullOrEmpty(Model.EntidadId))
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-hash", Etiqueta = "ID", Valor = Model.EntidadId, Propiedad = nameof(Model.EntidadId) });
-
-    if (Model.FechaDesde.HasValue)
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Desde", Valor = Model.FechaDesde.Value.ToShortDateString(), Propiedad = nameof(Model.FechaDesde) });
-
-    if (Model.FechaHasta.HasValue)
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Hasta", Valor = Model.FechaHasta.Value.ToShortDateString(), Propiedad = nameof(Model.FechaHasta) });
+    // Se declaran todas las pills posibles: el filtro final descarta las que no tienen valor.
+    var filtrosActivos = new List<FiltroPill>
+    {
+        new("bi-search", "Auditorías", Model.Busqueda, nameof(Model.Busqueda)),
+        new("bi-table", "Entidad", Model.TablaAfectada, nameof(Model.TablaAfectada)),
+        new("bi-hash", "ID", Model.EntidadId, nameof(Model.EntidadId)),
+        new("bi-calendar-event", "Desde", Model.FechaDesde?.ToString("dd/MM/yyyy"), nameof(Model.FechaDesde)),
+        new("bi-calendar-event", "Hasta", Model.FechaHasta?.ToString("dd/MM/yyyy"), nameof(Model.FechaHasta)),
+    }
+    .Where(filtro => !string.IsNullOrWhiteSpace(filtro.Valor))
+    .ToList();
 }
 
 <div class="container-fluid py-4">

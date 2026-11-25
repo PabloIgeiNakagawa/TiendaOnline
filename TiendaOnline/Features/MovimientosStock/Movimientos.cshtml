@@ -5,22 +5,18 @@
 @{
     ViewData[ViewDataKeys.Title] = "Movimientos";
 
-    var filtrosActivos = new List<FiltroPill>();
+    var nombreTipo = Model.TiposMovimiento.FirstOrDefault(t => t.Id == Model.TipoMovimientoId)?.Nombre;
 
-    if (!string.IsNullOrEmpty(Model.Busqueda))
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Producto", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
-
-    if (Model.TipoMovimientoId.HasValue)
+    // Se declaran todas las pills posibles: el filtro final descarta las que no tienen valor.
+    var filtrosActivos = new List<FiltroPill>
     {
-        var nombreTipo = Model.TiposMovimiento.FirstOrDefault(t => t.Id == Model.TipoMovimientoId)?.Nombre;
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-tag", Etiqueta = "Tipo", Valor = nombreTipo, Propiedad = nameof(Model.TipoMovimientoId) });
+        new("bi-search", "Producto", Model.Busqueda, nameof(Model.Busqueda)),
+        new("bi-tag", "Tipo", nombreTipo, nameof(Model.TipoMovimientoId)),
+        new("bi-calendar-event", "Desde", Model.Desde?.ToString("dd/MM/yyyy"), nameof(Model.Desde)),
+        new("bi-calendar-event", "Hasta", Model.Hasta?.ToString("dd/MM/yyyy"), nameof(Model.Hasta)),
     }
-
-    if (Model.Desde.HasValue)
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Desde", Valor = Model.Desde.Value.ToShortDateString(), Propiedad = nameof(Model.Desde) });
-
-    if (Model.Hasta.HasValue)
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Hasta", Valor = Model.Hasta.Value.ToShortDateString(), Propiedad = nameof(Model.Hasta) });
+    .Where(filtro => !string.IsNullOrWhiteSpace(filtro.Valor))
+    .ToList();
 }
 
 <div class="container-fluid py-4">

@@ -4,18 +4,15 @@
 @{
     ViewData[ViewDataKeys.Title] = "Gestión de Usuarios";
 
-    var filtrosActivos = new List<FiltroPill>();
-
-    if (!string.IsNullOrEmpty(Model.Busqueda))
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Producto", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
-
-    if (!string.IsNullOrEmpty(Model.Rol))
+    // Se declaran todas las pills posibles: el filtro final descarta las que no tienen valor.
+    var filtrosActivos = new List<FiltroPill>
     {
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-shield", Etiqueta = "Rol", Valor = Model.Rol, Propiedad = nameof(Model.Rol) });
+        new("bi-search", "Producto", Model.Busqueda, nameof(Model.Busqueda)),
+        new("bi-shield", "Rol", Model.Rol, nameof(Model.Rol)),
+        new("bi-toggle-on", "Estado", Model.Estado.HasValue ? (Model.Estado.Value ? "Activo" : "Inactivo") : null, nameof(Model.Estado)),
     }
-
-    if (Model.Estado.HasValue)
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-toggle-on", Etiqueta = "Estado", Valor = Model.Estado == true ? "Activo" : Model.Estado == false ? "Inactivo" : "", Propiedad = nameof(Model.Estado) });
+    .Where(filtro => !string.IsNullOrWhiteSpace(filtro.Valor))
+    .ToList();
 }
 
 <div class="container-fluid py-4">

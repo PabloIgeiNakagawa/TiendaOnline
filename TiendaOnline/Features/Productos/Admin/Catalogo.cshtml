@@ -4,19 +4,18 @@
 @{
     ViewData[ViewDataKeys.Title] = "Catálogo";
 
-    var filtrosActivos = new List<FiltroPill>();
+    var categoriaNombre = Model.Categorias.FirstOrDefault(c => c.CategoriaId == Model.CategoriaId)?.Nombre;
 
-    if (!string.IsNullOrEmpty(Model.Busqueda))
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Producto", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
-
-    @if (Model.CategoriaId.HasValue)
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-tag", Etiqueta = "Categoría", Valor = Model.Categorias.FirstOrDefault(c => c.CategoriaId == Model.CategoriaId)?.Nombre, Propiedad = nameof(Model.CategoriaId) });
-    
-    @if (!string.IsNullOrEmpty(Model.Stock))
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-boxes", Etiqueta = "Stock", Valor = Model.Stock, Propiedad = nameof(Model.Stock) });
-
-    @if (Model.Estado != null)
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-toggle-on", Etiqueta = "Estado", Valor = Model.Estado, Propiedad = nameof(Model.Estado) });
+    // Se declaran todas las pills posibles: el filtro final descarta las que no tienen valor.
+    var filtrosActivos = new List<FiltroPill>
+    {
+        new("bi-search", "Producto", Model.Busqueda, nameof(Model.Busqueda)),
+        new("bi-tag", "Categoría", categoriaNombre, nameof(Model.CategoriaId)),
+        new("bi-boxes", "Stock", Model.Stock, nameof(Model.Stock)),
+        new("bi-toggle-on", "Estado", Model.Estado, nameof(Model.Estado)),
+    }
+    .Where(filtro => !string.IsNullOrWhiteSpace(filtro.Valor))
+    .ToList();
 }
 
 <div class="container-fluid py-4">

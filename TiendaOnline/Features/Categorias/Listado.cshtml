@@ -4,13 +4,14 @@
 @{
     ViewData[ViewDataKeys.Title] = "Gestión de Categorías";
 
-    var filtrosActivos = new List<FiltroPill>();
-
-    if (!string.IsNullOrEmpty(Model.Busqueda))
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Categoría", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
-
-    if (!string.IsNullOrEmpty(Model.Nivel))
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-diagram-3", Etiqueta = "Nivel", Valor = Model.Nivel, Propiedad = nameof(Model.Nivel) });
+    // Se declaran todas las pills posibles: el filtro final descarta las que no tienen valor.
+    var filtrosActivos = new List<FiltroPill>
+    {
+        new("bi-search", "Categoría", Model.Busqueda, nameof(Model.Busqueda)),
+        new("bi-diagram-3", "Nivel", Model.Nivel, nameof(Model.Nivel)),
+    }
+    .Where(filtro => !string.IsNullOrWhiteSpace(filtro.Valor))
+    .ToList();
 
 }
 

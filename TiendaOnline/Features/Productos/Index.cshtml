@@ -21,67 +21,44 @@
 
     // Pills de filtros activos: el parcial compartido _FiltrosAplicados arma cada X
     // (reconstruye la query actual sin SU parámetro y vuelve a la página 1)
-    var pillsFiltros = new List<FiltroPill>();
+    var catActiva = Model.CategoriasRaiz.FirstOrDefault(c => c.CategoriaId == Model.CategoriaId)
+        ?? Model.CategoriasRaiz.SelectMany(c => c.Subcategorias)
+            .FirstOrDefault(s => s.CategoriaId == Model.CategoriaId);
 
-    if (!string.IsNullOrEmpty(Model.Busqueda))
+    string? valorPrecio = null;
+    if (Model.PrecioMin.HasValue && Model.PrecioMax.HasValue)
     {
-        pillsFiltros.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Búsqueda", Valor = Model.Busqueda, Propiedad = "busqueda" });
+        valorPrecio = $"${Model.PrecioMin.Value:N0} – ${Model.PrecioMax.Value:N0}";
+    }
+    else if (Model.PrecioMin.HasValue)
+    {
+        valorPrecio = $"desde ${Model.PrecioMin.Value:N0}";
+    }
+    else if (Model.PrecioMax.HasValue)
+    {
+        valorPrecio = $"hasta ${Model.PrecioMax.Value:N0}";
     }
 
-    if (Model.CategoriaId.HasValue)
-    {
-        var catActiva = Model.CategoriasRaiz.FirstOrDefault(c => c.CategoriaId == Model.CategoriaId.Value)
-            ?? Model.CategoriasRaiz.SelectMany(c => c.Subcategorias)
-                .FirstOrDefault(s => s.CategoriaId == Model.CategoriaId.Value);
-
-        if (catActiva != null)
-        {
-            pillsFiltros.Add(new FiltroPill { Icono = "bi-tags", Etiqueta = "Categoría", Valor = catActiva.Nombre, Propiedad = "categoriaId" });
-        }
-    }
-
-    if (Model.PrecioMin.HasValue || Model.PrecioMax.HasValue)
-    {
-        string valorPrecio;
-        if (Model.PrecioMin.HasValue && Model.PrecioMax.HasValue)
-        {
-            valorPrecio = $"${Model.PrecioMin.Value:N0} – ${Model.PrecioMax.Value:N0}";
-        }
-        else if (Model.PrecioMin.HasValue)
-        {
-            valorPrecio = $"desde ${Model.PrecioMin.Value:N0}";
-        }
-        else
-        {
-            valorPrecio = $"hasta ${Model.PrecioMax.Value:N0}";
-        }
-
-        // Una sola X saca los dos extremos del rango
-        pillsFiltros.Add(new FiltroPill
-        {
-            Icono = "bi-currency-dollar",
-            Etiqueta = "Precio",
-            Valor = valorPrecio,
-            Propiedad = "precioMin",
-            PropiedadesAdicionales = { "precioMax" }
-        });
-    }
-
+    string? ordenPill = null;
     if (!string.IsNullOrEmpty(Model.Orden) && Model.Orden != "nombre")
     {
-        pillsFiltros.Add(new FiltroPill
-        {
-            Icono = "bi-sort-down",
-            Etiqueta = "Orden",
-            Valor = Model.Orden == "precio-desc" ? "Mayor a Menor" : "Menor a Mayor",
-            Propiedad = "orden"
-        });
+        ordenPill = Model.Orden == "precio-desc" ? "Mayor a Menor" : "Menor a Mayor";
     }
 
+    // Se declaran todas las pills posibles: el filtro final descarta las que no tienen valor.
+    var pillsFiltros = new List<FiltroPill>
+    {
+        new("bi-search", "Búsqueda", Model.Busqueda, "busqueda"),
+        new("bi-tags", "Categoría", catActiva?.Nombre, "categoriaId"),
+        // Una sola X saca los dos extremos del rango
+        new("bi-currency-dollar", "Precio", valorPrecio, "precioMin", "precioMax"),
+        new("bi-sort-down", "Orden", ordenPill, "orden"),
+    }
+    .Where(filtro => !string.IsNullOrWhiteSpace(filtro.Valor))
+    .ToList();
+
     // Contador para el botón Filtros del mobile (el orden no cuenta: nunca filtra resultados)
-    var filtrosActivos = (string.IsNullOrEmpty(Model.Busqueda) ? 0 : 1)
-        + (Model.CategoriaId.HasValue ? 1 : 0)
-        + (Model.PrecioMin.HasValue || Model.PrecioMax.HasValue ? 1 : 0);
+    var filtrosActivos = pillsFiltros.Count(p => p.Propiedad != "orden");
 }
 
 @section Styles {

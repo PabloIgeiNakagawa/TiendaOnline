@@ -43,6 +43,23 @@ namespace TiendaOnline.Tests.Integration
         }
 
         [Fact]
+        public async Task Movimientos_SinFiltros_NoRenderizaPills()
+        {
+            _app.ResetMocks();
+            var adminId = _app.WithDb(ctx =>
+                TestDatabase.SeedUsuario(ctx, "pills-sin-filtros@test.local", Rol.Administrador).UsuarioId);
+
+            var client = _app.CreateClientAs(adminId, new[] { "Administrador" });
+            var respuesta = await client.GetAsync("/admin/MovimientosStock/Movimientos");
+
+            Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
+            var html = await respuesta.Content.ReadAsStringAsync();
+            // Las pills sin valor se descartan antes del parcial: ni pill ni Limpiar todo.
+            Assert.DoesNotContain("Quitar filtro", html);
+            Assert.DoesNotContain("Limpiar todo", html);
+        }
+
+        [Fact]
         public async Task ListadoPedidos_ConDosFiltros_CadaXLimpiaSoloElSuyo()
         {
             _app.ResetMocks();

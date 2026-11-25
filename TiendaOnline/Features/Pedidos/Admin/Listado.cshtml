@@ -6,35 +6,19 @@
 @{
     ViewData[ViewDataKeys.Title] = "Gestión de Pedidos";
 
-    var filtrosActivos = new List<FiltroPill>();
-
-    if (!string.IsNullOrEmpty(Model.Busqueda))
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-search", Etiqueta = "Producto", Valor = Model.Busqueda, Propiedad = nameof(Model.Busqueda) });
-
-    if (Model.EstadoId.HasValue) 
+    // Se declaran todas las pills posibles: el filtro final descarta las que no tienen valor.
+    var filtrosActivos = new List<FiltroPill>
     {
-        var estadoEnum = (EstadoPedido)Model.EstadoId.Value;
-        string nombreEstado = estadoEnum.GetDisplayName();
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-app-indicator", Etiqueta = "Estado", Valor = nombreEstado, Propiedad = nameof(Model.EstadoId) });
+        new("bi-search", "Producto", Model.Busqueda, nameof(Model.Busqueda)),
+        new("bi-app-indicator", "Estado", Model.EstadoId.HasValue ? ((EstadoPedido)Model.EstadoId.Value).GetDisplayName() : null, nameof(Model.EstadoId)),
+        new("bi-cash-stack", "Pago", Model.EstadoPagoId.HasValue ? ((EstadoPago)Model.EstadoPagoId.Value).GetDisplayName() : null, nameof(Model.EstadoPagoId)),
+        new("bi-currency-dollar", "Mínimo", Model.MontoMin > 0 ? Model.MontoMin.Value.ToString("C0") : null, nameof(Model.MontoMin)),
+        new("bi-currency-dollar", "Máximo", Model.MontoMax > 0 ? Model.MontoMax.Value.ToString("C0") : null, nameof(Model.MontoMax)),
+        new("bi-calendar-event", "Desde", Model.FechaDesde?.ToString("dd/MM/yyyy"), nameof(Model.FechaDesde)),
+        new("bi-calendar-event", "Hasta", Model.FechaHasta?.ToString("dd/MM/yyyy"), nameof(Model.FechaHasta)),
     }
-
-    if (Model.EstadoPagoId.HasValue) 
-    {
-        string nombrePago = ((EstadoPago)Model.EstadoPagoId.Value).GetDisplayName();
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-cash-stack", Etiqueta = "Pago", Valor = nombrePago, Propiedad = nameof(Model.EstadoPagoId) });
-    }
-
-    if (Model.MontoMin.HasValue && Model.MontoMin > 0)
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-currency-dollar", Etiqueta = "Mínimo", Valor = $"$ {Model.MontoMin:N0}", Propiedad = nameof(Model.MontoMin) });
-
-    if (Model.MontoMax.HasValue && Model.MontoMax > 0)
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-currency-dollar", Etiqueta = "Máximo", Valor = $"$ {Model.MontoMax:N0}", Propiedad = nameof(Model.MontoMax) });
-
-    if (Model.FechaDesde.HasValue)
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Desde", Valor = Model.FechaDesde.Value.ToShortDateString(), Propiedad = nameof(Model.FechaDesde) });
-
-    if (Model.FechaHasta.HasValue)
-        filtrosActivos.Add(new FiltroPill { Icono = "bi-calendar-event", Etiqueta = "Hasta", Valor = Model.FechaHasta.Value.ToShortDateString(), Propiedad = nameof(Model.FechaHasta) });
+    .Where(filtro => !string.IsNullOrWhiteSpace(filtro.Valor))
+    .ToList();
 }
 
 <div class="container-fluid py-4">
