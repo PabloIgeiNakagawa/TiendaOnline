@@ -6,13 +6,15 @@
 
         const pedidoId = btn.dataset.id;
         const accion = btn.dataset.accion;
+        // EnPreparacion siempre está cobrado: cancelar ahí reembolsa (el modal lo avisa).
+        const esCobrado = btn.dataset.cobrado === "true";
 
-        mostrarModalCambioEstado(pedidoId, accion);
+        mostrarModalCambioEstado(pedidoId, accion, esCobrado);
     });
 
 });
 
-function mostrarModalCambioEstado(pedidoId, accion) {
+function mostrarModalCambioEstado(pedidoId, accion, esCobrado = false) {
 
     const modal = new bootstrap.Modal(document.getElementById("modalCambioEstado"));
     const mensaje = document.getElementById("mensajeCambioEstado");
@@ -37,13 +39,21 @@ function mostrarModalCambioEstado(pedidoId, accion) {
             texto: "Marcar como Entregado",
             formId: `entregarPedido${pedidoId}`
         },
-        cancelar: {
-            mensaje: `¿Estás seguro de cancelar el pedido #${numeroFormateado}?`,
-            icono: "bi bi-x-circle text-danger display-4",
-            botonClase: "btn btn-danger",
-            texto: "Cancelar Pedido",
-            formId: `cancelarPedido${pedidoId}`
-        },
+        cancelar: esCobrado
+            ? {
+                mensaje: `El pago del pedido #${numeroFormateado} ya está cobrado. Al cancelarlo, el pago queda Reembolsado, el stock se devuelve y el cliente recibe el aviso por email. ¿Cancelamos?`,
+                icono: "bi bi-x-circle text-danger display-4",
+                botonClase: "btn btn-danger",
+                texto: "Cancelar y Reembolsar",
+                formId: `cancelarPedido${pedidoId}`
+            }
+            : {
+                mensaje: `¿Estás seguro de cancelar el pedido #${numeroFormateado}?`,
+                icono: "bi bi-x-circle text-danger display-4",
+                botonClase: "btn btn-danger",
+                texto: "Cancelar Pedido",
+                formId: `cancelarPedido${pedidoId}`
+            },
         aprobarPago: {
             mensaje: `¿Confirmás el pago por transferencia del pedido #${numeroFormateado}? Reserva el stock y pasa el pedido a preparación.`,
             icono: "bi bi-cash-coin text-primary display-4",

@@ -317,6 +317,18 @@
                                                     }
 
                                                     <button type="button"
+                                                            class="btn btn-outline-danger btn-sm rounded-2 shadow-sm btn-cambio-estado"
+                                                            data-id="@pedido.PedidoId"
+                                                            data-accion="cancelar"
+                                                            data-bs-toggle="tooltip"
+                                                            data-bs-placement="top"
+                                                            title="Cancelar pedido">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </button>
+                                                }
+                                                else if (pedido.EstadoId == (int)EstadoPedido.EnPreparacion)
+                                                {
+                                                    <button type="button"
                                                             class="btn btn-outline-success btn-sm rounded-2 shadow-sm btn-cambio-estado"
                                                             data-id="@pedido.PedidoId"
                                                             data-accion="enviar"
@@ -326,13 +338,15 @@
                                                         <i class="bi bi-truck"></i>
                                                     </button>
 
+                                                    @* EnPreparacion siempre implica pago aprobado: cancelar acá reembolsa. *@
                                                     <button type="button"
                                                             class="btn btn-outline-danger btn-sm rounded-2 shadow-sm btn-cambio-estado"
                                                             data-id="@pedido.PedidoId"
                                                             data-accion="cancelar"
+                                                            data-cobrado="true"
                                                             data-bs-toggle="tooltip"
                                                             data-bs-placement="top"
-                                                            title="Cancelar pedido">
+                                                            title="Cancelar pedido y reembolsar">
                                                         <i class="bi bi-x-circle"></i>
                                                     </button>
                                                 }
