@@ -16,8 +16,9 @@ namespace TiendaOnline.Tests.TestSupport
     /// </summary>
     public class TestTiendaContext : TiendaContext
     {
-        public TestTiendaContext(DbContextOptions<TiendaContext> options, IUserSessionService userSession)
-            : base(options, userSession)
+        public TestTiendaContext(DbContextOptions<TiendaContext> options, IUserSessionService userSession,
+            IAuditoriaContexto? auditoriaContexto = null)
+            : base(options, userSession, auditoriaContexto)
         {
         }
 
@@ -63,7 +64,7 @@ namespace TiendaOnline.Tests.TestSupport
         /// Usalo para verificar estado: el change tracker de un contexto ya usado
         /// puede tener valores stale (ej. stock cambiado con ExecuteUpdateAsync).
         /// </summary>
-        public TestTiendaContext CreateContext(int? userId = null)
+        public TestTiendaContext CreateContext(int? userId = null, IAuditoriaContexto? auditoriaContexto = null)
         {
             var session = new Mock<IUserSessionService>();
             session.Setup(x => x.GetUserId()).Returns(userId);
@@ -72,7 +73,7 @@ namespace TiendaOnline.Tests.TestSupport
                 .UseSqlite(_connection)
                 .Options;
 
-            return new TestTiendaContext(options, session.Object);
+            return new TestTiendaContext(options, session.Object, auditoriaContexto);
         }
 
         /// <summary>Conexión viva compartida: los hosts de integración registran la DB sobre ella.</summary>

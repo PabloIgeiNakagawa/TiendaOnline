@@ -8,12 +8,24 @@ namespace TiendaOnline.Infrastructure.Persistence
 {
     public class TiendaContext : DbContext
     {
-        private readonly IUserSessionService _userSession;
+        // Largo de las columnas de contexto de auditoría: la config de tabla y el
+        // recorte defensivo del valor viven juntos (un User-Agent más largo que la
+        // columna tumbaría el save completo del cambio de negocio).
+        public const int LargoMaximoIp = 45;
+        public const int LargoMaximoUserAgent = 512;
+        public const int LargoMaximoCorrelationId = 64;
 
-        public TiendaContext(DbContextOptions<TiendaContext> options, IUserSessionService userSession)
+        private readonly IUserSessionService _userSession;
+        private readonly IAuditoriaContexto? _auditoriaContexto;
+
+        public TiendaContext(
+            DbContextOptions<TiendaContext> options,
+            IUserSessionService userSession,
+            IAuditoriaContexto? auditoriaContexto = null)
             : base(options)
         {
             _userSession = userSession;
+            _auditoriaContexto = auditoriaContexto;
         }
 
         // Columnas que jamás viajan al JSON de auditoría: un hash de contraseña no es un dato de negocio.
@@ -133,22 +145,54 @@ namespace TiendaOnline.Infrastructure.Persistence
                         .CurrentValue?.ToString() ?? "0";
                 }
 
-                pendientes.Add((entry, new Auditoria
-                {
-                    UsuarioId = usuarioId,
-                    TablaAfectada = nombreTabla,
-                    // Sin usuario de sesión (jobs de Hangfire, webhooks): la acción queda marcada Sistema.
-                    Accion = usuarioId is null ? $"Sistema: {accionBase}" : accionBase,
-                    Fecha = DateTime.Now,
-                    DatosAnteriores = esAlta ? "{}" : Serializar(entry, valoresActuales: false, soloModificadas),
-                    // En altas quedan null acá y se llenan después del primer save, cuando ya existe el id.
-                    DatosNuevos = datosNuevos!,
-                    EntidadId = entidadId!
-                }));
+                pendientes.Add((entry, CrearAuditoria(usuarioId, nombreTabla, accionBase, entry,
+                    esAlta: esAlta, soloModificadas: soloModificadas,
+                    datosNuevos: datosNuevos, entidadId: entidadId)));
             }
 
             return pendientes;
         }
+
+        private Auditoria CrearAuditoria(
+            int? usuarioId,
+            string nombreTabla,
+            string accionBase,
+            EntityEntry entry,
+            bool esAlta,
+            bool soloModificadas,
+            string? datosNuevos,
+            string? entidadId)
+        {
+            var auditoria = new Auditoria
+            {
+                UsuarioId = usuarioId,
+                TablaAfectada = nombreTabla,
+                // Sin usuario de sesión (jobs de Hangfire, webhooks): la acción queda marcada Sistema.
+                Accion = usuarioId is null ? $"Sistema: {accionBase}" : accionBase,
+                Fecha = DateTime.Now,
+                DatosAnteriores = esAlta ? "{}" : Serializar(entry, valoresActuales: false, soloModificadas),
+                // En altas quedan null acá y se llenan después del primer save, cuando ya existe el id.
+                DatosNuevos = datosNuevos!,
+                EntidadId = entidadId!
+            };
+            CompletarContexto(auditoria);
+            return auditoria;
+        }
+
+        /// <summary>
+        /// Completa el contexto del request en una fila de auditoría (captura automática
+        /// y writer explícito). Los valores se recortan al largo de su columna.
+        /// </summary>
+        internal void CompletarContexto(Auditoria auditoria)
+        {
+            auditoria.Ip = Recortar(_auditoriaContexto?.Ip, LargoMaximoIp);
+            auditoria.UserAgent = Recortar(_auditoriaContexto?.UserAgent, LargoMaximoUserAgent);
+            auditoria.CorrelationId = Recortar(_auditoriaContexto?.CorrelationId, LargoMaximoCorrelationId);
+            auditoria.Origen = _auditoriaContexto?.Origen ?? "Sistema";
+        }
+
+        private static string? Recortar(string? valor, int largoMaximo)
+            => valor is null || valor.Length <= largoMaximo ? valor : valor[..largoMaximo];
 
         // Updates: solo las columnas que EF marcó como modificadas; altas y bajas: fila completa.
         private static string Serializar(EntityEntry entry, bool valoresActuales, bool soloModificadas)
@@ -359,6 +403,31 @@ namespace TiendaOnline.Infrastructure.Persistence
                       .WithOne()
                       .HasForeignKey<CarritoUsuario>(c => c.UsuarioId)
                       .OnDelete(DeleteBehavior.Cascade); // Sin dueño, el carrito guardado sobra
+            });
+
+            // Auditoría: columnas acotadas e índices para el panel (fecha) y el
+            // historial de una entidad puntual (tabla + id).
+            modelBuilder.Entity<Auditoria>(entity =>
+            {
+                entity.Property(a => a.Accion)
+                      .HasMaxLength(200)
+                      .IsRequired();
+
+                entity.Property(a => a.TablaAfectada)
+                      .HasMaxLength(100)
+                      .IsRequired();
+
+                entity.Property(a => a.EntidadId)
+                      .HasMaxLength(100)
+                      .IsRequired();
+
+                entity.Property(a => a.Ip).HasMaxLength(LargoMaximoIp);
+                entity.Property(a => a.UserAgent).HasMaxLength(LargoMaximoUserAgent);
+                entity.Property(a => a.CorrelationId).HasMaxLength(LargoMaximoCorrelationId);
+                entity.Property(a => a.Origen).HasMaxLength(50);
+
+                entity.HasIndex(a => a.Fecha);
+                entity.HasIndex(a => new { a.TablaAfectada, a.EntidadId });
             });
 
             base.OnModelCreating(modelBuilder);

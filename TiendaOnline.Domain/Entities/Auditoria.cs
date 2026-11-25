@@ -28,5 +28,15 @@ namespace TiendaOnline.Domain.Entities
 
         [Required]
         public DateTime Fecha { get; set; } = DateTime.Now;
+
+        // Contexto del request que originó el cambio: en jobs de Hangfire queda
+        // nulo (no hay request) y Origen marca "Sistema".
+        public string? Ip { get; set; }
+
+        public string? UserAgent { get; set; }
+
+        public string? CorrelationId { get; set; }
+
+        public string? Origen { get; set; }
     }
 }

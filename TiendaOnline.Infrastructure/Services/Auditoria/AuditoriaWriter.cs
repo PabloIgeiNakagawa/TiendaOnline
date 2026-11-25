@@ -29,7 +29,7 @@ namespace TiendaOnline.Infrastructure.Services.Auditoria
         {
             var usuarioId = _userSession.GetUserId();
 
-            _context.Auditorias.Add(new EntidadAuditoria
+            var auditoria = new EntidadAuditoria
             {
                 UsuarioId = usuarioId,
                 TablaAfectada = tablaAfectada,
@@ -40,7 +40,12 @@ namespace TiendaOnline.Infrastructure.Services.Auditoria
                 DatosAnteriores = AuditoriaJson.Serializar(datosAnteriores),
                 DatosNuevos = AuditoriaJson.Serializar(datosNuevos),
                 Fecha = DateTime.Now
-            });
+            };
+
+            // El contexto del request (IP, agente, traza, origen) lo completa
+            // CompletarContexto del contexto: única fuente para las dos vías de auditoría.
+            _context.CompletarContexto(auditoria);
+            _context.Auditorias.Add(auditoria);
         }
     }
 }

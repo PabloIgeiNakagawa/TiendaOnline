@@ -63,6 +63,7 @@ namespace TiendaOnline.Extensions
             services.Configure<MercadoPagoSettings>(configuration.GetSection("MercadoPago"));
             services.Configure<GoogleKeys>(configuration.GetSection("GoogleKeys"));
             services.Configure<GeorefSettings>(configuration.GetSection("Georef"));
+            services.Configure<AuditoriaSettings>(configuration.GetSection("Auditoria"));
             services.Configure<GlobalSettings>(o => o.SiteUrl = configuration["SiteUrl"] ?? "");
 
             // Hangfire
@@ -116,6 +117,10 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IAdminOverviewService, AdminOverviewService>();
             services.AddScoped<IReportesService, ReportesService>();
             services.AddScoped<IAuditoriaService, AuditoriaService>();
+            services.AddScoped<IAuditoriaRetencionService, AuditoriaRetencionService>();
+            // Contexto del request para las filas de auditoría (IP, agente, traza).
+            // Fuera de un request, como en los jobs de Hangfire, queda en Sistema.
+            services.AddScoped<IAuditoriaContexto, AuditoriaContexto>();
             // Las transiciones con ExecuteUpdateAsync no pasan por el ChangeTracker:
             // el writer escribe su fila en la misma transacción del cambio.
             services.AddScoped<IAuditoriaWriter, AuditoriaWriter>();

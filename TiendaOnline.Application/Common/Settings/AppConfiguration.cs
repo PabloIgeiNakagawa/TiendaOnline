@@ -48,4 +48,11 @@ namespace TiendaOnline.Application.Common.Settings
 
         public string BaseUrl { get; set; } = BaseUrlPorDefecto;
     }
+
+    public class AuditoriaSettings
+    {
+        public const int RetencionMesesPorDefecto = 24;
+
+        public int RetencionMeses { get; set; } = RetencionMesesPorDefecto;
+    }
 }

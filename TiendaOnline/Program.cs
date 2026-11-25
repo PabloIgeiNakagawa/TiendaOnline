@@ -6,6 +6,7 @@ using TiendaOnline.Hangfire;
 using TiendaOnline.Health;
 using TiendaOnline.Infrastructure.Persistence;
 using Hangfire;
+using TiendaOnline.Application.Auditoria;
 using TiendaOnline.Application.Pedidos.Commands;
 using Microsoft.AspNetCore.DataProtection;
 using Serilog;
@@ -152,6 +153,13 @@ try
         "cancelar-pedidos-vencidos",
         x => x.CancelarPedidosVencidosAsync(),
         "*/5 * * * *");
+
+    // Retención mensual del historial: día 1 a las 03:00. La ventana vive en
+    // Auditoria:RetencionMeses (default 24 meses si la clave falta).
+    RecurringJob.AddOrUpdate<IAuditoriaRetencionService>(
+        "purgar-auditorias",
+        x => x.PurgarAuditoriasAsync(),
+        "0 3 1 * *");
 }
 catch (Exception ex)
 {

@@ -67,7 +67,12 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Accion")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("DatosAnteriores")
                         .IsRequired()
@@ -79,21 +84,39 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("EntidadId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Ip")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<string>("Origen")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("TablaAfectada")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<int?>("UsuarioId")
                         .HasColumnType("int");
 
                     b.HasKey("AuditoriaId");
 
+                    b.HasIndex("Fecha");
+
                     b.HasIndex("UsuarioId");
+
+                    b.HasIndex("TablaAfectada", "EntidadId");
 
                     b.ToTable("Auditorias");
                 });
@@ -324,6 +347,7 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal>("CostoEnvio")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("EnvioCalle")
