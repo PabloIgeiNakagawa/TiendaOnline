@@ -418,6 +418,9 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
+                    b.Property<int?>("RepartidorId")
+                        .HasColumnType("int");
+
                     b.Property<string>("TransaccionPagoId")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -426,6 +429,8 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("PedidoId");
+
+                    b.HasIndex("RepartidorId");
 
                     b.HasIndex("UsuarioId");
 
@@ -497,6 +502,28 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                     b.HasIndex("ProductoId");
 
                     b.ToTable("ImagenesProducto");
+                });
+
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.UbicacionRepartidor", b =>
+                {
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ActualizadoEn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double>("Latitud")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Longitud")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("PrecisionMetros")
+                        .HasColumnType("float");
+
+                    b.HasKey("UsuarioId");
+
+                    b.ToTable("UbicacionesRepartidor", (string)null);
                 });
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Usuario", b =>
@@ -676,11 +703,18 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Pedido", b =>
                 {
+                    b.HasOne("TiendaOnline.Domain.Entities.Usuario", "Repartidor")
+                        .WithMany()
+                        .HasForeignKey("RepartidorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("TiendaOnline.Domain.Entities.Usuario", "Usuario")
                         .WithMany("Pedidos")
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Repartidor");
 
                     b.Navigation("Usuario");
                 });
@@ -705,6 +739,17 @@ namespace TiendaOnline.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("TiendaOnline.Domain.Entities.UbicacionRepartidor", b =>
+                {
+                    b.HasOne("TiendaOnline.Domain.Entities.Usuario", "Usuario")
+                        .WithOne()
+                        .HasForeignKey("TiendaOnline.Domain.Entities.UbicacionRepartidor", "UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("TiendaOnline.Domain.Entities.Categoria", b =>

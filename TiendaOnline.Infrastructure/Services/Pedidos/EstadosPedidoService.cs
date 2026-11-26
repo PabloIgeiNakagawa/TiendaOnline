@@ -69,13 +69,24 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
         }
 
         public async Task PedidoEntregadoAsync(int pedidoId, CancellationToken ct = default)
+            => await EntregarAsync(pedidoId, null, ct);
+
+        public async Task PedidoEntregadoPorRepartidorAsync(int pedidoId, int repartidorId, CancellationToken ct = default)
+            => await EntregarAsync(pedidoId, repartidorId, ct);
+
+        /// <summary>
+        /// Camino único de entrega (reparto y admin). <paramref name="repartidorQueEntrega"/>
+        /// null = admin: entrega cualquier pedido Enviado. Con id = reparto: solo un
+        /// pedido sin asignar (lo toma en el mismo claim) o ya asignado a él.
+        /// </summary>
+        private async Task EntregarAsync(int pedidoId, int? repartidorQueEntrega, CancellationToken ct)
         {
             // Datos del aviso: se leen antes del claim y sin tracking, la
             // transición no los modifica. El guard de estado vive en el claim.
             var aviso = await _context.Pedidos
                 .AsNoTracking()
                 .Where(p => p.PedidoId == pedidoId)
-                .Select(p => new { Email = p.Usuario.Email, p.Usuario.Nombre, p.Usuario.Apellido })
+                .Select(p => new { Email = p.Usuario.Email, p.Usuario.Nombre, p.Usuario.Apellido, p.RepartidorId })
                 .FirstOrDefaultAsync(ct);
 
             using var transaction = await _context.Database.BeginTransactionAsync(ct);
@@ -83,18 +94,42 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
             try
             {
                 var fechaEntrega = DateTime.Now;
-                var filasEntregado = await _context.Pedidos
-                    .Where(p => p.PedidoId == pedidoId && p.Estado == EstadoPedido.Enviado)
+                var pedidosEntregables = _context.Pedidos
+                    .Where(p => p.PedidoId == pedidoId && p.Estado == EstadoPedido.Enviado);
+
+                if (repartidorQueEntrega.HasValue)
+                {
+                    pedidosEntregables = pedidosEntregables.Where(p =>
+                        p.RepartidorId == null || p.RepartidorId == repartidorQueEntrega.Value);
+                }
+
+                var filasEntregado = await pedidosEntregables
                     .ExecuteUpdateAsync(s => s
                         .SetProperty(p => p.Estado, EstadoPedido.Entregado)
-                        .SetProperty(p => p.FechaEntrega, fechaEntrega), ct);
+                        .SetProperty(p => p.FechaEntrega, fechaEntrega)
+                        .SetProperty(p => p.RepartidorId, p => repartidorQueEntrega ?? p.RepartidorId), ct);
 
                 if (filasEntregado == 0)
                 {
                     var estadoReal = await EstadoRealDelPedido.LeerAsync(_context, pedidoId, ct);
                     if (estadoReal == null) throw new PedidoNoEncontradoException("Pedido no encontrado.");
 
+                    if (repartidorQueEntrega.HasValue
+                        && estadoReal.Estado == EstadoPedido.Enviado
+                        && estadoReal.RepartidorId != repartidorQueEntrega)
+                    {
+                        throw new PedidoNoAsignableException("Otro repartidor ya tomó este pedido.");
+                    }
+
                     throw new PedidoNoCancelableException($"No se puede entregar: el pedido aún figura como {estadoReal.Estado}.");
+                }
+
+                // Sin entregas en curso no hay mapa que mostrar: la última
+                // posición del repartidor se borra junto con el cierre del pedido.
+                var repartidorDeLaEntrega = repartidorQueEntrega ?? aviso?.RepartidorId;
+                if (repartidorDeLaEntrega.HasValue)
+                {
+                    await UbicacionDeRepartidor.LimpiarSiSinEntregasAsync(_context, repartidorDeLaEntrega.Value, ct);
                 }
 
                 _auditoriaWriter.Registrar(

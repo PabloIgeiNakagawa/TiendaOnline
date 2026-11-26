@@ -16,6 +16,10 @@ namespace TiendaOnline.Application.Pedidos.Queries
         public DateTime? FechaEnvio { get; set; }
         public DateTime? FechaEntrega { get; set; }
         public int CantidadItems { get; set; }
+
+        /// <summary>Quién lleva el pedido; null = todavía nadie lo tomó.</summary>
+        public int? RepartidorId { get; set; }
+        public string? RepartidorNombre { get; set; }
         public List<PedidoProductoListadoDto> Productos { get; set; } = new();
     }
 }

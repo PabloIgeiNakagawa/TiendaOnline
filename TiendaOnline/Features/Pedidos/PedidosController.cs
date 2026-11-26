@@ -10,6 +10,7 @@ using TiendaOnline.Application.Payment;
 using TiendaOnline.Application.Pedidos.Commands;
 using TiendaOnline.Application.Pedidos.Common;
 using TiendaOnline.Application.Pedidos.Queries;
+using TiendaOnline.Application.Usuarios.Queries;
 using TiendaOnline.Domain.Exceptions;
 using TiendaOnline.Domain.Entities;
 using TiendaOnline.Features.Shared;
@@ -27,9 +28,10 @@ namespace TiendaOnline.Features.Pedidos
         private readonly IPaymentService _paymentService;
         private readonly IComprobantePdfService _comprobantePdfService;
         private readonly IAppSettingsService _appSettingsService;
+        private readonly IUsuarioQueryService _usuarioQueryService;
         private readonly ILogger<PedidosController> _logger;
 
-        public PedidosController(IPedidoQueryService pedidoQueryService, IConfirmacionPagoService confirmacionPagoService, IGestionTransferenciaService gestionTransferenciaService, IEstadosPedidoService estadosPedidoService, ICarritoService carritoService, IPaymentService paymentService, IComprobantePdfService comprobantePdfService, IAppSettingsService appSettingsService, ILogger<PedidosController> logger)
+        public PedidosController(IPedidoQueryService pedidoQueryService, IConfirmacionPagoService confirmacionPagoService, IGestionTransferenciaService gestionTransferenciaService, IEstadosPedidoService estadosPedidoService, ICarritoService carritoService, IPaymentService paymentService, IComprobantePdfService comprobantePdfService, IAppSettingsService appSettingsService, IUsuarioQueryService usuarioQueryService, ILogger<PedidosController> logger)
         {
             _pedidoQueryService = pedidoQueryService;
             _confirmacionPagoService = confirmacionPagoService;
@@ -39,6 +41,7 @@ namespace TiendaOnline.Features.Pedidos
             _paymentService = paymentService;
             _comprobantePdfService = comprobantePdfService;
             _appSettingsService = appSettingsService;
+            _usuarioQueryService = usuarioQueryService;
             _logger = logger;
         }
 
@@ -126,6 +129,13 @@ namespace TiendaOnline.Features.Pedidos
                 DireccionCompleta = pedido.DireccionCompleta,
                 Observaciones = pedido.Observaciones,
 
+                RepartidorId = pedido.RepartidorId,
+                RepartidorNombre = pedido.RepartidorNombre,
+                RepartidoresDisponibles = User.IsInRole("Administrador")
+                    && ((EstadoPedido)pedido.EstadoId is EstadoPedido.EnPreparacion or EstadoPedido.Enviado)
+                    ? await _usuarioQueryService.ObtenerRepartidoresActivosAsync(HttpContext.RequestAborted)
+                    : new(),
+
                 Items = pedido.Items.Select(d => new PedidoItemViewModel
                 {
                     ProductoNombre = d.ProductoNombre,
@@ -146,9 +156,35 @@ namespace TiendaOnline.Features.Pedidos
                 EsRepartidor = User.IsInRole("Repartidor"),
                 EsPropioPedido = pedido.UsuarioId.ToString() ==
                                  User.FindFirstValue(ClaimTypes.NameIdentifier),
+                EsMiEntrega = pedido.RepartidorId?.ToString() ==
+                              User.FindFirstValue(ClaimTypes.NameIdentifier),
             };
 
             return View(viewModel);
+        }
+
+        /// <summary>
+        /// Posición del repartidor para el mapa del detalle. Solo existe mientras
+        /// el pedido está Enviado y el repartidor comparte ubicación; la policy es
+        /// la misma que la del detalle (dueño, admin o repartidor en curso).
+        /// </summary>
+        [Authorize(Policy = "VeDetallesDelPedido")]
+        [HttpGet("Ubicacion/{id:int}")]
+        public async Task<IActionResult> Ubicacion(int id)
+        {
+            var ubicacion = await _pedidoQueryService.ObtenerUbicacionRepartidorAsync(id, HttpContext.RequestAborted);
+
+            if (ubicacion == null) return Ok(new { disponible = false });
+
+            return Ok(new
+            {
+                disponible = true,
+                ubicacion.RepartidorNombre,
+                ubicacion.Latitud,
+                ubicacion.Longitud,
+                ubicacion.PrecisionMetros,
+                ubicacion.SegundosDesdeActualizacion
+            });
         }
 
         [Authorize(Policy = "EsDuenioDelPedido")]

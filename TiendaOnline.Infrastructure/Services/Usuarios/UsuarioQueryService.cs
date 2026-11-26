@@ -113,5 +113,16 @@ namespace TiendaOnline.Infrastructure.Services.Usuarios
 
             return new PagedResult<UsuarioListadoDto>(items, total, pagina, cantidad);
         }
+
+        public async Task<List<RepartidorResumenDto>> ObtenerRepartidoresActivosAsync(CancellationToken ct = default)
+        {
+            return await _context.Usuarios
+                .AsNoTracking()
+                .Where(u => u.Activo && u.Rol == Rol.Repartidor)
+                .OrderBy(u => u.Apellido)
+                .ThenBy(u => u.Nombre)
+                .Select(u => new RepartidorResumenDto(u.UsuarioId, u.Nombre + " " + u.Apellido))
+                .ToListAsync(ct);
+        }
     }
 }

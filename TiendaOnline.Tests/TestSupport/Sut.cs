@@ -56,6 +56,19 @@ namespace TiendaOnline.Tests.TestSupport
                 AuditoriaWriter(ctx, userId),
                 NullLogger<EstadosPedidoService>.Instance);
 
+        public static AsignacionRepartidorService AsignacionRepartidor(TiendaContext ctx, int userId)
+            => new(ctx, Session(userId), NullLogger<AsignacionRepartidorService>.Instance);
+
+        public static UbicacionRepartidorService UbicacionRepartidor(TiendaContext ctx, int userId)
+            => new(ctx, Session(userId));
+
+        private static IUserSessionService Session(int? userId)
+        {
+            var session = new Mock<IUserSessionService>();
+            session.Setup(x => x.GetUserId()).Returns(userId);
+            return session.Object;
+        }
+
         public static PedidoVencimientoService PedidoVencimiento(TiendaContext ctx, int? userId = null)
             => new(ctx, AuditoriaWriter(ctx, userId), NullLogger<PedidoVencimientoService>.Instance);
 

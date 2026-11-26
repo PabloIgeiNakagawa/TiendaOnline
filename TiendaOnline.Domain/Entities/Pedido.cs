@@ -109,6 +109,11 @@ namespace TiendaOnline.Domain.Entities
         public int UsuarioId { get; set; }
         public Usuario Usuario { get; set; }
 
+        // Quién lleva el pedido: null hasta que el repartidor lo toma o el admin
+        // lo asigna. La entrega y el seguimiento en vivo se apoyan en esta fila.
+        public int? RepartidorId { get; set; }
+        public Usuario? Repartidor { get; set; }
+
         public ICollection<DetallePedido> DetallesPedido { get; set; } = new List<DetallePedido>();
         public virtual ICollection<MovimientoStock> Movimientos { get; set; } = new List<MovimientoStock>();
 

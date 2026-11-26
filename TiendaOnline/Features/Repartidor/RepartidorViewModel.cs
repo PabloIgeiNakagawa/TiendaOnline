@@ -15,6 +15,10 @@ namespace TiendaOnline.Features.Repartidor
         // Resumen del día arriba del todo: entregas concretadas desde la 00:00
         // (el historial plegable cubre las últimas 24 h, no solo hoy).
         public int EntregadasHoy { get; set; }
+
+        // Quién mira la cola: distingue "tomar" (libre) de "es mío".
+        public int UsuarioActualId { get; set; }
+        public bool CompartiendoUbicacion { get; set; }
     }
 
     /// <summary>
@@ -32,6 +36,13 @@ namespace TiendaOnline.Features.Repartidor
         public DateTime? FechaEnvio { get; set; }
         public DateTime? FechaEntrega { get; set; }
         public List<PedidoProductoListadoDto> Productos { get; set; } = new();
+
+        public int? RepartidorId { get; set; }
+        public string? RepartidorNombre { get; set; }
+        public bool AsignadoAMi { get; set; }
+
+        public bool SinAsignar => RepartidorId == null;
+        public bool AsignadoAOtro => RepartidorId != null && !AsignadoAMi;
 
         /// <summary>Dirección completa de envío; null = el pedido es retiro en local.</summary>
         public string? DireccionCompleta { get; set; }

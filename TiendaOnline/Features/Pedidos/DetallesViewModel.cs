@@ -1,4 +1,5 @@
 ﻿using TiendaOnline.Domain.Entities;
+using TiendaOnline.Application.Usuarios.Queries;
 
 namespace TiendaOnline.Features.Pedidos
 {
@@ -26,6 +27,17 @@ namespace TiendaOnline.Features.Pedidos
         public string? DireccionCompleta { get; set; }
         public string? Observaciones { get; set; }
 
+        // Reparto: asignación (select del admin) y seguimiento en vivo del mapa.
+        public int? RepartidorId { get; set; }
+        public string? RepartidorNombre { get; set; }
+        public List<RepartidorResumenDto> RepartidoresDisponibles { get; set; } = new();
+
+        public bool PuedeAsignarRepartidor =>
+            EsAdmin && (Estado == EstadoPedido.EnPreparacion || Estado == EstadoPedido.Enviado);
+
+        /// <summary>El mapa solo se muestra mientras hay una entrega en camino.</summary>
+        public bool MostrarMapa => Estado == EstadoPedido.Enviado;
+
         // Productos
         public List<PedidoItemViewModel> Items { get; set; } = new();
 
@@ -47,6 +59,9 @@ namespace TiendaOnline.Features.Pedidos
         public bool EsAdmin { get; set; }
         public bool EsRepartidor { get; set; }
         public bool EsPropioPedido { get; set; }
+
+        /// <summary>El repartidor logueado es quien lleva este pedido.</summary>
+        public bool EsMiEntrega { get; set; }
 
         // Estados útiles para la vista
         public bool PuedeCancelar { get; set; }

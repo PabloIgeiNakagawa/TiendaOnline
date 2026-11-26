@@ -106,7 +106,9 @@ namespace TiendaOnline.Infrastructure.Persistence
                 // un Modified sin columnas marcadas es ruido de fix-up de navegaciones, no un cambio real.
                 // El carrito del usuario se toca en cada interacción y refresh de vista
                 // (agregar/quitar/refrescar precios): auditarlo es ruido sin valor de negocio.
-                if (entry.Entity is Auditoria or CarritoUsuario ||
+                // La ubicación del repartidor se actualiza con cada latido del GPS:
+                // mismo caso, dato efímero sin valor de auditoría.
+                if (entry.Entity is Auditoria or CarritoUsuario or UbicacionRepartidor ||
                     entry.State is EntityState.Detached or EntityState.Unchanged)
                     continue;
                 // Un Modified cuyas únicas columnas tocadas están excluidas (el hash de
@@ -229,6 +231,7 @@ namespace TiendaOnline.Infrastructure.Persistence
         public DbSet<AppSetting> AppSettings { get; set; }
         public DbSet<CarritoUsuario> CarritosUsuarios { get; set; }
         public DbSet<ProductoImagen> ImagenesProducto { get; set; }
+        public DbSet<UbicacionRepartidor> UbicacionesRepartidor { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -336,6 +339,15 @@ namespace TiendaOnline.Infrastructure.Persistence
                       .HasForeignKey(p => p.UsuarioId)
                       .OnDelete(DeleteBehavior.Restrict); // Si borro un usuario, NO se borran sus pedidos
 
+                // Quien entrega el pedido es un usuario con rol Repartidor. Restrict:
+                // dar de baja un repartidor no puede arrastrar el historial de pedidos.
+                entity.HasOne(p => p.Repartidor)
+                      .WithMany()
+                      .HasForeignKey(p => p.RepartidorId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(p => p.RepartidorId);
+
                 entity.Property(p => p.CostoEnvio)
                       .HasPrecision(18, 2);
             });
@@ -403,6 +415,22 @@ namespace TiendaOnline.Infrastructure.Persistence
                       .WithOne()
                       .HasForeignKey<CarritoUsuario>(c => c.UsuarioId)
                       .OnDelete(DeleteBehavior.Cascade); // Sin dueño, el carrito guardado sobra
+            });
+
+            // Última posición del repartidor: una fila por usuario (misma forma
+            // que el carrito), sin historial. La fila se pisa en cada latido y
+            // muere cuando el repartidor deja de compartir o no le quedan entregas.
+            modelBuilder.Entity<UbicacionRepartidor>(entity =>
+            {
+                entity.ToTable("UbicacionesRepartidor");
+
+                entity.Property(u => u.UsuarioId)
+                      .ValueGeneratedNever();
+
+                entity.HasOne(u => u.Usuario)
+                      .WithOne()
+                      .HasForeignKey<UbicacionRepartidor>(u => u.UsuarioId)
+                      .OnDelete(DeleteBehavior.Cascade); // Sin dueño, la última posición es dato muerto
             });
 
             // Auditoría: columnas acotadas e índices para el panel (fecha) y el

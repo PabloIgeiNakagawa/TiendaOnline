@@ -97,6 +97,8 @@ namespace TiendaOnline.Extensions
             services.AddScoped<IConfirmacionPagoService, ConfirmacionPagoService>();
             services.AddScoped<IGestionTransferenciaService, GestionTransferenciaService>();
             services.AddScoped<IEstadosPedidoService, EstadosPedidoService>();
+            services.AddScoped<IAsignacionRepartidorService, AsignacionRepartidorService>();
+            services.AddScoped<IUbicacionRepartidorService, UbicacionRepartidorService>();
             services.AddScoped<IPedidoVencimientoService, PedidoVencimientoService>();
             services.AddScoped<IEnvioQueryService, EnvioQueryService>();
             services.AddScoped<IEnvioCommandService, EnvioCommandService>();

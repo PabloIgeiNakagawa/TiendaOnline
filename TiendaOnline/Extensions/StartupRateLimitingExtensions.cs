@@ -95,6 +95,15 @@ namespace TiendaOnline.Extensions
                     opt.QueueLimit = 0;
                 });
 
+                // Latido GPS del repartidor: el cliente manda una posición cada 30 s
+                // mientras comparte ubicación (una pestaña abierta gasta ~2/min).
+                options.AddFixedWindowLimiter("ubicacion", opt =>
+                {
+                    opt.PermitLimit = Techo(20);
+                    opt.Window = TimeSpan.FromMinutes(1);
+                    opt.QueueLimit = 0;
+                });
+
                 options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                     RateLimitPartition.GetFixedWindowLimiter(
                         httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",

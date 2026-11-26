@@ -21,13 +21,15 @@ namespace TiendaOnline.Features.Pedidos.Admin
         private readonly IPedidoQueryService _pedidoQueryService;
         private readonly IGestionTransferenciaService _gestionTransferenciaService;
         private readonly IEstadosPedidoService _estadosPedidoService;
+        private readonly IAsignacionRepartidorService _asignacionRepartidorService;
         private readonly ILogger<AdminPedidosController> _logger;
 
-        public AdminPedidosController(IPedidoQueryService pedidoQueryService, IGestionTransferenciaService gestionTransferenciaService, IEstadosPedidoService estadosPedidoService, ILogger<AdminPedidosController> logger)
+        public AdminPedidosController(IPedidoQueryService pedidoQueryService, IGestionTransferenciaService gestionTransferenciaService, IEstadosPedidoService estadosPedidoService, IAsignacionRepartidorService asignacionRepartidorService, ILogger<AdminPedidosController> logger)
         {
             _pedidoQueryService = pedidoQueryService;
             _gestionTransferenciaService = gestionTransferenciaService;
             _estadosPedidoService = estadosPedidoService;
+            _asignacionRepartidorService = asignacionRepartidorService;
             _logger = logger;
         }
 
@@ -127,7 +129,22 @@ namespace TiendaOnline.Features.Pedidos.Admin
             await _estadosPedidoService.PedidoEnviadoAsync(pedidoId, HttpContext.RequestAborted);
             _logger.LogInformation("Pedido {PedidoId} marcado Enviado por {Admin}", pedidoId, User.FindFirstValue(ClaimTypes.NameIdentifier));
             TempData.SetMensajeExito("Estado del pedido actualizado a Enviado");
-            return RedirectToAction("Detalles", new { id = pedidoId });
+            return RedirectToAction("Detalles", "Pedidos", new { id = pedidoId });
+        }
+
+        [HttpPost("[action]")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AsignarRepartidor(int pedidoId, int? repartidorId)
+        {
+            if (pedidoId <= 0) return NotFound();
+
+            await _asignacionRepartidorService.AsignarRepartidorAsync(pedidoId, repartidorId, HttpContext.RequestAborted);
+            _logger.LogInformation("Pedido {PedidoId} asignado a {RepartidorId} por {Admin}", pedidoId, repartidorId, User.FindFirstValue(ClaimTypes.NameIdentifier));
+            TempData.SetMensajeExito(repartidorId.HasValue
+                ? "Repartidor asignado"
+                : "Pedido sin repartidor asignado");
+
+            return RedirectToAction("Detalles", "Pedidos", new { id = pedidoId });
         }
 
         [HttpPost("[action]")]
@@ -142,7 +159,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
             await _estadosPedidoService.PedidoEntregadoAsync(pedidoId, HttpContext.RequestAborted);
             _logger.LogInformation("Pedido {PedidoId} marcado Entregado por {Admin}", pedidoId, User.FindFirstValue(ClaimTypes.NameIdentifier));
             TempData.SetMensajeExito("Estado del pedido actualizado a Entregado");
-            return RedirectToAction("Detalles", new { id = pedidoId });
+            return RedirectToAction("Detalles", "Pedidos", new { id = pedidoId });
         }
 
         [HttpPost("[action]")]
@@ -160,7 +177,7 @@ namespace TiendaOnline.Features.Pedidos.Admin
             TempData.SetMensajeExito(quedoReembolsado
                 ? "Pedido cancelado: el pago quedó Reembolsado y el stock se devolvió"
                 : "Estado del pedido actualizado a Cancelado");
-            return RedirectToAction("Detalles", new { id = pedidoId });
+            return RedirectToAction("Detalles", "Pedidos", new { id = pedidoId });
         }
 
         [HttpPost("[action]")]

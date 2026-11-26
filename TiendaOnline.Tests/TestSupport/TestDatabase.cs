@@ -209,11 +209,13 @@ namespace TiendaOnline.Tests.TestSupport
             decimal costoEnvio = 0,
             string? transaccionId = null,
             MetodoPago metodoPago = MetodoPago.MercadoPago,
-            string? comprobanteUrl = null)
+            string? comprobanteUrl = null,
+            int? repartidorId = null)
         {
             var pedido = new Pedido
             {
                 UsuarioId = usuario.UsuarioId,
+                RepartidorId = repartidorId,
                 MetodoPago = metodoPago,
                 EsEnvioADomicilio = false,
                 Estado = estado,

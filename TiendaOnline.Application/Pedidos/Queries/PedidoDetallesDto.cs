@@ -23,6 +23,10 @@
         public string? DireccionCompleta { get; set; }
         public string? Observaciones { get; set; }
 
+        // Reparto: null hasta que el repartidor toma el pedido o el admin lo asigna.
+        public int? RepartidorId { get; set; }
+        public string? RepartidorNombre { get; set; }
+
         // Items
         public List<PedidoItemDto> Items { get; set; } = new();
 

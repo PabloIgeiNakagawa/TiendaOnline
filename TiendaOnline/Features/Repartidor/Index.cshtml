@@ -37,6 +37,30 @@
     <p class="text-muted small mb-0 mt-1">Tu cola de reparto: primero los más viejos. Tocá el pin para abrir la ruta con tu ubicación.</p>
 </div>
 
+<!-- Ubicación en vivo: el cliente sigue el punto del repartidor en el detalle -->
+<div class="card border-0 shadow-sm rounded-3 mb-3" id="ubicacionEnVivo"
+     data-compartiendo="@(Model.CompartiendoUbicacion ? "true" : "false")"
+     data-url="@Url.Action("Ubicacion", "Repartidor")"
+     data-url-detener="@Url.Action("DetenerUbicacion", "Repartidor")">
+    <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+        <div class="me-auto">
+            <div class="fw-semibold"><i class="bi bi-broadcast me-1"></i>Ubicación en vivo</div>
+            <div class="small text-muted" id="ubicacionEstado">
+                @(Model.CompartiendoUbicacion
+                    ? "Estás compartiendo tu posición. Mantené esta pantalla abierta durante la entrega."
+                    : "Compartí tu posición para que el cliente vea dónde viene su pedido. El GPS solo corre con esta pantalla abierta.")
+            </div>
+        </div>
+        <button type="button" class="btn btn-outline-primary @(Model.CompartiendoUbicacion ? "d-none" : "")" id="btnCompartirUbicacion">
+            <i class="bi bi-geo-alt me-1"></i>Compartir
+        </button>
+        <button type="button" class="btn btn-outline-danger @(Model.CompartiendoUbicacion ? "" : "d-none")" id="btnDetenerUbicacion">
+            <i class="bi bi-stop-circle me-1"></i>Detener
+        </button>
+    </div>
+    <div class="d-none">@Html.AntiForgeryToken()</div>
+</div>
+
 <h6 class="text-uppercase text-muted fw-bold mb-2" style="font-size: .75rem;">Para entregar</h6>
 
 @* Móvil: una tarjeta por pedido, apilada — el reparto trabaja desde el celular
@@ -56,6 +80,14 @@
                     <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@p.PedidoId" class="fw-bold text-decoration-none">#@p.PedidoId.ToString("D6")</a>
                     <div class="small text-muted">Pedido @p.FechaPedido.ToString("dd/MM/yy HH:mm")</div>
                 </div>
+                @if (p.AsignadoAMi)
+                {
+                    <span class="badge rounded-pill text-bg-success text-nowrap"><i class="bi bi-person-check me-1"></i>Tu entrega</span>
+                }
+                else if (p.AsignadoAOtro)
+                {
+                    <span class="badge rounded-pill text-bg-secondary text-nowrap"><i class="bi bi-person me-1"></i>@p.RepartidorNombre</span>
+                }
                 @if (p.HaceEnCamino != null)
                 {
                     <span class="badge rounded-pill text-nowrap @(p.EstaColgada ? "text-bg-danger" : "text-bg-secondary")">
@@ -115,9 +147,32 @@
                 }
             </div>
             <div class="card-footer bg-transparent border-0 pt-0 pb-3">
-                <form asp-controller="Repartidor" asp-action="Entregar" asp-route-id="@p.PedidoId" method="post" class="d-grid">
-                    <button type="submit" class="btn btn-success"><i class="bi bi-check-circle me-1"></i>Marcar entregado</button>
-                </form>
+                @if (p.AsignadoAOtro)
+                {
+                    <div class="alert alert-secondary mb-0 small">
+                        <i class="bi bi-person-badge me-1"></i>Asignado a <strong>@p.RepartidorNombre</strong>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex gap-2">
+                        @if (p.SinAsignar)
+                        {
+                            <form asp-controller="Repartidor" asp-action="Tomar" asp-route-id="@p.PedidoId" method="post" class="flex-grow-1">
+                                <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-hand-index-thumb me-1"></i>Tomar</button>
+                            </form>
+                        }
+                        <form asp-controller="Repartidor" asp-action="Entregar" asp-route-id="@p.PedidoId" method="post" class="flex-grow-1">
+                            <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle me-1"></i>Marcar entregado</button>
+                        </form>
+                    </div>
+                    @if (p.AsignadoAMi)
+                    {
+                        <form asp-controller="Repartidor" asp-action="Liberar" asp-route-id="@p.PedidoId" method="post" class="mt-2">
+                            <button type="submit" class="btn btn-sm btn-link text-muted w-100">Devolver a la cola</button>
+                        </form>
+                    }
+                }
             </div>
         </div>
     }
@@ -152,6 +207,14 @@
                             <td>
                                 <a asp-controller="Pedidos" asp-action="Detalles" asp-route-id="@p.PedidoId" class="fw-bold text-decoration-none">#@p.PedidoId.ToString("D6")</a>
                                 <div class="small text-muted">Pedido @p.FechaPedido.ToString("dd/MM/yyyy HH:mm")</div>
+                                @if (p.AsignadoAMi)
+                                {
+                                    <span class="badge rounded-pill text-bg-success"><i class="bi bi-person-check me-1"></i>Tu entrega</span>
+                                }
+                                else if (p.AsignadoAOtro)
+                                {
+                                    <span class="badge rounded-pill text-bg-secondary"><i class="bi bi-person me-1"></i>@p.RepartidorNombre</span>
+                                }
                                 @if (p.HaceEnCamino != null)
                                 {
                                     <div class="small @(p.EstaColgada ? "en-camino-colgado" : "text-muted")">
@@ -214,9 +277,28 @@
                                         <i class="bi bi-whatsapp"></i>
                                     </a>
                                 }
-                                <form asp-controller="Repartidor" asp-action="Entregar" asp-route-id="@p.PedidoId" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check-circle me-1"></i>Entregado</button>
-                                </form>
+                                @if (p.AsignadoAOtro)
+                                {
+                                    <span class="badge text-bg-secondary">Asignado a @p.RepartidorNombre</span>
+                                }
+                                else
+                                {
+                                    @if (p.SinAsignar)
+                                    {
+                                        <form asp-controller="Repartidor" asp-action="Tomar" asp-route-id="@p.PedidoId" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-hand-index-thumb me-1"></i>Tomar</button>
+                                        </form>
+                                    }
+                                    <form asp-controller="Repartidor" asp-action="Entregar" asp-route-id="@p.PedidoId" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check-circle me-1"></i>Entregado</button>
+                                    </form>
+                                    @if (p.AsignadoAMi)
+                                    {
+                                        <form asp-controller="Repartidor" asp-action="Liberar" asp-route-id="@p.PedidoId" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-link text-muted">Devolver</button>
+                                        </form>
+                                    }
+                                }
                             </td>
                         </tr>
                     }
@@ -269,3 +351,7 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/Features/Repartidor/UbicacionEnVivo.js" asp-append-version="true"></script>
+}

@@ -12,5 +12,12 @@ namespace TiendaOnline.Application.Pedidos.Queries
         Task<List<PedidoListadoDto>> ObtenerPedidosParaExportarAsync(PedidosFiltroDto filtros, CancellationToken ct = default);
         Task<List<PedidoRepartoDto>> ObtenerPedidosEnviadosAsync(CancellationToken ct = default);
         Task<List<PedidoRepartoDto>> ObtenerPedidosEntregadosUltimoDiaAsync(CancellationToken ct = default);
+
+        /// <summary>
+        /// Última posición del repartidor asignado, solo mientras el pedido está
+        /// Enviado. Null si el pedido no está en camino, no tiene repartidor o
+        /// el repartidor todavía no compartió ubicación.
+        /// </summary>
+        Task<UbicacionRepartidorDto?> ObtenerUbicacionRepartidorAsync(int pedidoId, CancellationToken ct = default);
     }
 }

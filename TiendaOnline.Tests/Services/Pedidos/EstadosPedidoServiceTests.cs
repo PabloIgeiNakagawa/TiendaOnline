@@ -329,5 +329,119 @@ namespace TiendaOnline.Tests.Services.Pedidos
                 .ToListAsync();
             Assert.Single(movimientos);
         }
+
+        [Fact]
+        public async Task PedidoEntregadoPorRepartidor_AsignadoAEl_Entrega()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var repartidor = TestDatabase.SeedUsuario(ctx, rol: Rol.Repartidor);
+            var producto = TestDatabase.SeedProducto(ctx);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, 1,
+                estado: EstadoPedido.Enviado, repartidorId: repartidor.UsuarioId);
+            var sut = Sut.EstadosPedido(ctx);
+
+            await sut.PedidoEntregadoPorRepartidorAsync(pedido.PedidoId, repartidor.UsuarioId);
+
+            using var verify = db.CreateContext();
+            var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
+            Assert.Equal(EstadoPedido.Entregado, pedidoDb.Estado);
+            Assert.Equal(repartidor.UsuarioId, pedidoDb.RepartidorId);
+        }
+
+        [Fact]
+        public async Task PedidoEntregadoPorRepartidor_AsignadoAOtro_LanzaYNoCambiaElEstado()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var repartidor = TestDatabase.SeedUsuario(ctx, rol: Rol.Repartidor);
+            var otro = TestDatabase.SeedUsuario(ctx, rol: Rol.Repartidor);
+            var producto = TestDatabase.SeedProducto(ctx);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, 1,
+                estado: EstadoPedido.Enviado, repartidorId: repartidor.UsuarioId);
+            var sut = Sut.EstadosPedido(ctx);
+
+            await Assert.ThrowsAsync<PedidoNoAsignableException>(
+                () => sut.PedidoEntregadoPorRepartidorAsync(pedido.PedidoId, otro.UsuarioId));
+
+            using var verify = db.CreateContext();
+            var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
+            Assert.Equal(EstadoPedido.Enviado, pedidoDb.Estado);
+            Assert.Equal(repartidor.UsuarioId, pedidoDb.RepartidorId);
+        }
+
+        [Fact]
+        public async Task PedidoEntregadoPorRepartidor_SinAsignar_LoTomaYEntrega()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var repartidor = TestDatabase.SeedUsuario(ctx, rol: Rol.Repartidor);
+            var producto = TestDatabase.SeedProducto(ctx);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, 1,
+                estado: EstadoPedido.Enviado);
+            var sut = Sut.EstadosPedido(ctx);
+
+            await sut.PedidoEntregadoPorRepartidorAsync(pedido.PedidoId, repartidor.UsuarioId);
+
+            using var verify = db.CreateContext();
+            var pedidoDb = await verify.Pedidos.AsNoTracking().FirstAsync(p => p.PedidoId == pedido.PedidoId);
+            Assert.Equal(EstadoPedido.Entregado, pedidoDb.Estado);
+            Assert.Equal(repartidor.UsuarioId, pedidoDb.RepartidorId);
+        }
+
+        [Fact]
+        public async Task PedidoEntregadoPorRepartidor_UltimaEntrega_BorraLaUbicacion()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var repartidor = TestDatabase.SeedUsuario(ctx, rol: Rol.Repartidor);
+            var producto = TestDatabase.SeedProducto(ctx);
+            var pedido = TestDatabase.SeedPedido(ctx, usuario, producto, 1,
+                estado: EstadoPedido.Enviado, repartidorId: repartidor.UsuarioId);
+            ctx.UbicacionesRepartidor.Add(new UbicacionRepartidor
+            {
+                UsuarioId = repartidor.UsuarioId,
+                Latitud = -34.60,
+                Longitud = -58.38
+            });
+            ctx.SaveChanges();
+            var sut = Sut.EstadosPedido(ctx);
+
+            await sut.PedidoEntregadoPorRepartidorAsync(pedido.PedidoId, repartidor.UsuarioId);
+
+            using var verify = db.CreateContext();
+            Assert.False(await verify.UbicacionesRepartidor.AnyAsync());
+        }
+
+        [Fact]
+        public async Task PedidoEntregadoPorRepartidor_ConOtraEntregaEnCurso_ConservaLaUbicacion()
+        {
+            using var db = new TestDatabase();
+            await using var ctx = db.CreateContext();
+            var usuario = TestDatabase.SeedUsuario(ctx);
+            var repartidor = TestDatabase.SeedUsuario(ctx, rol: Rol.Repartidor);
+            var producto = TestDatabase.SeedProducto(ctx);
+            var primero = TestDatabase.SeedPedido(ctx, usuario, producto, 1,
+                estado: EstadoPedido.Enviado, repartidorId: repartidor.UsuarioId);
+            TestDatabase.SeedPedido(ctx, usuario, producto, 1,
+                estado: EstadoPedido.Enviado, repartidorId: repartidor.UsuarioId);
+            ctx.UbicacionesRepartidor.Add(new UbicacionRepartidor
+            {
+                UsuarioId = repartidor.UsuarioId,
+                Latitud = -34.60,
+                Longitud = -58.38
+            });
+            ctx.SaveChanges();
+            var sut = Sut.EstadosPedido(ctx);
+
+            await sut.PedidoEntregadoPorRepartidorAsync(primero.PedidoId, repartidor.UsuarioId);
+
+            using var verify = db.CreateContext();
+            Assert.True(await verify.UbicacionesRepartidor.AnyAsync()); // todavía hay una entrega en curso
+        }
     }
 }

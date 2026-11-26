@@ -83,7 +83,7 @@ namespace TiendaOnline.Tests.Integration
             _app.ResetMocks();
             var s = SembrarPedido(_app, EstadoPedido.Enviado, "entrega");
             _app.EstadosPedido
-                .Setup(x => x.PedidoEntregadoAsync(s.PedidoId, It.IsAny<CancellationToken>()))
+                .Setup(x => x.PedidoEntregadoPorRepartidorAsync(s.PedidoId, s.RepartidorId, It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
             var client = _app.CreateClientAs(s.RepartidorId, new[] { "Repartidor" });
@@ -97,7 +97,7 @@ namespace TiendaOnline.Tests.Integration
             Assert.Equal(HttpStatusCode.Found, response.StatusCode);
             Assert.StartsWith("/Repartidor", response.Headers.Location?.ToString() ?? string.Empty);
             _app.EstadosPedido.Verify(
-                x => x.PedidoEntregadoAsync(s.PedidoId, It.IsAny<CancellationToken>()), Times.Once);
+                x => x.PedidoEntregadoPorRepartidorAsync(s.PedidoId, s.RepartidorId, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
@@ -109,7 +109,7 @@ namespace TiendaOnline.Tests.Integration
             _app.ResetMocks();
             var s = SembrarPedido(_app, EstadoPedido.EnPreparacion, "guard");
             _app.EstadosPedido
-                .Setup(x => x.PedidoEntregadoAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .Setup(x => x.PedidoEntregadoPorRepartidorAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new PedidoNoCancelableException("No se puede entregar: el pedido aún figura como EnPreparacion."));
 
             var client = _app.CreateClientAs(s.RepartidorId, new[] { "Repartidor" });
@@ -121,7 +121,7 @@ namespace TiendaOnline.Tests.Integration
 
             Assert.Equal(HttpStatusCode.Found, response.StatusCode);
             _app.EstadosPedido.Verify(
-                x => x.PedidoEntregadoAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
+                x => x.PedidoEntregadoPorRepartidorAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]

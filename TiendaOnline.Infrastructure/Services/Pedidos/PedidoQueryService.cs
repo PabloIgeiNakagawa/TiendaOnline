@@ -109,6 +109,12 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                         d.PrecioUnitario
                     }).ToList(),
 
+                    // Reparto
+                    RepartidorId = p.RepartidorId,
+                    RepartidorNombre = p.Repartidor != null
+                        ? p.Repartidor.Nombre + " " + p.Repartidor.Apellido
+                        : null,
+
                     p.TransaccionPagoId,
                     p.ComprobanteUrl,
                     p.FechaComprobante,
@@ -137,6 +143,9 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
 
                 DireccionCompleta = pedido.DireccionCompleta,
                 Observaciones = pedido.Observaciones,
+
+                RepartidorId = pedido.RepartidorId,
+                RepartidorNombre = pedido.RepartidorNombre,
 
                 Items = pedido.Items.Select(i => new PedidoItemDto
                 {
@@ -365,11 +374,47 @@ namespace TiendaOnline.Infrastructure.Services.Pedidos
                 DireccionCompleta = FormatearDireccionEnvio(p),
                 Observaciones = p.EnvioObservaciones,
                 CantidadItems = p.DetallesPedido.Sum(d => d.Cantidad),
+                RepartidorId = p.RepartidorId,
+                RepartidorNombre = p.Repartidor != null
+                    ? p.Repartidor.Nombre + " " + p.Repartidor.Apellido
+                    : null,
 
                 Productos = p.DetallesPedido
                                 .Select(d => new PedidoProductoListadoDto(d.Producto.Nombre, d.Producto.ImagenUrl, d.Cantidad))
                                 .ToList()
             });
+        }
+
+        public async Task<UbicacionRepartidorDto?> ObtenerUbicacionRepartidorAsync(int pedidoId, CancellationToken ct)
+        {
+            // Solo se comparte la posición mientras el pedido está en camino: un
+            // pedido entregado o cancelado ya no necesita el punto del repartidor.
+            var pedido = await _context.Pedidos
+                .AsNoTracking()
+                .Where(p => p.PedidoId == pedidoId && p.Estado == Domain.Entities.EstadoPedido.Enviado)
+                .Select(p => new
+                {
+                    p.RepartidorId,
+                    RepartidorNombre = p.Repartidor != null
+                        ? p.Repartidor.Nombre + " " + p.Repartidor.Apellido
+                        : null
+                })
+                .FirstOrDefaultAsync(ct);
+
+            if (pedido?.RepartidorId == null) return null;
+
+            var ubicacion = await _context.UbicacionesRepartidor
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UsuarioId == pedido.RepartidorId.Value, ct);
+
+            if (ubicacion == null) return null;
+
+            return new UbicacionRepartidorDto(
+                pedido.RepartidorNombre ?? string.Empty,
+                ubicacion.Latitud,
+                ubicacion.Longitud,
+                ubicacion.PrecisionMetros,
+                Math.Max(0, (int)(DateTime.Now - ubicacion.ActualizadoEn).TotalSeconds));
         }
 
         public async Task<InstruccionesTransferenciaDto?> ObtenerInstruccionesTransferenciaAsync(int pedidoId, CancellationToken ct)
