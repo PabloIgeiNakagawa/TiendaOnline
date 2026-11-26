@@ -24,8 +24,8 @@ Probá la aplicación acá: [http://techstoreargentina.runasp.net](http://techst
 * **Backend:** ASP.NET Core 10 (LTS) con C#.
 * **Base de datos:** SQL Server + Entity Framework Core 10 (Code First).
 * **Frontend:** Razor Views + Bootstrap 5.3.3, JavaScript.
-* **Jobs en segundo plano:** Hangfire (emails transaccionales y vencimiento de pedidos).
-* **Testing:** xUnit + Moq, 47 tests sobre SQLite in-memory.
+* **Jobs en segundo plano:** Hangfire (emails transaccionales, vencimiento de pedidos y retención de auditoría).
+* **Testing:** xUnit + Moq + SQLite in-memory (358 tests unitarios y de integración) + 3 smoke E2E con Playwright.
 * **Integraciones:** MercadoPago (checkout), Google OAuth (login), Cloudinary (imágenes), Resend (emails).
 
 ---
@@ -33,14 +33,14 @@ Probá la aplicación acá: [http://techstoreargentina.runasp.net](http://techst
 ## Arquitectura y calidad
 * **Service Layer Pattern:** la lógica de negocio vive en servicios inyectados; los controladores quedan delgados (*thin controllers*).
 * **Clean Architecture** en capas: Domain, Application, Infrastructure, Web y Tests.
-* **Tests:** 47 casos (flujo de dinero, carrito y autenticación) que corren en CI y como gate del deploy.
+* **Tests:** 358 casos (flujo de dinero, carrito, autenticación, envíos, ofertas, reparto y tracking) que corren en CI y como gate del deploy.
 
 ---
 
 ## CI/CD
 Cada push a `main` ejecuta el pipeline de GitHub Actions (`.github/workflows/publish.yml`):
 
-1. Build del proyecto y corrida de los 47 tests; si fallan, no se publica nada.
+1. Build del proyecto y corrida de los 358 tests; si fallan, no se publica nada.
 2. Publish del proyecto web en Release (win-x86, framework-dependent).
 3. Upload a producción vía Web Deploy; el sitio queda actualizado en menos de 3 minutos.
 
@@ -57,16 +57,21 @@ Para redeployar sin cambiar código: pestaña *Actions* → *Deploy a MonsterASP
 * Gestión de perfiles y auditoría de acciones de usuarios.
 
 ### E-commerce y carrito
-* Carrito de compras persistido en sesión con serialización JSON.
-* Checkout con generación automática de pedidos.
+* Catálogo con búsqueda en vivo, filtros, ofertas y galería de imágenes.
+* Carrito persistido en base de datos para usuarios logueados (sesión para anónimos), con validación de stock y refresco de precio en cada lectura.
+* Checkout en una sola página: envío a domicilio por provincia o retiro, y pago por MercadoPago o transferencia con comprobante.
 * Reserva de stock al confirmar el pago y movimiento de stock trazable.
 * Emails transaccionales por Hangfire y cancelación automática de pedidos pendientes de pago (24 h).
 
 ### Administración
-* Dashboard con métricas clave mediante gráficos dinámicos.
-* Auditoría de acciones sensibles para trazabilidad.
-* Reportes exportables a Excel y PDF.
-* Gestión de productos, pedidos, usuarios, stock y categorías.
+* Dashboard y reportes con gráficos (ventas, top productos/clientes, stock inmovilizado, tiempos de preparación).
+* Export CSV del listado de pedidos con los mismos filtros; panel de auditoría con diff legible y export.
+* Gestión de productos, pedidos, usuarios, stock, categorías, ofertas, envíos y configuración de la tienda.
+* Asignación de repartidor y aprobación/rechazo de comprobantes de transferencia.
+
+### Reparto
+* Cola de entregas para el rol Repartidor, con toma/liberación de pedidos y atajos de mapa y WhatsApp.
+* Seguimiento en vivo: el repartidor comparte su GPS y el cliente ve la posición en un mapa Leaflet/OpenStreetMap mientras el pedido está en camino.
 
 ### Interfaz
 * Tema claro/oscuro persistente en local storage.
