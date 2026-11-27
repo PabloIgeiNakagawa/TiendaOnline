@@ -52,3 +52,36 @@ jobs:
 
     - name: 8. Ejecutar Tests
       run: dotnet test --no-build --verbosity normal
+
+  # Job separado a propósito: un flake de browser no puede bloquear el deploy.
+  # Corre los 3 smoke E2E (Playwright/Chromium) contra la app real en Kestrel.
+  # En Debug: en Release las cookies de auth salen SecurePolicy.Always y el
+  # login por HTTP de loopback no viaja (el browser nunca manda la cookie).
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: 1. Descargar código
+      uses: actions/checkout@v4
+
+    - name: 2. Configurar .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: 3. Restaurar paquetes NuGet (E2E)
+      run: dotnet restore TiendaOnline.E2E/TiendaOnline.E2E.csproj
+
+    - name: 4. Restaurar librerías del front (libman)
+      working-directory: TiendaOnline
+      run: dotnet tool install -g Microsoft.Web.LibraryManager.Cli > /dev/null && libman restore
+
+    - name: 5. Compilar E2E en Debug
+      run: dotnet build TiendaOnline.E2E/TiendaOnline.E2E.csproj --configuration Debug --no-restore
+
+    - name: 6. Instalar Chromium
+      run: pwsh TiendaOnline.E2E/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium
+
+    - name: 7. Correr smoke tests E2E
+      run: dotnet test TiendaOnline.E2E/TiendaOnline.E2E.csproj --configuration Debug --no-build --verbosity normal

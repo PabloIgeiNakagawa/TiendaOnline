@@ -25,7 +25,7 @@ Probá la aplicación acá: [http://techstoreargentina.runasp.net](http://techst
 * **Base de datos:** SQL Server + Entity Framework Core 10 (Code First).
 * **Frontend:** Razor Views + Bootstrap 5.3.3, JavaScript.
 * **Jobs en segundo plano:** Hangfire (emails transaccionales, vencimiento de pedidos y retención de auditoría).
-* **Testing:** xUnit + Moq + SQLite in-memory (358 tests unitarios y de integración) + 3 smoke E2E con Playwright.
+* **Testing:** xUnit + Moq + SQLite in-memory (358 tests unitarios y de integración) + 3 smoke E2E con Playwright en CI.
 * **Integraciones:** MercadoPago (checkout), Google OAuth (login), Cloudinary (imágenes), Resend (emails).
 
 ---

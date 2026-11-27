@@ -5,8 +5,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <!-- Proyecto fuera del .sln mientras madura: el CI/gate no lo corre hasta
-         que se wireé explícito (no romper el gate del deploy con flake de browser). -->
+    <!-- Fuera del .sln a propósito: corre en CI como job separado (e2e en
+         dotnet-tests.yml), no como gate del deploy. Un flake de browser no
+         puede frenar la publicación. -->
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
