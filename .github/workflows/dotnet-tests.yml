@@ -57,8 +57,10 @@ jobs:
   # Corre los 3 smoke E2E (Playwright/Chromium) contra la app real en Kestrel.
   # En Debug: en Release las cookies de auth salen SecurePolicy.Always y el
   # login por HTTP de loopback no viaja (el browser nunca manda la cookie).
+  # Runner fijado a 24.04: Playwright 1.51 no soporta 26.04 (ubuntu-latest) y
+  # `playwright.ps1 install --with-deps` aborta sin instalar el browser.
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:
