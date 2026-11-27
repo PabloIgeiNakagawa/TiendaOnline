@@ -102,8 +102,8 @@ namespace TiendaOnline.Features.Pedidos.Admin
                 sb.AppendLine(string.Join(';',
                     Csv.Celda(p.PedidoId.ToString()),
                     Csv.Celda(p.FechaPedido.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)),
-                    Csv.Celda(p.NombreCliente),
-                    Csv.Celda(p.EmailCliente),
+                    Csv.Celda(Csv.NeutralizarFormula(p.NombreCliente)),
+                    Csv.Celda(Csv.NeutralizarFormula(p.EmailCliente)),
                     Csv.Celda(((EstadoPedido)p.EstadoId).GetDisplayName()),
                     Csv.Celda(((EstadoPago)p.EstadoPagoId).GetDisplayName()),
                     Csv.Celda(((MetodoPago)p.MetodoPagoId).GetDisplayName()),
@@ -113,9 +113,9 @@ namespace TiendaOnline.Features.Pedidos.Admin
             }
 
             // BOM UTF-8: sin él Excel adivina ANSI y los acentos salen rotos.
-            return File(new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetBytes(sb.ToString()),
+            return File(Csv.Archivo(sb.ToString()),
                 "text/csv",
-                $"pedidos-{DateTime.Now:yyyyMMdd}.csv");
+                $"pedidos-{DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture)}.csv");
         }
 
         [HttpPost("[action]")]

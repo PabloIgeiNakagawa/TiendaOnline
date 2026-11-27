@@ -55,17 +55,17 @@ namespace TiendaOnline.Features.Auditorias
             {
                 sb.AppendLine(string.Join(';',
                     Csv.Celda(fila.Fecha.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)),
-                    Csv.Celda(fila.UsuarioNombreCompleto),
-                    Csv.Celda(fila.UsuarioEmail ?? ""),
+                    Csv.Celda(Csv.NeutralizarFormula(fila.UsuarioNombreCompleto)),
+                    Csv.Celda(Csv.NeutralizarFormula(fila.UsuarioEmail ?? "")),
                     Csv.Celda(fila.Accion),
                     Csv.Celda(fila.TablaAfectada),
                     Csv.Celda(fila.EntidadId)));
             }
 
             // BOM UTF-8: sin él Excel adivina ANSI y los acentos salen rotos.
-            return File(new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetBytes(sb.ToString()),
+            return File(Csv.Archivo(sb.ToString()),
                 "text/csv",
-                $"auditorias-{DateTime.Now:yyyyMMdd}.csv");
+                $"auditorias-{DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture)}.csv");
         }
 
         [HttpGet("[action]/{id}")]

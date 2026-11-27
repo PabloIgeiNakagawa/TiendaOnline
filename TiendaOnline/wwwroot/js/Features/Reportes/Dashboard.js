@@ -362,3 +362,7 @@ setInterval(() => {
     };
     reloj.textContent = fecha.toLocaleString('es-AR', opciones);
 }, 60000);
+
+// Imprimir: los estilos @media print del dashboard ocultan botones y menús;
+// el diálogo del navegador permite guardar el reporte como PDF.
+document.getElementById('btnImprimir')?.addEventListener('click', () => window.print());

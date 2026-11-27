@@ -25,7 +25,7 @@ Probá la aplicación acá: [http://techstoreargentina.runasp.net](http://techst
 * **Base de datos:** SQL Server + Entity Framework Core 10 (Code First).
 * **Frontend:** Razor Views + Bootstrap 5.3.3, JavaScript.
 * **Jobs en segundo plano:** Hangfire (emails transaccionales, vencimiento de pedidos y retención de auditoría).
-* **Testing:** xUnit + Moq + SQLite in-memory (358 tests unitarios y de integración) + 3 smoke E2E con Playwright en CI.
+* **Testing:** xUnit + Moq + SQLite in-memory (371 tests unitarios y de integración) + 3 smoke E2E con Playwright en CI.
 * **Integraciones:** MercadoPago (checkout), Google OAuth (login), Cloudinary (imágenes), Resend (emails).
 
 ---
@@ -33,14 +33,14 @@ Probá la aplicación acá: [http://techstoreargentina.runasp.net](http://techst
 ## Arquitectura y calidad
 * **Service Layer Pattern:** la lógica de negocio vive en servicios inyectados; los controladores quedan delgados (*thin controllers*).
 * **Clean Architecture** en capas: Domain, Application, Infrastructure, Web y Tests.
-* **Tests:** 358 casos (flujo de dinero, carrito, autenticación, envíos, ofertas, reparto y tracking) que corren en CI y como gate del deploy.
+* **Tests:** 371 casos (flujo de dinero, carrito, autenticación, envíos, ofertas, reparto y tracking) que corren en CI y como gate del deploy.
 
 ---
 
 ## CI/CD
 Cada push a `main` ejecuta el pipeline de GitHub Actions (`.github/workflows/publish.yml`):
 
-1. Build del proyecto y corrida de los 358 tests; si fallan, no se publica nada.
+1. Build del proyecto y corrida de los 371 tests; si fallan, no se publica nada.
 2. Publish del proyecto web en Release (win-x86, framework-dependent).
 3. Upload a producción vía Web Deploy; el sitio queda actualizado en menos de 3 minutos.
 
@@ -122,6 +122,7 @@ Para redeployar sin cambiar código: pestaña *Actions* → *Deploy a MonsterASP
 <img alt="Inicio admin" src="https://github.com/user-attachments/assets/3ccfa318-af45-4903-8969-36ba964da382" style="max-width: 100%;" />
 
 #### Dashboards
+Reportes con gráficos, métricas y tablas; export CSV por reporte o ZIP con todos, e impresión del dashboard a PDF desde el botón Imprimir.
 <img alt="Dashboards" src="https://github.com/user-attachments/assets/0943b4f9-44bc-4158-9373-7849ff2d04e4" style="max-width: 100%;" />
 <img alt="Dashboards 2" src="https://github.com/user-attachments/assets/3b5e7cdc-36a0-47ca-a3bd-2c74bb1101db" style="max-width: 100%;" />
 

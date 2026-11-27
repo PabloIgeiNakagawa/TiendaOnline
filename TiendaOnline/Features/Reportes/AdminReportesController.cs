@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 using TiendaOnline.Application.Reportes;
 using TiendaOnline.Enums;
 using TiendaOnline.Features.Shared.Controllers;
@@ -140,6 +141,39 @@ namespace TiendaOnline.Features.Reportes
             };
 
             return PartialView("_SeccionesDelDashboard", viewModel);
+        }
+
+        // Export de los reportes del dashboard: sin ?reporte baja un ZIP con un
+        // CSV por sección; con ?reporte=<enum> baja solo esa tabla. Usa los
+        // mismos datos cacheados del dashboard (lo que se ve es lo que se baja).
+        // GET sin efectos: no lleva antiforgery.
+        [HttpGet("[action]")]
+        public async Task<IActionResult> Exportar(string? reporte)
+        {
+            ReporteExportable? tipo = null;
+            if (!string.IsNullOrWhiteSpace(reporte))
+            {
+                if (!Enum.TryParse<ReporteExportable>(reporte, ignoreCase: true, out var parseado)
+                    || !Enum.IsDefined(parseado))
+                {
+                    return NotFound();
+                }
+
+                tipo = parseado;
+            }
+
+            var datos = await _reportesService.ObtenerDatosAsync(HttpContext.RequestAborted);
+
+            if (tipo is null)
+            {
+                return File(ReportesCsv.ArmarZip(datos), "application/zip",
+                    $"reportes-{DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture)}.zip");
+            }
+
+            return File(
+                ReportesCsv.ConBom(ReportesCsv.Armar(tipo.Value, datos)),
+                "text/csv",
+                ReportesCsv.NombreDeArchivo(tipo.Value, DateTime.Now));
         }
     }
 }

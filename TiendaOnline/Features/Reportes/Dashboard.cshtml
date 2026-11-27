@@ -1,11 +1,12 @@
 ﻿@using TiendaOnline.Extensions
+@using TiendaOnline.Features.Reportes
 @{
     ViewData[ViewDataKeys.Title] = "Dashboard";
 }
 @section Styles{
     <style>
         @@media print {
-            .btn, .card-header button {
+            .btn, .card-header button, .dropdown-menu {
                 display: none !important;
             }
 
@@ -41,8 +42,31 @@
                         </div>
                     </div>
                 </div>
-                <div>
-                    <button id="btnImprimir" class="btn btn-outline-secondary">
+                <div class="d-flex flex-wrap gap-2">
+                    <div class="dropdown">
+                        <button id="btnExportar" class="btn btn-outline-primary dropdown-toggle" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download me-1"></i>Exportar
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="btnExportar">
+                            <li>
+                                <a class="dropdown-item fw-semibold" href="@Url.Action("Exportar")">
+                                    <i class="bi bi-file-earmark-zip me-1"></i>Todos los reportes (ZIP)
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Exportar", new { reporte = ReporteExportable.Resumen })">Resumen general</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Exportar", new { reporte = ReporteExportable.VentasPorMes })">Ventas por mes</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Exportar", new { reporte = ReporteExportable.EstadosPedidos })">Estados de pedidos</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Exportar", new { reporte = ReporteExportable.VentasPorCategoria })">Ventas por categoría</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Exportar", new { reporte = ReporteExportable.VentasPorMetodoPago })">Ventas por método de pago</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Exportar", new { reporte = ReporteExportable.TopProductos })">Top productos</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Exportar", new { reporte = ReporteExportable.TopClientes })">Top clientes</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Exportar", new { reporte = ReporteExportable.PedidosPorDiaHora })">Pedidos por día y hora</a></li>
+                            <li><a class="dropdown-item" href="@Url.Action("Exportar", new { reporte = ReporteExportable.StockInmovilizado })">Stock inmovilizado</a></li>
+                        </ul>
+                    </div>
+                    <button id="btnImprimir" class="btn btn-outline-secondary" type="button">
                         <i class="bi bi-printer me-1"></i>Imprimir
                     </button>
                 </div>

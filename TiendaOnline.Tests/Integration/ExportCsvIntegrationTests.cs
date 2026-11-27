@@ -42,8 +42,10 @@ namespace TiendaOnline.Tests.Integration
             Assert.Contains("attachment", respuesta.Content.Headers.ContentDisposition?.ToString());
 
             var csv = await respuesta.Content.ReadAsStringAsync();
-            // BOM UTF-8 primero (sin él Excel adivina ANSI y rompe los acentos).
-            Assert.StartsWith("\uFEFF", csv);
+            // BOM UTF-8 primero (sin él Excel adivina ANSI y rompe los acentos):
+            // se compara a nivel bytes porque la comparación de strings ignora U+FEFF.
+            var bytes = await respuesta.Content.ReadAsByteArrayAsync();
+            Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, bytes.Take(3).ToArray());
             Assert.Contains("Pedido;Fecha;Cliente;Email;Estado;Estado del pago;Método de pago;Total;Fecha de entrega;Comprobante", csv);
             // Los dos pedidos sembrados viajan, con sus estados legibles.
             Assert.Contains("export-cliente1@test.local", csv);
@@ -53,6 +55,31 @@ namespace TiendaOnline.Tests.Integration
             // Separador ";": la fila del pedido 1 aparece con su id.
             Assert.Contains(ids.P1.ToString(), csv);
             Assert.Contains(ids.P2.ToString(), csv);
+        }
+
+        [Fact]
+        public async Task Exportar_ClienteConFormulaDeExcel_SeNeutraliza()
+        {
+            _app.ResetMocks();
+            var adminId = _app.WithDb(ctx =>
+            {
+                var admin = TestDatabase.SeedUsuario(ctx, "export-formula-admin@test.local", Rol.Administrador);
+                var cliente = TestDatabase.SeedUsuario(ctx, "export-formula@test.local");
+                cliente.Nombre = "=HYPERLINK(\"http://malo\",\"Click\")";
+                ctx.SaveChanges();
+                var producto = TestDatabase.SeedProducto(ctx);
+                TestDatabase.SeedPedido(ctx, cliente, producto, 1);
+                return admin.UsuarioId;
+            });
+
+            var client = _app.CreateClientAs(adminId, new[] { "Administrador" });
+            var respuesta = await client.GetAsync("/admin/pedidos/Exportar");
+
+            Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
+            var csv = await respuesta.Content.ReadAsStringAsync();
+            // El nombre es texto libre del cliente: sin el apóstrofo, Excel lo
+            // ejecutaría como fórmula al abrir el CSV.
+            Assert.Contains("'=HYPERLINK(", csv);
         }
 
         [Fact]

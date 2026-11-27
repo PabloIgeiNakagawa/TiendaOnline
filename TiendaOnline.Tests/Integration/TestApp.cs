@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -140,6 +141,14 @@ namespace TiendaOnline.Tests.Integration
             Pdf.Reset();
 
             Carrito.Setup(x => x.ObtenerAsync()).ReturnsAsync(new List<ItemCarrito>());
+
+            // El dashboard de reportes se cachea 60 s en un singleton del host:
+            // sin limpiarlo, un test leería el armado del anterior aunque siembre
+            // datos nuevos (el service ni consulta la base).
+            if (Services.GetService<IMemoryCache>() is MemoryCache cache)
+            {
+                cache.Compact(1.0);
+            }
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)

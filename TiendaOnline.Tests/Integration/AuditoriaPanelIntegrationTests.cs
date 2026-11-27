@@ -68,12 +68,38 @@ namespace TiendaOnline.Tests.Integration
             Assert.StartsWith("text/csv", respuesta.Content.Headers.ContentType?.ToString());
             Assert.Contains("attachment", respuesta.Content.Headers.ContentDisposition?.ToString());
 
+            // BOM UTF-8 primero (sin él Excel adivina ANSI y rompe los acentos):
+            // se compara a nivel bytes porque la comparación de strings ignora U+FEFF.
+            var bytes = await respuesta.Content.ReadAsByteArrayAsync();
+            Assert.Equal(new byte[] { 0xEF, 0xBB, 0xBF }, bytes.Take(3).ToArray());
+
             var csv = await respuesta.Content.ReadAsStringAsync();
-            Assert.StartsWith("\uFEFF", csv); // BOM para Excel
             Assert.Contains("Fecha;Usuario;Email;Acción;Entidad;ID", csv);
             Assert.Contains(datos.A, csv);
             Assert.Contains("Envió Pedido", csv);
             Assert.DoesNotContain("Entregó Pedido", csv);
+        }
+
+        [Fact]
+        public async Task Exportar_UsuarioConFormulaDeExcel_SeNeutraliza()
+        {
+            _app.ResetMocks();
+            var adminId = _app.WithDb(ctx =>
+            {
+                var admin = TestDatabase.SeedUsuario(ctx, "audit-formula-admin@test.local", Rol.Administrador);
+                var cliente = TestDatabase.SeedUsuario(ctx, "audit-formula@test.local");
+                cliente.Nombre = "=HYPERLINK(\"http://malo\",\"Click\")";
+                ctx.SaveChanges();
+                TestDatabase.SeedAuditoria(ctx, cliente, "Envió Pedido", "Pedido", Guid.NewGuid().ToString("N"));
+                return admin.UsuarioId;
+            });
+
+            var client = _app.CreateClientAs(adminId, new[] { "Administrador" });
+            var respuesta = await client.GetAsync("/admin/auditorias/Exportar");
+
+            Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
+            var csv = await respuesta.Content.ReadAsStringAsync();
+            Assert.Contains("'=HYPERLINK(", csv);
         }
 
         [Fact]
